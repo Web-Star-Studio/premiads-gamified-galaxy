@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,13 +50,13 @@
   }
 
   body {
-    @apply bg-galaxy-dark text-foreground font-poppins overflow-x-hidden;
+    @apply bg-galaxy-dark text-foreground font-sans overflow-x-hidden;
     background: url('/stars-bg.png'), linear-gradient(180deg, #0A0A18 0%, #1A1F2C 100%);
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, .galaxy-title {
-    @apply font-orbitron;
+    @apply font-heading;
   }
 }
 

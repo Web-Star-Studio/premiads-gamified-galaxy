@@ -78,8 +78,9 @@ export default {
 				}
 			},
 			fontFamily: {
-				orbitron: ['Orbitron', 'sans-serif'],
-				poppins: ['Poppins', 'sans-serif']
+				// Replace existing font families with Montserrat for headings and Inter as default
+				'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', "Segoe UI", 'Roboto', "Helvetica Neue", 'Arial', "Noto Sans", 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"],
+				'heading': ['Montserrat', 'ui-sans-serif', 'system-ui', '-apple-system'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
