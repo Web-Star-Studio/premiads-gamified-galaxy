@@ -102,10 +102,22 @@ export function useProfileForm() {
         
         // Award points if user hasn't completed the profile before
         if (!hasCompletedBefore) {
+          // First, fetch current points
+          const { data: currentProfile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('points')
+            .eq('id', userId)
+            .single();
+          
+          if (fetchError) throw fetchError;
+          
+          // Then update with incremented value
+          const newPoints = (currentProfile?.points || 0) + POINTS_PER_PROFILE_COMPLETION;
+          
           const { error: pointsError } = await supabase
             .from('profiles')
             .update({
-              points: supabase.rpc("increment", { x: POINTS_PER_PROFILE_COMPLETION })
+              points: newPoints
             })
             .eq('id', userId);
           
