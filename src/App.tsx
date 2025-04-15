@@ -15,11 +15,11 @@ import Authentication from "./pages/Authentication";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import AdvertiserProfile from "./pages/AdvertiserProfile";
 import AdminPanel from "./pages/AdminPanel";
-import { UserProvider } from "./context/UserContext";
 
 // Admin section page imports
 import LotteryManagementPage from "./pages/admin/LotteryManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
+import AccessControlPage from "./pages/admin/AccessControlPage";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +48,7 @@ const App = () => {
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/admin/sorteios" element={<LotteryManagementPage />} />
               <Route path="/admin/usuarios" element={<UserManagementPage />} />
+              <Route path="/admin/acesso" element={<AccessControlPage />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
