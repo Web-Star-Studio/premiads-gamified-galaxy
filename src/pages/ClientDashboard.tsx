@@ -1,106 +1,26 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
-import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
+import { useClientDashboard } from "@/hooks/useClientDashboard";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import PointsCard from "@/components/dashboard/PointsCard";
-import MissionsCarousel from "@/components/dashboard/MissionsCarousel";
-import ActiveMissions from "@/components/dashboard/ActiveMissions";
-import DailyChallenge from "@/components/dashboard/DailyChallenge";
-import SorteDoDia from "@/components/dashboard/SorteDoDia";
-import { Button } from "@/components/ui/button";
-import { Gift, Ticket } from "lucide-react";
-import { useSounds } from "@/hooks/use-sounds";
+import LoadingState from "@/components/client/dashboard/LoadingState";
+import PointsSection from "@/components/client/dashboard/PointsSection";
+import MissionsSection from "@/components/client/dashboard/MissionsSection";
+import SidePanel from "@/components/client/dashboard/SidePanel";
 import SupportTools from "@/components/client/SupportTools";
-import LifetimePoints from "@/components/client/LifetimePoints";
-import ReferralProgram from "@/components/client/ReferralProgram";
 import OnboardingModal from "@/components/client/OnboardingModal";
 import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
 
 const ClientDashboard = () => {
-  const { userName, userType } = useUser();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { playSound } = useSounds();
-  const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    // Redirect if user is not a participant
-    if (userType !== "participante") {
-      toast({
-        title: "Acesso restrito",
-        description: "Você não tem permissão para acessar esta página",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
-    }
-
-    // Check if onboarding has been completed
-    const onboardingComplete = localStorage.getItem("onboardingComplete");
-    if (!onboardingComplete) {
-      // Only show after loading finishes
-      setTimeout(() => {
-        setShowOnboarding(true);
-      }, 2000);
-    }
-
-    // Simulate loading
-    const loadTimer = setTimeout(() => {
-      setLoading(false);
-      // Play welcome sound when dashboard loads
-      playSound("chime");
-      
-      // Check if user has been inactive
-      const lastActivity = localStorage.getItem("lastActivity");
-      if (lastActivity && Date.now() - parseInt(lastActivity) > 86400000) {
-        toast({
-          title: "Streak em risco!",
-          description: "Você está há mais de 24h sem atividade. Complete uma missão hoje!",
-        });
-      }
-      
-      // Update last activity
-      localStorage.setItem("lastActivity", Date.now().toString());
-    }, 1500);
-
-    return () => clearTimeout(loadTimer);
-  }, [userType, navigate, toast, playSound]);
-
-  const handleExtendSession = () => {
-    toast({
-      title: "Sessão estendida",
-      description: "Sua sessão foi estendida com sucesso.",
-    });
-  };
-
-  const handleSessionTimeout = () => {
-    toast({
-      title: "Sessão expirada",
-      description: "Você foi desconectado devido à inatividade.",
-      variant: "destructive",
-    });
-    // In a real app, this would log the user out
-    // For this demo, we'll just redirect to home
-    navigate("/");
-  };
+  const {
+    userName,
+    loading,
+    showOnboarding,
+    setShowOnboarding,
+    handleExtendSession,
+    handleSessionTimeout
+  } = useClientDashboard();
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin"></div>
-          <h2 className="text-xl font-heading neon-text-cyan">Carregando seu universo...</h2>
-        </motion.div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -110,79 +30,13 @@ const ClientDashboard = () => {
         
         <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
           {/* Points & Tickets Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-1"
-          >
-            <PointsCard points={750} level={4} progress={65} />
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-6"
-            >
-              <LifetimePoints totalPoints={1950} rank={42} totalUsers={1250} />
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6"
-            >
-              <Button
-                className="w-full neon-button py-6"
-                onClick={() => navigate("/cliente/sorteios")}
-              >
-                <div className="flex flex-col items-center justify-center">
-                  <div className="flex items-center mb-2">
-                    <Gift className="w-6 h-6 mr-2 text-neon-pink" />
-                    <span className="text-xl font-heading">Sorteios</span>
-                  </div>
-                  <div className="text-sm text-gray-300">
-                    Você tem <span className="text-neon-cyan">8 tickets</span> disponíveis
-                  </div>
-                </div>
-              </Button>
-            </motion.div>
-          </motion.div>
+          <PointsSection />
           
-          {/* Missions Carousel */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-2"
-          >
-            <MissionsCarousel />
-          </motion.div>
-          
-          {/* Active Missions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-2"
-          >
-            <ActiveMissions />
-          </motion.div>
+          {/* Missions Sections */}
+          <MissionsSection />
           
           {/* Daily Challenge & Sorte do Dia */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="lg:col-span-1"
-          >
-            <div className="grid gap-6">
-              <DailyChallenge />
-              <SorteDoDia />
-              <ReferralProgram />
-            </div>
-          </motion.div>
+          <SidePanel />
         </div>
       </div>
       
