@@ -6,10 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import DashboardHeader from "@/components/advertiser/DashboardHeader";
 import LoadingState from "@/components/advertiser/dashboard/LoadingState";
 import NotificationBanner from "@/components/advertiser/dashboard/NotificationBanner";
-import UserMenu from "@/components/advertiser/dashboard/UserMenu";
 import DashboardTabs from "@/components/advertiser/dashboard/DashboardTabs";
 
 const AdvertiserDashboard = () => {
@@ -17,7 +18,6 @@ const AdvertiserDashboard = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [credits, setCredits] = useState(0);
@@ -60,7 +60,12 @@ const AdvertiserDashboard = () => {
           console.error("Error fetching credits:", profileError);
         } else if (profileData) {
           setCredits(profileData.credits || 0);
+          // Store in localStorage for sidebar
+          localStorage.setItem("userCredits", (profileData.credits || 0).toString());
         }
+        
+        // Store user name in localStorage for sidebar
+        localStorage.setItem("userName", userName || "Anunciante");
         
         // Fetch missions count
         const { count: missionsCountData, error: missionsError } = await supabase
@@ -120,19 +125,11 @@ const AdvertiserDashboard = () => {
     };
     
     checkAccess();
-  }, [userType, navigate, toast, playSound]);
+  }, [userType, navigate, toast, playSound, userName]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     playSound("pop");
-  };
-  
-  const handleProfileClick = () => {
-    navigate("/anunciante/perfil");
-  };
-  
-  const handleLogout = async () => {
-    await signOut();
   };
 
   if (loading) {
@@ -140,30 +137,27 @@ const AdvertiserDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-galaxy-dark pb-20">
-      <div className="container px-4 py-8 mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <DashboardHeader userName={userName} />
-          
-          <UserMenu 
-            credits={credits} 
-            onProfileClick={handleProfileClick} 
-            onLogout={handleLogout} 
-          />
-        </div>
-        
-        <NotificationBanner 
-          pendingSubmissions={pendingSubmissions} 
-          onViewClick={() => setActiveTab("finance")} 
-        />
-        
-        <DashboardTabs 
-          activeTab={activeTab} 
-          onTabChange={handleTabChange} 
-          credits={credits} 
-        />
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
+        <AdvertiserSidebar />
+        <SidebarInset className="overflow-y-auto pb-20">
+          <div className="container px-4 py-8 mx-auto">
+            <DashboardHeader userName={userName} />
+            
+            <NotificationBanner 
+              pendingSubmissions={pendingSubmissions} 
+              onViewClick={() => setActiveTab("finance")} 
+            />
+            
+            <DashboardTabs 
+              activeTab={activeTab} 
+              onTabChange={handleTabChange} 
+              credits={credits} 
+            />
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
