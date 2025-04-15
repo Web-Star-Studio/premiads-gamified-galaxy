@@ -1,4 +1,3 @@
 
-// This file is a re-export of all sidebar components from the sidebar directory
-// This ensures backward compatibility with existing imports
+// Re-export all the sidebar components from the individual files
 export * from "./sidebar/index";

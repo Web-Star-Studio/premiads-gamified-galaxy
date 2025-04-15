@@ -1,8 +1,9 @@
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// Create a sidebar.tsx file that re-exports everything
-<lov-write file_path="src/components/ui/sidebar.tsx">
-// Re-export all the sidebar components from the individual files
-export * from "./sidebar";
+// Export utility functions for sidebar
+export function createSidebarClassName(baseClassName: string, additionalClassName?: string) {
+  return cn(baseClassName, additionalClassName);
+}
+
+// Other utility functions can be added here as needed
