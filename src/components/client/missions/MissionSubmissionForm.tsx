@@ -17,6 +17,7 @@ interface MissionSubmissionFormProps {
 }
 
 const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmissionFormProps) => {
+  // Estado local para dados do formulário
   const [missionAnswer, setMissionAnswer] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -24,6 +25,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
 
   if (!mission) return null;
 
+  // Funções para lidar com o upload de mídia
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -39,8 +41,9 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
     setImagePreview(null);
   };
 
+  // Função para lidar com o envio do formulário
   const handleSubmit = () => {
-    // Prepare submission data based on mission type
+    // Preparar dados de submissão baseado no tipo de missão
     let submissionData = {};
     
     if (mission.type === "survey") {
@@ -62,11 +65,12 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
     onSubmit(submissionData);
   };
 
-  // Determine if submission button should be disabled
+  // Determinar se o botão de envio deve estar desabilitado
   const isSubmitDisabled = 
     (!missionAnswer && !imagePreview && mission.type !== "visit") || 
     !agreedToTerms;
 
+  // Renderizar o formulário apropriado com base no tipo de missão
   return (
     <div className="space-y-4 my-4">
       {mission.type === "survey" && (

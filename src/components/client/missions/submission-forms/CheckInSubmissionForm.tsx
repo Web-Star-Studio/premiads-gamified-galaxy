@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 
-const VisitSubmissionForm = () => {
+const CheckInSubmissionForm = () => {
   return (
     <div className="space-y-2">
       <Label>Check-in na loja</Label>
@@ -21,4 +21,4 @@ const VisitSubmissionForm = () => {
   );
 };
 
-export default VisitSubmissionForm;
+export default CheckInSubmissionForm;
