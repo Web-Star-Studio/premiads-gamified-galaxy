@@ -96,26 +96,47 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          credits: number | null
+          description: string | null
+          email_notifications: boolean | null
           full_name: string | null
           id: string
+          phone: string | null
           points: number
+          push_notifications: boolean | null
           updated_at: string
+          user_type: string | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credits?: number | null
+          description?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          phone?: string | null
           points?: number
+          push_notifications?: boolean | null
           updated_at?: string
+          user_type?: string | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credits?: number | null
+          description?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          phone?: string | null
           points?: number
+          push_notifications?: boolean | null
           updated_at?: string
+          user_type?: string | null
+          website?: string | null
         }
         Relationships: []
       }

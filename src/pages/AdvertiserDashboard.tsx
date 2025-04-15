@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -64,9 +63,9 @@ const AdvertiserDashboard = () => {
           .eq("id", userId)
           .single();
           
-        if (profileError) throw profileError;
-        
-        if (profileData) {
+        if (profileError) {
+          console.error("Error fetching credits:", profileError);
+        } else if (profileData) {
           setCredits(profileData.credits || 0);
         }
         
@@ -76,18 +75,35 @@ const AdvertiserDashboard = () => {
           .select("*", { count: 'exact', head: true })
           .eq("advertiser_id", userId);
           
-        if (missionsError) throw missionsError;
-        setMissionsCount(missionsCountData || 0);
+        if (missionsError) {
+          console.error("Error fetching missions count:", missionsError);
+        } else {
+          setMissionsCount(missionsCountData || 0);
+        }
         
-        // Fetch pending submissions count
-        const { count: submissionsCountData, error: submissionsError } = await supabase
-          .from("mission_submissions")
-          .select("*", { count: 'exact', head: true })
-          .eq("status", "pending")
-          .in("mission_id", supabase.from("missions").select("id").eq("advertiser_id", userId));
+        // Fetch pending submissions count - using a different approach to avoid type issues
+        const { data: missionIds, error: missionIdsError } = await supabase
+          .from("missions")
+          .select("id")
+          .eq("advertiser_id", userId);
+        
+        if (missionIdsError) {
+          console.error("Error fetching mission IDs:", missionIdsError);
+        } else if (missionIds && missionIds.length > 0) {
+          const ids = missionIds.map(m => m.id);
           
-        if (submissionsError) throw submissionsError;
-        setPendingSubmissions(submissionsCountData || 0);
+          const { count: submissionsCountData, error: submissionsError } = await supabase
+            .from("mission_submissions")
+            .select("*", { count: 'exact', head: true })
+            .eq("status", "pending")
+            .in("mission_id", ids);
+            
+          if (submissionsError) {
+            console.error("Error fetching submissions count:", submissionsError);
+          } else {
+            setPendingSubmissions(submissionsCountData || 0);
+          }
+        }
         
         // Check for low credits
         if ((profileData?.credits || 0) < 500) {
