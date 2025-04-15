@@ -46,6 +46,7 @@ interface NewLotteryFormProps {
 
 const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { playSound } = useSounds();
   
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -59,6 +60,12 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
   
   const onSubmit = async (values: FormSchema) => {
     setIsSubmitting(true);
+    
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
     
     try {
       // Simulando um atraso de rede
@@ -75,13 +82,35 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       };
       
       toastSuccess('Sorteio criado', `O sorteio "${values.name}" foi criado com sucesso.`);
+      
+      try {
+        playSound('reward');
+      } catch (error) {
+        console.log("Som não reproduzido", error);
+      }
+      
       onSuccess(newLottery);
     } catch (error) {
       console.error("Erro ao criar sorteio:", error);
       toastError('Erro', 'Não foi possível criar o sorteio. Tente novamente.');
+      
+      try {
+        playSound('error');
+      } catch (error) {
+        console.log("Som não reproduzido", error);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  const handleCancel = () => {
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
+    onCancel();
   };
   
   return (
@@ -215,14 +244,15 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
           <Button
             type="button"
             variant="outline"
-            onClick={onCancel}
-            className="border-neon-cyan/30 text-white"
+            onClick={handleCancel}
+            className="border-neon-cyan/30 text-white transition-all duration-200"
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
           <Button 
             type="submit"
-            className="bg-neon-pink hover:bg-neon-pink/80"
+            className="bg-neon-pink hover:bg-neon-pink/80 transition-all duration-200"
             disabled={isSubmitting}
           >
             {isSubmitting ? (

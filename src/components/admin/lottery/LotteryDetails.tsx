@@ -7,6 +7,9 @@ import PrizeTable from './PrizeTable';
 import SpinningWheel from './SpinningWheel';
 import { Lottery } from './LotteryList';
 import { toastInfo } from "@/utils/toast";
+import { motion } from 'framer-motion';
+import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';
+import { useSounds } from '@/hooks/use-sounds';
 
 interface LotteryDetailsProps {
   selectedLottery: Lottery;
@@ -18,6 +21,7 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
   onStatusChange
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { playSound } = useSounds();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -29,6 +33,12 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
   };
 
   const handleStatusChange = () => {
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
+    
     setIsLoading(true);
     const newStatus = selectedLottery.status === 'active' ? 'pending' : 'active';
     
@@ -40,12 +50,22 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
   };
 
   const handleEdit = () => {
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
+    
     // Por enquanto, apenas mostra uma mensagem
     toastInfo("Funcionalidade em desenvolvimento", "A edição de sorteios será disponibilizada em breve.");
   };
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium flex items-center">
           <Award className="h-5 w-5 mr-2 text-neon-lime" />
@@ -58,13 +78,13 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-galaxy-purple/30"
+                className="border-galaxy-purple/30 transition-all duration-200"
                 onClick={handleStatusChange}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <span className="h-4 w-4 border-2 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mr-1"></span>
+                    <ButtonLoadingSpinner />
                     Atualizando...
                   </span>
                 ) : selectedLottery.status === 'active' ? (
@@ -83,8 +103,9 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-neon-pink text-neon-pink hover:bg-neon-pink/20"
+                className="border-neon-pink text-neon-pink hover:bg-neon-pink/20 transition-all duration-200"
                 onClick={handleEdit}
+                disabled={isLoading}
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Editar
@@ -94,7 +115,11 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
         </div>
       </div>
       
-      <div className="bg-galaxy-dark rounded-md p-4 border border-galaxy-purple/30 mb-6">
+      <motion.div 
+        className="bg-galaxy-dark rounded-md p-4 border border-galaxy-purple/30 mb-6"
+        whileHover={{ boxShadow: "0 0 8px rgba(155, 135, 245, 0.3)" }}
+        transition={{ duration: 0.2 }}
+      >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-xs text-muted-foreground">Nome</div>
@@ -113,7 +138,7 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
             <div className="font-medium">{selectedLottery.endDate}</div>
           </div>
         </div>
-      </div>
+      </motion.div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PrizeTable prizes={selectedLottery.prizes} isCompleted={selectedLottery.status === 'completed'} />
@@ -121,7 +146,12 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
       </div>
       
       {selectedLottery.prizes.length === 0 && (
-        <div className="mt-6 bg-yellow-500/10 border border-yellow-500/20 rounded-md p-4 flex items-start">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mt-6 bg-yellow-500/10 border border-yellow-500/20 rounded-md p-4 flex items-start"
+        >
           <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
           <div>
             <h4 className="font-medium text-yellow-500">Atenção</h4>
@@ -129,9 +159,9 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
               Este sorteio ainda não possui prêmios configurados. Adicione prêmios para que ele possa funcionar corretamente.
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

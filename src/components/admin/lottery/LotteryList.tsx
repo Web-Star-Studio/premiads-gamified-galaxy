@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Ticket, Calendar, Plus } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import NewLotteryDialog from './NewLotteryDialog';
+import { motion } from 'framer-motion';
+import { useSounds } from '@/hooks/use-sounds';
 
 interface Prize {
   id: number;
@@ -34,6 +36,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
   onLotteryCreated
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { playSound } = useSounds();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -45,6 +48,11 @@ const LotteryList: React.FC<LotteryListProps> = ({
   };
 
   const handleNewLotteryClick = () => {
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
     setDialogOpen(true);
   };
 
@@ -54,6 +62,15 @@ const LotteryList: React.FC<LotteryListProps> = ({
     }
   };
 
+  const handleSelectLottery = (lottery: Lottery) => {
+    try {
+      playSound('pop');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
+    onSelectLottery(lottery);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -61,27 +78,31 @@ const LotteryList: React.FC<LotteryListProps> = ({
           <Ticket className="h-4 w-4 mr-2 text-neon-cyan" />
           Sorteios
         </h3>
-        <button 
-          className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center"
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center transition-colors"
           onClick={handleNewLotteryClick}
           aria-label="Adicionar novo sorteio"
         >
           <Plus className="h-4 w-4 mr-1" />
           Novo
-        </button>
+        </motion.button>
       </div>
       
       <div className="space-y-3 max-h-[500px] overflow-y-auto fancy-scrollbar pr-2">
         {lotteries.length > 0 ? (
           lotteries.map(lottery => (
-            <div
+            <motion.div
               key={lottery.id}
               className={`p-3 rounded-md border cursor-pointer transition-all duration-200 ${
                 selectedLotteryId === lottery.id 
                   ? 'border-neon-cyan bg-galaxy-dark/50 shadow-[0_0_10px_rgba(0,255,231,0.3)]' 
                   : 'border-galaxy-purple/30 hover:border-galaxy-purple/60'
               }`}
-              onClick={() => onSelectLottery(lottery)}
+              onClick={() => handleSelectLottery(lottery)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -96,7 +117,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
               <div className="mt-3 text-xs text-muted-foreground">
                 {lottery.prizes.length} prêmios configurados
               </div>
-            </div>
+            </motion.div>
           ))
         ) : (
           <div className="text-center py-6 text-muted-foreground">

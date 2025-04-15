@@ -23,7 +23,7 @@ export const toastSuccess = (title: string, description?: string) => {
   toast({
     title,
     description,
-    variant: "default", // Alterado de "success" para "default"
+    variant: "default", // Corrigido de "success" para "default"
   });
 };
 
@@ -49,6 +49,6 @@ export const toastWarning = (title: string, description?: string) => {
   toast({
     title,
     description,
-    variant: "default", // Alterado de "warning" para "default"
+    variant: "default", // Corrigido de "warning" para "default"
   });
 };

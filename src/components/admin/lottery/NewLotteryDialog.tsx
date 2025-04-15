@@ -10,6 +10,7 @@ import {
 import NewLotteryForm from './NewLotteryForm';
 import { Gift } from 'lucide-react';
 import { Lottery } from './LotteryList';
+import { motion } from 'framer-motion';
 
 interface NewLotteryDialogProps {
   open: boolean;
@@ -36,7 +37,13 @@ const NewLotteryDialog: React.FC<NewLotteryDialogProps> = ({
       <DialogContent className="sm:max-w-[500px] bg-galaxy-deepPurple border-galaxy-purple/30">
         <DialogHeader>
           <DialogTitle className="flex items-center text-white">
-            <Gift className="h-5 w-5 mr-2 text-neon-pink" />
+            <motion.div
+              initial={{ rotate: -10 }}
+              animate={{ rotate: 10 }}
+              transition={{ duration: 0.5, repeat: 1, repeatType: "reverse" }}
+            >
+              <Gift className="h-5 w-5 mr-2 text-neon-pink" />
+            </motion.div>
             Novo Sorteio
           </DialogTitle>
           <DialogDescription>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ const LotteryManagement: React.FC = () => {
     
     // Toque um som ao selecionar
     try {
-      playSound('pop'); // Alterado de 'click' para 'pop'
+      playSound('pop'); // Corrigido de 'click' para 'pop'
     } catch (error) {
       console.log("Som não reproduzido", error);
     }
@@ -112,9 +113,16 @@ const LotteryManagement: React.FC = () => {
     
     // Tocar som de sucesso
     try {
-      playSound('reward'); // Alterado de 'success' para 'reward'
+      playSound('reward'); // Corrigido de 'success' para 'reward'
     } catch (error) {
       console.log("Som não reproduzido", error);
+    }
+  };
+
+  const handleNewLotteryClick = () => {
+    const emptyStateNewLotteryButton = document.querySelector('[aria-label="Adicionar novo sorteio"]');
+    if (emptyStateNewLotteryButton) {
+      (emptyStateNewLotteryButton as HTMLButtonElement).click();
     }
   };
 
@@ -123,6 +131,7 @@ const LotteryManagement: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <div className="grid grid-cols-1 gap-6">
         <Card className="bg-galaxy-deepPurple border-galaxy-purple/30">
@@ -137,10 +146,15 @@ const LotteryManagement: React.FC = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center items-center h-60 relative">
+              <motion.div 
+                className="flex justify-center items-center h-60 relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
                 <LoadingParticles />
                 <div className="w-12 h-12 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
-              </div>
+              </motion.div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1">
@@ -159,7 +173,7 @@ const LotteryManagement: React.FC = () => {
                       onStatusChange={handleStatusChange}
                     />
                   ) : (
-                    <EmptyState />
+                    <EmptyState onNewLotteryClick={handleNewLotteryClick} />
                   )}
                 </div>
               </div>
