@@ -10,6 +10,7 @@ import Testimonials from "@/components/Testimonials";
 import Faq from "@/components/Faq";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
+import SupportTools from "@/components/client/SupportTools";
 
 const MainContent = () => {
   const { isOverlayOpen } = useUser();
@@ -40,6 +41,7 @@ const MainContent = () => {
         <CallToAction />
       </main>
       <Footer />
+      <SupportTools />
     </div>
   );
 };

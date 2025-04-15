@@ -12,6 +12,9 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 // Regular import for essential components
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Tutorials from "./pages/Tutorials";
+import Faq from "./pages/Faq";
+import Support from "./pages/Support";
 
 // Lazy load other pages to reduce initial bundle size
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
@@ -66,6 +69,11 @@ const App = () => {
                     <Authentication />
                   </Suspense>
                 } />
+                
+                {/* Páginas de conhecimento */}
+                <Route path="/tutoriais" element={<Tutorials />} />
+                <Route path="/faq" element={<Faq />} />
+                <Route path="/suporte" element={<Support />} />
                 
                 {/* Client Routes */}
                 <Route path="/cliente" element={
