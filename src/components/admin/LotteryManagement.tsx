@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,7 +68,7 @@ const LotteryManagement: React.FC = () => {
     
     // Toque um som ao selecionar
     try {
-      playSound('click');
+      playSound('pop'); // Alterado de 'click' para 'pop'
     } catch (error) {
       console.log("Som não reproduzido", error);
     }
@@ -113,7 +112,7 @@ const LotteryManagement: React.FC = () => {
     
     // Tocar som de sucesso
     try {
-      playSound('success');
+      playSound('reward'); // Alterado de 'success' para 'reward'
     } catch (error) {
       console.log("Som não reproduzido", error);
     }
