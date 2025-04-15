@@ -10,6 +10,7 @@ export interface SignUpCredentials {
   email: string;
   password: string;
   name: string;
+  userType?: "participante" | "anunciante"; // Add userType to signup credentials
 }
 
 export interface SignInCredentials {
@@ -35,17 +36,18 @@ export const useAuth = () => {
         // Set user name from metadata
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, user_type")
           .eq("id", data.session.user.id)
           .single();
         
-        if (profileData?.full_name) {
-          setUserName(profileData.full_name);
+        if (profileData) {
+          setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
+          // Set user type from profile
+          setUserType(profileData.user_type || "participante");
         } else {
           setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
+          setUserType("participante");
         }
-        
-        setUserType("participante");
       }
     };
     
@@ -57,20 +59,28 @@ export const useAuth = () => {
         if (event === "SIGNED_IN" && session) {
           setUser(session.user);
           
-          // Set user name from metadata
+          // Set user name and type from metadata
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, user_type")
             .eq("id", session.user.id)
             .single();
           
-          if (profileData?.full_name) {
-            setUserName(profileData.full_name);
+          if (profileData) {
+            setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
+            // Set user type from profile
+            setUserType(profileData.user_type || "participante");
           } else {
             setUserName(session.user.email?.split('@')[0] || 'Usuário');
+            setUserType("participante");
           }
           
-          setUserType("participante");
+          // Redirect based on user type
+          if (profileData?.user_type === "anunciante") {
+            navigate("/anunciante");
+          } else {
+            navigate("/cliente");
+          }
         } else if (event === "SIGNED_OUT") {
           setUser(null);
           resetUserInfo();
@@ -81,7 +91,7 @@ export const useAuth = () => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [setUserName, setUserType, resetUserInfo]);
+  }, [setUserName, setUserType, resetUserInfo, navigate]);
 
   const signUp = async (credentials: SignUpCredentials) => {
     setLoading(true);
@@ -93,6 +103,7 @@ export const useAuth = () => {
         options: {
           data: {
             full_name: credentials.name,
+            user_type: credentials.userType || "participante"
           }
         }
       });
@@ -108,8 +119,14 @@ export const useAuth = () => {
       if (data.user) {
         setUser(data.user);
         setUserName(credentials.name);
-        setUserType("participante");
-        navigate("/cliente");
+        setUserType(credentials.userType || "participante");
+        
+        // Redirect based on user type
+        if (credentials.userType === "anunciante") {
+          navigate("/anunciante");
+        } else {
+          navigate("/cliente");
+        }
       }
       
       return true;
@@ -149,18 +166,25 @@ export const useAuth = () => {
         // Set user name from metadata
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, user_type")
           .eq("id", data.user.id)
           .single();
         
-        if (profileData?.full_name) {
-          setUserName(profileData.full_name);
+        if (profileData) {
+          setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
+          setUserType(profileData.user_type || "participante");
+          
+          // Redirect based on user type
+          if (profileData.user_type === "anunciante") {
+            navigate("/anunciante");
+          } else {
+            navigate("/cliente");
+          }
         } else {
           setUserName(data.user.email?.split('@')[0] || 'Usuário');
+          setUserType("participante");
+          navigate("/cliente");
         }
-        
-        setUserType("participante");
-        navigate("/cliente");
       }
       
       return true;

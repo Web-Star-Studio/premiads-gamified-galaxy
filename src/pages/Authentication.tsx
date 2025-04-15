@@ -2,19 +2,22 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Loader2, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, SignUpCredentials } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const Authentication = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [userType, setUserType] = useState<"participante" | "anunciante">("participante");
   const { toast } = useToast();
   const { playSound } = useSounds();
   const { loading, signIn, signUp } = useAuth();
@@ -38,7 +41,14 @@ const Authentication = () => {
           return;
         }
         
-        await signUp({ email, password, name });
+        const credentials: SignUpCredentials = {
+          email, 
+          password, 
+          name,
+          userType
+        };
+        
+        await signUp(credentials);
       }
     } catch (error: any) {
       // Error handling is done inside the auth hooks
@@ -158,6 +168,31 @@ const Authentication = () => {
                     required
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground mb-2 block">Tipo de conta</Label>
+                <RadioGroup 
+                  defaultValue="participante" 
+                  className="flex gap-4"
+                  value={userType}
+                  onValueChange={(v) => setUserType(v as "participante" | "anunciante")}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="participante" id="participant" />
+                    <Label htmlFor="participant" className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      Participante
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="anunciante" id="advertiser" />
+                    <Label htmlFor="advertiser" className="flex items-center gap-1">
+                      <Building className="h-4 w-4" />
+                      Anunciante
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
               
               <Button 

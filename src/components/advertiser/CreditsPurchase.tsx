@@ -7,10 +7,16 @@ import { Slider } from "@/components/ui/slider";
 import { CreditCard, Sparkles, Clock, Zap, CheckCircle } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const CreditsPurchase = () => {
+interface CreditsPurchaseProps {
+  currentCredits?: number;
+}
+
+const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
   const [selectedAmount, setSelectedAmount] = useState<number[]>([2]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const { playSound } = useSounds();
   const { toast } = useToast();
   
@@ -29,18 +35,59 @@ const CreditsPurchase = () => {
     setSelectedAmount(value);
   };
   
-  const handlePurchase = () => {
-    playSound("reward");
-    setShowConfirmation(true);
+  const handlePurchase = async () => {
+    setProcessing(true);
+    playSound("pop");
     
-    // Reset after 3 seconds
-    setTimeout(() => {
-      setShowConfirmation(false);
+    try {
+      // Simulating payment processing
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setShowConfirmation(true);
+      
+      // Update credit balance in database
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      if (userId) {
+        const totalCredits = selectedPackage.credits + selectedPackage.bonus;
+        
+        // Update the user's credits in the database
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            credits: (currentCredits || 0) + totalCredits,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userId);
+          
+        if (error) throw error;
+      }
+      
+      playSound("reward");
+      
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setShowConfirmation(false);
+        toast({
+          title: "Créditos adquiridos",
+          description: `${selectedPackage.credits + selectedPackage.bonus} créditos foram adicionados à sua conta.`,
+        });
+        
+        // Reload page to show updated credit balance
+        window.location.reload();
+      }, 3000);
+    } catch (error: any) {
+      console.error("Error purchasing credits:", error);
       toast({
-        title: "Créditos adquiridos",
-        description: `${selectedPackage.credits + selectedPackage.bonus} créditos foram adicionados à sua conta.`,
+        title: "Erro na compra",
+        description: error.message || "Ocorreu um erro ao processar sua compra.",
+        variant: "destructive",
       });
-    }, 3000);
+      setShowConfirmation(false);
+    } finally {
+      setProcessing(false);
+    }
   };
   
   const formatCurrency = (value: number) => {
@@ -185,10 +232,25 @@ const CreditsPurchase = () => {
             <Button
               onClick={handlePurchase}
               className="w-full bg-gradient-to-r from-purple-600/60 to-pink-500/60 hover:from-purple-600/80 hover:to-pink-500/80"
+              disabled={processing}
             >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Comprar Créditos
+              {processing ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Comprar Créditos
+                </>
+              )}
             </Button>
+            
+            <div className="flex items-center justify-between border-t border-gray-700 pt-4 mt-4">
+              <span className="text-sm text-gray-400">Saldo atual</span>
+              <span className="text-lg font-bold">{currentCredits.toLocaleString()} créditos</span>
+            </div>
             
             <p className="text-xs text-center text-gray-400">
               Os créditos serão adicionados imediatamente após a confirmação do pagamento

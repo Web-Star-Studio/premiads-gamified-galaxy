@@ -9,9 +9,12 @@ interface PointsSectionProps {
 }
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
+  const { points } = useClientDashboard();
+  const effectivePoints = totalPoints || points;
+  
   // Calculate level and progress based on total points
-  const level = Math.floor(totalPoints / 1000) + 1;
-  const pointsInCurrentLevel = totalPoints % 1000;
+  const level = Math.floor(effectivePoints / 1000) + 1;
+  const pointsInCurrentLevel = effectivePoints % 1000;
   const progress = Math.min(Math.round((pointsInCurrentLevel / 1000) * 100), 100);
 
   return (
@@ -21,7 +24,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       transition={{ delay: 0.1 }}
       className="flex flex-col gap-4"
     >
-      <PointsCard points={totalPoints} level={level} progress={progress} />
+      <PointsCard points={effectivePoints} level={level} progress={progress} />
       <TicketsButton />
     </motion.div>
   );

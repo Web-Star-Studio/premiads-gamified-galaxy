@@ -13,6 +13,7 @@ import ClientReferrals from "./pages/ClientReferrals";
 import ClientRaffles from "./pages/ClientRaffles";
 import Authentication from "./pages/Authentication";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
+import AdvertiserProfile from "./pages/AdvertiserProfile";
 import AdminPanel from "./pages/AdminPanel";
 import { UserProvider } from "./context/UserContext";
 
@@ -27,14 +28,22 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Authentication />} />
+              
+              {/* Client Routes */}
               <Route path="/cliente" element={<ClientDashboard />} />
               <Route path="/cliente/missoes" element={<ClientMissions />} />
               <Route path="/cliente/indicacoes" element={<ClientReferrals />} />
               <Route path="/cliente/sorteios" element={<ClientRaffles />} />
               <Route path="/cliente/perfil" element={<ClientProfile />} />
+              
+              {/* Advertiser Routes */}
               <Route path="/anunciante" element={<AdvertiserDashboard />} />
+              <Route path="/anunciante/perfil" element={<AdvertiserProfile />} />
+              
+              {/* Admin Routes */}
               <Route path="/admin" element={<AdminPanel />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              
+              {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
