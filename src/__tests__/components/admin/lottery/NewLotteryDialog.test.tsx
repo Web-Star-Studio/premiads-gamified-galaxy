@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../../../utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import NewLotteryDialog from '@/components/admin/lottery/NewLotteryDialog';
 import { Lottery } from '@/components/admin/lottery/LotteryList';
@@ -44,9 +44,10 @@ describe('NewLotteryDialog Component', () => {
   
   test('submits new lottery when form is filled and submitted', async () => {
     renderComponent();
+    const user = userEvent.setup();
     
     // Fill the form
-    await userEvent.type(screen.getByLabelText('Nome do Sorteio'), 'Teste de Sorteio');
+    await user.type(screen.getByLabelText('Nome do Sorteio'), 'Teste de Sorteio');
     
     // Select status
     fireEvent.click(screen.getByText('Selecione um status'));
