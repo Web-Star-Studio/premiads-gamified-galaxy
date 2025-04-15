@@ -34,6 +34,7 @@ const AdvertiserAnalytics = lazy(() => import("./pages/advertiser/AnalyticsPage"
 const AdvertiserCredits = lazy(() => import("./pages/advertiser/CreditsPage"));
 const AdvertiserNotifications = lazy(() => import("./pages/advertiser/NotificationsPage"));
 const AdvertiserSettings = lazy(() => import("./pages/advertiser/SettingsPage"));
+const AdvertiserProfilePage = lazy(() => import("./pages/advertiser/ProfilePage"));
 
 // Lazy load admin section pages
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
@@ -147,7 +148,7 @@ const App = () => {
                 } />
                 <Route path="/anunciante/perfil" element={
                   <Suspense fallback={<RouteLoadingSpinner />}>
-                    <AdvertiserProfile />
+                    <AdvertiserProfilePage />
                   </Suspense>
                 } />
                 <Route path="/anunciante/configuracoes" element={
