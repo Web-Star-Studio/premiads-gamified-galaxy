@@ -17,6 +17,9 @@ import AdvertiserProfile from "./pages/AdvertiserProfile";
 import AdminPanel from "./pages/AdminPanel";
 import { UserProvider } from "./context/UserContext";
 
+// Admin section page imports
+import LotteryManagementPage from "./pages/admin/LotteryManagementPage";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -42,6 +45,7 @@ const App = () => {
               
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/admin/sorteios" element={<LotteryManagementPage />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

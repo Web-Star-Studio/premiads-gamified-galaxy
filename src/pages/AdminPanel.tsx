@@ -1,30 +1,20 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-
-// Admin components
 import DashboardHeader from "@/components/admin/DashboardHeader";
-import UserManagement from "@/components/admin/UserManagement";
-import AccessControl from "@/components/admin/AccessControl";
-import SystemAudit from "@/components/admin/SystemAudit";
-import LotteryManagement from "@/components/admin/LotteryManagement";
-import NotificationTesting from "@/components/admin/NotificationTesting";
-import LoadingParticles from "@/components/admin/LoadingParticles";
 import AdminOverview from "@/components/admin/AdminOverview";
-import PlatformMonitoring from "@/components/admin/PlatformMonitoring";
-import RulesConfiguration from "@/components/admin/RulesConfiguration";
-import TechnicalSupport from "@/components/admin/TechnicalSupport";
-import AdvancedReporting from "@/components/admin/AdvancedReporting";
+import LoadingParticles from "@/components/admin/LoadingParticles";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const loadTimer = setTimeout(() => {
@@ -62,81 +52,9 @@ const AdminPanel = () => {
         <SidebarInset className="overflow-y-auto pb-20">
           <div className="container px-4 py-8 mx-auto">
             <DashboardHeader title="Painel Master" subtitle="Controle completo do sistema" />
-            
-            <Tabs defaultValue="overview" className="mt-8">
-              <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex md:gap-4 mb-8">
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="overview">
-                  📊 Visão Geral
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="users">
-                  👥 Usuários
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="access">
-                  🔐 Controle de Acesso
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="rules">
-                  📝 Regras
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="monitoring">
-                  🖥️ Monitoramento
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="support">
-                  🎧 Suporte
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="reporting">
-                  📈 Relatórios
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="audit">
-                  📋 Auditoria
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="lottery">
-                  🎟️ Sorteios
-                </TabsTrigger>
-                <TabsTrigger className="data-[state=active]:neon-text-pink" value="notifications">
-                  🔔 Notificações
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="space-y-6">
-                <AdminOverview />
-              </TabsContent>
-              
-              <TabsContent value="users" className="space-y-6">
-                <UserManagement />
-              </TabsContent>
-              
-              <TabsContent value="access" className="space-y-6">
-                <AccessControl />
-              </TabsContent>
-              
-              <TabsContent value="rules" className="space-y-6">
-                <RulesConfiguration />
-              </TabsContent>
-              
-              <TabsContent value="monitoring" className="space-y-6">
-                <PlatformMonitoring />
-              </TabsContent>
-              
-              <TabsContent value="support" className="space-y-6">
-                <TechnicalSupport />
-              </TabsContent>
-              
-              <TabsContent value="reporting" className="space-y-6">
-                <AdvancedReporting />
-              </TabsContent>
-              
-              <TabsContent value="audit" className="space-y-6">
-                <SystemAudit />
-              </TabsContent>
-              
-              <TabsContent value="lottery" className="space-y-6">
-                <LotteryManagement />
-              </TabsContent>
-              
-              <TabsContent value="notifications" className="space-y-6">
-                <NotificationTesting />
-              </TabsContent>
-            </Tabs>
+            <div className="mt-8">
+              <AdminOverview />
+            </div>
           </div>
         </SidebarInset>
       </div>
