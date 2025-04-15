@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -8,10 +9,15 @@ import PointsCard from "@/components/dashboard/PointsCard";
 import MissionsCarousel from "@/components/dashboard/MissionsCarousel";
 import ActiveMissions from "@/components/dashboard/ActiveMissions";
 import DailyChallenge from "@/components/dashboard/DailyChallenge";
-import SorteDoDia from "@/components/dashboard/SorteDoDia"; // Updated import
+import SorteDoDia from "@/components/dashboard/SorteDoDia";
 import { Button } from "@/components/ui/button";
 import { Gift, Ticket } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
+import SupportTools from "@/components/client/SupportTools";
+import LifetimePoints from "@/components/client/LifetimePoints";
+import ReferralProgram from "@/components/client/ReferralProgram";
+import OnboardingModal from "@/components/client/OnboardingModal";
+import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
 
 const ClientDashboard = () => {
   const { userName, userType } = useUser();
@@ -19,6 +25,7 @@ const ClientDashboard = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     // Redirect if user is not a participant
@@ -30,6 +37,15 @@ const ClientDashboard = () => {
       });
       navigate("/");
       return;
+    }
+
+    // Check if onboarding has been completed
+    const onboardingComplete = localStorage.getItem("onboardingComplete");
+    if (!onboardingComplete) {
+      // Only show after loading finishes
+      setTimeout(() => {
+        setShowOnboarding(true);
+      }, 2000);
     }
 
     // Simulate loading
@@ -54,6 +70,24 @@ const ClientDashboard = () => {
     return () => clearTimeout(loadTimer);
   }, [userType, navigate, toast, playSound]);
 
+  const handleExtendSession = () => {
+    toast({
+      title: "Sessão estendida",
+      description: "Sua sessão foi estendida com sucesso.",
+    });
+  };
+
+  const handleSessionTimeout = () => {
+    toast({
+      title: "Sessão expirada",
+      description: "Você foi desconectado devido à inatividade.",
+      variant: "destructive",
+    });
+    // In a real app, this would log the user out
+    // For this demo, we'll just redirect to home
+    navigate("/");
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark">
@@ -75,6 +109,7 @@ const ClientDashboard = () => {
         <DashboardHeader userName={userName} streak={3} />
         
         <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
+          {/* Points & Tickets Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -82,6 +117,15 @@ const ClientDashboard = () => {
             className="lg:col-span-1"
           >
             <PointsCard points={750} level={4} progress={65} />
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6"
+            >
+              <LifetimePoints totalPoints={1950} rank={42} totalUsers={1250} />
+            </motion.div>
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -106,6 +150,7 @@ const ClientDashboard = () => {
             </motion.div>
           </motion.div>
           
+          {/* Missions Carousel */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -115,6 +160,7 @@ const ClientDashboard = () => {
             <MissionsCarousel />
           </motion.div>
           
+          {/* Active Missions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -124,6 +170,7 @@ const ClientDashboard = () => {
             <ActiveMissions />
           </motion.div>
           
+          {/* Daily Challenge & Sorte do Dia */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -132,11 +179,29 @@ const ClientDashboard = () => {
           >
             <div className="grid gap-6">
               <DailyChallenge />
-              <SorteDoDia /> {/* Updated component name */}
+              <SorteDoDia />
+              <ReferralProgram />
             </div>
           </motion.div>
         </div>
       </div>
+      
+      {/* Support tools */}
+      <SupportTools />
+      
+      {/* Onboarding modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onClose={() => setShowOnboarding(false)} 
+      />
+      
+      {/* Session timeout warning */}
+      <SessionTimeoutWarning 
+        timeoutDuration={5 * 60 * 1000} // 5 minutes for demo (normally 30 minutes)
+        warningTime={1 * 60 * 1000} // 1 minute warning for demo
+        onExtend={handleExtendSession}
+        onTimeout={handleSessionTimeout}
+      />
     </div>
   );
 };
