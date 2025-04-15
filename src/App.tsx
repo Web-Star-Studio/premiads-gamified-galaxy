@@ -8,9 +8,12 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientProfile from "./pages/ClientProfile";
+import ClientMissions from "./pages/ClientMissions";
+import ClientReferrals from "./pages/ClientReferrals";
+import ClientRaffles from "./pages/ClientRaffles";
+import Authentication from "./pages/Authentication";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import AdminPanel from "./pages/AdminPanel";
-import ClientRaffles from "./pages/ClientRaffles";
 import { UserProvider } from "./context/UserContext";
 
 const queryClient = new QueryClient();
@@ -23,7 +26,10 @@ const App = () => {
           <TooltipProvider>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Authentication />} />
               <Route path="/cliente" element={<ClientDashboard />} />
+              <Route path="/cliente/missoes" element={<ClientMissions />} />
+              <Route path="/cliente/indicacoes" element={<ClientReferrals />} />
               <Route path="/cliente/sorteios" element={<ClientRaffles />} />
               <Route path="/cliente/perfil" element={<ClientProfile />} />
               <Route path="/anunciante" element={<AdvertiserDashboard />} />
