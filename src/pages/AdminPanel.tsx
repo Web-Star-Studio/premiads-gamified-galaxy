@@ -56,7 +56,7 @@ const AdminPanel = () => {
         <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
           <AdminHeader />
           
-          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl pt-16">
+          <div className="container px-4 py-8 mx-auto max-w-7xl">
             <DashboardHeader 
               title="Painel de Controle" 
               subtitle="Visão geral do sistema e estatísticas" 

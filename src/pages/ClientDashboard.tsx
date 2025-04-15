@@ -42,7 +42,7 @@ const ClientDashboard = () => {
         <SidebarInset className="overflow-y-auto pb-20">
           <ClientHeader />
           
-          <div className="container px-4 pt-20 py-8 mx-auto">
+          <div className="container px-4 py-8 mx-auto">
             <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
               {/* Points & Tickets Section */}
               <PointsSection totalPoints={points} />

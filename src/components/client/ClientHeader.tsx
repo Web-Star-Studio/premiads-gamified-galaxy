@@ -49,7 +49,7 @@ const ClientHeader = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={`fixed top-0 left-0 right-0 z-40 py-2 transition-all duration-300 ${
+      className={`sticky top-0 z-40 py-2 transition-all duration-300 ${
         scrolled ? "bg-galaxy-dark/80 backdrop-blur-md shadow-lg" : "bg-galaxy-dark/60"
       }`}
     >

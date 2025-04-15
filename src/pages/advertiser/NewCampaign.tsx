@@ -27,7 +27,7 @@ const NewCampaign = () => {
         <SidebarInset className="overflow-y-auto pb-20">
           <AdvertiserHeader />
           
-          <div className="container px-4 pt-20 py-8 mx-auto">
+          <div className="container px-4 py-8 mx-auto">
             <div className="flex items-center mb-6">
               <Button 
                 variant="ghost" 
