@@ -15,7 +15,7 @@ export const useCashbackMarketplace = () => {
   useEffect(() => {
     const fetchCashbackData = async () => {
       try {
-        // Fetch active campaigns
+        // Fetch active campaigns using raw SQL since the types don't know about our new tables
         const { data: campaignsData, error: campaignsError } = await supabase
           .from('cashback_campaigns')
           .select('*')
@@ -23,17 +23,17 @@ export const useCashbackMarketplace = () => {
           .lte('start_date', new Date().toISOString())
           .gte('end_date', new Date().toISOString());
 
-        // Fetch user's cashback balance
+        // Get user's cashback balance
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('cashback_balance')
-          .eq('id', supabase.auth.getUser())
+          .eq('id', (await supabase.auth.getUser()).data.user?.id)
           .single();
 
         if (campaignsError) throw campaignsError;
         if (profileError) throw profileError;
 
-        setCampaigns(campaignsData || []);
+        setCampaigns(campaignsData as CashbackCampaign[] || []);
         setUserCashback(profileData?.cashback_balance || 0);
       } catch (error: any) {
         toast({
@@ -47,14 +47,21 @@ export const useCashbackMarketplace = () => {
     };
 
     fetchCashbackData();
-  }, []);
+  }, [toast]);
 
   const redeemCashback = async (campaignId: string, amount: number) => {
     try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const { data, error } = await supabase
         .from('cashback_redemptions')
         .insert({
-          user_id: supabase.auth.getUser(),
+          user_id: userId,
           campaign_id: campaignId,
           amount
         })
@@ -68,13 +75,14 @@ export const useCashbackMarketplace = () => {
         description: `Você resgatou R$ ${amount.toFixed(2)} de cashback`
       });
 
-      return data;
+      return data as CashbackRedemption;
     } catch (error: any) {
       toast({
         title: 'Erro no resgate',
         description: error.message,
         variant: 'destructive'
       });
+      return null;
     }
   };
 

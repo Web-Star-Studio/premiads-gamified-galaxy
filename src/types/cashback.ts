@@ -1,8 +1,31 @@
 
-import type { Tables } from "@/integrations/supabase/types";
+export interface CashbackCampaign {
+  id: string;
+  advertiser_id: string;
+  title: string;
+  description: string | null;
+  discount_percentage: number;
+  start_date: string;
+  end_date: string;
+  minimum_purchase: number | null;
+  maximum_discount: number | null;
+  is_active: boolean;
+  conditions: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
-export type CashbackCampaign = Tables<'cashback_campaigns'>;
-export type CashbackRedemption = Tables<'cashback_redemptions'>;
+export interface CashbackRedemption {
+  id: string;
+  user_id: string;
+  campaign_id: string;
+  amount: number;
+  status: string;
+  code: string;
+  redeemed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export type CampaignStatus = 'active' | 'expired' | 'upcoming';
 
