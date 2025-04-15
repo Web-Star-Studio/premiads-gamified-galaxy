@@ -1,14 +1,68 @@
-
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Gift, Ticket } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, Gift, Info, Ticket, Trophy, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { RAFFLES, USER_TICKETS } from "./raffleData";
-import RaffleInfo from "./RaffleInfo";
-import RafflePrizes from "./RafflePrizes";
-import RaffleParticipation from "./RaffleParticipation";
-import RaffleWheel from "./RaffleWheel";
+
+// Mock data for raffles
+const RAFFLES = [
+  {
+    id: 1,
+    name: "Sorteio Semanal de Pontos",
+    description: "Participe do sorteio semanal e concorra a pontos extras e benefícios exclusivos. Quanto mais tickets, maiores suas chances!",
+    startDate: "2025-04-15",
+    endDate: "2025-04-22",
+    drawDate: "2025-04-23",
+    ticketsRequired: 1,
+    status: "active",
+    maxTicketsPerUser: 10,
+    totalParticipants: 147,
+    prizes: [
+      { id: 1, name: "5000 Pontos", rarity: "common", probability: 60, image: "https://source.unsplash.com/random/100x100/?coin" },
+      { id: 2, name: "10000 Pontos", rarity: "uncommon", probability: 30, image: "https://source.unsplash.com/random/100x100/?diamond" },
+      { id: 3, name: "Premium por 1 mês", rarity: "rare", probability: 10, image: "https://source.unsplash.com/random/100x100/?crown" }
+    ]
+  },
+  {
+    id: 2,
+    name: "Loot Box Especial",
+    description: "Uma loot box recheada de itens exclusivos e raros para personalizar sua experiência. Participe agora!",
+    startDate: "2025-04-17",
+    endDate: "2025-04-24",
+    drawDate: "2025-04-25",
+    ticketsRequired: 3,
+    status: "active",
+    maxTicketsPerUser: 5,
+    totalParticipants: 72,
+    prizes: [
+      { id: 4, name: "Skin Exclusiva", rarity: "common", probability: 55, image: "https://source.unsplash.com/random/100x100/?skin" },
+      { id: 5, name: "Título Raro", rarity: "uncommon", probability: 35, image: "https://source.unsplash.com/random/100x100/?title" },
+      { id: 6, name: "Pacote VIP", rarity: "legendary", probability: 10, image: "https://source.unsplash.com/random/100x100/?vip" }
+    ]
+  },
+  {
+    id: 3,
+    name: "Sorteio de Eletrônicos",
+    description: "Concorra a incríveis produtos eletrônicos! Este é um sorteio especial com prêmios físicos que serão enviados diretamente para sua casa.",
+    startDate: "2025-04-10",
+    endDate: "2025-05-10",
+    drawDate: "2025-05-12",
+    ticketsRequired: 5,
+    status: "active",
+    maxTicketsPerUser: 3,
+    totalParticipants: 238,
+    prizes: [
+      { id: 7, name: "Fone de Ouvido", rarity: "uncommon", probability: 70, image: "https://source.unsplash.com/random/100x100/?headphones" },
+      { id: 8, name: "SmartWatch", rarity: "rare", probability: 25, image: "https://source.unsplash.com/random/100x100/?smartwatch" },
+      { id: 9, name: "Smartphone", rarity: "legendary", probability: 5, image: "https://source.unsplash.com/random/100x100/?smartphone" }
+    ]
+  }
+];
+
+// Mock user data
+const USER_TICKETS = 8;
 
 interface RaffleDetailsProps {
   raffleId: number;
@@ -41,6 +95,31 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
       </div>
     );
   }
+  
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+  
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case "common": return "text-gray-300";
+      case "uncommon": return "text-neon-lime";
+      case "rare": return "text-neon-cyan";
+      case "legendary": return "text-neon-pink";
+      default: return "text-gray-300";
+    }
+  };
+  
+  const getRarityBorderColor = (rarity: string) => {
+    switch (rarity) {
+      case "common": return "border-gray-300/30";
+      case "uncommon": return "border-neon-lime/30";
+      case "rare": return "border-neon-cyan/30";
+      case "legendary": return "border-neon-pink/30";
+      default: return "border-gray-300/30";
+    }
+  };
   
   const canParticipate = () => {
     return (
@@ -101,18 +180,150 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
       <p className="text-gray-400 mb-6">{raffle.description}</p>
       
       {showWheel ? (
-        <RaffleWheel prizes={raffle.prizes} drawDate={raffle.drawDate} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="my-6"
+        >
+          {/* Replace SpinningWheel with a simple prize wheel visualization */}
+          <div className="bg-galaxy-deepPurple/40 p-6 rounded-lg border border-neon-cyan/30 max-w-md mx-auto">
+            <div className="w-64 h-64 mx-auto relative">
+              <div className="absolute inset-0 rounded-full border-4 border-neon-pink animate-spin" style={{ animationDuration: '4s' }}></div>
+              <div className="absolute inset-8 rounded-full bg-galaxy-deepPurple/70 border border-neon-cyan flex items-center justify-center">
+                <div className="text-center">
+                  <Trophy className="w-12 h-12 text-neon-cyan mx-auto mb-2" />
+                  <p className="text-neon-lime font-bold">Boa Sorte!</p>
+                </div>
+              </div>
+              
+              {raffle.prizes.map((prize: any, index: number) => {
+                const angle = (360 / raffle.prizes.length) * index;
+                return (
+                  <div 
+                    key={prize.id}
+                    className="absolute w-4 h-4 rounded-full bg-neon-cyan"
+                    style={{ 
+                      transform: `rotate(${angle}deg) translateY(-120px) rotate(-${angle}deg)`,
+                      top: '50%',
+                      left: '50%',
+                    }}
+                  ></div>
+                );
+              })}
+            </div>
+            <p className="text-center text-sm text-gray-400 mt-6">
+              Esta é apenas uma simulação. O sorteio real acontecerá em {formatDate(raffle.drawDate)}.
+            </p>
+          </div>
+        </motion.div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <RaffleInfo raffle={raffle} />
-            <RafflePrizes prizes={raffle.prizes} />
+            <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Info className="w-4 h-4 text-neon-cyan" />
+                  Informações
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Início</div>
+                  <div className="flex items-center text-sm">
+                    <Calendar className="w-3 h-3 mr-1 text-neon-cyan" />
+                    {formatDate(raffle.startDate)}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Encerramento</div>
+                  <div className="flex items-center text-sm">
+                    <Calendar className="w-3 h-3 mr-1 text-neon-pink" />
+                    {formatDate(raffle.endDate)}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Sorteio</div>
+                  <div className="flex items-center text-sm">
+                    <Clock className="w-3 h-3 mr-1 text-neon-lime" />
+                    {formatDate(raffle.drawDate)}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Participantes</div>
+                  <div className="flex items-center text-sm">
+                    <Users className="w-3 h-3 mr-1" />
+                    {raffle.totalParticipants}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Custo</div>
+                  <div className="flex items-center text-sm">
+                    <Ticket className="w-3 h-3 mr-1 text-neon-cyan" />
+                    {raffle.ticketsRequired} {raffle.ticketsRequired > 1 ? "tickets" : "ticket"} por participação
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-400">Limite por usuário</div>
+                  <div className="text-sm">{raffle.maxTicketsPerUser} participações</div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-neon-pink" />
+                  Prêmios
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {raffle.prizes.map((prize: any) => (
+                    <div 
+                      key={prize.id} 
+                      className={`flex items-center p-2 rounded-lg border ${getRarityBorderColor(prize.rarity)} bg-galaxy-deepPurple/40`}
+                    >
+                      <div className="w-10 h-10 rounded-md overflow-hidden border border-galaxy-purple/30">
+                        <img 
+                          src={prize.image} 
+                          alt={prize.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <div className={`font-medium ${getRarityColor(prize.rarity)}`}>
+                          {prize.name}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Chance: {prize.probability}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
           
-          <RaffleParticipation 
-            participationCount={participationCount} 
-            remainingSlots={remainingSlots} 
-          />
+          <div className="bg-galaxy-deepPurple/40 rounded-lg p-4 border border-galaxy-purple/20 mb-6">
+            <div className="flex items-start">
+              <AlertTriangle className="w-5 h-5 text-neon-cyan mt-0.5 mr-3 flex-shrink-0" />
+              <div>
+                <h4 className="font-medium mb-1">Sua participação</h4>
+                <p className="text-sm text-gray-400">
+                  {participationCount > 0 ? (
+                    <>Você está participando com <span className="text-neon-cyan">{participationCount} ticket(s)</span> neste sorteio.</>
+                  ) : (
+                    <>Você ainda não está participando deste sorteio.</>
+                  )}
+                  {remainingSlots > 0 && (
+                    <> Você ainda pode adicionar <span className="text-neon-lime">{remainingSlots} ticket(s)</span> adicionais.</>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
         </>
       )}
       
