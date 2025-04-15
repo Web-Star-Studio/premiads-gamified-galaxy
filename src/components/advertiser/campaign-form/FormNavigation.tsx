@@ -1,5 +1,5 @@
 
-import { FC, memo } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
 
@@ -18,23 +18,19 @@ interface FormNavigationProps {
   isNextDisabled?: boolean;
 }
 
-/**
- * Navigation controls for multi-step form
- * Handles back, next, cancel and submit actions
- */
-const FormNavigation: FC<FormNavigationProps> = ({
+export const FormNavigation = ({
   step,
   totalSteps,
   handleNext,
   handleBack,
   onClose,
   isNextDisabled = false
-}) => {
+}: FormNavigationProps) => {
   const isLastStep = step === totalSteps;
   const isFirstStep = step === 1;
   
   return (
-    <div className="mt-8 flex justify-between items-center">
+    <div className="mt-8 flex justify-between items-center w-full">
       <Button
         variant="outline"
         onClick={handleBack}
@@ -61,7 +57,7 @@ const FormNavigation: FC<FormNavigationProps> = ({
           onClick={handleNext}
           disabled={isNextDisabled}
           className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
-          aria-label={isLastStep ? "Concluir e salvar missão" : "Avançar para o próximo passo"}
+          aria-label={isLastStep ? "Concluir e salvar campanha" : "Avançar para o próximo passo"}
         >
           {isLastStep ? (
             <>
@@ -79,5 +75,3 @@ const FormNavigation: FC<FormNavigationProps> = ({
     </div>
   );
 };
-
-export default memo(FormNavigation);

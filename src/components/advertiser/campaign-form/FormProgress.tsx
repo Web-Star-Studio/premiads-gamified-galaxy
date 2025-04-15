@@ -1,5 +1,5 @@
 
-import { memo } from "react";
+import React from "react";
 
 interface FormProgressProps {
   /** Current step number (1-4) */
@@ -8,11 +8,7 @@ interface FormProgressProps {
   title: string;
 }
 
-/**
- * Visual progress indicator for multi-step form
- * Shows current step and form title
- */
-const FormProgress = ({ step, title }: FormProgressProps) => {
+export const FormProgress = ({ step, title }: FormProgressProps) => {
   // Array of step numbers for proper accessibility
   const steps = [1, 2, 3, 4];
   
@@ -39,5 +35,3 @@ const FormProgress = ({ step, title }: FormProgressProps) => {
     </div>
   );
 };
-
-export default memo(FormProgress);
