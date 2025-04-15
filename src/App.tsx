@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -51,110 +52,111 @@ const App = () => {
           <UserProvider>
             <TooltipProvider>
               <Routes>
-              <Route path="/" element={<Index />} />
-              
-              {/* Wrap lazy-loaded routes with Suspense */}
-              <Route path="/auth" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Authentication />
-                </Suspense>
-              } />
-              
-              {/* Client Routes */}
-              <Route path="/cliente" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ClientDashboard />
-                </Suspense>
-              } />
-              <Route path="/cliente/missoes" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ClientMissions />
-                </Suspense>
-              } />
-              <Route path="/cliente/indicacoes" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ClientReferrals />
-                </Suspense>
-              } />
-              <Route path="/cliente/sorteios" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ClientRaffles />
-                </Suspense>
-              } />
-              <Route path="/cliente/perfil" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ClientProfile />
-                </Suspense>
-              } />
-              
-              {/* Advertiser Routes */}
-              <Route path="/anunciante" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <AdvertiserDashboard />
-                </Suspense>
-              } />
-              <Route path="/anunciante/perfil" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <AdvertiserProfile />
-                </Suspense>
-              } />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <AdminPanel />
-                </Suspense>
-              } />
-              <Route path="/admin/sorteios" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <LotteryManagementPage />
-                </Suspense>
-              } />
-              <Route path="/admin/usuarios" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <UserManagementPage />
-                </Suspense>
-              } />
-              <Route path="/admin/acesso" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <AccessControlPage />
-                </Suspense>
-              } />
-              <Route path="/admin/regras" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <RulesPage />
-                </Suspense>
-              } />
-              <Route path="/admin/monitoramento" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <MonitoringPage />
-                </Suspense>
-              } />
-              <Route path="/admin/relatorios" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ReportsPage />
-                </Suspense>
-              } />
-              <Route path="/admin/notificacoes" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <NotificationsPage />
-                </Suspense>
-              } />
-              <Route path="/admin/configuracoes" element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <SettingsPage />
-                </Suspense>
-              } />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </UserProvider>
-      </AppProvider>
-    </QueryClientProvider>
+                <Route path="/" element={<Index />} />
+                
+                {/* Wrap lazy-loaded routes with Suspense */}
+                <Route path="/auth" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Authentication />
+                  </Suspense>
+                } />
+                
+                {/* Client Routes */}
+                <Route path="/cliente" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientDashboard />
+                  </Suspense>
+                } />
+                <Route path="/cliente/missoes" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientMissions />
+                  </Suspense>
+                } />
+                <Route path="/cliente/indicacoes" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientReferrals />
+                  </Suspense>
+                } />
+                <Route path="/cliente/sorteios" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientRaffles />
+                  </Suspense>
+                } />
+                <Route path="/cliente/perfil" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ClientProfile />
+                  </Suspense>
+                } />
+                
+                {/* Advertiser Routes */}
+                <Route path="/anunciante" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AdvertiserDashboard />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/perfil" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AdvertiserProfile />
+                  </Suspense>
+                } />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AdminPanel />
+                  </Suspense>
+                } />
+                <Route path="/admin/sorteios" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <LotteryManagementPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/usuarios" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <UserManagementPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/acesso" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AccessControlPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/regras" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <RulesPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/monitoramento" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <MonitoringPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/relatorios" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <ReportsPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/notificacoes" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <NotificationsPage />
+                  </Suspense>
+                } />
+                <Route path="/admin/configuracoes" element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage />
+                  </Suspense>
+                } />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </UserProvider>
+        </AppProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
