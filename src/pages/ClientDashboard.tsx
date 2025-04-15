@@ -13,9 +13,11 @@ import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
 import ProfilePreview from "@/components/client/profile/ProfilePreview";
 import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     userName,
     points,
@@ -33,7 +35,7 @@ const ClientDashboard = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <ClientSidebar />
         <SidebarInset className="overflow-y-auto pb-20">

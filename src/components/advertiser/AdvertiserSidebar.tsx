@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Sidebar, 
@@ -29,11 +29,22 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useSidebar } from "@/hooks/use-sidebar";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { setOpen } = useSidebar();
+  
+  // Close sidebar on mobile by default
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile, setOpen]);
   
   // Get user info from context or props
   const userName = localStorage.getItem("userName") || "Anunciante";

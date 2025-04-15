@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Sidebar, 
@@ -32,12 +32,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import { useSidebar } from "@/hooks/use-sidebar";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 export const ClientSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
-  const [open, setOpen] = useState(true);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { setOpen } = useSidebar();
+  
+  // Close sidebar on mobile by default
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile, setOpen]);
   
   // Get user info from context or props
   // Don't use useClientDashboard here since we don't want to make API calls twice
