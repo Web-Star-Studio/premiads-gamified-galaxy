@@ -5,6 +5,12 @@ import { useToast } from '@/hooks/use-toast';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
 import { useUser } from '@/context/UserContext';
 
+// Helper type for RPC calls
+type RPCResponse<T> = {
+  data: T | null;
+  error: any;
+};
+
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
   const [userCashback, setUserCashback] = useState(0);
@@ -16,19 +22,19 @@ export const useCashbackMarketplace = () => {
     const fetchCashbackData = async () => {
       try {
         // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
-        const { data: campaignsData, error: campaignsError } = await supabase
-          .rpc('get_active_cashback_campaigns') as { data: CashbackCampaign[] | null, error: any };
+        const { data: campaignsData, error: campaignsError } = await (supabase
+          .rpc('get_active_cashback_campaigns') as unknown as Promise<RPCResponse<CashbackCampaign[]>>);
 
         // Get user's cashback balance using rpc
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await (supabase
           .rpc('get_user_cashback_balance', {
             user_id: (await supabase.auth.getUser()).data.user?.id
-          }) as { data: { cashback_balance: number }[] | null, error: any };
+          }) as unknown as Promise<RPCResponse<{ cashback_balance: number }[]>>);
 
         if (campaignsError) throw campaignsError;
         if (profileError) throw profileError;
 
-        setCampaigns(campaignsData as CashbackCampaign[] || []);
+        setCampaigns(campaignsData || []);
         setUserCashback(profileData && profileData[0] ? profileData[0].cashback_balance || 0 : 0);
       } catch (error: any) {
         toast({
@@ -54,12 +60,12 @@ export const useCashbackMarketplace = () => {
       }
 
       // Use rpc call to redeem cashback
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .rpc('redeem_cashback', {
           p_user_id: userId,
           p_campaign_id: campaignId,
           p_amount: amount
-        }) as { data: CashbackRedemption | null, error: any };
+        }) as unknown as Promise<RPCResponse<CashbackRedemption>>);
 
       if (error) throw error;
 
