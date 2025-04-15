@@ -128,9 +128,19 @@ const Footer = () => {
         </div>
         
         <div className="mt-12 pt-12 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} PremiAds. Todos os direitos reservados.
-          </p>
+          <div className="text-center md:text-left mb-4 md:mb-0">
+            <p className="text-gray-500 text-sm mb-2">
+              &copy; {new Date().getFullYear()} PremiAds. Todos os direitos reservados. 
+              Desenvolvido por <a href="https://www.webstar.studio" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">Web Star Studio</a>
+            </p>
+            <p className="text-gray-500 text-sm">
+              PremiAds - Recife - PE - CEP: 51.160-330
+            </p>
+            <p className="text-gray-500 text-sm">
+              <a href="mailto:info@premiads.com" className="hover:text-neon-cyan transition-colors">info@premiads.com</a> | 
+              <a href="tel:+558198559-5912" className="ml-2 hover:text-neon-cyan transition-colors">+55 81 9 8559 5912</a>
+            </p>
+          </div>
           
           <div className="flex space-x-6 text-sm text-gray-500">
             <a href="#" className="hover:text-neon-cyan transition-colors">Termos de Uso</a>
