@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -25,9 +26,17 @@ const ClientRaffles = lazy(() => import("./pages/ClientRaffles"));
 const Authentication = lazy(() => import("./pages/Authentication"));
 const AdvertiserDashboard = lazy(() => import("./pages/AdvertiserDashboard"));
 const AdvertiserProfile = lazy(() => import("./pages/AdvertiserProfile"));
-const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+
+// Lazy load advertiser section pages
+const AdvertiserCampaigns = lazy(() => import("./pages/advertiser/AdvertiserCampaigns"));
+const AdvertiserNewCampaign = lazy(() => import("./pages/advertiser/NewCampaign"));
+const AdvertiserAnalytics = lazy(() => import("./pages/advertiser/AnalyticsPage"));
+const AdvertiserCredits = lazy(() => import("./pages/advertiser/CreditsPage"));
+const AdvertiserNotifications = lazy(() => import("./pages/advertiser/NotificationsPage"));
+const AdvertiserSettings = lazy(() => import("./pages/advertiser/SettingsPage"));
 
 // Lazy load admin section pages
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const LotteryManagementPage = lazy(() => import("./pages/admin/LotteryManagementPage"));
 const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage"));
 const AccessControlPage = lazy(() => import("./pages/admin/AccessControlPage"));
@@ -111,9 +120,39 @@ const App = () => {
                     <AdvertiserDashboard />
                   </Suspense>
                 } />
+                <Route path="/anunciante/campanhas" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserCampaigns />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/nova-campanha" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserNewCampaign />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/analises" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserAnalytics />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/creditos" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserCredits />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/notificacoes" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserNotifications />
+                  </Suspense>
+                } />
                 <Route path="/anunciante/perfil" element={
                   <Suspense fallback={<RouteLoadingSpinner />}>
                     <AdvertiserProfile />
+                  </Suspense>
+                } />
+                <Route path="/anunciante/configuracoes" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <AdvertiserSettings />
                   </Suspense>
                 } />
                 
@@ -164,16 +203,18 @@ const App = () => {
                   </Suspense>
                 } />
                 
-                {/* Redirect URLs com "/" no final para versões sem "/" */}
-                <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
+                {/* Cashback Route */}
                 <Route path="/cashback" element={
                   <Suspense fallback={<RouteLoadingSpinner />}>
                     <CashbackMarketplace />
                   </Suspense>
                 } />
+                
+                {/* Redirect URLs com "/" no final para versões sem "/" */}
+                <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
               <Sonner />
