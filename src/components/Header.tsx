@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -142,7 +141,7 @@ const Header = () => {
           </DropdownMenu>
 
           <Button 
-            className="hidden md:block neon-button text-center items-center justify-center" 
+            className="hidden md:block neon-button" 
             size="sm"
             onClick={navigateToDashboard}
           >
@@ -197,4 +196,3 @@ const Header = () => {
 };
 
 export default Header;
-
