@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft } from "lucide-react";
+import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
