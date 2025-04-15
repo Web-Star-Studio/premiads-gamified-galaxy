@@ -118,6 +118,8 @@ export type Database = {
           id: string
           phone: string | null
           points: number
+          profile_completed: boolean | null
+          profile_data: Json | null
           push_notifications: boolean | null
           updated_at: string
           user_type: string | null
@@ -133,6 +135,8 @@ export type Database = {
           id: string
           phone?: string | null
           points?: number
+          profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string
           user_type?: string | null
@@ -148,6 +152,8 @@ export type Database = {
           id?: string
           phone?: string | null
           points?: number
+          profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string
           user_type?: string | null
