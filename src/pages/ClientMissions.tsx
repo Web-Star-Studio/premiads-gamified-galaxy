@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { useUser } from "@/context/UserContext";
+import { useMissions } from "@/hooks/useMissions";
 import ClientDashboardHeader from "@/components/client/ClientDashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,89 +35,22 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
-// Types for missions
-type MissionStatus = "available" | "in_progress" | "completed" | "pending_approval";
-
-interface Mission {
-  id: number;
-  title: string;
-  description: string;
-  brand: string;
-  type: "survey" | "photo" | "video" | "visit" | "share";
-  points: number;
-  deadline: string;
-  status: MissionStatus;
-  requirements: string[];
-}
-
-// Mock data
-const MOCK_MISSIONS: Mission[] = [
-  {
-    id: 1,
-    title: "Avalie nosso novo produto",
-    description: "Compartilhe sua opinião sobre nosso lançamento e ganhe pontos!",
-    brand: "TechGadgets",
-    type: "survey",
-    points: 150,
-    deadline: "2025-05-01",
-    status: "available",
-    requirements: ["Ter mais de 18 anos", "Responder todas as perguntas da pesquisa"]
-  },
-  {
-    id: 2,
-    title: "Tire uma foto com nosso produto",
-    description: "Mostre como você usa nosso produto no dia a dia",
-    brand: "FashionStyle",
-    type: "photo",
-    points: 200,
-    deadline: "2025-04-25",
-    status: "available",
-    requirements: ["Fotografar o produto em uso", "Garantir que a marca esteja visível"]
-  },
-  {
-    id: 3,
-    title: "Compartilhe nas redes sociais",
-    description: "Compartilhe nossa promoção nas suas redes sociais",
-    brand: "FitLife",
-    type: "share",
-    points: 100,
-    deadline: "2025-04-30",
-    status: "in_progress",
-    requirements: ["Fazer o post com a hashtag #FitLifePromo", "Deixar o post público por 7 dias"]
-  },
-  {
-    id: 4,
-    title: "Visite nossa loja",
-    description: "Faça check-in em uma de nossas lojas físicas",
-    brand: "HomeDecor",
-    type: "visit",
-    points: 180,
-    deadline: "2025-05-10",
-    status: "completed",
-    requirements: ["Permanecer na loja por pelo menos 10 minutos", "Fazer check-in pelo aplicativo"]
-  },
-  {
-    id: 5,
-    title: "Grave um vídeo de review",
-    description: "Crie um vídeo falando sobre sua experiência com nosso serviço",
-    brand: "StreamFlix",
-    type: "video",
-    points: 300,
-    deadline: "2025-05-15",
-    status: "pending_approval",
-    requirements: ["Vídeo entre 30 segundos e 2 minutos", "Mencionar pelo menos 3 funcionalidades"]
-  }
-];
-
 const ClientMissions = () => {
   const { userName, userType } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const [loading, setLoading] = useState(true);
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const { 
+    loading, 
+    missions, 
+    selectedMission, 
+    setSelectedMission, 
+    currentFilter, 
+    setFilter,
+    submitMission
+  } = useMissions({ initialFilter: "available" });
+  
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
   const [missionAnswer, setMissionAnswer] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -131,16 +65,8 @@ const ClientMissions = () => {
         variant: "destructive",
       });
       navigate("/");
-      return;
     }
-
-    // Load missions (mock data for now)
-    setTimeout(() => {
-      setMissions(MOCK_MISSIONS);
-      setLoading(false);
-      playSound("chime");
-    }, 1000);
-  }, [userType, navigate, toast, playSound]);
+  }, [userType, navigate, toast]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -148,11 +74,11 @@ const ClientMissions = () => {
 
   const filteredMissions = missions.filter(mission => 
     mission.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    mission.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (mission.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
     mission.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleMissionClick = (mission: Mission) => {
+  const handleMissionClick = (mission: any) => {
     setSelectedMission(mission);
     playSound("pop");
   };
@@ -179,34 +105,38 @@ const ClientMissions = () => {
     setImagePreview(null);
   };
 
-  const handleSubmitMission = () => {
+  const handleSubmitMission = async () => {
     if (!selectedMission) return;
 
-    setLoading(true);
+    // Prepare submission data based on mission type
+    let submissionData = {};
     
-    // Simulate submission process
-    setTimeout(() => {
-      // Update mission status
-      const updatedMissions = missions.map(mission => 
-        mission.id === selectedMission.id 
-          ? { ...mission, status: "pending_approval" as MissionStatus } 
-          : mission
-      );
-      
-      setMissions(updatedMissions);
+    if (selectedMission.type === "survey") {
+      submissionData = { answer: missionAnswer };
+    } else if (selectedMission.type === "photo" || selectedMission.type === "video") {
+      if (!imagePreview) {
+        toast({
+          title: "Arquivo necessário",
+          description: "Por favor, envie uma imagem ou vídeo para concluir esta missão.",
+          variant: "destructive",
+        });
+        return;
+      }
+      submissionData = { mediaUrl: imagePreview };
+    } else if (selectedMission.type === "social_share") {
+      submissionData = { shareLink: missionAnswer };
+    }
+    
+    // Submit the mission
+    const success = await submitMission(selectedMission.id, submissionData);
+    
+    if (success) {
       setSelectedMission(null);
       setIsSubmissionOpen(false);
       setMissionAnswer("");
       setImagePreview(null);
       setAgreedToTerms(false);
-      setLoading(false);
-      
-      playSound("reward");
-      toast({
-        title: "Missão enviada com sucesso!",
-        description: "Sua submissão está em análise e será avaliada em breve.",
-      });
-    }, 1500);
+    }
   };
 
   if (loading) {
@@ -256,7 +186,7 @@ const ClientMissions = () => {
             </Button>
           </div>
           
-          <Tabs defaultValue="available" className="w-full">
+          <Tabs defaultValue={currentFilter} onValueChange={(value) => setFilter(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-4 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
               <TabsTrigger value="available">Disponíveis</TabsTrigger>
               <TabsTrigger value="in_progress">Em Progresso</TabsTrigger>
@@ -270,33 +200,31 @@ const ClientMissions = () => {
                   <div className="glass-panel p-4">
                     <h3 className="text-lg font-heading mb-4">Missões Disponíveis</h3>
                     
-                    {filteredMissions.filter(m => m.status === "available").length === 0 ? (
+                    {filteredMissions.length === 0 ? (
                       <div className="text-center py-8">
                         <p className="text-gray-400">Nenhuma missão disponível no momento.</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {filteredMissions
-                          .filter(m => m.status === "available")
-                          .map(mission => (
-                            <div 
-                              key={mission.id}
-                              className={`bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20 cursor-pointer transition-all hover:border-neon-cyan/40 ${selectedMission?.id === mission.id ? 'border-neon-cyan' : ''}`}
-                              onClick={() => handleMissionClick(mission)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium">{mission.title}</h4>
-                                  <p className="text-sm text-gray-400">{mission.brand}</p>
-                                </div>
-                                <Badge variant="secondary">{mission.points} pts</Badge>
+                        {filteredMissions.map(mission => (
+                          <div 
+                            key={mission.id}
+                            className={`bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20 cursor-pointer transition-all hover:border-neon-cyan/40 ${selectedMission?.id === mission.id ? 'border-neon-cyan' : ''}`}
+                            onClick={() => handleMissionClick(mission)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">{mission.title}</h4>
+                                <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                               </div>
-                              <div className="flex items-center mt-2 text-xs text-gray-400">
-                                <Clock className="w-3 h-3 mr-1" />
-                                <span>Prazo: {new Date(mission.deadline).toLocaleDateString('pt-BR')}</span>
-                              </div>
+                              <Badge variant="secondary">{mission.points} pts</Badge>
                             </div>
-                          ))}
+                            <div className="flex items-center mt-2 text-xs text-gray-400">
+                              <Clock className="w-3 h-3 mr-1" />
+                              <span>Prazo: {mission.deadline ? new Date(mission.deadline).toLocaleDateString('pt-BR') : "Sem prazo"}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -312,7 +240,7 @@ const ClientMissions = () => {
                       <div className="flex justify-between items-start mb-6">
                         <div>
                           <h2 className="text-xl font-heading">{selectedMission.title}</h2>
-                          <p className="text-sm text-gray-400">{selectedMission.brand}</p>
+                          <p className="text-sm text-gray-400">{selectedMission.brand || "PremiAds"}</p>
                         </div>
                         <Badge 
                           variant="secondary" 
@@ -324,14 +252,16 @@ const ClientMissions = () => {
                       
                       <p className="mb-6">{selectedMission.description}</p>
                       
-                      <div className="mb-6">
-                        <h3 className="text-lg font-medium mb-2">Requisitos</h3>
-                        <ul className="space-y-1 list-disc pl-5">
-                          {selectedMission.requirements.map((req, index) => (
-                            <li key={index} className="text-gray-300">{req}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      {selectedMission.requirements && selectedMission.requirements.length > 0 && (
+                        <div className="mb-6">
+                          <h3 className="text-lg font-medium mb-2">Requisitos</h3>
+                          <ul className="space-y-1 list-disc pl-5">
+                            {selectedMission.requirements.map((req: string, index: number) => (
+                              <li key={index} className="text-gray-300">{req}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       
                       <div className="mb-6">
                         <h3 className="text-lg font-medium mb-2">Tipo de Missão</h3>
@@ -340,7 +270,7 @@ const ClientMissions = () => {
                           {selectedMission.type === "photo" && <Image className="w-5 h-5 mr-2 text-neon-pink" />}
                           {selectedMission.type === "video" && <Camera className="w-5 h-5 mr-2 text-neon-pink" />}
                           {selectedMission.type === "visit" && <CheckCircle className="w-5 h-5 mr-2 text-neon-pink" />}
-                          {selectedMission.type === "share" && <Upload className="w-5 h-5 mr-2 text-neon-pink" />}
+                          {selectedMission.type === "social_share" && <Upload className="w-5 h-5 mr-2 text-neon-pink" />}
                           <span className="capitalize">{selectedMission.type.replace("_", " ")}</span>
                         </div>
                       </div>
@@ -348,7 +278,9 @@ const ClientMissions = () => {
                       <div className="flex justify-between items-center text-sm text-gray-400 mb-6">
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
-                          <span>Prazo: {new Date(selectedMission.deadline).toLocaleDateString('pt-BR')}</span>
+                          <span>Prazo: {selectedMission.deadline 
+                            ? new Date(selectedMission.deadline).toLocaleDateString('pt-BR') 
+                            : "Sem prazo"}</span>
                         </div>
                       </div>
                       
@@ -386,96 +318,96 @@ const ClientMissions = () => {
             
             <TabsContent value="in_progress" className="mt-6">
               <div className="grid grid-cols-1 gap-4">
-                {filteredMissions.filter(m => m.status === "in_progress").length === 0 ? (
+                {filteredMissions.length === 0 ? (
                   <div className="glass-panel p-8 text-center">
                     <p className="text-gray-400">Você não tem missões em progresso no momento.</p>
                   </div>
                 ) : (
-                  filteredMissions
-                    .filter(m => m.status === "in_progress")
-                    .map(mission => (
-                      <div 
-                        key={mission.id}
-                        className="glass-panel p-4"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{mission.title}</h4>
-                            <p className="text-sm text-gray-400">{mission.brand}</p>
-                          </div>
-                          <Badge variant="secondary">{mission.points} pts</Badge>
+                  filteredMissions.map(mission => (
+                    <div 
+                      key={mission.id}
+                      className="glass-panel p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{mission.title}</h4>
+                          <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                         </div>
-                        <p className="mt-2 mb-4">{mission.description}</p>
-                        <div className="flex justify-end">
-                          <Button className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80">
-                            Continuar
-                          </Button>
-                        </div>
+                        <Badge variant="secondary">{mission.points} pts</Badge>
                       </div>
-                    ))
+                      <p className="mt-2 mb-4">{mission.description}</p>
+                      <div className="flex justify-end">
+                        <Button 
+                          className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
+                          onClick={() => {
+                            setSelectedMission(mission);
+                            setIsSubmissionOpen(true);
+                          }}
+                        >
+                          Continuar
+                        </Button>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </TabsContent>
             
             <TabsContent value="pending" className="mt-6">
               <div className="grid grid-cols-1 gap-4">
-                {filteredMissions.filter(m => m.status === "pending_approval").length === 0 ? (
+                {filteredMissions.length === 0 ? (
                   <div className="glass-panel p-8 text-center">
                     <p className="text-gray-400">Você não tem missões pendentes de aprovação no momento.</p>
                   </div>
                 ) : (
-                  filteredMissions
-                    .filter(m => m.status === "pending_approval")
-                    .map(mission => (
-                      <div 
-                        key={mission.id}
-                        className="glass-panel p-4"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{mission.title}</h4>
-                            <p className="text-sm text-gray-400">{mission.brand}</p>
-                          </div>
-                          <Badge className="bg-yellow-600">{mission.points} pts</Badge>
+                  filteredMissions.map(mission => (
+                    <div 
+                      key={mission.id}
+                      className="glass-panel p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{mission.title}</h4>
+                          <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                         </div>
-                        <p className="mt-2 mb-2">{mission.description}</p>
-                        <div className="bg-yellow-600/20 rounded p-2 text-sm">
-                          <p className="text-yellow-300">Aguardando aprovação do anunciante</p>
-                        </div>
+                        <Badge className="bg-yellow-600">{mission.points} pts</Badge>
                       </div>
-                    ))
+                      <p className="mt-2 mb-2">{mission.description}</p>
+                      <div className="bg-yellow-600/20 rounded p-2 text-sm">
+                        <p className="text-yellow-300">Aguardando aprovação do anunciante</p>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </TabsContent>
             
             <TabsContent value="completed" className="mt-6">
               <div className="grid grid-cols-1 gap-4">
-                {filteredMissions.filter(m => m.status === "completed").length === 0 ? (
+                {filteredMissions.length === 0 ? (
                   <div className="glass-panel p-8 text-center">
                     <p className="text-gray-400">Você não tem missões concluídas ainda.</p>
                   </div>
                 ) : (
-                  filteredMissions
-                    .filter(m => m.status === "completed")
-                    .map(mission => (
-                      <div 
-                        key={mission.id}
-                        className="glass-panel p-4"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{mission.title}</h4>
-                            <p className="text-sm text-gray-400">{mission.brand}</p>
-                          </div>
-                          <Badge className="bg-green-600">{mission.points} pts</Badge>
+                  filteredMissions.map(mission => (
+                    <div 
+                      key={mission.id}
+                      className="glass-panel p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{mission.title}</h4>
+                          <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                         </div>
-                        <p className="mt-2 mb-2">{mission.description}</p>
-                        <div className="bg-green-600/20 rounded p-2 text-sm flex items-center">
-                          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-                          <p className="text-green-400">Concluída e aprovada</p>
-                        </div>
+                        <Badge className="bg-green-600">{mission.points} pts</Badge>
                       </div>
-                    ))
+                      <p className="mt-2 mb-2">{mission.description}</p>
+                      <div className="bg-green-600/20 rounded p-2 text-sm flex items-center">
+                        <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                        <p className="text-green-400">Concluída e aprovada</p>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </TabsContent>
@@ -489,7 +421,7 @@ const ClientMissions = () => {
           <DialogHeader>
             <DialogTitle>Submeter Missão</DialogTitle>
             <DialogDescription>
-              {selectedMission?.title} - {selectedMission?.brand}
+              {selectedMission?.title} - {selectedMission?.brand || "PremiAds"}
             </DialogDescription>
           </DialogHeader>
           
@@ -558,7 +490,7 @@ const ClientMissions = () => {
               </div>
             )}
             
-            {selectedMission?.type === "share" && (
+            {selectedMission?.type === "social_share" && (
               <div className="space-y-2">
                 <Label htmlFor="share-link">Link da postagem</Label>
                 <Input

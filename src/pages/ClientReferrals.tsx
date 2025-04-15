@@ -21,97 +21,43 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { useUser } from "@/context/UserContext";
+import { useReferrals } from "@/hooks/useReferrals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClientDashboardHeader from "@/components/client/ClientDashboardHeader";
 import ReferralProgram from "@/components/client/ReferralProgram";
 
-// Type definitions
-interface Referral {
-  id: number;
-  name: string;
-  email: string;
-  status: "pending" | "registered" | "completed";
-  date: string;
-  completedMissions?: number;
-  pointsEarned?: number;
-}
-
-interface ReferralReward {
-  id: number;
-  description: string;
-  type: "points" | "tickets" | "special";
-  value: number;
-  status: "available" | "claimed";
-  expiresAt?: string;
-}
-
-// Mock data
-const MOCK_REFERRALS: Referral[] = [
-  {
-    id: 1,
-    name: "Carlos Silva",
-    email: "carlos.silva@example.com",
-    status: "completed",
-    date: "2025-03-15",
-    completedMissions: 3,
-    pointsEarned: 200
-  },
-  {
-    id: 2,
-    name: "Mariana Oliveira",
-    email: "mariana.o@example.com",
-    status: "registered",
-    date: "2025-04-02",
-    completedMissions: 0,
-    pointsEarned: 0
-  },
-  {
-    id: 3,
-    name: "João Pereira",
-    email: "joao.p@example.com",
-    status: "pending",
-    date: "2025-04-10"
-  },
-  {
-    id: 4,
-    name: "Ana Beatriz",
-    email: "ana.b@example.com",
-    status: "pending",
-    date: "2025-04-12"
-  }
-];
-
-const MOCK_REWARDS: ReferralReward[] = [
+// Mock rewards data - in a real app, this would come from the database
+const MOCK_REWARDS = [
   {
     id: 1,
     description: "Bônus de indicação - 3 amigos",
-    type: "points",
+    type: "points" as const,
     value: 500,
-    status: "claimed"
+    status: "claimed" as const
   },
   {
     id: 2,
     description: "Bônus de indicação - 5 amigos",
-    type: "points",
+    type: "points" as const,
     value: 1000,
-    status: "available"
+    status: "available" as const
   },
   {
     id: 3,
     description: "Bilhetes extras para sorteio",
-    type: "tickets",
+    type: "tickets" as const,
     value: 3,
-    status: "available",
+    status: "available" as const,
     expiresAt: "2025-05-30"
   },
   {
     id: 4,
     description: "Acesso VIP - Evento exclusivo",
-    type: "special",
+    type: "special" as const,
     value: 1,
-    status: "available",
+    status: "available" as const,
     expiresAt: "2025-06-15"
   }
 ];
@@ -121,11 +67,15 @@ const ClientReferrals = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const [loading, setLoading] = useState(true);
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [rewards, setRewards] = useState<ReferralReward[]>([]);
-  const [referralCode] = useState("PREMIUMUSER2025");
-  const [referralLink] = useState("https://premiads.com/r/PREMIUMUSER2025");
+  const { 
+    loading, 
+    referrals, 
+    referralCode, 
+    referralLink, 
+    sendInvites 
+  } = useReferrals();
+  
+  const [rewards, setRewards] = useState(MOCK_REWARDS);
   const [emailInputs, setEmailInputs] = useState<string[]>(["", "", ""]);
   const [inviteMessage, setInviteMessage] = useState("Junte-se a mim no PremiAds e ganhe pontos para trocar por prêmios incríveis! Use meu código:");
 
@@ -140,15 +90,7 @@ const ClientReferrals = () => {
       navigate("/");
       return;
     }
-
-    // Load referrals and rewards (mock data for now)
-    setTimeout(() => {
-      setReferrals(MOCK_REFERRALS);
-      setRewards(MOCK_REWARDS);
-      setLoading(false);
-      playSound("chime");
-    }, 1000);
-  }, [userType, navigate, toast, playSound]);
+  }, [userType, navigate, toast]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(referralCode);
@@ -174,7 +116,7 @@ const ClientReferrals = () => {
     setEmailInputs(newEmails);
   };
 
-  const handleSendInvites = () => {
+  const handleSendInvites = async () => {
     // Filter out empty emails
     const validEmails = emailInputs.filter(email => email.trim() !== "");
     
@@ -188,21 +130,12 @@ const ClientReferrals = () => {
       return;
     }
     
-    setLoading(true);
+    const success = await sendInvites(validEmails, inviteMessage);
     
-    // Simulate sending invites
-    setTimeout(() => {
-      setLoading(false);
-      playSound("reward");
-      
-      toast({
-        title: "Convites enviados!",
-        description: `${validEmails.length} convite(s) enviado(s) com sucesso.`,
-      });
-      
+    if (success) {
       // Reset email inputs
       setEmailInputs(["", "", ""]);
-    }, 1500);
+    }
   };
 
   const handleClaimReward = (rewardId: number) => {
@@ -357,19 +290,25 @@ const ClientReferrals = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Total de convites</div>
-                          <div className="text-xl font-semibold">7</div>
+                          <div className="text-xl font-semibold">{referrals.length}</div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Pendentes</div>
-                          <div className="text-xl font-semibold">2</div>
+                          <div className="text-xl font-semibold">
+                            {referrals.filter(r => r.status === "pending").length}
+                          </div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Registrados</div>
-                          <div className="text-xl font-semibold">3</div>
+                          <div className="text-xl font-semibold">
+                            {referrals.filter(r => r.status === "registered").length}
+                          </div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Pontos ganhos</div>
-                          <div className="text-xl font-semibold">600</div>
+                          <div className="text-xl font-semibold">
+                            {referrals.reduce((total, ref) => total + (ref.pointsEarned || 0), 0)}
+                          </div>
                         </div>
                       </div>
                       
@@ -436,7 +375,9 @@ const ClientReferrals = () => {
                     <div className="space-y-6">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-heading">Recompensas de Indicação</h3>
-                        <span className="text-sm text-gray-400">3 de {referrals.length} indicações completadas</span>
+                        <span className="text-sm text-gray-400">
+                          {referrals.filter(r => r.status === "completed").length} de {referrals.length} indicações completadas
+                        </span>
                       </div>
                       
                       <div className="w-full bg-galaxy-deepPurple/40 h-2 rounded-full overflow-hidden">

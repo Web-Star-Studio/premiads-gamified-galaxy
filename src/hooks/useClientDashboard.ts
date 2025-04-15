@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useClientDashboard = () => {
   const { userName, userType } = useUser();
@@ -12,6 +13,8 @@ export const useClientDashboard = () => {
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [points, setPoints] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     // Redirect if user is not a participant
@@ -34,26 +37,57 @@ export const useClientDashboard = () => {
       }, 2000);
     }
 
-    // Simulate loading
-    const loadTimer = setTimeout(() => {
-      setLoading(false);
-      // Play welcome sound when dashboard loads
-      playSound("chime");
-      
-      // Check if user has been inactive
-      const lastActivity = localStorage.getItem("lastActivity");
-      if (lastActivity && Date.now() - parseInt(lastActivity) > 86400000) {
-        toast({
-          title: "Streak em risco!",
-          description: "Você está há mais de 24h sem atividade. Complete uma missão hoje!",
-        });
+    // Fetch user data from Supabase
+    const fetchUserData = async () => {
+      try {
+        const session = await supabase.auth.getSession();
+        const userId = session.data.session?.user.id;
+        
+        if (!userId) {
+          throw new Error("Usuário não autenticado");
+        }
+        
+        // Get user profile with points
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("points")
+          .eq("id", userId)
+          .single();
+        
+        if (profileError) throw profileError;
+        
+        if (profileData) {
+          setPoints(profileData.points || 0);
+        }
+        
+        // For streak, we would ideally have a user_activity table
+        // For now, let's use a placeholder value
+        setStreak(3);
+        
+        // Update last activity
+        localStorage.setItem("lastActivity", Date.now().toString());
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+        playSound("chime");
+        
+        // Check if user has been inactive
+        const lastActivity = localStorage.getItem("lastActivity");
+        if (lastActivity && Date.now() - parseInt(lastActivity) > 86400000) {
+          toast({
+            title: "Streak em risco!",
+            description: "Você está há mais de 24h sem atividade. Complete uma missão hoje!",
+          });
+        }
       }
-      
-      // Update last activity
-      localStorage.setItem("lastActivity", Date.now().toString());
+    };
+
+    // Simulate loading
+    setTimeout(() => {
+      fetchUserData();
     }, 1500);
 
-    return () => clearTimeout(loadTimer);
   }, [userType, navigate, toast, playSound]);
 
   const handleExtendSession = () => {
@@ -76,6 +110,8 @@ export const useClientDashboard = () => {
 
   return {
     userName,
+    points,
+    streak,
     loading,
     showOnboarding,
     setShowOnboarding,

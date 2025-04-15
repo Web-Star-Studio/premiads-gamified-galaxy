@@ -1,87 +1,48 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { useUser } from "@/context/UserContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
 
 const Authentication = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const navigate = useNavigate();
-  const { setUserName, setUserType } = useUser();
+  const { loading, signIn, signUp } = useAuth();
 
   const handleAuthentication = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
       if (isLogin) {
         // Login logic
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-
-        // Set user info in context
-        setUserName(email.split('@')[0]);
-        setUserType("participante");
-        
-        playSound("chime");
-        toast({
-          title: "Login bem-sucedido",
-          description: "Bem-vindo de volta à plataforma!",
-        });
-        
-        navigate("/cliente");
+        await signIn({ email, password });
       } else {
         // Registration logic
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: name,
-            },
-          },
-        });
-
-        if (error) throw error;
-
-        // Set user info in context
-        setUserName(name);
-        setUserType("participante");
+        if (!name.trim()) {
+          playSound("error");
+          toast({
+            title: "Nome obrigatório",
+            description: "Por favor, insira seu nome para realizar o cadastro.",
+            variant: "destructive",
+          });
+          return;
+        }
         
-        playSound("chime");
-        toast({
-          title: "Cadastro realizado com sucesso",
-          description: "Bem-vindo à plataforma de engajamento!",
-        });
-        
-        navigate("/cliente");
+        await signUp({ email, password, name });
       }
     } catch (error: any) {
-      playSound("error");
-      toast({
-        title: "Erro na autenticação",
-        description: error.message || "Ocorreu um erro durante a autenticação",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      // Error handling is done inside the auth hooks
+      console.error("Authentication error:", error);
     }
   };
 

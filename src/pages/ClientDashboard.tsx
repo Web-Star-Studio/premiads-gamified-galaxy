@@ -13,17 +13,21 @@ import ProfilePreview from "@/components/client/profile/ProfilePreview";
 import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Gift } from "lucide-react";
+import { FileText, Users, Gift, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const ClientDashboard = () => {
   const {
     userName,
+    points,
+    streak,
     loading,
     showOnboarding,
     setShowOnboarding,
     handleExtendSession,
     handleSessionTimeout
   } = useClientDashboard();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -33,7 +37,17 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-galaxy-dark pb-20">
       <div className="container px-4 py-8 mx-auto">
-        <DashboardHeader userName={userName} streak={3} />
+        <div className="flex justify-between items-center">
+          <DashboardHeader userName={userName} streak={streak} />
+          <Button 
+            variant="ghost" 
+            className="gap-2 text-gray-400 hover:text-white"
+            onClick={signOut}
+          >
+            <LogOut className="w-4 h-4" />
+            Sair
+          </Button>
+        </div>
         
         <div className="flex flex-wrap gap-4 mt-4 mb-6">
           <Button 
@@ -66,7 +80,7 @@ const ClientDashboard = () => {
         
         <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
           {/* Points & Tickets Section */}
-          <PointsSection />
+          <PointsSection totalPoints={points} />
           
           {/* Missions Sections */}
           <MissionsSection />

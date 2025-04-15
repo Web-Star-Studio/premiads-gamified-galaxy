@@ -9,7 +9,173 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      mission_submissions: {
+        Row: {
+          feedback: string | null
+          id: string
+          mission_id: string
+          status: string
+          submission_data: Json | null
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          feedback?: string | null
+          id?: string
+          mission_id: string
+          status?: string
+          submission_data?: Json | null
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          feedback?: string | null
+          id?: string
+          mission_id?: string
+          status?: string
+          submission_data?: Json | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_submissions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          advertiser_id: string | null
+          created_at: string
+          description: string
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          points: number
+          requirements: Json | null
+          start_date: string
+          title: string
+          type: string
+        }
+        Insert: {
+          advertiser_id?: string | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          points: number
+          requirements?: Json | null
+          start_date?: string
+          title: string
+          type: string
+        }
+        Update: {
+          advertiser_id?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          points?: number
+          requirements?: Json | null
+          start_date?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          points: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          points?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          points_awarded: boolean | null
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          points_awarded?: boolean | null
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          points_awarded?: boolean | null
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          created_at: string
+          id: string
+          quantity: number
+          raffle_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          raffle_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          raffle_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
