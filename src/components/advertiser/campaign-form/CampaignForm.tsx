@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import FormProgress from "./FormProgress";
-import FormNavigation from "./FormNavigation";
+import { FormProgress } from "./FormProgress";
+import { FormNavigation } from "./FormNavigation";
 import { Campaign } from "../campaignData";
 import BasicInfoStep from "./BasicInfoStep";
 import RequirementsStep from "./RequirementsStep";

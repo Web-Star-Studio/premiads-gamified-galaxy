@@ -1,6 +1,6 @@
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import FormNavigation from '@/components/advertiser/campaign-form/FormNavigation';
+import { FormNavigation } from '@/components/advertiser/campaign-form/FormNavigation';
 
 describe('FormNavigation', () => {
   const mockHandleNext = jest.fn();

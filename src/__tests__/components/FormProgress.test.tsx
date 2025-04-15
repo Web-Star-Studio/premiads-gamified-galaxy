@@ -1,6 +1,6 @@
 
 import { render, screen } from '@testing-library/react';
-import FormProgress from '@/components/advertiser/campaign-form/FormProgress';
+import { FormProgress } from '@/components/advertiser/campaign-form/FormProgress';
 
 describe('FormProgress', () => {
   it('renders the correct title and step', () => {
