@@ -3,12 +3,22 @@ import { HelpCircle } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useSounds } from "@/hooks/use-sounds";
 
 const HelpButton = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { playSound } = useSounds();
 
   const toggleHelpMenu = () => {
     setIsOpen(!isOpen);
+    playSound("pop");
+  };
+
+  const handleOptionClick = (option: string) => {
+    // In the future, this could navigate to specific help pages or open modals
+    console.log(`Selected help option: ${option}`);
+    setIsOpen(false);
+    playSound("chime");
   };
 
   return (
@@ -33,31 +43,49 @@ const HelpButton = () => {
             <h3 className="text-lg font-heading mb-3">Ajuda</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
-                  className="text-sm text-gray-300 hover:text-white flex items-center"
+                <button
+                  onClick={() => handleOptionClick("faq")}
+                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
                 >
                   <span className="w-1.5 h-1.5 bg-neon-cyan rounded-full mr-2"></span>
                   Perguntas frequentes
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="text-sm text-gray-300 hover:text-white flex items-center"
+                <button
+                  onClick={() => handleOptionClick("support")}
+                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
                 >
                   <span className="w-1.5 h-1.5 bg-neon-pink rounded-full mr-2"></span>
                   Falar com suporte
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="text-sm text-gray-300 hover:text-white flex items-center"
+                <button
+                  onClick={() => handleOptionClick("tour")}
+                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
                 >
                   <span className="w-1.5 h-1.5 bg-neon-lime rounded-full mr-2"></span>
                   Tour guiado
-                </a>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => handleOptionClick("how-it-works")}
+                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
+                >
+                  <span className="w-1.5 h-1.5 bg-neon-cyan rounded-full mr-2"></span>
+                  Como funciona
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => handleOptionClick("feedback")}
+                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
+                >
+                  <span className="w-1.5 h-1.5 bg-neon-pink rounded-full mr-2"></span>
+                  Enviar feedback
+                </button>
               </li>
             </ul>
           </motion.div>
