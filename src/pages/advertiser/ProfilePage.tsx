@@ -1,79 +1,76 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSounds } from "@/hooks/use-sounds";
-import { Building, Save, Edit2, User, Mail, Phone, Globe, X } from "lucide-react";
-import { useUser } from "@/context/UserContext";
+import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  BarChart3, 
+  Edit2, 
+  FileText, 
+  Wallet, 
+  Star, 
+  Mail, 
+  MapPin,
+  Phone,
+  Building,
+  Calendar
+} from "lucide-react";
 
 const ProfilePage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { playSound } = useSounds();
-  const { userName } = useUser();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
   
-  const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    companyName: userName || "Empresa Demo",
-    email: "demo@premiads.com",
-    phone: "(11) 99999-9999",
-    website: "www.minhaempresa.com.br",
-    description: "Empresa especializada em produtos inovadores para o mercado brasileiro.",
-    logo: "",
-    emailNotifications: true,
-    pushNotifications: true
-  });
-  
-  // Simula carregamento de dados
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-      try {
-        playSound("chime");
-      } catch (error) {
-        console.log("Sound playback failed silently", error);
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [playSound]);
-  
-  const handleSaveProfile = () => {
-    setLoading(true);
-    
-    // Simulação de salvamento
-    setTimeout(() => {
-      setLoading(false);
-      setIsEditing(false);
-      playSound("chime");
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso",
-      });
-    }, 1000);
+  // User profile data
+  const user = {
+    name: "Desenvolvedor PremiAds",
+    role: "Marketing Manager",
+    company: "PremiAds Tecnologia",
+    email: "desenvolvedor@premiads.com",
+    phone: "+55 (11) 98765-4321",
+    location: "São Paulo, SP",
+    joined: "Janeiro 2025",
+    bio: "Especialista em marketing digital com mais de 5 anos de experiência em campanhas digitais e estratégias de engajamento.",
+    stats: {
+      campaigns: 12,
+      activeUsers: 845,
+      monthlySpend: "R$ 3.250,00",
+      avgReward: "R$ 45,20"
+    }
   };
   
-  const handleCancel = () => {
-    setIsEditing(false);
+  // Recent campaign activities
+  const recentActivities = [
+    { id: 1, campaign: "Verão 2025", action: "Submissão aprovada", date: "15/04/2025", user: "Maria S.", reward: 75 },
+    { id: 2, campaign: "Promoção Relâmpago", action: "Campanha concluída", date: "14/04/2025", user: "Sistema", reward: null },
+    { id: 3, campaign: "Verão 2025", action: "Submissão recusada", date: "13/04/2025", user: "João P.", reward: null },
+    { id: 4, campaign: "Desafio Mensal", action: "Nova submissão", date: "12/04/2025", user: "Carlos M.", reward: null },
+    { id: 5, campaign: "Desafio Mensal", action: "Submissão aprovada", date: "11/04/2025", user: "Ana B.", reward: 50 },
+  ];
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
     playSound("pop");
   };
   
-  const userInitial = profileData.companyName.charAt(0) || "E";
+  const handleEditProfile = () => {
+    toast({
+      title: "Edição de perfil",
+      description: "Você pode editar seu perfil na página de configurações",
+    });
+    
+    playSound("pop");
+  };
   
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -83,199 +80,243 @@ const ProfilePage = () => {
           <AdvertiserHeader />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold mb-2">Perfil da Empresa</h1>
-                <p className="text-muted-foreground">Gerencie suas informações e preferências</p>
-              </div>
-              
-              <div className="mt-4 md:mt-0">
-                {!isEditing ? (
-                  <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
-                    <Edit2 className="h-4 w-4" />
-                    Editar Perfil
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleCancel}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleSaveProfile} disabled={loading}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Salvar
-                    </Button>
-                  </div>
-                )}
-              </div>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold mb-2">Perfil do Anunciante</h1>
+              <p className="text-muted-foreground">Visualize e gerencie suas informações</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Informações básicas */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="md:col-span-1"
-              >
-                <Card className="bg-galaxy-darkPurple border-galaxy-purple">
-                  <CardHeader>
-                    <CardTitle>Informações da Conta</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-32 h-32 rounded-full bg-galaxy-purple/30 flex items-center justify-center mb-4">
-                        {profileData.logo ? (
-                          <AvatarImage 
-                            src={profileData.logo} 
-                            alt={profileData.companyName} 
-                          />
-                        ) : (
-                          <AvatarFallback className="w-full h-full text-4xl">
-                            {userInitial}
-                          </AvatarFallback>
-                        )}
+            <Card className="bg-galaxy-darkPurple border-galaxy-purple/30 mb-8">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex flex-col items-center text-center">
+                    <Avatar className="h-24 w-24 border-4 border-neon-cyan/30">
+                      <AvatarFallback className="bg-galaxy-purple text-2xl">
+                        {user.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h2 className="mt-4 text-xl font-bold">{user.name}</h2>
+                    <p className="text-sm text-muted-foreground">{user.role}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={handleEditProfile}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Editar Perfil
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3">
+                        <Building className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Empresa</p>
+                          <p>{user.company}</p>
+                        </div>
                       </div>
-                      
-                      <h3 className="text-xl font-semibold">{profileData.companyName}</h3>
-                      <p className="text-muted-foreground">{profileData.email}</p>
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">E-mail</p>
+                          <p>{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Telefone</p>
+                          <p>{user.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Localização</p>
+                          <p>{user.location}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Membro desde</p>
+                          <p>{user.joined}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Star className="h-5 w-5 text-yellow-400" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <p className="text-neon-cyan">Premium</p>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="pt-4 mt-4 border-t border-galaxy-purple/20">
-                      <h4 className="font-medium mb-2">Tipo de Conta</h4>
-                      <Badge variant="outline" className="bg-neon-pink/10 text-neon-pink w-full justify-center py-2">
-                        <Building className="w-4 h-4 mr-2" />
-                        Anunciante Premium
-                      </Badge>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Biografia</p>
+                      <p>{user.bio}</p>
                     </div>
-                    
-                    <div className="pt-4 mt-4 border-t border-galaxy-purple/20">
-                      <Button variant="ghost" className="w-full text-muted-foreground hover:text-white" onClick={() => navigate("/")}>
-                        <X className="w-4 h-4 mr-2" />
-                        Sair da conta
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Campanhas</h3>
+                    <FileText className="h-5 w-5 text-neon-cyan" />
+                  </div>
+                  <div className="flex items-end">
+                    <span className="text-3xl font-bold">{user.stats.campaigns}</span>
+                    <span className="text-sm ml-2 mb-1 text-muted-foreground">total</span>
+                  </div>
+                </CardContent>
+              </Card>
               
-              {/* Detalhes do perfil */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="md:col-span-2"
-              >
-                <Card className="bg-galaxy-darkPurple border-galaxy-purple">
+              <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Usuários Ativos</h3>
+                    <BarChart3 className="h-5 w-5 text-neon-pink" />
+                  </div>
+                  <div className="flex items-end">
+                    <span className="text-3xl font-bold">{user.stats.activeUsers}</span>
+                    <span className="text-sm ml-2 mb-1 text-muted-foreground">pessoas</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Gastos Mensais</h3>
+                    <Wallet className="h-5 w-5 text-neon-pink" />
+                  </div>
+                  <div className="flex items-end">
+                    <span className="text-3xl font-bold">{user.stats.monthlySpend}</span>
+                    <span className="text-sm ml-2 mb-1 text-muted-foreground">média</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Recompensa Média</h3>
+                    <Star className="h-5 w-5 text-yellow-400" />
+                  </div>
+                  <div className="flex items-end">
+                    <span className="text-3xl font-bold">{user.stats.avgReward}</span>
+                    <span className="text-sm ml-2 mb-1 text-muted-foreground">por missão</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-8">
+              <TabsList className="mb-6">
+                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="activity">Atividade Recente</TabsTrigger>
+                <TabsTrigger value="campaigns">Campanhas</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview">
+                <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
                   <CardHeader>
-                    <CardTitle>Detalhes do Perfil</CardTitle>
+                    <CardTitle>Resumo da Conta</CardTitle>
+                    <CardDescription>Visão geral das suas métricas de anunciante</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="companyName" className="flex items-center gap-2">
-                            <Building className="h-4 w-4" />
-                            Nome da Empresa
-                          </Label>
-                          <Input 
-                            id="companyName"
-                            value={profileData.companyName}
-                            onChange={(e) => setProfileData({...profileData, companyName: e.target.value})}
-                            disabled={!isEditing || loading}
-                            className="bg-galaxy-dark"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            Email
-                          </Label>
-                          <Input 
-                            id="email"
-                            value={profileData.email}
-                            onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                            disabled={!isEditing || loading}
-                            className="bg-galaxy-dark"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="phone" className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            Telefone
-                          </Label>
-                          <Input 
-                            id="phone"
-                            value={profileData.phone}
-                            onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                            disabled={!isEditing || loading}
-                            className="bg-galaxy-dark"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="website" className="flex items-center gap-2">
-                            <Globe className="h-4 w-4" />
-                            Website
-                          </Label>
-                          <Input 
-                            id="website"
-                            value={profileData.website}
-                            onChange={(e) => setProfileData({...profileData, website: e.target.value})}
-                            disabled={!isEditing || loading}
-                            className="bg-galaxy-dark"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Descrição da Empresa</Label>
-                        <Textarea 
-                          id="description"
-                          value={profileData.description}
-                          onChange={(e) => setProfileData({...profileData, description: e.target.value})}
-                          disabled={!isEditing || loading}
-                          className="bg-galaxy-dark min-h-[100px]"
-                        />
-                      </div>
-                      
-                      <div className="pt-4 border-t border-galaxy-purple/20">
-                        <h4 className="font-medium mb-4">Preferências de Notificação</h4>
-                        
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label htmlFor="emailNotif">Notificações por Email</Label>
-                              <p className="text-sm text-muted-foreground">Receber atualizações e relatórios por email</p>
-                            </div>
-                            <Switch 
-                              id="emailNotif"
-                              checked={profileData.emailNotifications}
-                              onCheckedChange={(checked) => setProfileData({...profileData, emailNotifications: checked})}
-                              disabled={!isEditing || loading}
-                            />
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <Label htmlFor="pushNotif">Notificações Push</Label>
-                              <p className="text-sm text-muted-foreground">Receber alertas no navegador</p>
-                            </div>
-                            <Switch 
-                              id="pushNotif"
-                              checked={profileData.pushNotifications}
-                              onCheckedChange={(checked) => setProfileData({...profileData, pushNotifications: checked})}
-                              disabled={!isEditing || loading}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                    <div className="h-64 flex items-center justify-center text-muted-foreground">
+                      Gráfico de atividade da conta ao longo do tempo
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="activity">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                    <CardHeader>
+                      <CardTitle>Atividade Recente</CardTitle>
+                      <CardDescription>Últimas atualizações nas suas campanhas</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Campanha</TableHead>
+                            <TableHead>Ação</TableHead>
+                            <TableHead>Usuário</TableHead>
+                            <TableHead className="text-right">Recompensa</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {recentActivities.map((activity) => (
+                            <TableRow key={activity.id}>
+                              <TableCell>{activity.date}</TableCell>
+                              <TableCell>{activity.campaign}</TableCell>
+                              <TableCell>
+                                <span className={
+                                  activity.action.includes("aprovada") ? "text-green-400" :
+                                  activity.action.includes("recusada") ? "text-red-400" :
+                                  activity.action.includes("concluída") ? "text-neon-cyan" :
+                                  ""
+                                }>
+                                  {activity.action}
+                                </span>
+                              </TableCell>
+                              <TableCell>{activity.user}</TableCell>
+                              <TableCell className="text-right">
+                                {activity.reward ? `${activity.reward} pontos` : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                    <CardFooter className="flex justify-center border-t border-galaxy-purple/20 pt-4">
+                      <Button variant="outline">Ver Todas as Atividades</Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+              
+              <TabsContent value="campaigns">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                    <CardHeader>
+                      <CardTitle>Minhas Campanhas</CardTitle>
+                      <CardDescription>Lista de todas as suas campanhas</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
+                        <p>Veja todas as suas campanhas na seção de Campanhas</p>
+                        <Button 
+                          className="mt-4"
+                          onClick={() => {
+                            window.location.href = "/anunciante/campanhas";
+                          }}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Ir para Campanhas
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </TabsContent>
+            </Tabs>
           </div>
         </SidebarInset>
       </div>
