@@ -15,6 +15,7 @@ export const useClientDashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [points, setPoints] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if user is not a participant
@@ -40,12 +41,22 @@ export const useClientDashboard = () => {
     // Fetch user data from Supabase
     const fetchUserData = async () => {
       try {
-        const session = await supabase.auth.getSession();
-        const userId = session.data.session?.user.id;
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        const userId = sessionData.session?.user.id;
         
         if (!userId) {
-          throw new Error("Usuário não autenticado");
+          console.log("No authenticated user found in useClientDashboard");
+          setAuthError("Usuário não autenticado");
+          setLoading(false);
+          return;
         }
+        
+        console.log("Fetching user data for:", userId);
         
         // Get user profile with points
         const { data: profileData, error: profileError } = await supabase
@@ -54,10 +65,14 @@ export const useClientDashboard = () => {
           .eq("id", userId)
           .single();
         
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          throw profileError;
+        }
         
         if (profileData) {
           setPoints(profileData.points || 0);
+          console.log("User points:", profileData.points);
         }
         
         // For streak, we would ideally have a user_activity table
@@ -66,8 +81,19 @@ export const useClientDashboard = () => {
         
         // Update last activity
         localStorage.setItem("lastActivity", Date.now().toString());
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching user data:", error);
+        setAuthError(error.message || "Erro ao buscar dados do usuário");
+        
+        // If unauthorized, redirect to login
+        if (error.status === 401 || error.message.includes("unauthorized")) {
+          toast({
+            title: "Sessão expirada",
+            description: "Por favor, faça login novamente",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
       } finally {
         setLoading(false);
         playSound("chime");
@@ -116,6 +142,7 @@ export const useClientDashboard = () => {
     showOnboarding,
     setShowOnboarding,
     handleExtendSession,
-    handleSessionTimeout
+    handleSessionTimeout,
+    authError
   };
 };

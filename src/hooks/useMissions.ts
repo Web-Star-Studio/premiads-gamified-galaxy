@@ -12,7 +12,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [filter, setFilter] = useState(options.initialFilter || "available");
   
-  const { loading, missions, setMissions } = useMissionsFetch();
+  const { loading, missions, setMissions, error } = useMissionsFetch();
   const { submitMission, submissionLoading } = useMissionSubmit(setMissions);
   const { 
     findMissionsByBusinessType,
@@ -33,6 +33,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
 
   return {
     loading: loading || submissionLoading,
+    error,
     missions: filteredMissions,
     allMissions: missions,
     selectedMission,

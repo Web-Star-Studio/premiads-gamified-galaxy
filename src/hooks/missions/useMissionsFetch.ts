@@ -9,6 +9,7 @@ import { MissionType } from "@/hooks/useMissionsTypes";
 export const useMissionsFetch = () => {
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { playSound } = useSounds();
 
@@ -16,14 +17,24 @@ export const useMissionsFetch = () => {
   useEffect(() => {
     const fetchMissions = async () => {
       setLoading(true);
+      setError(null);
+      
       try {
-        // Get current user id
-        const { data: sessionData } = await supabase.auth.getSession();
+        // Check if user is authenticated
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+        
         const userId = sessionData?.session?.user?.id;
         
         if (!userId) {
-          throw new Error("User not authenticated");
+          console.log("No authenticated user found");
+          setLoading(false);
+          setMissions([]);
+          return;
         }
+        
+        console.log("Fetching missions for user:", userId);
         
         // Get user's submissions first to determine mission status
         const { data: userSubmissions, error: submissionsError } = await supabase
@@ -31,7 +42,12 @@ export const useMissionsFetch = () => {
           .select("mission_id, status")
           .eq("user_id", userId);
         
-        if (submissionsError) throw submissionsError;
+        if (submissionsError) {
+          console.error("Error fetching submissions:", submissionsError);
+          throw submissionsError;
+        }
+        
+        console.log("User submissions:", userSubmissions?.length || 0);
         
         // Get all active missions
         const { data: missionsData, error: missionsError } = await supabase
@@ -39,8 +55,13 @@ export const useMissionsFetch = () => {
           .select("*")
           .eq("is_active", true);
         
-        if (missionsError) throw missionsError;
+        if (missionsError) {
+          console.error("Error fetching missions:", missionsError);
+          throw missionsError;
+        }
 
+        console.log("Missions fetched:", missionsData?.length || 0);
+        
         // Map missions with their status for the current user
         const mappedMissions: Mission[] = (missionsData || []).map((mission) => {
           const submission = userSubmissions?.find(s => s.mission_id === mission.id);
@@ -84,10 +105,11 @@ export const useMissionsFetch = () => {
         });
 
         setMissions(mappedMissions);
-        console.log("Fetched missions:", mappedMissions.length);
+        console.log("Mapped missions:", mappedMissions.length);
         playSound("chime");
       } catch (error: any) {
         console.error("Error fetching missions:", error);
+        setError(error.message || "Erro ao buscar missões");
         toast({
           title: "Erro ao carregar missões",
           description: error.message || "Ocorreu um erro ao buscar as missões",
@@ -101,5 +123,5 @@ export const useMissionsFetch = () => {
     fetchMissions();
   }, [toast, playSound]);
 
-  return { loading, missions, setMissions };
+  return { loading, missions, setMissions, error };
 };

@@ -10,18 +10,41 @@ import MissionCard from "./missions/MissionCard";
 import MissionsEmptyState from "./missions/MissionsEmptyState";
 import MissionsHeader from "./missions/MissionsHeader";
 import MissionsLoading from "./missions/MissionsLoading";
+import { supabase } from "@/integrations/supabase/client";
 
 const MissionsCarousel = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [acceptedMissions, setAcceptedMissions] = useState<string[]>([]);
   const navigate = useNavigate();
+  const [authChecked, setAuthChecked] = useState(false);
 
   const { 
     loading, 
     allMissions,
+    error,
     getMissionTypeLabel 
   } = useMissions();
+  
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        console.log("No auth session in MissionsCarousel");
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente para ver suas missões",
+          variant: "destructive",
+        });
+      } else {
+        console.log("User authenticated in MissionsCarousel");
+      }
+      setAuthChecked(true);
+    };
+    
+    checkAuth();
+  }, [toast]);
   
   // Effect to initialize from localStorage
   useEffect(() => {
@@ -60,6 +83,32 @@ const MissionsCarousel = () => {
 
   // Get only available missions for the carousel
   const availableMissions = allMissions.filter(m => m.status === "available").slice(0, 8);
+
+  if (!authChecked) {
+    return <MissionsLoading />;
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        className="glass-panel p-6"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <MissionsHeader onViewAllMissions={handleViewAllMissions} />
+        <div className="p-8 text-center">
+          <p className="text-red-400">Erro ao carregar missões: {error}</p>
+          <button 
+            className="mt-4 px-4 py-2 bg-neon-cyan text-galaxy-dark rounded"
+            onClick={() => window.location.reload()}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
