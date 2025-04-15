@@ -14,23 +14,23 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 
 interface AdminSidebarProps {
-  defaultOpen?: boolean;
   className?: string;
 }
 
-const AdminSidebar: FC<AdminSidebarProps> = ({ 
-  defaultOpen = true,
-  className = "" 
-}) => {
+/**
+ * Admin panel sidebar with navigation and user profile
+ * Automatically collapses on mobile devices
+ */
+const AdminSidebar: FC<AdminSidebarProps> = ({ className = "" }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { open, setOpen } = useSidebar();
+  const { setOpen } = useSidebar();
   
   // Close sidebar on mobile by default
   useEffect(() => {
-    if (isMobile && defaultOpen === undefined) {
+    if (isMobile) {
       setOpen(false);
     }
-  }, [isMobile, defaultOpen, setOpen]);
+  }, [isMobile, setOpen]);
   
   return (
     <Sidebar 
@@ -53,5 +53,4 @@ const AdminSidebar: FC<AdminSidebarProps> = ({
   );
 };
 
-// Use memo to prevent unnecessary re-renders
 export default memo(AdminSidebar);

@@ -11,10 +11,10 @@ import {
   FileText
 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
-import { NavigationItem, NavigationItemProps } from "./NavigationItem";
+import NavigationItem, { NavigationItemProps } from "./NavigationItem";
 
 export const NavigationItems = () => {
-  // Navigation items
+  // Navigation items with descriptive properties
   const navigationItems: NavigationItemProps[] = [
     {
       title: "Dashboard",

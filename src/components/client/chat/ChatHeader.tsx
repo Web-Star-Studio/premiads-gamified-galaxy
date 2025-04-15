@@ -8,12 +8,15 @@ interface ChatHeaderProps {
   title?: string;
 }
 
+/**
+ * Header component for chat interface
+ * Displays title and close button
+ */
 const ChatHeader: FC<ChatHeaderProps> = ({ 
   onClose, 
   title = "Atendimento" 
 }) => {
-  // Use useCallback to prevent recreating this function on every render
-  const handleClose = useCallback(() => {
+  const handleCloseChat = useCallback(() => {
     onClose();
   }, [onClose]);
 
@@ -22,7 +25,7 @@ const ChatHeader: FC<ChatHeaderProps> = ({
       <div className="flex items-center justify-between">
         <SheetTitle className="text-lg font-heading">{title}</SheetTitle>
         <button
-          onClick={handleClose}
+          onClick={handleCloseChat}
           className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-galaxy-deepPurple/50 text-gray-400 hover:text-white transition-colors"
           aria-label="Fechar chat"
         >
@@ -33,5 +36,4 @@ const ChatHeader: FC<ChatHeaderProps> = ({
   );
 };
 
-// Use memo to prevent unnecessary re-renders
 export default memo(ChatHeader);
