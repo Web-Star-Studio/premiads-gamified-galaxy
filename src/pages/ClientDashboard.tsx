@@ -14,6 +14,7 @@ import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
 import ProfilePreview from "@/components/client/profile/ProfilePreview";
 import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
+import ProfileCompletionBanner from "@/components/client/dashboard/ProfileCompletionBanner";
 import { useMediaQuery } from "@/hooks/use-mobile";
 
 const ClientDashboard = () => {
@@ -43,6 +44,9 @@ const ClientDashboard = () => {
           <ClientHeader />
           
           <div className="container px-4 py-8 mx-auto">
+            {/* Profile Completion Banner */}
+            <ProfileCompletionBanner />
+            
             <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
               {/* Points & Tickets Section */}
               <PointsSection totalPoints={points} />

@@ -13,6 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClientDashboardHeader from "@/components/client/ClientDashboardHeader";
+import ProfileForm from "@/components/client/profile/ProfileForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -104,8 +105,9 @@ const ClientProfile = () => {
           className="mt-8"
         >
           <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
+            <TabsList className="grid w-full grid-cols-4 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
               <TabsTrigger value="personal">Informações Pessoais</TabsTrigger>
+              <TabsTrigger value="profile_form">Perfil Completo</TabsTrigger>
               <TabsTrigger value="preferences">Preferências</TabsTrigger>
               <TabsTrigger value="security">Segurança</TabsTrigger>
             </TabsList>
@@ -189,6 +191,10 @@ const ClientProfile = () => {
                   </form>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="profile_form" className="mt-6">
+              <ProfileForm />
             </TabsContent>
             
             <TabsContent value="preferences" className="mt-6">
