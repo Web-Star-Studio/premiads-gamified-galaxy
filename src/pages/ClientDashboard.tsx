@@ -10,6 +10,8 @@ import MissionsCarousel from "@/components/dashboard/MissionsCarousel";
 import ActiveMissions from "@/components/dashboard/ActiveMissions";
 import DailyChallenge from "@/components/dashboard/DailyChallenge";
 import LootBoxes from "@/components/dashboard/LootBoxes";
+import { Button } from "@/components/ui/button";
+import { Gift, Ticket } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
 
 const ClientDashboard = () => {
@@ -81,6 +83,28 @@ const ClientDashboard = () => {
             className="lg:col-span-1"
           >
             <PointsCard points={750} level={4} progress={65} />
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6"
+            >
+              <Button
+                className="w-full neon-button py-6"
+                onClick={() => navigate("/cliente/sorteios")}
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <div className="flex items-center mb-2">
+                    <Gift className="w-6 h-6 mr-2 text-neon-pink" />
+                    <span className="text-xl font-heading">Sorteios</span>
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    Você tem <span className="text-neon-cyan">8 tickets</span> disponíveis
+                  </div>
+                </div>
+              </Button>
+            </motion.div>
           </motion.div>
           
           <motion.div
