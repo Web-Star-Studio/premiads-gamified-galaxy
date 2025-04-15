@@ -27,7 +27,8 @@ export default tseslint.config(
       // Clean code rules
       "@typescript-eslint/no-unused-vars": ["warn", { 
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
+        "varsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
       }],
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
@@ -39,6 +40,31 @@ export default tseslint.config(
       // React specific rules
       "react-hooks/exhaustive-deps": "warn",
       "react-hooks/rules-of-hooks": "error",
+      // Additional clean code rules
+      "max-lines-per-function": ["warn", { 
+        max: 80, 
+        skipBlankLines: true, 
+        skipComments: true 
+      }],
+      "max-depth": ["warn", 3],
+      "complexity": ["warn", 10],
+      "no-nested-ternary": "warn",
+      "no-unneeded-ternary": "error",
+      "@typescript-eslint/naming-convention": [
+        "warn",
+        {
+          "selector": "variable",
+          "format": ["camelCase", "PascalCase", "UPPER_CASE"]
+        },
+        {
+          "selector": "function",
+          "format": ["camelCase", "PascalCase"]
+        },
+        {
+          "selector": "typeLike",
+          "format": ["PascalCase"]
+        }
+      ]
     },
   }
 );
