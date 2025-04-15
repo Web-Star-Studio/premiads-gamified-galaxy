@@ -1,13 +1,10 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { 
   Users, Shield, Target, Ticket, FileCheck, AlertTriangle,
-  Database, Server, HardDrive, ArrowDown, UserPlus, 
-  KeyRound, ClipboardCheck, Sparkles
+  Database, Server, HardDrive, ArrowDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow 
@@ -240,34 +237,6 @@ const AdminOverview = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Quick Actions */}
-          <div className="mt-6">
-            <h2 className="text-xl font-heading mb-4 neon-text-cyan">Ações Rápidas</h2>
-            <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/40 backdrop-blur-sm">
-              <CardContent className="pt-6 grid grid-cols-2 gap-3">
-                <Button variant="outline" className="flex items-center justify-start gap-2 border-neon-cyan/30 bg-galaxy-deepPurple/70 hover:bg-galaxy-deepPurple">
-                  <UserPlus size={18} className="text-neon-cyan" />
-                  <span>Gerenciar Usuários</span>
-                </Button>
-                
-                <Button variant="outline" className="flex items-center justify-start gap-2 border-neon-pink/30 bg-galaxy-deepPurple/70 hover:bg-galaxy-deepPurple">
-                  <KeyRound size={18} className="text-neon-pink" />
-                  <span>Gerenciar Permissões</span>
-                </Button>
-                
-                <Button variant="outline" className="flex items-center justify-start gap-2 border-neon-cyan/30 bg-galaxy-deepPurple/70 hover:bg-galaxy-deepPurple">
-                  <ClipboardCheck size={18} className="text-neon-lime" />
-                  <span>Aprovar Submissões</span>
-                </Button>
-                
-                <Button variant="outline" className="flex items-center justify-start gap-2 border-neon-pink/30 bg-galaxy-deepPurple/70 hover:bg-galaxy-deepPurple">
-                  <Sparkles size={18} className="text-amber-400" />
-                  <span>Gerenciar Sorteios</span>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </motion.section>
 
         {/* Recent Activities */}
@@ -295,12 +264,6 @@ const AdminOverview = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-              
-              <div className="mt-6 flex justify-center">
-                <Button variant="outline" className="border-galaxy-purple/30 bg-galaxy-deepPurple/70 hover:bg-galaxy-deepPurple">
-                  Ver Todas as Atividades
-                </Button>
               </div>
             </CardContent>
           </Card>
