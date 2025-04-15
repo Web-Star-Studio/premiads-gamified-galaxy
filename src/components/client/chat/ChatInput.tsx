@@ -1,5 +1,5 @@
 
-import { FC, RefObject } from "react";
+import { FC, RefObject, memo, useCallback } from "react";
 import { Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -22,6 +22,13 @@ const ChatInput: FC<ChatInputProps> = ({
 }) => {
   const isDisabled = !message.trim();
   
+  // Use useCallback to prevent recreating this function on every render
+  const handleSend = useCallback(() => {
+    if (!isDisabled) {
+      onSend();
+    }
+  }, [isDisabled, onSend]);
+  
   return (
     <div className="border-t border-galaxy-purple/30 p-4 bg-galaxy-darkPurple/30">
       <div className="flex gap-2">
@@ -35,7 +42,7 @@ const ChatInput: FC<ChatInputProps> = ({
           aria-label="Mensagem de chat"
         />
         <button
-          onClick={onSend}
+          onClick={handleSend}
           disabled={isDisabled}
           aria-label="Enviar mensagem"
           className={`p-2 rounded-full transition-colors ${
@@ -51,4 +58,5 @@ const ChatInput: FC<ChatInputProps> = ({
   );
 };
 
-export default ChatInput;
+// Use memo to prevent unnecessary re-renders
+export default memo(ChatInput);

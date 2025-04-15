@@ -1,4 +1,5 @@
 
+import { memo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -11,10 +12,15 @@ export interface NavigationItemProps {
   description: string;
 }
 
-export const NavigationItem = ({ title, url, icon: Icon, description }: NavigationItemProps) => {
+const NavigationItem = ({ title, url, icon: Icon, description }: NavigationItemProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isActive = location.pathname === url;
+
+  // Use useCallback to prevent recreating this function on every render
+  const handleNavigate = useCallback(() => {
+    navigate(url);
+  }, [navigate, url]);
 
   return (
     <SidebarMenuItem key={title}>
@@ -28,7 +34,7 @@ export const NavigationItem = ({ title, url, icon: Icon, description }: Navigati
           className={`w-full justify-start gap-2 h-10 px-3 text-base ${
             isActive ? "bg-galaxy-purple/20" : ""
           }`}
-          onClick={() => navigate(url)}
+          onClick={handleNavigate}
         >
           <Icon className={isActive ? "text-neon-pink" : ""} size={20} />
           <span>{title}</span>
@@ -38,4 +44,5 @@ export const NavigationItem = ({ title, url, icon: Icon, description }: Navigati
   );
 };
 
-export default NavigationItem;
+// Wrap with memo to prevent unnecessary re-renders
+export default memo(NavigationItem);

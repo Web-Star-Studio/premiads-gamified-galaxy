@@ -1,5 +1,5 @@
 
-import { FC, useEffect } from "react";
+import { FC, useEffect, memo } from "react";
 import { 
   Sidebar, 
   SidebarContent
@@ -18,7 +18,7 @@ interface AdminSidebarProps {
   className?: string;
 }
 
-export const AdminSidebar: FC<AdminSidebarProps> = ({ 
+const AdminSidebar: FC<AdminSidebarProps> = ({ 
   defaultOpen = true,
   className = "" 
 }) => {
@@ -53,4 +53,5 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({
   );
 };
 
-export default AdminSidebar;
+// Use memo to prevent unnecessary re-renders
+export default memo(AdminSidebar);
