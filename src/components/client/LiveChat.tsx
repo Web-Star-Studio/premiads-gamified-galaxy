@@ -1,5 +1,5 @@
 
-import React from "react";
+import { FC } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,10 @@ import MessageList from "./chat/MessageList";
 import ChatInput from "./chat/ChatInput";
 import { useChatLogic } from "./chat/useChatLogic";
 
-const LiveChat = () => {
+const LiveChat: FC = () => {
   const {
     isOpen,
-    setIsOpen,  // Add setIsOpen here
+    setIsOpen,
     message,
     messages,
     isTyping,

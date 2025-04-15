@@ -1,4 +1,5 @@
 
+import { FC } from "react";
 import { 
   Sidebar, 
   SidebarContent
@@ -11,7 +12,11 @@ import {
 } from "./sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 
-export const AdminSidebar = () => {
+interface AdminSidebarProps {
+  defaultOpen?: boolean;
+}
+
+export const AdminSidebar: FC<AdminSidebarProps> = ({ defaultOpen }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   return (

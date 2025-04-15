@@ -1,25 +1,36 @@
 
+import { FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 
-interface ClientDashboardHeaderProps {
+export interface ClientDashboardHeaderProps {
   title: string;
   description?: string;
   userName: string;
   showBackButton?: boolean;
   backTo?: string;
+  onBackClick?: () => void;
 }
 
-const ClientDashboardHeader = ({
+export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
   title,
   description,
   userName,
   showBackButton = false,
-  backTo = "/"
-}: ClientDashboardHeaderProps) => {
+  backTo = "/",
+  onBackClick
+}) => {
   const navigate = useNavigate();
+
+  const handleBackClick = () => {
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      navigate(backTo);
+    }
+  };
 
   return (
     <motion.div
@@ -35,7 +46,7 @@ const ClientDashboardHeader = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(backTo)}
+              onClick={handleBackClick}
               className="mb-4 text-neon-cyan hover:text-neon-cyan/80 hover:bg-galaxy-deepPurple/30 -ml-2"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />

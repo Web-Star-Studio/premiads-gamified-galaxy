@@ -1,9 +1,25 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "./types";
 
-export const useChatLogic = () => {
+export interface UseChatLogicReturn {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  message: string;
+  messages: Message[];
+  isTyping: boolean;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+  inputRef: React.RefObject<HTMLInputElement>;
+  setMessage: (message: string) => void;
+  toggleChat: () => void;
+  handleSendMessage: () => void;
+  handleKeyPress: (e: React.KeyboardEvent) => void;
+  closeChat: () => void;
+}
+
+export const useChatLogic = (): UseChatLogicReturn => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -13,7 +29,7 @@ export const useChatLogic = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initial greeting message
+  // Mensagem inicial de saudação
   useEffect(() => {
     if (messages.length === 0 && isOpen) {
       setIsTyping(true);
@@ -31,12 +47,12 @@ export const useChatLogic = () => {
     }
   }, [isOpen, messages.length]);
 
-  // Auto scroll to bottom of messages
+  // Rolagem automática para o final das mensagens
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Focus input when chat opens
+  // Foco no input quando o chat é aberto
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -53,7 +69,7 @@ export const useChatLogic = () => {
   const handleSendMessage = () => {
     if (message.trim() === "") return;
 
-    // Add user message
+    // Adiciona mensagem do usuário
     const newUserMessage: Message = {
       id: Date.now(),
       text: message,
@@ -65,10 +81,10 @@ export const useChatLogic = () => {
     setMessage("");
     playSound("pop");
 
-    // Simulate agent typing
+    // Simula digitação do agente
     setIsTyping(true);
     
-    // Simulate agent response after a delay
+    // Simula resposta do agente após um atraso
     setTimeout(() => {
       const responses = [
         "Entendi! Vou verificar isso para você.",
