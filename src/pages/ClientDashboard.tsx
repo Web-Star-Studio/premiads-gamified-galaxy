@@ -15,6 +15,7 @@ import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
 
 const ClientDashboard = () => {
+  const navigate = useNavigate();
   const {
     userName,
     points,
@@ -25,8 +26,7 @@ const ClientDashboard = () => {
     handleExtendSession,
     handleSessionTimeout,
     authError
-  } = useClientDashboard();
-  const navigate = useNavigate();
+  } = useClientDashboard(navigate);
 
   if (loading) {
     return <LoadingState />;

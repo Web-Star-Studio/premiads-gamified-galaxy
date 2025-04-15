@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useClientDashboard = () => {
+export const useClientDashboard = (navigate?: NavigateFunction) => {
   const { userName, userType } = useUser();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
@@ -19,7 +18,7 @@ export const useClientDashboard = () => {
 
   useEffect(() => {
     // Redirect if user is not a participant
-    if (userType !== "participante") {
+    if (userType !== "participante" && navigate) {
       toast({
         title: "Acesso restrito",
         description: "Você não tem permissão para acessar esta página",
@@ -86,7 +85,7 @@ export const useClientDashboard = () => {
         setAuthError(error.message || "Erro ao buscar dados do usuário");
         
         // If unauthorized, redirect to login
-        if (error.status === 401 || error.message.includes("unauthorized")) {
+        if (navigate && (error.status === 401 || (error.message && error.message.includes("unauthorized")))) {
           toast({
             title: "Sessão expirada",
             description: "Por favor, faça login novamente",
@@ -131,7 +130,9 @@ export const useClientDashboard = () => {
     });
     // In a real app, this would log the user out
     // For this demo, we'll just redirect to home
-    navigate("/");
+    if (navigate) {
+      navigate("/");
+    }
   };
 
   return {

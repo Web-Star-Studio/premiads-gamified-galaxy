@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import PointsCard from "@/components/dashboard/PointsCard";
 import TicketsButton from "@/components/client/dashboard/TicketsButton";
+import { useNavigate } from "react-router-dom";
 import { useClientDashboard } from "@/hooks/useClientDashboard";
 
 interface PointsSectionProps {
@@ -9,7 +10,8 @@ interface PointsSectionProps {
 }
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
-  const { points } = useClientDashboard();
+  const navigate = useNavigate();
+  const { points } = useClientDashboard(navigate);
   const effectivePoints = totalPoints || points;
   
   // Calculate level and progress based on total points

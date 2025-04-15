@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useClientDashboard } from "@/hooks/useClientDashboard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
@@ -37,9 +36,14 @@ export const ClientSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
-  const { userName, points, streak } = useClientDashboard();
   const [open, setOpen] = useState(true);
-
+  
+  // Get user info from context or props
+  // Don't use useClientDashboard here since we don't want to make API calls twice
+  const userName = localStorage.getItem("userName") || "Usuário";
+  const userPoints = parseInt(localStorage.getItem("userPoints") || "0");
+  const userStreak = parseInt(localStorage.getItem("userStreak") || "0");
+  
   // Get the first letter of the user name for the avatar fallback
   const userInitial = userName?.charAt(0) || "U";
   
@@ -98,7 +102,7 @@ export const ClientSidebar = () => {
             </Avatar>
             <div className="flex flex-col">
               <span className="font-medium truncate">{userName}</span>
-              <span className="text-xs text-muted-foreground">{points} pontos</span>
+              <span className="text-xs text-muted-foreground">{userPoints} pontos</span>
             </div>
           </div>
         </div>
@@ -136,13 +140,13 @@ export const ClientSidebar = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Streak</span>
                 <span className="text-sm text-neon-pink flex items-center">
-                  <Star className="w-4 h-4 mr-1" /> {streak} dias
+                  <Star className="w-4 h-4 mr-1" /> {userStreak} dias
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Pontos</span>
                 <span className="text-sm text-neon-cyan flex items-center">
-                  <Wallet className="w-4 h-4 mr-1" /> {points}
+                  <Wallet className="w-4 h-4 mr-1" /> {userPoints}
                 </span>
               </div>
             </div>

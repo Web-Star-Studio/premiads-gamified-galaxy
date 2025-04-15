@@ -6,7 +6,7 @@ import { useClientDashboard } from "@/hooks/useClientDashboard";
 
 const TicketsButton = () => {
   const navigate = useNavigate();
-  const { points } = useClientDashboard();
+  const { points } = useClientDashboard(navigate);
   const tickets = Math.floor(points / 100);
   
   return (
