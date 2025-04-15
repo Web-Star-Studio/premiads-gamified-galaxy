@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
@@ -114,6 +113,7 @@ export const useChatLogic = () => {
 
   return {
     isOpen,
+    setIsOpen,
     message,
     messages,
     isTyping,

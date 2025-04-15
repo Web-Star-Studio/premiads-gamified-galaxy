@@ -12,6 +12,7 @@ import { useChatLogic } from "./chat/useChatLogic";
 const LiveChat = () => {
   const {
     isOpen,
+    setIsOpen,  // Add setIsOpen here
     message,
     messages,
     isTyping,
