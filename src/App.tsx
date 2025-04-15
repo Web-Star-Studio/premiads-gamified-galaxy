@@ -54,6 +54,8 @@ const queryClient = new QueryClient({
   },
 });
 
+import CashbackMarketplace from "./pages/CashbackMarketplace";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -167,6 +169,11 @@ const App = () => {
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
+                <Route path="/cashback" element={
+                  <Suspense fallback={<RouteLoadingSpinner />}>
+                    <CashbackMarketplace />
+                  </Suspense>
+                } />
               </Routes>
               <Toaster />
               <Sonner />
