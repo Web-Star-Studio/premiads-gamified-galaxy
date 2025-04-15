@@ -44,7 +44,7 @@ const ProfileOverlay = () => {
       scale: 1.1,
       transition: { 
         repeat: Infinity, 
-        repeatType: "reverse" as const, 
+        repeatType: "reverse", 
         duration: 1.2 
       } 
     }
