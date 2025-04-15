@@ -1,8 +1,9 @@
 
 import { motion } from "framer-motion";
-import { Bell, Home, User } from "lucide-react";
+import { Home, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import NotificationCenter from "@/components/client/NotificationCenter";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -36,14 +37,13 @@ const DashboardHeader = ({ userName, streak = 0 }: DashboardHeaderProps) => {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="rounded-full relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full"></span>
-        </Button>
+        <NotificationCenter />
         
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <User className="w-5 h-5" />
-        </Button>
+        <Link to="/cliente/perfil">
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <User className="w-5 h-5" />
+          </Button>
+        </Link>
       </div>
     </header>
   );

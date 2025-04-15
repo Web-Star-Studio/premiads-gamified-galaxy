@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ClientDashboard from "./pages/ClientDashboard";
+import ClientProfile from "./pages/ClientProfile";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import ClientRaffles from "./pages/ClientRaffles";
@@ -24,6 +25,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/cliente" element={<ClientDashboard />} />
               <Route path="/cliente/sorteios" element={<ClientRaffles />} />
+              <Route path="/cliente/perfil" element={<ClientProfile />} />
               <Route path="/anunciante" element={<AdvertiserDashboard />} />
               <Route path="/admin" element={<AdminPanel />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -8,6 +8,9 @@ import SidePanel from "@/components/client/dashboard/SidePanel";
 import SupportTools from "@/components/client/SupportTools";
 import OnboardingModal from "@/components/client/OnboardingModal";
 import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
+import ProfilePreview from "@/components/client/profile/ProfilePreview";
+import BrandsPreview from "@/components/client/brand/BrandsPreview";
+import CashbackPreview from "@/components/client/cashback/CashbackPreview";
 
 const ClientDashboard = () => {
   const {
@@ -37,6 +40,17 @@ const ClientDashboard = () => {
           
           {/* Daily Challenge & Sorte do Dia */}
           <SidePanel />
+        </div>
+        
+        <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-3">
+          {/* Profile Preview */}
+          <ProfilePreview />
+          
+          {/* Cashback Preview */}
+          <CashbackPreview />
+          
+          {/* Brands Preview */}
+          <BrandsPreview />
         </div>
       </div>
       
