@@ -5,10 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Gift, Sparkles, Star, Trophy, Target, Camera, FileText, Upload, MapPin } from "lucide-react";
+import { 
+  Gift, Sparkles, Star, Trophy, Target, Camera, FileText, 
+  Upload, MapPin, Image, ChevronRight, Clock
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
-import { MissionType } from "@/hooks/useMissionsTypes";
+import { useMissions } from "@/hooks/useMissions";
+import { MissionType, getEstimatedTime, getMissionDifficulty } from "@/hooks/useMissionsTypes";
+import { useNavigate } from "react-router-dom";
 
 // Component to display mission icon based on type
 const MissionTypeIcon = ({ type }: { type: MissionType }) => {
@@ -16,9 +20,9 @@ const MissionTypeIcon = ({ type }: { type: MissionType }) => {
     case "survey":
       return <FileText className="w-5 h-5 text-neon-lime" />;
     case "photo":
-      return <Camera className="w-5 h-5 text-neon-cyan" />;
+      return <Image className="w-5 h-5 text-neon-cyan" />;
     case "video":
-      return <Sparkles className="w-5 h-5 text-neon-pink" />;
+      return <Camera className="w-5 h-5 text-neon-pink" />;
     case "social_share":
       return <Upload className="w-5 h-5 text-yellow-400" />;
     case "visit":
@@ -28,109 +32,27 @@ const MissionTypeIcon = ({ type }: { type: MissionType }) => {
   }
 };
 
-interface RecommendedMission {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  type: MissionType;
-  difficulty: string;
-  estimatedTime: string;
-  business_type?: string;
-}
-
 const MissionsCarousel = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [acceptedMissions, setAcceptedMissions] = useState<string[]>([]);
-  const [recommendedMissions, setRecommendedMissions] = useState<RecommendedMission[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchMissions = async () => {
-      try {
-        setLoading(true);
-        
-        // Get session to check if user is logged in
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        
-        if (!userId) {
-          console.log("User not authenticated, using mock data");
-          // Use mock data
-          setRecommendedMissions(MOCK_RECOMMENDED_MISSIONS);
-          setLoading(false);
-          return;
-        }
-        
-        // Fetch real missions from the database
-        const { data: missionsData, error } = await supabase
-          .from("missions")
-          .select("id, title, description, points, type, business_type")
-          .eq("is_active", true)
-          .limit(8);
-        
-        if (error) throw error;
-        
-        if (missionsData && missionsData.length > 0) {
-          // Map missions to our format
-          const mapped = missionsData.map(mission => ({
-            id: mission.id,
-            title: mission.title,
-            description: mission.description,
-            points: mission.points,
-            type: mission.type as MissionType,
-            difficulty: getDifficultyFromPoints(mission.points),
-            estimatedTime: getEstimatedTimeFromType(mission.type as MissionType),
-            business_type: mission.business_type
-          }));
-          
-          setRecommendedMissions(mapped);
-        } else {
-          // Fallback to mock data if no missions found
-          setRecommendedMissions(MOCK_RECOMMENDED_MISSIONS);
-        }
-      } catch (error) {
-        console.error("Error fetching missions:", error);
-        // Fallback to mock data
-        setRecommendedMissions(MOCK_RECOMMENDED_MISSIONS);
-      } finally {
-        setLoading(false);
-        
-        const timer = setTimeout(() => {
-          playSound("chime");
-        }, 600);
-        
-        return () => clearTimeout(timer);
-      }
-    };
-    
-    fetchMissions();
-  }, [playSound]);
+  const navigate = useNavigate();
 
-  // Helper functions to derive mission properties
-  const getDifficultyFromPoints = (points: number): string => {
-    if (points <= 50) return "Fácil";
-    if (points <= 150) return "Médio";
-    return "Difícil";
-  };
+  const { 
+    loading, 
+    missions, 
+    allMissions,
+    findMissionsByBusinessType, 
+    getMissionTypeLabel 
+  } = useMissions();
   
-  const getEstimatedTimeFromType = (type: MissionType): string => {
-    switch (type) {
-      case "survey":
-        return "10 min";
-      case "photo":
-        return "15 min";
-      case "video":
-        return "30 min";
-      case "social_share":
-        return "5 min";
-      case "visit":
-        return "1 hora";
-      default:
-        return "20 min";
+  // Effect to initialize from localStorage
+  useEffect(() => {
+    const savedAccepted = localStorage.getItem('acceptedMissions');
+    if (savedAccepted) {
+      setAcceptedMissions(JSON.parse(savedAccepted));
     }
-  };
+  }, []);
   
   const handleAcceptMission = (missionId: string) => {
     if (acceptedMissions.includes(missionId)) {
@@ -144,8 +66,10 @@ const MissionsCarousel = () => {
     // Play coin sound
     playSound("pop");
     
-    // Update accepted missions
-    setAcceptedMissions(prev => [...prev, missionId]);
+    // Update accepted missions and save to localStorage
+    const updatedAccepted = [...acceptedMissions, missionId];
+    setAcceptedMissions(updatedAccepted);
+    localStorage.setItem('acceptedMissions', JSON.stringify(updatedAccepted));
     
     toast({
       title: "Missão aceita!",
@@ -153,45 +77,12 @@ const MissionsCarousel = () => {
     });
   };
 
-  // Mock data for fallback
-  const MOCK_RECOMMENDED_MISSIONS: RecommendedMission[] = [
-    {
-      id: "mock-1",
-      title: "Visite 3 Lojas Parceiras",
-      description: "Confira nossas lojas parceiras e ganhe pontos extras",
-      points: 120,
-      type: "visit",
-      difficulty: "Fácil",
-      estimatedTime: "30 min"
-    },
-    {
-      id: "mock-2",
-      title: "Compartilhe nas Redes Sociais",
-      description: "Compartilhe sua experiência e ganhe recompensas exclusivas",
-      points: 150,
-      type: "social_share",
-      difficulty: "Fácil",
-      estimatedTime: "5 min"
-    },
-    {
-      id: "mock-3",
-      title: "Complete o Quiz Semanal",
-      description: "Teste seus conhecimentos e ganhe pontos extras",
-      points: 200,
-      type: "survey",
-      difficulty: "Médio",
-      estimatedTime: "15 min"
-    },
-    {
-      id: "mock-4",
-      title: "Participe do Evento Especial",
-      description: "Eventos com recompensas raras e exclusivas",
-      points: 300,
-      type: "photo",
-      difficulty: "Difícil",
-      estimatedTime: "1 hora"
-    }
-  ];
+  const handleViewAllMissions = () => {
+    navigate('/cliente/missoes');
+  };
+
+  // Get only available missions for the carousel
+  const availableMissions = allMissions.filter(m => m.status === "available").slice(0, 8);
 
   return (
     <motion.div
@@ -201,8 +92,20 @@ const MissionsCarousel = () => {
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold font-heading">Missões Recomendadas</h2>
-        <Target className="w-5 h-5 text-neon-cyan" />
+        <div>
+          <h2 className="text-xl font-bold font-heading">Missões Recomendadas</h2>
+          <p className="text-sm text-gray-400">Descubra missões de anunciantes de Recife</p>
+        </div>
+        <div className="flex items-center">
+          <Button 
+            variant="link" 
+            className="text-neon-cyan flex items-center p-0"
+            onClick={handleViewAllMissions}
+          >
+            Ver todas <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+          <Target className="w-5 h-5 text-neon-cyan ml-2" />
+        </div>
       </div>
       
       {loading ? (
@@ -218,54 +121,80 @@ const MissionsCarousel = () => {
           className="w-full"
         >
           <CarouselContent>
-            {recommendedMissions.map((mission) => (
-              <CarouselItem key={mission.id} className="md:basis-1/2 lg:basis-1/3">
-                <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <MissionTypeIcon type={mission.type} />
-                      <span className="text-xs px-2 py-0.5 bg-galaxy-deepPurple/50 rounded-full">
-                        {mission.difficulty}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg">{mission.title}</CardTitle>
-                    <CardDescription>{mission.description}</CardDescription>
-                    {mission.business_type && (
-                      <div className="text-xs text-gray-400 mt-1">
-                        {mission.business_type}
+            {availableMissions.length > 0 ? (
+              availableMissions.map((mission) => (
+                <CarouselItem key={mission.id} className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20 h-full flex flex-col">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <MissionTypeIcon type={mission.type} />
+                          <span className="text-xs ml-2">{getMissionTypeLabel(mission.type)}</span>
+                        </div>
+                        <span className="text-xs px-2 py-0.5 bg-galaxy-deepPurple/50 rounded-full">
+                          {getMissionDifficulty(mission.points)}
+                        </span>
                       </div>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-400">Recompensa</div>
-                      <div className="flex items-center">
-                        <span className="font-semibold text-neon-cyan">{mission.points}</span>
-                        <span className="ml-1 text-xs text-gray-400">pontos</span>
+                      <CardTitle className="text-lg">{mission.title}</CardTitle>
+                      <CardDescription>{mission.description}</CardDescription>
+                      {mission.business_type && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {mission.business_type}
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-400">Recompensa</div>
+                        <div className="flex items-center">
+                          <span className="font-semibold text-neon-cyan">{mission.points}</span>
+                          <span className="ml-1 text-xs text-gray-400">pontos</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <div className="text-sm text-gray-400">Duração estimada</div>
-                      <div className="text-sm">{mission.estimatedTime}</div>
-                    </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="text-sm text-gray-400">Duração estimada</div>
+                        <div className="text-sm flex items-center">
+                          <Clock className="w-3 h-3 mr-1 text-gray-400" />
+                          {getEstimatedTime(mission.type)}
+                        </div>
+                      </div>
+                      {mission.target_audience_gender && mission.target_audience_gender !== 'all' && (
+                        <div className="text-xs text-gray-400 mt-2">
+                          Público: {mission.target_audience_gender === 'male' ? 'Masculino' : 
+                                   mission.target_audience_gender === 'female' ? 'Feminino' : 'Todos'}
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className="w-full neon-button"
+                        onClick={() => handleAcceptMission(mission.id)}
+                        disabled={acceptedMissions.includes(mission.id)}
+                      >
+                        {acceptedMissions.includes(mission.id) ? "Aceita" : "Aceitar Missão"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </CarouselItem>
+              ))
+            ) : (
+              <CarouselItem className="md:basis-full">
+                <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20 p-8 text-center">
+                  <CardContent className="pt-6">
+                    <Target className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-lg font-medium">Nenhuma missão disponível no momento</p>
+                    <p className="text-sm text-gray-400 mt-2">Volte mais tarde para novas missões</p>
                   </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className="w-full neon-button"
-                      onClick={() => handleAcceptMission(mission.id)}
-                      disabled={acceptedMissions.includes(mission.id)}
-                    >
-                      {acceptedMissions.includes(mission.id) ? "Aceita" : "Aceitar Missão"}
-                    </Button>
-                  </CardFooter>
                 </Card>
               </CarouselItem>
-            ))}
+            )}
           </CarouselContent>
-          <div className="flex justify-center mt-4 gap-2">
-            <CarouselPrevious className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
-            <CarouselNext className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
-          </div>
+          {availableMissions.length > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              <CarouselPrevious className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
+              <CarouselNext className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
+            </div>
+          )}
         </Carousel>
       )}
     </motion.div>

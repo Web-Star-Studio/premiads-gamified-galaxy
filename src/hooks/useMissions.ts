@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
+import { MissionType, missionTypeLabels } from "@/hooks/useMissionsTypes";
 
-export type MissionType = "survey" | "photo" | "video" | "social_share" | "visit";
 export type MissionStatus = "available" | "in_progress" | "completed" | "pending_approval";
 
 export interface Mission {
@@ -59,7 +60,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
         // Get all active missions
         const { data: missionsData, error: missionsError } = await supabase
           .from("missions")
-          .select("*, missions(*)")
+          .select("*")
           .eq("is_active", true);
         
         if (missionsError) throw missionsError;
@@ -107,6 +108,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
         });
 
         setMissions(mappedMissions);
+        console.log("Fetched missions:", mappedMissions.length);
         playSound("chime");
       } catch (error: any) {
         console.error("Error fetching missions:", error);
@@ -185,6 +187,35 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
     }
   };
 
+  // Find missions based on business type
+  const findMissionsByBusinessType = (businessType: string) => {
+    return missions.filter(mission => 
+      mission.business_type?.toLowerCase().includes(businessType.toLowerCase())
+    );
+  };
+
+  // Find missions for specific gender
+  const findMissionsByGender = (gender: string) => {
+    return missions.filter(mission => 
+      mission.target_audience_gender === gender || mission.target_audience_gender === 'all'
+    );
+  };
+
+  // Find missions by age range
+  const findMissionsByAge = (age: number) => {
+    return missions.filter(mission => 
+      (mission.target_audience_age_min === null || mission.target_audience_age_min <= age) &&
+      (mission.target_audience_age_max === null || mission.target_audience_age_max >= age)
+    );
+  };
+
+  // Find missions by region
+  const findMissionsByRegion = (region: string) => {
+    return missions.filter(mission => 
+      mission.target_audience_region?.toLowerCase().includes(region.toLowerCase())
+    );
+  };
+
   return {
     loading,
     missions: filteredMissions,
@@ -193,6 +224,11 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
     setSelectedMission,
     setFilter,
     currentFilter: filter,
-    submitMission
+    submitMission,
+    findMissionsByBusinessType,
+    findMissionsByGender,
+    findMissionsByAge,
+    findMissionsByRegion,
+    getMissionTypeLabel: (type: MissionType) => missionTypeLabels[type] || type
   };
 };
