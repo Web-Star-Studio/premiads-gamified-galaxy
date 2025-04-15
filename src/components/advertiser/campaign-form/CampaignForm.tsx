@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { CampaignFormProps, initialFormData, FormData } from "./types";
 import BasicInfoStep from "./BasicInfoStep";
 import RewardsStep from "./RewardsStep";
 import DatesStep from "./DatesStep";
+import RequirementsStep from "./RequirementsStep";
 import FormNavigation from "./FormNavigation";
 import FormProgress from "./FormProgress";
 
@@ -33,10 +35,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   }, [editCampaign]);
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
     } else {
-      onClose();
+      handleSubmit();
     }
   };
 
@@ -53,14 +55,38 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }));
   };
 
+  const handleSubmit = () => {
+    // Here we would submit the form data to the server
+    console.log("Submitting form data:", formData);
+    onClose();
+  };
+
   const getStepTitle = () => {
-    if (editCampaign) return "Editar Campanha";
+    if (editCampaign) return "Editar Missão";
     
-    if (step === 1) return "Criar Nova Campanha";
-    if (step === 2) return "Definir Recompensas";
-    if (step === 3) return "Configurar Datas";
+    if (step === 1) return "Criar Nova Missão";
+    if (step === 2) return "Definir Requisitos";
+    if (step === 3) return "Definir Recompensas";
+    if (step === 4) return "Configurar Datas";
     
     return "";
+  };
+
+  // Check if current step is valid
+  const isCurrentStepValid = () => {
+    if (step === 1) {
+      return formData.title.trim() !== "" && formData.type !== "" && formData.audience !== "";
+    }
+    if (step === 2) {
+      return formData.requirements.length > 0;
+    }
+    if (step === 3) {
+      return true; // Rewards are optional
+    }
+    if (step === 4) {
+      return formData.startDate !== "" && formData.endDate !== "";
+    }
+    return false;
   };
 
   return (
@@ -92,8 +118,19 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
           </motion.div>
         )}
 
-        {/* Step 2: Rewards */}
+        {/* Step 2: Requirements */}
         {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <RequirementsStep formData={formData} updateFormData={updateFormData} />
+          </motion.div>
+        )}
+
+        {/* Step 3: Rewards */}
+        {step === 3 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -103,8 +140,8 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
           </motion.div>
         )}
 
-        {/* Step 3: Dates & Streaks */}
-        {step === 3 && (
+        {/* Step 4: Dates & Streaks */}
+        {step === 4 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -115,10 +152,12 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         )}
 
         <FormNavigation 
-          step={step} 
+          step={step}
+          totalSteps={4}
           handleNext={handleNext} 
           handleBack={handleBack} 
-          onClose={onClose} 
+          onClose={onClose}
+          isNextDisabled={!isCurrentStepValid()}
         />
       </CardContent>
     </Card>

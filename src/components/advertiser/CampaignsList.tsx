@@ -44,8 +44,8 @@ const CampaignsList = () => {
     setEditingCampaign(null);
     playSound("pop");
     toast({
-      title: "Campanha gerenciada",
-      description: editingCampaign ? "Campanha atualizada com sucesso!" : "Nova campanha criada com sucesso!",
+      title: "Missão gerenciada",
+      description: editingCampaign ? "Missão atualizada com sucesso!" : "Nova missão criada com sucesso!",
     });
     
     // Add logic here to add the campaign data to the campaigns list
@@ -57,7 +57,7 @@ const CampaignsList = () => {
       const newId = Math.max(...campaigns.map(c => c.id)) + 1;
       const newCampaign: Campaign = {
         id: newId,
-        title: `Nova Campanha #${newId}`,
+        title: `Nova Missão #${newId}`,
         status: "pendente",
         audience: "todos",
         completions: 0,
