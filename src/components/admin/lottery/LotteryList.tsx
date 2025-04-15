@@ -1,136 +1,92 @@
-
-import React, { useState } from 'react';
-import { Ticket, Calendar, Plus } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
-import NewLotteryDialog from './NewLotteryDialog';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { useSounds } from '@/hooks/use-sounds';
-
-interface Prize {
-  id: number;
-  name: string;
-  rarity: string;
-  probability: number;
-}
-
-export interface Lottery {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  prizes: Prize[];
-}
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon, CheckCircle, Circle, Timer } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from '@/lib/utils';
+import NewLotteryDialog from './NewLotteryDialog';
+import { Lottery } from './types';
 
 interface LotteryListProps {
   lotteries: Lottery[];
   selectedLotteryId: number | null;
   onSelectLottery: (lottery: Lottery) => void;
-  onLotteryCreated?: (lottery: Lottery) => void;
+  onLotteryCreated: (lottery: Lottery) => void;
 }
 
 const LotteryList: React.FC<LotteryListProps> = ({ 
-  lotteries,
-  selectedLotteryId,
+  lotteries, 
+  selectedLotteryId, 
   onSelectLottery,
   onLotteryCreated
 }) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const { playSound } = useSounds();
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active': return <Badge className="bg-neon-lime text-black">Ativo</Badge>;
-      case 'pending': return <Badge className="bg-yellow-500 text-black">Pendente</Badge>;
-      case 'completed': return <Badge className="bg-muted">Concluído</Badge>;
-      default: return <Badge>Desconhecido</Badge>;
-    }
-  };
-
-  const handleNewLotteryClick = () => {
-    try {
-      playSound('pop');
-    } catch (error) {
-      console.log("Som não reproduzido", error);
-    }
-    setDialogOpen(true);
-  };
-
-  const handleLotteryCreated = (newLottery: Lottery) => {
-    if (onLotteryCreated) {
-      onLotteryCreated(newLottery);
-    }
-  };
-
-  const handleSelectLottery = (lottery: Lottery) => {
-    try {
-      playSound('pop');
-    } catch (error) {
-      console.log("Som não reproduzido", error);
-    }
-    onSelectLottery(lottery);
-  };
-
+  const [open, setOpen] = React.useState(false);
+  
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium flex items-center">
-          <Ticket className="h-4 w-4 mr-2 text-neon-cyan" />
-          Sorteios
-        </h3>
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
-          className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center transition-colors"
-          onClick={handleNewLotteryClick}
-          aria-label="Adicionar novo sorteio"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Novo
-        </motion.button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-white">Lista de Sorteios</h3>
+        <Button size="sm" onClick={() => setOpen(true)} aria-label="Adicionar novo sorteio">
+          Novo Sorteio
+        </Button>
+        <NewLotteryDialog 
+          open={open} 
+          onOpenChange={setOpen}
+          onLotteryCreated={onLotteryCreated}
+        />
       </div>
       
-      <div className="space-y-3 max-h-[500px] overflow-y-auto fancy-scrollbar pr-2">
-        {lotteries.length > 0 ? (
-          lotteries.map(lottery => (
-            <motion.div
-              key={lottery.id}
-              className={`p-3 rounded-md border cursor-pointer transition-all duration-200 ${
-                selectedLotteryId === lottery.id 
-                  ? 'border-neon-cyan bg-galaxy-dark/50 shadow-[0_0_10px_rgba(0,255,231,0.3)]' 
-                  : 'border-galaxy-purple/30 hover:border-galaxy-purple/60'
-              }`}
-              onClick={() => handleSelectLottery(lottery)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">{lottery.name}</div>
-                  <div className="text-sm text-muted-foreground flex items-center mt-1">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {lottery.startDate} - {lottery.endDate}
-                  </div>
+      {lotteries.length === 0 ? (
+        <p className="text-muted-foreground">Nenhum sorteio encontrado.</p>
+      ) : (
+        <ScrollArea className="h-[400px] w-full rounded-md border border-galaxy-purple/30">
+          <div className="p-2">
+            {lotteries.map((lottery) => (
+              <motion.div
+                key={lottery.id}
+                className={cn(
+                  "group flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-secondary cursor-pointer",
+                  selectedLotteryId === lottery.id ? "bg-secondary" : "bg-transparent"
+                )}
+                onClick={() => onSelectLottery(lottery)}
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-white">{lottery.name}</span>
                 </div>
-                <div>{getStatusBadge(lottery.status)}</div>
-              </div>
-              <div className="mt-3 text-xs text-muted-foreground">
-                {lottery.prizes.length} prêmios configurados
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            Nenhum sorteio encontrado. Crie um novo sorteio clicando em "Novo".
+                <div className="flex items-center space-x-2">
+                  {lottery.status === 'active' && (
+                    <Badge variant="success">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Ativo
+                    </Badge>
+                  )}
+                  {lottery.status === 'pending' && (
+                    <Badge variant="secondary">
+                      <Timer className="h-4 w-4 mr-1" />
+                      Pendente
+                    </Badge>
+                  )}
+                  {lottery.status === 'completed' && (
+                    <Badge variant="outline">
+                      <Circle className="h-4 w-4 mr-1" />
+                      Finalizado
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground">
+                    <CalendarIcon className="h-3 w-3 mr-1 inline-block" />
+                    {format(parseISO(lottery.startDate), 'dd/MM/yyyy', { locale: ptBR })}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        )}
-      </div>
-
-      <NewLotteryDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen}
-        onLotteryCreated={handleLotteryCreated}
-      />
+        </ScrollArea>
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import NewLotteryForm from './NewLotteryForm';
 import { Gift } from 'lucide-react';
-import { Lottery } from './LotteryList';
+import { Lottery } from './types';
 import { motion } from 'framer-motion';
 
 interface NewLotteryDialogProps {
