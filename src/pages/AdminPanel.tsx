@@ -10,6 +10,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import AdminOverview from "@/components/admin/AdminOverview";
 import LoadingParticles from "@/components/admin/LoadingParticles";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import DashboardHeader from "@/components/admin/DashboardHeader";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,11 @@ const AdminPanel = () => {
         <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
           <AdminHeader />
           
-          <div className="container px-4 pt-20 py-6 sm:py-8 mx-auto max-w-7xl">
+          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl pt-16">
+            <DashboardHeader 
+              title="Painel de Controle" 
+              subtitle="Visão geral do sistema e estatísticas" 
+            />
             <div className="mt-6 sm:mt-8">
               <AdminOverview />
             </div>

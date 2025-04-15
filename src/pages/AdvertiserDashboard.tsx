@@ -147,7 +147,7 @@ const AdvertiserDashboard = () => {
           <AdvertiserHeader />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
-            <DashboardHeader userName={userName} />
+            <DashboardHeader userName={userName} credits={credits} isPremium={true} />
             
             <NotificationBanner 
               pendingSubmissions={pendingSubmissions} 
