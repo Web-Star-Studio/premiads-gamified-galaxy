@@ -8,14 +8,23 @@ import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
 import { mockCampaigns, Campaign } from "./campaignData";
 
-const CampaignsList = () => {
+interface CampaignsListProps {
+  initialFilter?: string | null;
+}
+
+const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
   const { playSound } = useSounds();
   const { toast } = useToast();
+  
+  // Set initial filter when prop changes
+  useEffect(() => {
+    setFilterStatus(initialFilter);
+  }, [initialFilter]);
   
   // Filter campaigns based on search term and status filter
   const filteredCampaigns = campaigns.filter(campaign => {

@@ -1,101 +1,112 @@
 
-import { FC, memo } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { CampaignFormProps } from "./types";
-import { useCampaignForm } from "@/hooks/use-campaign-form";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import FormProgress from "./FormProgress";
+import FormNavigation from "./FormNavigation";
+import { Campaign } from "../campaignData";
 import BasicInfoStep from "./BasicInfoStep";
+import RequirementsStep from "./RequirementsStep";
 import RewardsStep from "./RewardsStep";
 import DatesStep from "./DatesStep";
-import RequirementsStep from "./RequirementsStep";
-import FormNavigation from "./FormNavigation";
-import FormProgress from "./FormProgress";
+import { useFormNavigation } from "@/hooks/use-form-navigation";
+import { ArrowLeft, Save } from "lucide-react";
+import { motion } from "framer-motion";
 
-/**
- * Campaign creation and editing form with multi-step wizard
- * Manages form state through useCampaignForm hook
- * 
- * @param onClose Function called when form is closed or submitted
- * @param editCampaign Optional campaign data for editing mode
- */
-const CampaignForm: FC<CampaignFormProps> = ({ onClose, editCampaign }) => {
+interface CampaignFormProps {
+  onClose: () => void;
+  editCampaign?: Campaign | null;
+}
+
+const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
+  const isEditing = !!editCampaign;
+  const [loading, setLoading] = useState(false);
+  
+  const steps = [
+    "Informações Básicas",
+    "Requisitos",
+    "Recompensas", 
+    "Datas"
+  ];
+  
   const { 
-    step, 
-    formData, 
-    handleNext, 
-    handleBack, 
-    updateFormData, 
-    getStepTitle, 
-    isCurrentStepValid 
-  } = useCampaignForm({ editCampaign, onClose });
-
-  // Animation configuration for form steps
-  const stepAnimation = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 }
+    currentStepIndex, 
+    isFirstStep, 
+    isLastStep,
+    goToPreviousStep,
+    goToNextStep
+  } = useFormNavigation(steps.length);
+  
+  const handleSave = () => {
+    setLoading(true);
+    
+    // Simulating save operation
+    setTimeout(() => {
+      setLoading(false);
+      onClose();
+    }, 1000);
   };
-
+  
+  // Shows the current step content based on the current index
+  const renderCurrentStep = () => {
+    switch (currentStepIndex) {
+      case 0:
+        return <BasicInfoStep campaign={editCampaign} />;
+      case 1:
+        return <RequirementsStep campaign={editCampaign} />;
+      case 2:
+        return <RewardsStep campaign={editCampaign} />;
+      case 3:
+        return <DatesStep campaign={editCampaign} />;
+      default:
+        return null;
+    }
+  };
+  
   return (
-    <Card className="relative overflow-hidden border-neon-cyan/30 shadow-[0_0_20px_rgba(0,255,231,0.2)]">
-      <Button
-        size="icon"
-        variant="ghost"
-        className="absolute top-2 right-2 text-gray-400 hover:text-white"
-        onClick={onClose}
-        aria-label="Fechar formulário"
-      >
-        <X className="w-4 h-4" />
-      </Button>
-
-      <CardHeader className="pb-3">
-        <CardTitle>
-          <FormProgress step={step} title={getStepTitle()} />
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="pb-6">
-        {/* Step 1: Basic Information */}
-        {step === 1 && (
-          <motion.div {...stepAnimation}>
-            <BasicInfoStep formData={formData} updateFormData={updateFormData} />
-          </motion.div>
-        )}
-
-        {/* Step 2: Requirements */}
-        {step === 2 && (
-          <motion.div {...stepAnimation}>
-            <RequirementsStep formData={formData} updateFormData={updateFormData} />
-          </motion.div>
-        )}
-
-        {/* Step 3: Rewards */}
-        {step === 3 && (
-          <motion.div {...stepAnimation}>
-            <RewardsStep formData={formData} updateFormData={updateFormData} />
-          </motion.div>
-        )}
-
-        {/* Step 4: Dates & Streaks */}
-        {step === 4 && (
-          <motion.div {...stepAnimation}>
-            <DatesStep formData={formData} updateFormData={updateFormData} />
-          </motion.div>
-        )}
-
-        <FormNavigation 
-          step={step}
-          totalSteps={4}
-          handleNext={handleNext} 
-          handleBack={handleBack} 
-          onClose={onClose}
-          isNextDisabled={!isCurrentStepValid()}
-        />
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="bg-galaxy-darkPurple border-galaxy-purple">
+        <CardHeader className="pb-4">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              className="mr-2 text-muted-foreground"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <CardTitle>
+              {isEditing ? "Editar Campanha" : "Nova Campanha"}
+            </CardTitle>
+          </div>
+          <FormProgress 
+            steps={steps} 
+            currentStepIndex={currentStepIndex} 
+          />
+        </CardHeader>
+        
+        <CardContent>
+          {renderCurrentStep()}
+        </CardContent>
+        
+        <CardFooter className="flex justify-between border-t border-galaxy-purple/20 pt-4">
+          <FormNavigation 
+            isFirstStep={isFirstStep}
+            isLastStep={isLastStep}
+            onBack={goToPreviousStep}
+            onNext={goToNextStep}
+            onSave={handleSave}
+            loading={loading}
+          />
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };
 
-export default memo(CampaignForm);
+export default CampaignForm;
