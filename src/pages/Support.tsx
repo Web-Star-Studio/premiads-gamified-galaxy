@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { MessageSquare, Mail, Phone, FileQuestion, Clock } from "lucide-react";
 import KnowledgeLayout from "@/components/client/knowledge/KnowledgeLayout";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useSounds } from "@/hooks/use-sounds";
 
 const Support = () => {
