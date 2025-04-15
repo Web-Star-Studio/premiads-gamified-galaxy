@@ -1,7 +1,8 @@
 
-import React from 'react';
-import { Ticket, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Ticket, Calendar, Plus } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import NewLotteryDialog from './NewLotteryDialog';
 
 interface Prize {
   id: number;
@@ -23,19 +24,33 @@ interface LotteryListProps {
   lotteries: Lottery[];
   selectedLotteryId: number | null;
   onSelectLottery: (lottery: Lottery) => void;
+  onLotteryCreated?: (lottery: Lottery) => void;
 }
 
 const LotteryList: React.FC<LotteryListProps> = ({ 
   lotteries,
   selectedLotteryId,
-  onSelectLottery
+  onSelectLottery,
+  onLotteryCreated
 }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active': return <Badge className="bg-neon-lime text-black">Ativo</Badge>;
       case 'pending': return <Badge className="bg-yellow-500 text-black">Pendente</Badge>;
       case 'completed': return <Badge className="bg-muted">Concluído</Badge>;
       default: return <Badge>Desconhecido</Badge>;
+    }
+  };
+
+  const handleNewLotteryClick = () => {
+    setDialogOpen(true);
+  };
+
+  const handleLotteryCreated = (newLottery: Lottery) => {
+    if (onLotteryCreated) {
+      onLotteryCreated(newLottery);
     }
   };
 
@@ -46,8 +61,11 @@ const LotteryList: React.FC<LotteryListProps> = ({
           <Ticket className="h-4 w-4 mr-2 text-neon-cyan" />
           Sorteios
         </h3>
-        <button className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center">
-          <span className="mr-1 text-lg">+</span>
+        <button 
+          className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center"
+          onClick={handleNewLotteryClick}
+        >
+          <Plus className="h-4 w-4 mr-1" />
           Novo
         </button>
       </div>
@@ -79,6 +97,12 @@ const LotteryList: React.FC<LotteryListProps> = ({
           </div>
         ))}
       </div>
+
+      <NewLotteryDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen}
+        onLotteryCreated={handleLotteryCreated}
+      />
     </div>
   );
 };

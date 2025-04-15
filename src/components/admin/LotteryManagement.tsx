@@ -98,6 +98,14 @@ const LotteryManagement: React.FC = () => {
     }, 800);
   };
 
+  const handleLotteryCreated = (newLottery: Lottery) => {
+    // Adicionar o novo sorteio à lista
+    setLotteries([newLottery, ...lotteries]);
+    
+    // Selecionar o novo sorteio
+    setSelectedLottery(newLottery);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -128,6 +136,7 @@ const LotteryManagement: React.FC = () => {
                     lotteries={lotteries} 
                     selectedLotteryId={selectedLottery?.id || null}
                     onSelectLottery={handleSelectLottery}
+                    onLotteryCreated={handleLotteryCreated}
                   />
                 </div>
                 
