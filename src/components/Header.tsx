@@ -142,7 +142,7 @@ const Header = () => {
           </DropdownMenu>
 
           <Button 
-            className="hidden md:block neon-button" 
+            className="hidden md:block neon-button text-center items-center justify-center" 
             size="sm"
             onClick={navigateToDashboard}
           >
@@ -197,3 +197,4 @@ const Header = () => {
 };
 
 export default Header;
+
