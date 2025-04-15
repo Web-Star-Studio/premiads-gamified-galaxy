@@ -1,116 +1,18 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
+import { SignUpCredentials, SignInCredentials } from "@/types/auth";
 
-export interface SignUpCredentials {
-  email: string;
-  password: string;
-  name: string;
-  userType?: "participante" | "anunciante"; // Add userType to signup credentials
-}
-
-export interface SignInCredentials {
-  email: string;
-  password: string;
-}
-
-export const useAuth = () => {
+export const useAuthMethods = () => {
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const { setUserName, setUserType, resetUserInfo } = useUser();
   const { toast } = useToast();
   const { playSound } = useSounds();
   const navigate = useNavigate();
-
-  // Check for existing session
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setUser(data.session.user);
-        
-        try {
-          // Set user name from metadata
-          const { data: profileData, error } = await supabase
-            .from("profiles")
-            .select("full_name, user_type")
-            .eq("id", data.session.user.id)
-            .single();
-          
-          if (error) throw error;
-          
-          if (profileData) {
-            setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
-            // Type cast user_type to UserType
-            const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
-            setUserType(userType);
-          } else {
-            setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
-            setUserType("participante");
-          }
-        } catch (error) {
-          console.error("Error fetching profile:", error);
-          setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
-          setUserType("participante");
-        }
-      }
-    };
-    
-    checkSession();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setUser(session.user);
-          
-          try {
-            // Set user name and type from metadata
-            const { data: profileData, error } = await supabase
-              .from("profiles")
-              .select("full_name, user_type")
-              .eq("id", session.user.id)
-              .single();
-            
-            if (error) throw error;
-            
-            if (profileData) {
-              setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
-              // Type cast user_type to UserType
-              const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
-              setUserType(userType);
-            } else {
-              setUserName(session.user.email?.split('@')[0] || 'Usuário');
-              setUserType("participante");
-            }
-            
-            // Redirect based on user type
-            if (profileData?.user_type === "anunciante") {
-              navigate("/anunciante");
-            } else {
-              navigate("/cliente");
-            }
-          } catch (error) {
-            console.error("Error fetching profile:", error);
-            setUserName(session.user.email?.split('@')[0] || 'Usuário');
-            setUserType("participante");
-            navigate("/cliente");
-          }
-        } else if (event === "SIGNED_OUT") {
-          setUser(null);
-          resetUserInfo();
-        }
-      }
-    );
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [setUserName, setUserType, resetUserInfo, navigate]);
 
   const signUp = async (credentials: SignUpCredentials) => {
     setLoading(true);
@@ -136,7 +38,6 @@ export const useAuth = () => {
       });
       
       if (data.user) {
-        setUser(data.user);
         setUserName(credentials.name);
         setUserType(credentials.userType || "participante");
         
@@ -180,8 +81,6 @@ export const useAuth = () => {
       });
       
       if (data.user) {
-        setUser(data.user);
-        
         try {
           // Set user name from metadata
           const { data: profileData, error } = await supabase
@@ -194,9 +93,7 @@ export const useAuth = () => {
           
           if (profileData) {
             setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
-            // Type cast user_type to UserType
-            const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
-            setUserType(userType);
+            setUserType((profileData.user_type || "participante") as "participante" | "anunciante");
             
             // Redirect based on user type
             if (profileData.user_type === "anunciante") {
@@ -258,7 +155,6 @@ export const useAuth = () => {
   }, [navigate, resetUserInfo, toast]);
 
   return {
-    user,
     loading,
     signUp,
     signIn,
