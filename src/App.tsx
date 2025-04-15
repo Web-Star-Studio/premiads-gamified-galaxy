@@ -52,8 +52,11 @@ const App = () => {
               <Route path="/admin/sorteios" element={<LotteryManagementPage />} />
               <Route path="/admin/usuarios" element={<UserManagementPage />} />
               <Route path="/admin/acesso" element={<AccessControlPage />} />
-              <Route path="/admin/relatorios" element={<ReportsPage />} />
+              <Route path="/admin/regras" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
               <Route path="/admin/monitoramento" element={<MonitoringPage />} />
+              <Route path="/admin/relatorios" element={<ReportsPage />} />
+              <Route path="/admin/notificacoes" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
+              <Route path="/admin/configuracoes" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
