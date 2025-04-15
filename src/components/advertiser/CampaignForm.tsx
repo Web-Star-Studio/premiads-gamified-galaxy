@@ -1,30 +1,50 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { X, Check, ChevronRight, Calendar, BarChart, Trophy, Target, Sparkles } from "lucide-react";
+import { Campaign } from "./campaignData";
 
 interface CampaignFormProps {
   onClose: () => void;
+  editCampaign?: Campaign | null;
 }
 
-const CampaignForm = ({ onClose }: CampaignFormProps) => {
+const initialFormData = {
+  title: "",
+  type: "",
+  audience: "",
+  pointsRange: [30, 50],
+  randomPoints: true,
+  hasBadges: false,
+  hasLootBox: false,
+  startDate: "",
+  endDate: "",
+  streakBonus: false,
+};
+
+const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    title: "",
-    type: "",
-    audience: "",
-    pointsRange: [30, 50],
-    randomPoints: true,
-    hasBadges: false,
-    hasLootBox: false,
-    startDate: "",
-    endDate: "",
-    streakBonus: false,
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  
+  // If editing, populate form with campaign data
+  useEffect(() => {
+    if (editCampaign) {
+      const pointsRange = editCampaign.reward.includes("-") 
+        ? editCampaign.reward.split("-").map(Number) 
+        : [parseInt(editCampaign.reward), parseInt(editCampaign.reward)];
+      
+      setFormData({
+        ...initialFormData,
+        title: editCampaign.title,
+        audience: editCampaign.audience,
+        pointsRange: pointsRange as [number, number],
+        // Other fields would be populated here if they were available in the campaign data
+      });
+    }
+  }, [editCampaign]);
 
   const handleNext = () => {
     if (step < 3) {
@@ -60,9 +80,13 @@ const CampaignForm = ({ onClose }: CampaignFormProps) => {
 
       <CardHeader className="pb-3">
         <CardTitle className="text-xl font-heading">
-          {step === 1 && "Criar Nova Campanha"}
-          {step === 2 && "Definir Recompensas"}
-          {step === 3 && "Configurar Datas"}
+          {editCampaign ? "Editar Campanha" : (
+            <>
+              {step === 1 && "Criar Nova Campanha"}
+              {step === 2 && "Definir Recompensas"}
+              {step === 3 && "Configurar Datas"}
+            </>
+          )}
         </CardTitle>
         <div className="flex items-center mt-2">
           <div className={`h-1 w-1/3 ${step >= 1 ? "bg-neon-cyan" : "bg-gray-700"}`}></div>
@@ -120,9 +144,9 @@ const CampaignForm = ({ onClose }: CampaignFormProps) => {
               <label className="text-sm font-medium">Público Alvo</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { id: "all", label: "Todos" },
-                  { id: "new", label: "Novos" },
-                  { id: "level3", label: "Nível 3+" },
+                  { id: "todos", label: "Todos" },
+                  { id: "novos", label: "Novos" },
+                  { id: "nivel3", label: "Nível 3+" },
                 ].map((audience) => (
                   <div
                     key={audience.id}
@@ -166,6 +190,7 @@ const CampaignForm = ({ onClose }: CampaignFormProps) => {
               />
             </div>
 
+            
             <div className="flex items-center justify-between px-1 py-2">
               <div className="space-y-1">
                 <p className="text-sm font-medium">Pontuação Aleatória</p>
@@ -209,6 +234,7 @@ const CampaignForm = ({ onClose }: CampaignFormProps) => {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-5"
           >
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Data de Início</label>

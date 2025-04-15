@@ -1,19 +1,31 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
-import { mockCampaigns } from "./campaignData";
+import { mockCampaigns, Campaign } from "./campaignData";
 
 const CampaignsList = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const { playSound } = useSounds();
   const { toast } = useToast();
   
+  // Filter campaigns based on search term and status filter
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus ? campaign.status === filterStatus : true;
+    return matchesSearch && matchesStatus;
+  });
+
   const handleDelete = (id: number) => {
+    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
     playSound("error");
     toast({
       title: "Campanha removida",
@@ -23,16 +35,51 @@ const CampaignsList = () => {
   
   const handleCreateNew = () => {
     setShowCreateForm(true);
+    setEditingCampaign(null);
     playSound("pop");
   };
   
   const handleFormClose = () => {
     setShowCreateForm(false);
+    setEditingCampaign(null);
     playSound("pop");
     toast({
-      title: "Campanha criada",
-      description: "Sua nova campanha foi criada com sucesso!",
+      title: "Campanha gerenciada",
+      description: editingCampaign ? "Campanha atualizada com sucesso!" : "Nova campanha criada com sucesso!",
     });
+    
+    // Add logic here to add the campaign data to the campaigns list
+    if (editingCampaign) {
+      // Update existing campaign logic would go here
+    } else {
+      // Add new campaign logic would go here
+      // For now we'll just add a mock campaign with a new ID
+      const newId = Math.max(...campaigns.map(c => c.id)) + 1;
+      const newCampaign: Campaign = {
+        id: newId,
+        title: `Nova Campanha #${newId}`,
+        status: "pendente",
+        audience: "todos",
+        completions: 0,
+        reward: "50-100",
+        expires: "30/08/2025",
+      };
+      setCampaigns(prev => [...prev, newCampaign]);
+    }
+  };
+  
+  const handleEdit = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setShowCreateForm(true);
+    playSound("pop");
+  };
+  
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+  };
+  
+  const handleFilterChange = (status: string | null) => {
+    setFilterStatus(status);
   };
   
   return (
@@ -42,12 +89,23 @@ const CampaignsList = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <CampaignForm onClose={handleFormClose} />
+          <CampaignForm 
+            onClose={handleFormClose} 
+            editCampaign={editingCampaign}
+          />
         </motion.div>
       ) : (
         <>
-          <CampaignHeader onCreateNew={handleCreateNew} />
-          <CampaignTable campaigns={mockCampaigns} onDelete={handleDelete} />
+          <CampaignHeader 
+            onCreateNew={handleCreateNew} 
+            onSearchChange={handleSearchChange}
+            onFilterChange={handleFilterChange}
+          />
+          <CampaignTable 
+            campaigns={filteredCampaigns} 
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
         </>
       )}
     </div>

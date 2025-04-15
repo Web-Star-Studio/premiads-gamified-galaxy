@@ -19,6 +19,7 @@ const AdvertiserDashboard = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     // Simulate loading
@@ -41,6 +42,16 @@ const AdvertiserDashboard = () => {
     return () => clearTimeout(loadTimer);
   }, []); // Empty dependency array to run only once
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // Play sound on tab change
+    playSound("pop");
+    
+    // Track action in a real app
+    console.log(`Tab changed to: ${value}`);
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark">
@@ -61,7 +72,7 @@ const AdvertiserDashboard = () => {
       <div className="container px-4 py-8 mx-auto">
         <DashboardHeader userName={userName} />
         
-        <Tabs defaultValue="overview" className="mt-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-8">
           <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex md:gap-4">
             <TabsTrigger className="data-[state=active]:neon-text-pink" value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger className="data-[state=active]:neon-text-pink" value="campaigns">Missões</TabsTrigger>
