@@ -22,6 +22,7 @@ import LotteryManagementPage from "./pages/admin/LotteryManagementPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AccessControlPage from "./pages/admin/AccessControlPage";
 import ReportsPage from "./pages/admin/ReportsPage";
+import MonitoringPage from "./pages/admin/MonitoringPage";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => {
               <Route path="/admin/usuarios" element={<UserManagementPage />} />
               <Route path="/admin/acesso" element={<AccessControlPage />} />
               <Route path="/admin/relatorios" element={<ReportsPage />} />
+              <Route path="/admin/monitoramento" element={<MonitoringPage />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
