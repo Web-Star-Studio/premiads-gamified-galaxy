@@ -22,17 +22,32 @@ export const useCashbackMarketplace = () => {
     const fetchCashbackData = async () => {
       try {
         // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
-        const { data: campaignsData, error: campaignsError } = await (supabase
-          .rpc('get_active_cashback_campaigns') as unknown as Promise<RPCResponse<CashbackCampaign[]>>);
-
+        const campaignsResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/get_active_cashback_campaigns`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          }
+        });
+        
+        const campaignsData = await campaignsResponse.json();
+        
+        // Get user authenticated user
+        const { data: { user } } = await supabase.auth.getUser();
+        
         // Get user's cashback balance using rpc
-        const { data: profileData, error: profileError } = await (supabase
-          .rpc('get_user_cashback_balance', {
-            user_id: (await supabase.auth.getUser()).data.user?.id
-          }) as unknown as Promise<RPCResponse<{ cashback_balance: number }[]>>);
-
-        if (campaignsError) throw campaignsError;
-        if (profileError) throw profileError;
+        const profileResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/get_user_cashback_balance`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          },
+          body: JSON.stringify({ user_id: user?.id })
+        });
+        
+        const profileData = await profileResponse.json();
 
         setCampaigns(campaignsData || []);
         setUserCashback(profileData && profileData[0] ? profileData[0].cashback_balance || 0 : 0);
@@ -59,22 +74,33 @@ export const useCashbackMarketplace = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Use rpc call to redeem cashback
-      const { data, error } = await (supabase
-        .rpc('redeem_cashback', {
+      // Use direct fetch for RPC call to avoid TypeScript issues
+      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/redeem_cashback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer ${supabase.supabaseKey}`
+        },
+        body: JSON.stringify({
           p_user_id: userId,
           p_campaign_id: campaignId,
           p_amount: amount
-        }) as unknown as Promise<RPCResponse<CashbackRedemption>>);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Resgate efetuado',
-        description: `Você resgatou R$ ${amount.toFixed(2)} de cashback`
+        })
       });
-
-      return data as CashbackRedemption;
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: 'Resgate efetuado',
+          description: `Você resgatou R$ ${amount.toFixed(2)} de cashback`
+        });
+        
+        return data as CashbackRedemption;
+      } else {
+        throw new Error(data.message || 'Erro no resgate de cashback');
+      }
     } catch (error: any) {
       toast({
         title: 'Erro no resgate',
