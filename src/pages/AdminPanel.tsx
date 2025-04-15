@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
-import { useToast } from "@/hooks/use-toast";
+import { toastInfo } from "@/utils/toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import DashboardHeader from "@/components/admin/DashboardHeader";
@@ -14,7 +13,6 @@ import { useMediaQuery } from "@/hooks/use-mobile";
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
@@ -29,10 +27,7 @@ const AdminPanel = () => {
         console.log("Sound playback failed silently", error);
       }
       
-      toast({
-        title: "Painel Admin",
-        description: "Acesso administrativo concedido.",
-      });
+      toastInfo("Painel Admin", "Acesso administrativo concedido.");
     }, 1500);
 
     return () => clearTimeout(loadTimer);

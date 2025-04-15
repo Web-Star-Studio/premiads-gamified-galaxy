@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserProvider } from "@/context/UserContext";
+import { AppProvider } from "@/context/AppContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Regular import for essential components
@@ -18,7 +18,7 @@ const ClientProfile = lazy(() => import("./pages/ClientProfile"));
 const ClientMissions = lazy(() => import("./pages/ClientMissions"));
 const ClientReferrals = lazy(() => import("./pages/ClientReferrals"));
 const ClientRaffles = lazy(() => import("./pages/ClientRaffles"));
-const Authentication = lazy(() => import("./pages/Authentication"));
+const Authentication = lazy(() => import("./pages/pages/Authentication"));
 const AdvertiserDashboard = lazy(() => import("./pages/AdvertiserDashboard"));
 const AdvertiserProfile = lazy(() => import("./pages/AdvertiserProfile"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
@@ -47,9 +47,10 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <UserProvider>
-          <TooltipProvider>
-            <Routes>
+        <AppProvider>
+          <UserProvider>
+            <TooltipProvider>
+              <Routes>
               <Route path="/" element={<Index />} />
               
               {/* Wrap lazy-loaded routes with Suspense */}
@@ -152,8 +153,8 @@ const App = () => {
             <Sonner />
           </TooltipProvider>
         </UserProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      </AppProvider>
+    </QueryClientProvider>
   );
 };
 
