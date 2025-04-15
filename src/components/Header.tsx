@@ -115,7 +115,11 @@ const Header = () => {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="bg-galaxy-deepPurple/70 border-neon-cyan/30">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-galaxy-deepPurple/70 border-neon-cyan/30 flex items-center justify-center"
+              >
                 {userType === "participante" ? "Participante" : "Anunciante"} 
               </Button>
             </DropdownMenuTrigger>
@@ -142,7 +146,7 @@ const Header = () => {
           </DropdownMenu>
 
           <Button 
-            className="hidden md:block neon-button" 
+            className="hidden md:flex neon-button items-center justify-center" 
             size="sm"
             onClick={navigateToDashboard}
           >
