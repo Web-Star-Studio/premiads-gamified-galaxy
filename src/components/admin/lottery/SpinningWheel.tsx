@@ -2,15 +2,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { Lottery } from './LotteryList';
 
 interface SpinningWheelProps {
   isSpinning?: boolean;
   onComplete?: () => void;
+  selectedLottery?: Lottery;
 }
 
 const SpinningWheel: React.FC<SpinningWheelProps> = ({ 
   isSpinning = false, 
-  onComplete 
+  onComplete,
+  selectedLottery
 }) => {
   const wheelSegments = [
     { color: 'bg-neon-cyan', value: '100 Pontos' },

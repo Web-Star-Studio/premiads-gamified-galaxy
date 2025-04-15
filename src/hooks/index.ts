@@ -13,7 +13,15 @@ export { useToast } from './use-toast';
 // Feature hooks
 export { useClientDashboard } from './useClientDashboard';
 export { useMissions } from './useMissions';
-export { useMissionsTypes } from './useMissionsTypes';
+export { 
+  MissionType, 
+  missionTypeLabels, 
+  getMissionTypeDescription, 
+  getMissionIcon,
+  filterMissionsByType,
+  getMissionDifficulty,
+  getEstimatedTime
+} from './useMissionsTypes';
 export { useReferrals } from './useReferrals';
 
 // Mission-specific hooks
