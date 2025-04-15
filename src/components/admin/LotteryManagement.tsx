@@ -11,8 +11,8 @@ import { Lottery } from './lottery/types';
 import LotteryDetails from './lottery/LotteryDetails';
 import EmptyState from './lottery/EmptyState';
 
-// Mock lottery data
-const initialLotteries = [
+// Mock lottery data with proper type-safe status values
+const initialLotteries: Lottery[] = [
   { 
     id: 1, 
     name: 'Sorteio Semanal de Pontos', 
@@ -76,7 +76,7 @@ const LotteryManagement: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (id: number, newStatus: string) => {
+  const handleStatusChange = (id: number, newStatus: 'active' | 'pending' | 'completed') => {
     setLoading(true);
     
     setTimeout(() => {
