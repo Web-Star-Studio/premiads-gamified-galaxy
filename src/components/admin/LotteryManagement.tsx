@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Gift, Plus, Edit, Trash2, Play, Pause, Award, Ticket, Dices, RotateCw, 
-  Clock, Calendar, CheckCircle, XCircle, Switch, ChevronsUpDown 
+  Clock, Calendar, CheckCircle, XCircle, ChevronsUpDown 
 } from 'lucide-react';
 import LoadingParticles from './LoadingParticles';
 import { useSounds } from '@/hooks/use-sounds';
