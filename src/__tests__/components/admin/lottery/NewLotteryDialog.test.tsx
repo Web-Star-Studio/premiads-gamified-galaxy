@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../utils/test-utils';
+import { render, screen, fireEvent, waitFor } from '../../../../utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import NewLotteryDialog from '@/components/admin/lottery/NewLotteryDialog';
 import { Lottery } from '@/components/admin/lottery/types';
