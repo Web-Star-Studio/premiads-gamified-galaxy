@@ -9,14 +9,12 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import DashboardHeader from "@/components/admin/DashboardHeader";
 import AdminOverview from "@/components/admin/AdminOverview";
 import LoadingParticles from "@/components/admin/LoadingParticles";
-import { useMediaQuery } from "@/hooks/use-mobile";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery("(max-width: 768px)");
   
   useEffect(() => {
     const loadTimer = setTimeout(() => {
@@ -48,7 +46,7 @@ const AdminPanel = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdminSidebar />
         <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
