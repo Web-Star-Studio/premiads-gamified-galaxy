@@ -1,44 +1,60 @@
 
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback, useRef } from "react";
 
-// Sound URLs - would typically be imported from actual audio files
-const SOUND_URLS = {
-  chime: "https://assets.mixkit.co/active_storage/sfx/2019/chime-notification-alert.wav",
-  pop: "https://assets.mixkit.co/active_storage/sfx/2044/game-pop-alert.wav",
-  reward: "https://assets.mixkit.co/active_storage/sfx/2020/coin-win-notification.wav",
-  error: "https://assets.mixkit.co/active_storage/sfx/2021/error-negative-alert.wav",
-};
+export type SoundType = "pop" | "chime" | "success" | "error" | "notification";
 
-type SoundName = keyof typeof SOUND_URLS;
+interface SoundOptions {
+  volume?: number; // 0 to 1
+}
 
-export function useSounds() {
-  const audioCache = useRef<Record<SoundName, HTMLAudioElement>>({} as Record<SoundName, HTMLAudioElement>);
+export const useSounds = () => {
+  const audioCache = useRef<Record<string, HTMLAudioElement>>({});
+  
+  const soundMap: Record<SoundType, string> = {
+    pop: "/sounds/pop.mp3",
+    chime: "/sounds/chime.mp3",
+    success: "/sounds/success.mp3",
+    error: "/sounds/error.mp3",
+    notification: "/sounds/notification.mp3",
+  };
 
-  // Preload sounds
-  useEffect(() => {
-    const soundsToLoad = Object.entries(SOUND_URLS) as [SoundName, string][];
-    
-    soundsToLoad.forEach(([name, url]) => {
-      const audio = new Audio(url);
-      audio.preload = "auto";
-      audioCache.current[name] = audio;
-    });
-    
-    return () => {
-      Object.values(audioCache.current).forEach(audio => {
-        audio.pause();
-        audio.src = "";
-      });
-    };
-  }, []);
-
-  const playSound = useCallback((name: SoundName) => {
-    const audio = audioCache.current[name];
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(err => console.error("Failed to play sound:", err));
-    }
-  }, []);
+  const playSound = useCallback(
+    (sound: SoundType, options?: SoundOptions) => {
+      try {
+        // Check if audio context is allowed
+        if (typeof window === "undefined") return;
+        
+        const volume = options?.volume ?? 0.5;
+        
+        // Use cached audio element or create a new one
+        if (!audioCache.current[sound]) {
+          audioCache.current[sound] = new Audio(soundMap[sound]);
+        }
+        
+        const audio = audioCache.current[sound];
+        
+        // Set volume and play
+        audio.volume = volume;
+        
+        // Reset audio to beginning if it's already playing
+        audio.currentTime = 0;
+        
+        // Use promise with catch to handle play errors silently
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            // Silent error handling - browsers often block autoplay
+            console.log("Sound playback was prevented by the browser", sound);
+          });
+        }
+      } catch (error) {
+        // Silently handle errors to prevent app disruption
+        console.log("Sound system unavailable", error);
+      }
+    },
+    [soundMap]
+  );
 
   return { playSound };
-}
+};
