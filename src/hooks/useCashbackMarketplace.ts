@@ -17,19 +17,19 @@ export const useCashbackMarketplace = () => {
       try {
         // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
         const { data: campaignsData, error: campaignsError } = await supabase
-          .rpc('get_active_cashback_campaigns');
+          .rpc('get_active_cashback_campaigns') as { data: CashbackCampaign[] | null, error: any };
 
         // Get user's cashback balance using rpc
         const { data: profileData, error: profileError } = await supabase
           .rpc('get_user_cashback_balance', {
             user_id: (await supabase.auth.getUser()).data.user?.id
-          });
+          }) as { data: { cashback_balance: number }[] | null, error: any };
 
         if (campaignsError) throw campaignsError;
         if (profileError) throw profileError;
 
         setCampaigns(campaignsData as CashbackCampaign[] || []);
-        setUserCashback(profileData?.cashback_balance || 0);
+        setUserCashback(profileData && profileData[0] ? profileData[0].cashback_balance || 0 : 0);
       } catch (error: any) {
         toast({
           title: 'Erro ao carregar cashback',
@@ -59,7 +59,7 @@ export const useCashbackMarketplace = () => {
           p_user_id: userId,
           p_campaign_id: campaignId,
           p_amount: amount
-        });
+        }) as { data: CashbackRedemption | null, error: any };
 
       if (error) throw error;
 
