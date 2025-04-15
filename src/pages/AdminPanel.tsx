@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
 import { toastInfo } from "@/utils/toast";
@@ -15,7 +14,6 @@ import DashboardHeader from "@/components/admin/DashboardHeader";
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
-  const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   useEffect(() => {
@@ -33,7 +31,7 @@ const AdminPanel = () => {
     }, 1500);
 
     return () => clearTimeout(loadTimer);
-  }, []);
+  }, [playSound]);
 
   if (loading) {
     return (
