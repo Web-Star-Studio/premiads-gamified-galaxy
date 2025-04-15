@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const { userType } = useUser();
@@ -38,9 +39,9 @@ const Footer = () => {
       title: "Recursos",
       links: [
         { name: "Blog", href: "#" },
-        { name: "Tutoriais", href: "#" },
-        { name: "FAQ", href: "#" },
-        { name: "Suporte", href: "#" }
+        { name: "Tutoriais", href: "/tutoriais", isRouterLink: true },
+        { name: "FAQ", href: "/faq", isRouterLink: true },
+        { name: "Suporte", href: "/suporte", isRouterLink: true }
       ]
     }
   ];
@@ -87,12 +88,21 @@ const Footer = () => {
               <ul className="space-y-4">
                 {category.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <a
-                      href={link.href}
-                      className="text-gray-400 hover:text-neon-cyan transition-colors"
-                    >
-                      {link.name}
-                    </a>
+                    {link.isRouterLink ? (
+                      <Link
+                        to={link.href}
+                        className="text-gray-400 hover:text-neon-cyan transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-gray-400 hover:text-neon-cyan transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
