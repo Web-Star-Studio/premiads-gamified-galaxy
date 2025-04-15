@@ -7,6 +7,13 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 
+interface Message {
+  id: number;
+  text: string;
+  sender: "user" | "agent";
+  timestamp: Date;
+}
+
 const LiveChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -16,13 +23,6 @@ const LiveChat = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  interface Message {
-    id: number;
-    text: string;
-    sender: "user" | "agent";
-    timestamp: Date;
-  }
 
   // Initial greeting message
   useEffect(() => {
@@ -65,7 +65,7 @@ const LiveChat = () => {
     if (message.trim() === "") return;
 
     // Add user message
-    const newUserMessage = {
+    const newUserMessage: Message = {
       id: Date.now(),
       text: message,
       sender: "user",
@@ -91,7 +91,7 @@ const LiveChat = () => {
       
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
-      const newAgentMessage = {
+      const newAgentMessage: Message = {
         id: Date.now() + 1,
         text: randomResponse,
         sender: "agent",
