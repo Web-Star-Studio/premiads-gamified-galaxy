@@ -287,7 +287,7 @@ const TechnicalSupport: React.FC = () => {
       setNewMessage('');
       setSendingMessage(false);
       
-      playSound('message');
+      playSound('chime'); // Changed from 'message' to 'chime'
       
       toast({
         title: "Mensagem enviada",
@@ -315,7 +315,7 @@ const TechnicalSupport: React.FC = () => {
     });
     
     setTickets(updatedTickets);
-    playSound('success');
+    playSound('reward'); // Changed from 'success' to 'reward'
     
     toast({
       title: "Status atualizado",

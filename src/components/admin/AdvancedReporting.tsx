@@ -70,7 +70,7 @@ const AdvancedReporting: React.FC = () => {
   }, []);
 
   const handleDownloadReport = (reportType: string) => {
-    playSound('success');
+    playSound('reward'); // Changed from 'success' to 'reward'
     
     toast({
       title: "Relatório gerado",

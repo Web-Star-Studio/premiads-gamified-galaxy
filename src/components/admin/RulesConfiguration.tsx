@@ -212,7 +212,7 @@ const RulesConfiguration: React.FC = () => {
       
       setEditingRule(null);
       setSaving(false);
-      playSound('success');
+      playSound('reward'); // Changed from 'success' to 'reward'
       
       toast({
         title: "Alterações salvas",
@@ -227,7 +227,7 @@ const RulesConfiguration: React.FC = () => {
     
     setTimeout(() => {
       setSaving(false);
-      playSound('success');
+      playSound('reward'); // Changed from 'success' to 'reward'
       
       toast({
         title: "Configurações salvas",
