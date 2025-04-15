@@ -12,7 +12,8 @@ import AccessControl from "@/components/admin/AccessControl";
 import SystemAudit from "@/components/admin/SystemAudit";
 import LotteryManagement from "@/components/admin/LotteryManagement";
 import NotificationTesting from "@/components/admin/NotificationTesting";
-import { Loader } from "lucide-react";
+import LoadingParticles from "@/components/admin/LoadingParticles";
+import AdminOverview from "@/components/admin/AdminOverview";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ const AdminPanel = () => {
         >
           <div className="w-16 h-16 mx-auto mb-4 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
           <h2 className="text-xl font-heading neon-text-pink">Carregando painel master...</h2>
+          <LoadingParticles />
         </motion.div>
       </div>
     );
@@ -52,8 +54,11 @@ const AdminPanel = () => {
       <div className="container px-4 py-8 mx-auto">
         <DashboardHeader title="Painel Master" subtitle="Controle completo do sistema" />
         
-        <Tabs defaultValue="users" className="mt-8">
+        <Tabs defaultValue="overview" className="mt-8">
           <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex md:gap-4 mb-8">
+            <TabsTrigger className="data-[state=active]:neon-text-pink" value="overview">
+              📊 Visão Geral
+            </TabsTrigger>
             <TabsTrigger className="data-[state=active]:neon-text-pink" value="users">
               👥 Usuários
             </TabsTrigger>
@@ -70,6 +75,10 @@ const AdminPanel = () => {
               🔔 Notificações
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <AdminOverview />
+          </TabsContent>
           
           <TabsContent value="users" className="space-y-6">
             <UserManagement />
