@@ -15,6 +15,44 @@ type RPCResponse<T> = {
 const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
 
+// Mock data for advertiser logos and names
+const advertisers = [
+  { 
+    name: "Restaurantes", 
+    logo: "https://via.placeholder.com/80x80.png?text=R" 
+  },
+  { 
+    name: "Tecnologia", 
+    logo: "https://via.placeholder.com/80x80.png?text=T" 
+  },
+  { 
+    name: "Varejo", 
+    logo: "https://via.placeholder.com/80x80.png?text=V" 
+  },
+  { 
+    name: "Saúde", 
+    logo: "https://via.placeholder.com/80x80.png?text=S" 
+  },
+  { 
+    name: "Beleza", 
+    logo: "https://via.placeholder.com/80x80.png?text=B" 
+  },
+  { 
+    name: "Serviços", 
+    logo: "https://via.placeholder.com/80x80.png?text=Svc" 
+  }
+];
+
+// Mock conditions for campaigns
+const conditions = [
+  "Válido somente para compras online.",
+  "Não cumulativo com outras promoções.",
+  "Cashback limitado a uma utilização por CPF.",
+  "Válido para todos os produtos da loja, exceto eletrônicos.",
+  "Necessário cadastro no programa de fidelidade da loja.",
+  "Válido apenas para a primeira compra."
+];
+
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
   const [userCashback, setUserCashback] = useState(0);
@@ -53,7 +91,20 @@ export const useCashbackMarketplace = () => {
         
         const profileData = await profileResponse.json();
 
-        setCampaigns(campaignsData || []);
+        // Enhance campaigns with advertiser data (in a real app, this would come from the database)
+        const enhancedCampaigns = (campaignsData || []).map((campaign: CashbackCampaign) => {
+          const index = parseInt(campaign.id.substring(0, 2), 16) % advertisers.length;
+          const conditionIndex = parseInt(campaign.id.substring(2, 4), 16) % conditions.length;
+          
+          return {
+            ...campaign,
+            advertiser_logo: advertisers[index].logo,
+            advertiser_name: advertisers[index].name,
+            conditions: conditions[conditionIndex]
+          };
+        });
+
+        setCampaigns(enhancedCampaigns);
         setUserCashback(profileData && profileData[0] ? profileData[0].cashback_balance || 0 : 0);
       } catch (error: any) {
         toast({
@@ -96,10 +147,16 @@ export const useCashbackMarketplace = () => {
       const data = await response.json();
       
       if (response.ok) {
+        // Get the campaign that was redeemed
+        const redeemedCampaign = campaigns.find(c => c.id === campaignId);
+        
         toast({
           title: 'Resgate efetuado',
-          description: `Você resgatou R$ ${amount.toFixed(2)} de cashback`
+          description: `Você resgatou R$ ${amount.toFixed(2)} de cashback${redeemedCampaign ? ` com ${redeemedCampaign.discount_percentage}% de desconto` : ''}.`
         });
+        
+        // Update user cashback balance
+        setUserCashback(0); // Since we're using all cashback in this version
         
         return data as CashbackRedemption;
       } else {

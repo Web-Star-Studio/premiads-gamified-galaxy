@@ -13,6 +13,9 @@ export interface CashbackCampaign {
   conditions: string | null;
   created_at: string;
   updated_at: string;
+  advertiser_logo?: string;
+  advertiser_image?: string;
+  advertiser_name?: string;
 }
 
 export interface CashbackRedemption {

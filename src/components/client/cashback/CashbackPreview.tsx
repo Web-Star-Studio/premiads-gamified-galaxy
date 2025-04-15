@@ -57,8 +57,7 @@ const CashbackPreview = () => {
       <Button 
         variant="outline" 
         className="w-full justify-between mt-2 border-galaxy-purple/30 hover:bg-galaxy-deepPurple/50"
-        // In a real implementation, this would navigate to a cashback page
-        onClick={() => console.log("Navigate to cashback details")}
+        onClick={() => navigate("/cashback")}
       >
         <div className="flex items-center">
           <DollarSign className="w-4 h-4 mr-2" />
