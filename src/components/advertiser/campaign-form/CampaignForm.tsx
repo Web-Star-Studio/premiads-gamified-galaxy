@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import FormProgress from "./FormProgress";
@@ -12,6 +12,7 @@ import DatesStep from "./DatesStep";
 import { useFormNavigation } from "@/hooks/use-form-navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import { FormData, initialFormData } from "./types";
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -21,6 +22,7 @@ interface CampaignFormProps {
 const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const isEditing = !!editCampaign;
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   
   const steps = [
     "Informações Básicas",
@@ -29,13 +31,38 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     "Datas"
   ];
   
+  // Using correct props for useFormNavigation
   const { 
-    currentStepIndex, 
+    currentStep,
     isFirstStep, 
     isLastStep,
-    goToPreviousStep,
-    goToNextStep
-  } = useFormNavigation(steps.length);
+    prevStep,
+    nextStep
+  } = useFormNavigation({
+    totalSteps: steps.length,
+    initialStep: 1
+  });
+
+  // Map campaign data to form data if in edit mode
+  useEffect(() => {
+    if (isEditing && editCampaign) {
+      // Map campaign data to formData
+      // This is a simplified example, adjust according to actual data structure
+      setFormData({
+        ...initialFormData,
+        title: editCampaign.title,
+        audience: editCampaign.audience,
+        // Map other fields as needed
+      });
+    }
+  }, [isEditing, editCampaign]);
+  
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   
   const handleSave = () => {
     setLoading(true);
@@ -49,15 +76,15 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   
   // Shows the current step content based on the current index
   const renderCurrentStep = () => {
-    switch (currentStepIndex) {
-      case 0:
-        return <BasicInfoStep campaign={editCampaign} />;
+    switch (currentStep) {
       case 1:
-        return <RequirementsStep campaign={editCampaign} />;
+        return <BasicInfoStep formData={formData} updateFormData={updateFormData} />;
       case 2:
-        return <RewardsStep campaign={editCampaign} />;
+        return <RequirementsStep formData={formData} updateFormData={updateFormData} />;
       case 3:
-        return <DatesStep campaign={editCampaign} />;
+        return <RewardsStep formData={formData} updateFormData={updateFormData} />;
+      case 4:
+        return <DatesStep formData={formData} updateFormData={updateFormData} />;
       default:
         return null;
     }
@@ -85,8 +112,8 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
             </CardTitle>
           </div>
           <FormProgress 
-            steps={steps} 
-            currentStepIndex={currentStepIndex} 
+            step={currentStep} 
+            title={steps[currentStep - 1]} 
           />
         </CardHeader>
         
@@ -96,12 +123,12 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         
         <CardFooter className="flex justify-between border-t border-galaxy-purple/20 pt-4">
           <FormNavigation 
-            isFirstStep={isFirstStep}
-            isLastStep={isLastStep}
-            onBack={goToPreviousStep}
-            onNext={goToNextStep}
-            onSave={handleSave}
-            loading={loading}
+            step={currentStep}
+            totalSteps={steps.length}
+            handleBack={prevStep}
+            handleNext={nextStep}
+            onClose={onClose}
+            isNextDisabled={false}
           />
         </CardFooter>
       </Card>
