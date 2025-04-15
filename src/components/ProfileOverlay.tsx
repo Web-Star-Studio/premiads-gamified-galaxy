@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Particles from "./Particles";
 import { motion } from "framer-motion";
-import { Gift, Megaphone } from "lucide-react";
 
 const ProfileOverlay = () => {
   const { userType, setUserType, setUserName, setIsOverlayOpen } = useUser();
@@ -76,9 +75,6 @@ const ProfileOverlay = () => {
                   className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer relative overflow-hidden group"
                   whileHover={{ y: -5, scale: 1.02 }}
                 >
-                  <div className="absolute top-0 right-0 p-3 text-neon-cyan">
-                    <Gift className="w-6 h-6" />
-                  </div>
                   <h3 className="text-xl font-semibold mb-2">Você quer concorrer a prêmios?</h3>
                   <p className="text-gray-300">Participe de missões e ganhe recompensas incríveis!</p>
                   <Button className="neon-button mt-4 w-full">
@@ -91,9 +87,6 @@ const ProfileOverlay = () => {
                   className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer relative overflow-hidden group"
                   whileHover={{ y: -5, scale: 1.02 }}
                 >
-                  <div className="absolute top-0 right-0 p-3 text-neon-pink">
-                    <Megaphone className="w-6 h-6" />
-                  </div>
                   <h3 className="text-xl font-semibold mb-2">Você quer alavancar sua marca?</h3>
                   <p className="text-gray-300">Crie campanhas gamificadas e engaje seu público!</p>
                   <Button className="neon-button mt-4 w-full">
