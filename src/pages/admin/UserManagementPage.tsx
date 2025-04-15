@@ -5,12 +5,14 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import DashboardHeader from "@/components/admin/DashboardHeader";
 import UserManagement from "@/components/admin/UserManagement";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 const UserManagementPage = () => {
   const { playSound } = useSounds();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdminSidebar />
         <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">

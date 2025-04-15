@@ -15,6 +15,7 @@ import Authentication from "./pages/Authentication";
 import AdvertiserDashboard from "./pages/AdvertiserDashboard";
 import AdvertiserProfile from "./pages/AdvertiserProfile";
 import AdminPanel from "./pages/AdminPanel";
+import { UserProvider } from "@/context/UserContext";
 
 // Admin section page imports
 import LotteryManagementPage from "./pages/admin/LotteryManagementPage";

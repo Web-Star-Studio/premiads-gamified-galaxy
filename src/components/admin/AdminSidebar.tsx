@@ -101,7 +101,6 @@ export const AdminSidebar = () => {
       className="border-r border-galaxy-purple/30 bg-galaxy-dark"
       variant="sidebar"
       collapsible="icon"
-      defaultOpen={!isMobile}
     >
       <SidebarHeader className="flex items-center justify-between p-4 pt-6">
         <div className="flex items-center gap-2">
