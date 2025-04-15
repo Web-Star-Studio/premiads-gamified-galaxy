@@ -1,0 +1,43 @@
+
+/* Button Base Styles */
+.btn {
+  @apply relative px-6 sm:px-8 py-2 sm:py-3 rounded-lg transition-all duration-300
+         font-heading text-white flex items-center justify-center;
+}
+
+/* Button Sizes */
+.btn-sm {
+  @apply px-4 sm:px-6 py-1.5 sm:py-2 text-sm;
+}
+
+.btn-lg {
+  @apply px-8 sm:px-10 py-3 sm:py-4 text-lg;
+}
+
+/* Neon Effect Base */
+.neon-effect {
+  @apply bg-transparent overflow-hidden
+         shadow-[0_0_20px_rgba(0,255,231,0.3)]
+         hover:shadow-[0_0_30px_rgba(0,255,231,0.5)]
+         hover:scale-105;
+}
+
+/* Neon Button (combines btn + neon-effect) */
+.neon-button {
+  @apply btn neon-effect border-2 border-neon-cyan;
+}
+
+/* Neon Button Variants */
+.neon-button-small {
+  @apply neon-button btn-sm;
+}
+
+.neon-button-outline {
+  @apply btn bg-transparent border-2 border-white/20 hover:bg-white/5 transition-colors;
+}
+
+/* Neon Before Element */
+.neon-effect::before {
+  @apply content-[''] absolute top-0 left-0 w-full h-full bg-neon-gradient opacity-0
+         transition-opacity duration-300 -z-10 hover:opacity-20;
+}
