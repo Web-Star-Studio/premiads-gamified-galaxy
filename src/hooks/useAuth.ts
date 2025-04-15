@@ -33,18 +33,27 @@ export const useAuth = () => {
       if (data.session) {
         setUser(data.session.user);
         
-        // Set user name from metadata
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("full_name, user_type")
-          .eq("id", data.session.user.id)
-          .single();
-        
-        if (profileData) {
-          setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
-          // Set user type from profile
-          setUserType(profileData.user_type || "participante");
-        } else {
+        try {
+          // Set user name from metadata
+          const { data: profileData, error } = await supabase
+            .from("profiles")
+            .select("full_name, user_type")
+            .eq("id", data.session.user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          if (profileData) {
+            setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
+            // Type cast user_type to UserType
+            const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
+            setUserType(userType);
+          } else {
+            setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
+            setUserType("participante");
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
           setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
           setUserType("participante");
         }
@@ -59,26 +68,36 @@ export const useAuth = () => {
         if (event === "SIGNED_IN" && session) {
           setUser(session.user);
           
-          // Set user name and type from metadata
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("full_name, user_type")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (profileData) {
-            setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
-            // Set user type from profile
-            setUserType(profileData.user_type || "participante");
-          } else {
+          try {
+            // Set user name and type from metadata
+            const { data: profileData, error } = await supabase
+              .from("profiles")
+              .select("full_name, user_type")
+              .eq("id", session.user.id)
+              .single();
+            
+            if (error) throw error;
+            
+            if (profileData) {
+              setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
+              // Type cast user_type to UserType
+              const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
+              setUserType(userType);
+            } else {
+              setUserName(session.user.email?.split('@')[0] || 'Usuário');
+              setUserType("participante");
+            }
+            
+            // Redirect based on user type
+            if (profileData?.user_type === "anunciante") {
+              navigate("/anunciante");
+            } else {
+              navigate("/cliente");
+            }
+          } catch (error) {
+            console.error("Error fetching profile:", error);
             setUserName(session.user.email?.split('@')[0] || 'Usuário');
             setUserType("participante");
-          }
-          
-          // Redirect based on user type
-          if (profileData?.user_type === "anunciante") {
-            navigate("/anunciante");
-          } else {
             navigate("/cliente");
           }
         } else if (event === "SIGNED_OUT") {
@@ -163,24 +182,35 @@ export const useAuth = () => {
       if (data.user) {
         setUser(data.user);
         
-        // Set user name from metadata
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("full_name, user_type")
-          .eq("id", data.user.id)
-          .single();
-        
-        if (profileData) {
-          setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
-          setUserType(profileData.user_type || "participante");
+        try {
+          // Set user name from metadata
+          const { data: profileData, error } = await supabase
+            .from("profiles")
+            .select("full_name, user_type")
+            .eq("id", data.user.id)
+            .single();
           
-          // Redirect based on user type
-          if (profileData.user_type === "anunciante") {
-            navigate("/anunciante");
+          if (error) throw error;
+          
+          if (profileData) {
+            setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
+            // Type cast user_type to UserType
+            const userType = (profileData.user_type || "participante") as "participante" | "anunciante";
+            setUserType(userType);
+            
+            // Redirect based on user type
+            if (profileData.user_type === "anunciante") {
+              navigate("/anunciante");
+            } else {
+              navigate("/cliente");
+            }
           } else {
+            setUserName(data.user.email?.split('@')[0] || 'Usuário');
+            setUserType("participante");
             navigate("/cliente");
           }
-        } else {
+        } catch (error) {
+          console.error("Error fetching profile:", error);
           setUserName(data.user.email?.split('@')[0] || 'Usuário');
           setUserType("participante");
           navigate("/cliente");
