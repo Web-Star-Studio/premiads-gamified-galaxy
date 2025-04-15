@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Particles from "./Particles";
 import { motion } from "framer-motion";
-import { Gift, Megaphone } from "lucide-react";
 
 const ProfileOverlay = () => {
   const { userType, setUserType, setUserName, setIsOverlayOpen } = useUser();
@@ -36,20 +35,6 @@ const ProfileOverlay = () => {
     }, 800);
   };
 
-  const iconVariants = {
-    initial: { y: -10, opacity: 0, scale: 0.8 },
-    animate: { y: 0, opacity: 1, scale: 1 },
-    hover: { 
-      y: -5, 
-      scale: 1.1,
-      transition: { 
-        repeat: Infinity, 
-        repeatType: "reverse", 
-        duration: 1.2 
-      } 
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -75,59 +60,27 @@ const ProfileOverlay = () => {
                 Bem-vindo à <span className="neon-text-pink">PremiAds</span>
               </h1>
               
-              <div className="space-y-8">
-                <div className="relative">
-                  <div 
-                    onClick={() => handleTypeSelection("participante")} 
-                    className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer relative pt-12"
-                  >
-                    <motion.div 
-                      className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-galaxy-dark/40 rounded-full p-4 border border-white/10"
-                      initial="initial"
-                      animate="animate"
-                      whileHover="hover"
-                      variants={iconVariants}
-                    >
-                      <Gift
-                        size={40}
-                        className="text-neon-cyan filter drop-shadow-[0_0_8px_rgba(0,255,231,0.8)]"
-                        strokeWidth={1.5}
-                      />
-                    </motion.div>
-                    
-                    <h3 className="text-xl font-semibold mb-2">Você quer concorrer a prêmios?</h3>
-                    <p className="text-gray-300">Participe de missões e ganhe recompensas incríveis!</p>
-                    <Button className="neon-button mt-4 w-full">
-                      Sim, quero participar!
-                    </Button>
-                  </div>
+              <div className="space-y-6">
+                <div 
+                  onClick={() => handleTypeSelection("participante")} 
+                  className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Você quer concorrer a prêmios?</h3>
+                  <p className="text-gray-300">Participe de missões e ganhe recompensas incríveis!</p>
+                  <Button className="neon-button mt-4 w-full">
+                    Sim, quero participar!
+                  </Button>
                 </div>
                 
-                <div className="relative">
-                  <div 
-                    onClick={() => handleTypeSelection("anunciante")}
-                    className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer relative pt-12"
-                  >
-                    <motion.div 
-                      className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-galaxy-dark/40 rounded-full p-4 border border-white/10"
-                      initial="initial"
-                      animate="animate"
-                      whileHover="hover"
-                      variants={iconVariants}
-                    >
-                      <Megaphone 
-                        size={40}
-                        className="text-neon-pink filter drop-shadow-[0_0_8px_rgba(255,0,200,0.8)]"
-                        strokeWidth={1.5}
-                      />
-                    </motion.div>
-                    
-                    <h3 className="text-xl font-semibold mb-2">Você quer alavancar sua marca?</h3>
-                    <p className="text-gray-300">Crie campanhas gamificadas e engaje seu público!</p>
-                    <Button className="neon-button mt-4 w-full">
-                      Sim, quero anunciar!
-                    </Button>
-                  </div>
+                <div 
+                  onClick={() => handleTypeSelection("anunciante")}
+                  className="glass-panel p-6 hover:neon-border transition-all duration-300 cursor-pointer"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Você quer alavancar sua marca?</h3>
+                  <p className="text-gray-300">Crie campanhas gamificadas e engaje seu público!</p>
+                  <Button className="neon-button mt-4 w-full">
+                    Sim, quero anunciar!
+                  </Button>
                 </div>
               </div>
             </>
