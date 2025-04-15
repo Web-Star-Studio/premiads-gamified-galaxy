@@ -1,5 +1,5 @@
 
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { 
   Sidebar, 
   SidebarContent
@@ -26,7 +26,7 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({
   const { open, setOpen } = useSidebar();
   
   // Close sidebar on mobile by default
-  React.useEffect(() => {
+  useEffect(() => {
     if (isMobile && defaultOpen === undefined) {
       setOpen(false);
     }
@@ -37,7 +37,6 @@ export const AdminSidebar: FC<AdminSidebarProps> = ({
       className={`border-r border-galaxy-purple/30 bg-galaxy-dark ${className}`}
       variant="sidebar"
       collapsible="icon"
-      defaultOpen={defaultOpen}
     >
       <SidebarHeader />
 
