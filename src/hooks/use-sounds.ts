@@ -1,7 +1,7 @@
 
 import { useCallback, useRef } from "react";
 
-export type SoundType = "pop" | "chime" | "success" | "error" | "notification";
+export type SoundType = "pop" | "chime" | "success" | "error" | "notification" | "reward";
 
 interface SoundOptions {
   volume?: number; // 0 to 1
@@ -16,6 +16,7 @@ export const useSounds = () => {
     success: "/sounds/success.mp3",
     error: "/sounds/error.mp3",
     notification: "/sounds/notification.mp3",
+    reward: "/sounds/reward.mp3",
   };
 
   const playSound = useCallback(
