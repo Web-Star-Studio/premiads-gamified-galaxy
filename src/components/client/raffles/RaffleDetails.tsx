@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Calendar, Clock, Gift, Info, Ticket, Trophy, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
+
+// Remove this import since we're not using the wheel component anymore
+// import { SpinningWheel } from "@/components/admin/lottery";
 
 // Mock data for raffles
 const RAFFLES = [
