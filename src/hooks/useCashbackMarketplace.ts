@@ -15,20 +15,15 @@ export const useCashbackMarketplace = () => {
   useEffect(() => {
     const fetchCashbackData = async () => {
       try {
-        // Fetch active campaigns using raw SQL since the types don't know about our new tables
+        // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
         const { data: campaignsData, error: campaignsError } = await supabase
-          .from('cashback_campaigns')
-          .select('*')
-          .eq('is_active', true)
-          .lte('start_date', new Date().toISOString())
-          .gte('end_date', new Date().toISOString());
+          .rpc('get_active_cashback_campaigns');
 
-        // Get user's cashback balance
+        // Get user's cashback balance using rpc
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('cashback_balance')
-          .eq('id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
+          .rpc('get_user_cashback_balance', {
+            user_id: (await supabase.auth.getUser()).data.user?.id
+          });
 
         if (campaignsError) throw campaignsError;
         if (profileError) throw profileError;
@@ -58,15 +53,13 @@ export const useCashbackMarketplace = () => {
         throw new Error('Usuário não autenticado');
       }
 
+      // Use rpc call to redeem cashback
       const { data, error } = await supabase
-        .from('cashback_redemptions')
-        .insert({
-          user_id: userId,
-          campaign_id: campaignId,
-          amount
-        })
-        .select()
-        .single();
+        .rpc('redeem_cashback', {
+          p_user_id: userId,
+          p_campaign_id: campaignId,
+          p_amount: amount
+        });
 
       if (error) throw error;
 
