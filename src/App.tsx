@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Tutorials from "./pages/Tutorials";
 import Faq from "./pages/Faq";
 import Support from "./pages/Support";
+import About from "./pages/About";
 
 // Lazy load other pages to reduce initial bundle size
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
@@ -70,10 +70,11 @@ const App = () => {
                   </Suspense>
                 } />
                 
-                {/* Páginas de conhecimento */}
+                {/* Páginas informativas */}
                 <Route path="/tutoriais" element={<Tutorials />} />
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/suporte" element={<Support />} />
+                <Route path="/sobre" element={<About />} />
                 
                 {/* Client Routes */}
                 <Route path="/cliente" element={

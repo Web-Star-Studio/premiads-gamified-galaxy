@@ -1,4 +1,3 @@
-
 import { useUser } from "@/context/UserContext";
 import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
@@ -13,7 +12,7 @@ const Footer = () => {
     {
       title: "Empresa",
       links: [
-        { name: "Sobre Nós", href: "#" },
+        { name: "Sobre Nós", href: "/sobre", isRouterLink: true },
         { name: "Nosso Time", href: "#" },
         { name: "Carreiras", href: "#" },
         { name: "Contato", href: "#" }
