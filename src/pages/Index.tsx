@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { UserProvider, useUser } from "@/context/UserContext";
 import ProfileOverlay from "@/components/ProfileOverlay";
-import Header from "@/components/Header";
+import MainHeader from "@/components/MainHeader";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import Benefits from "@/components/Benefits";
@@ -31,7 +31,7 @@ const MainContent = () => {
   return (
     <div className="flex flex-col min-h-screen w-full">
       {isOverlayOpen && <ProfileOverlay />}
-      <Header />
+      <MainHeader />
       <main className="flex-grow">
         <Hero />
         <HowItWorks />

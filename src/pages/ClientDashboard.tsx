@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useClientDashboard } from "@/hooks/useClientDashboard";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import ClientSidebar from "@/components/client/dashboard/ClientSidebar";
+import ClientHeader from "@/components/client/ClientHeader";
 import LoadingState from "@/components/client/dashboard/LoadingState";
 import PointsSection from "@/components/client/dashboard/PointsSection";
 import MissionsSection from "@/components/client/dashboard/MissionsSection";
@@ -39,7 +40,9 @@ const ClientDashboard = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <ClientSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <div className="container px-4 py-8 mx-auto">
+          <ClientHeader />
+          
+          <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
               {/* Points & Tickets Section */}
               <PointsSection totalPoints={points} />

@@ -6,7 +6,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { toastInfo } from "@/utils/toast";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import DashboardHeader from "@/components/admin/DashboardHeader";
+import AdminHeader from "@/components/admin/AdminHeader";
 import AdminOverview from "@/components/admin/AdminOverview";
 import LoadingParticles from "@/components/admin/LoadingParticles";
 import { useMediaQuery } from "@/hooks/use-mobile";
@@ -55,8 +55,9 @@ const AdminPanel = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdminSidebar />
         <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
-          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl">
-            <DashboardHeader title="Painel Master" subtitle="Controle completo do sistema" />
+          <AdminHeader />
+          
+          <div className="container px-4 pt-20 py-6 sm:py-8 mx-auto max-w-7xl">
             <div className="mt-6 sm:mt-8">
               <AdminOverview />
             </div>
