@@ -1,0 +1,24 @@
+
+// Mission types and status definitions
+export type MissionStatus = "available" | "in_progress" | "completed" | "pending_approval";
+
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  brand?: string;
+  type: import("@/hooks/useMissionsTypes").MissionType;
+  points: number;
+  deadline?: string;
+  status: MissionStatus;
+  requirements?: string[];
+  business_type?: string;
+  target_audience_gender?: string;
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
+}
+
+export interface UseMissionsOptions {
+  initialFilter?: "available" | "in_progress" | "pending" | "completed";
+}
