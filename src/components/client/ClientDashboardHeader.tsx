@@ -12,6 +12,8 @@ export interface ClientDashboardHeaderProps {
   showBackButton?: boolean;
   backTo?: string;
   onBackClick?: () => void;
+  className?: string;
+  titleClassName?: string;
 }
 
 export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
@@ -20,7 +22,9 @@ export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
   userName,
   showBackButton = false,
   backTo = "/",
-  onBackClick
+  onBackClick,
+  className = "",
+  titleClassName = ""
 }) => {
   const navigate = useNavigate();
 
@@ -36,7 +40,7 @@ export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative"
+      className={`relative ${className}`}
     >
       <div className="absolute top-0 left-0 w-full h-40 bg-purple-glow opacity-10 blur-3xl -z-10"></div>
       
@@ -53,7 +57,9 @@ export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
               Voltar
             </Button>
           )}
-          <h1 className="text-2xl md:text-3xl font-heading neon-text-cyan">{title}</h1>
+          <h1 className={`text-2xl md:text-3xl font-heading neon-text-cyan ${titleClassName}`}>
+            {title}
+          </h1>
           {description && (
             <p className="mt-2 text-gray-400 max-w-2xl">{description}</p>
           )}
