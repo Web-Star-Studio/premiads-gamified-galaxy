@@ -1,10 +1,231 @@
 
-/* Import the base styles first */
-@import './styles/base.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Import component-specific styles */
-@import './styles/buttons.css';
-@import './styles/effects.css';
-@import './styles/layout.css';
+@layer base {
+  :root {
+    --background: 240 50% 3.9%;
+    --foreground: 0 0% 98%;
 
-/* Add any additional styles that don't fit into the above categories here */
+    --card: 240 30% 6%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 30% 6%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 267 100% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 240 10% 3.9%;
+
+    --muted: 240 15% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 310 100% 50%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 15% 20%;
+    --input: 240 15% 20%;
+    --ring: 240 10% 80%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 50% 3.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 267 100% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 15% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 15% 20%;
+    --sidebar-ring: 240 10% 80%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-galaxy-dark text-foreground font-sans overflow-x-hidden;
+    background: url('/stars-bg.png'), linear-gradient(180deg, #0A0A18 0%, #1A1F2C 100%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, .galaxy-title {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .neon-button {
+    @apply relative px-6 sm:px-8 py-2 sm:py-3 bg-transparent overflow-hidden rounded-lg transition-all duration-300
+           font-heading text-white border-2 border-neon-cyan shadow-[0_0_20px_rgba(0,255,231,0.3)]
+           hover:shadow-[0_0_30px_rgba(0,255,231,0.5)] hover:scale-105;
+  }
+
+  .neon-button::before {
+    @apply content-[''] absolute top-0 left-0 w-full h-full bg-neon-gradient opacity-0
+           transition-opacity duration-300 -z-10 hover:opacity-20;
+  }
+
+  .neon-button-small {
+    @apply neon-button px-4 sm:px-6 py-1.5 sm:py-2 text-sm;
+  }
+
+  .neon-button-outline {
+    @apply bg-transparent border-2 border-white/20 hover:bg-white/5 transition-colors;
+  }
+
+  /* Borders and highlights */
+  .neon-border {
+    @apply border-2 border-neon-cyan shadow-[0_0_10px_rgba(0,255,231,0.3)];
+  }
+
+  .neon-border-pink {
+    @apply border-2 border-neon-pink shadow-[0_0_10px_rgba(255,0,200,0.3)];
+  }
+
+  .neon-border-lime {
+    @apply border-2 border-neon-lime shadow-[0_0_10px_rgba(180,241,10,0.3)];
+  }
+
+  /* Text effects */
+  .neon-text-cyan {
+    @apply text-neon-cyan drop-shadow-[0_0_5px_rgba(0,255,231,0.7)];
+  }
+  
+  .neon-text-pink {
+    @apply text-neon-pink drop-shadow-[0_0_5px_rgba(255,0,200,0.7)];
+  }
+  
+  .neon-text-lime {
+    @apply text-neon-lime drop-shadow-[0_0_5px_rgba(180,241,10,0.7)];
+  }
+
+  /* Panels and backgrounds */
+  .glass-panel {
+    @apply backdrop-blur-md bg-galaxy-dark/40 border border-white/10 rounded-2xl;
+  }
+
+  .glass-panel-hover {
+    @apply glass-panel hover:border-galaxy-purple/30 transition-colors duration-300;
+  }
+
+  .nebula-bg {
+    @apply relative;
+  }
+  
+  .nebula-bg::before {
+    @apply content-[''] absolute top-[-50%] left-[-50%] w-[200%] h-[200%] 
+           bg-purple-glow opacity-30 -z-10 animate-float;
+  }
+
+  /* Particles and stars */
+  .particle {
+    @apply absolute w-1 h-1 rounded-full bg-white opacity-0 animate-particles;
+  }
+  
+  .star {
+    @apply absolute w-[2px] h-[2px] rounded-full bg-white;
+    box-shadow: 0 0 4px 1px rgba(255,255,255,0.4);
+  }
+
+  /* Layout utilities */
+  .responsive-container {
+    @apply w-full px-4 sm:px-6 md:px-8 lg:px-10 mx-auto max-w-7xl;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+
+  .responsive-card {
+    @apply flex flex-col p-4 sm:p-6 rounded-lg border border-galaxy-purple/30 bg-galaxy-deepPurple/10 
+           hover:bg-galaxy-deepPurple/20 transition-colors duration-300;
+  }
+
+  /* Typography */
+  .responsive-text {
+    @apply text-base sm:text-lg md:text-xl text-gray-200;
+  }
+
+  .responsive-heading {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading;
+  }
+
+  /* Section backgrounds */
+  .section-gradient {
+    @apply relative overflow-hidden;
+  }
+  
+  .section-gradient::before {
+    @apply content-[''] absolute inset-0 bg-purple-glow opacity-20 -z-10;
+  }
+
+  /* Accessibility improvements */
+  .text-contrast-high {
+    @apply text-white drop-shadow-sm;
+  }
+
+  .text-contrast-medium {
+    @apply text-gray-200;
+  }
+
+  /* Scrollbar styling */
+  .fancy-scrollbar {
+    @apply scrollbar-thin scrollbar-thumb-galaxy-purple/50 scrollbar-track-white/5 
+           hover:scrollbar-thumb-galaxy-purple/80;
+  }
+}
+
+/* Extended scrollbar styles */
+.fancy-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fancy-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.fancy-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(155, 135, 245, 0.5);
+  border-radius: 10px;
+}
+
+.fancy-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 135, 245, 0.8);
+}
+
+/* Accessibility focus styles */
+:focus {
+  @apply outline-none ring-2 ring-neon-cyan/50 ring-offset-1 ring-offset-galaxy-dark;
+}
+
+/* Improved support for reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .neon-text-cyan, .neon-text-pink, .neon-text-lime {
+    text-shadow: none;
+    @apply font-semibold;
+  }
+  
+  .glass-panel {
+    @apply rounded-xl;
+  }
+}
