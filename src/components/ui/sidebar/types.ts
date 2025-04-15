@@ -1,7 +1,7 @@
-
 import { VariantProps } from "class-variance-authority";
 import { sidebarMenuButtonVariants } from "./sidebar-menu";
 
+// We need to make sure the SidebarContext type is properly exported
 export type SidebarContext = {
   state: "expanded" | "collapsed";
   open: boolean;
