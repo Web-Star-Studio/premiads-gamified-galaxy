@@ -10,16 +10,19 @@ interface SocialShareSubmissionFormProps {
 
 const SocialShareSubmissionForm = ({ value, onChange }: SocialShareSubmissionFormProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="share-link">Link da postagem</Label>
+    <div className="form-container">
+      <Label className="form-label">
+        Link da publicação
+      </Label>
       <Input
-        id="share-link"
-        placeholder="Cole o link da sua postagem aqui..."
+        type="text"
+        placeholder="https://exemplo.com/sua-publicacao"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        className="form-input"
       />
-      <p className="text-sm text-gray-400">
-        Cole o link da sua postagem nas redes sociais contendo a hashtag solicitada.
+      <p className="text-medium-contrast text-sm mt-2">
+        Cole o link direto da sua publicação nas redes sociais.
       </p>
     </div>
   );

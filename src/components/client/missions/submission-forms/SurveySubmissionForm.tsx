@@ -10,15 +10,19 @@ interface SurveySubmissionFormProps {
 
 const SurveySubmissionForm = ({ value, onChange }: SurveySubmissionFormProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="answer">Sua resposta</Label>
-      <Textarea 
-        id="answer"
-        placeholder="Digite sua resposta aqui..."
-        className="min-h-[150px]"
+    <div className="form-container">
+      <Label className="form-label">
+        Sua resposta
+      </Label>
+      <Textarea
+        placeholder="Digite sua resposta detalhada aqui..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        className="form-textarea"
       />
+      <p className="text-medium-contrast text-sm mt-2">
+        Seja detalhado e específico em sua resposta para melhor avaliação.
+      </p>
     </div>
   );
 };

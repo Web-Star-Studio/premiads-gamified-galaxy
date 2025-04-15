@@ -6,14 +6,17 @@ import { MapPin } from "lucide-react";
 
 const CheckInSubmissionForm = () => {
   return (
-    <div className="space-y-2">
-      <Label>Check-in na loja</Label>
-      <div className="bg-galaxy-deepPurple/80 rounded-md p-4">
-        <p className="text-center">
+    <div className="form-container">
+      <Label className="form-label">Check-in na loja</Label>
+      <div className="bg-galaxy-deepPurple/80 rounded-md p-4 md:p-6">
+        <p className="text-center text-medium-contrast text-mobile-base">
           Pressione o botão abaixo para realizar check-in usando sua localização atual
         </p>
-        <Button className="w-full mt-4 flex items-center justify-center gap-2">
-          <MapPin className="w-4 h-4" />
+        <Button 
+          className="w-full mt-4 md:mt-6 flex items-center justify-center gap-2 py-3"
+          variant="default"
+        >
+          <MapPin className="w-5 h-5" />
           Fazer Check-in
         </Button>
       </div>

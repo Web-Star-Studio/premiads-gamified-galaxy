@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,12 +13,17 @@
   --neon-pink: #F472B6;
   --neon-cyan: #67E8F9;
   --neon-lime: #A3E635;
+  
+  /* Cores de texto com melhor contraste */
+  --text-muted: #B4B9C6;  /* Cinza mais claro para melhor contraste em fundos escuros */
+  --text-muted-strong: #CDD2DD; /* Versão mais clara ainda para maior contraste */
 }
 
 body {
   font-family: 'Roboto', sans-serif;
   background-color: var(--galaxy-dark);
   color: white;
+  font-size: 16px; /* Tamanho de fonte base maior para melhor legibilidade */
 }
 
 /* Estilos para os painéis de vidro */
@@ -50,6 +56,7 @@ textarea {
   border-radius: 0.375rem;
   padding: 0.5rem 0.75rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  font-size: 1rem; /* Tamanho mínimo para melhor legibilidade */
 }
 
 input[type="text"]:focus,
@@ -174,6 +181,17 @@ a:hover {
   .glass-panel {
     padding: 1rem;
   }
+  
+  /* Espaçamento aprimorado em dispositivos móveis */
+  .card-mobile-spaced {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+  }
+  
+  /* Texto maior para dispositivos móveis */
+  .text-mobile-base {
+    font-size: 1rem;
+  }
 }
 
 /* Melhorias de acessibilidade para foco visível em botões e links */
@@ -198,6 +216,20 @@ a:hover {
   animation: pulse-glow 2s infinite ease-in-out;
 }
 
+/* Reduzir movimento para preferências de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .pulse-effect, .neon-button:before, .animate-float, .animate-pulse-glow {
+    animation: none !important;
+  }
+}
+
 /* Estados de carregamento */
 .loading-shimmer {
   position: relative;
@@ -215,3 +247,34 @@ a:hover {
     background-position: -200% 0;
   }
 }
+
+/* Classes utilitárias para texto com melhor contraste */
+.text-high-contrast {
+  color: var(--text-muted-strong);
+}
+
+.text-medium-contrast {
+  color: var(--text-muted);
+}
+
+/* Estilos padronizados para formulários */
+.form-container {
+  @apply space-y-4 bg-galaxy-deepPurple/60 rounded-lg p-4 border border-galaxy-purple/30;
+}
+
+.form-label {
+  @apply text-white text-base font-medium mb-1 block;
+}
+
+.form-input {
+  @apply w-full bg-galaxy-deepPurple/80 border border-galaxy-purple/40 rounded-md px-4 py-2.5 text-white focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan;
+}
+
+.form-textarea {
+  @apply w-full bg-galaxy-deepPurple/80 border border-galaxy-purple/40 rounded-md px-4 py-2.5 text-white focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan min-h-[100px] resize-y;
+}
+
+.form-button {
+  @apply w-full bg-neon-cyan text-galaxy-dark font-medium py-2.5 px-4 rounded-md hover:bg-neon-cyan/90 transition-colors flex items-center justify-center gap-2;
+}
+

@@ -1,13 +1,13 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
 
 interface TermsAndSubmitProps {
   loading: boolean;
   agreedToTerms: boolean;
-  setAgreedToTerms: (agreed: boolean) => void;
+  setAgreedToTerms: (value: boolean) => void;
   onCancel: () => void;
   onSubmit: () => void;
   isDisabled: boolean;
@@ -22,41 +22,47 @@ const TermsAndSubmit = ({
   isDisabled
 }: TermsAndSubmitProps) => {
   return (
-    <>
-      <div className="flex items-start space-x-2 pt-4">
-        <Checkbox 
-          id="terms" 
+    <div className="form-container mt-6">
+      <div className="flex items-start space-x-3 mb-4">
+        <Checkbox
+          id="terms"
           checked={agreedToTerms}
-          onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+          onCheckedChange={() => setAgreedToTerms(!agreedToTerms)}
+          className="mt-1"
         />
-        <div className="grid gap-1.5 leading-none">
-          <Label
-            htmlFor="terms"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Declaro que li e concordo com os termos de submissão
-          </Label>
-          <p className="text-sm text-gray-400">
-            Autorizo o uso do conteúdo enviado para fins promocionais.
-          </p>
-        </div>
+        <label
+          htmlFor="terms"
+          className="text-medium-contrast text-base leading-relaxed"
+        >
+          Confirmo que li e aceito os termos e condições desta missão. Entendo que o conteúdo enviado será analisado pelo anunciante antes da aprovação.
+        </label>
       </div>
       
-      <div className="pt-4 flex justify-end space-x-2">
-        <Button 
-          variant="outline" 
+      <div className="flex gap-3 mt-6">
+        <Button
+          variant="outline"
           onClick={onCancel}
+          className="flex-1 py-2.5 text-base"
         >
           Cancelar
         </Button>
-        <Button 
+        
+        <Button
           onClick={onSubmit}
           disabled={isDisabled || loading}
+          className="flex-1 bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80 py-2.5 text-base"
         >
-          {loading ? "Enviando..." : "Enviar"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            "Concluir Missão"
+          )}
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

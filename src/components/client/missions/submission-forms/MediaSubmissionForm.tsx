@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Camera, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Upload, X, Image, Camera } from "lucide-react";
 
 interface MediaSubmissionFormProps {
   type: "photo" | "video";
@@ -18,53 +18,75 @@ const MediaSubmissionForm = ({
   onClearImage 
 }: MediaSubmissionFormProps) => {
   return (
-    <div className="space-y-2">
-      <Label>Enviar {type === "photo" ? "foto" : "vídeo"}</Label>
-      {imagePreview ? (
-        <div className="relative">
-          <img 
-            src={imagePreview} 
-            alt="Preview" 
-            className="max-h-[200px] w-full object-cover rounded-md" 
-          />
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            className="absolute top-2 right-2"
+    <div className="form-container">
+      <Label className="form-label">
+        {type === "photo" ? "Enviar Imagem" : "Enviar Vídeo"}
+      </Label>
+      
+      {!imagePreview ? (
+        <div className="bg-galaxy-deepPurple/80 border border-dashed border-galaxy-purple/40 rounded-md p-6 text-center">
+          <div className="flex flex-col items-center justify-center">
+            {type === "photo" 
+              ? <Image className="w-10 h-10 md:w-12 md:h-12 text-medium-contrast mb-3" /> 
+              : <Camera className="w-10 h-10 md:w-12 md:h-12 text-medium-contrast mb-3" />
+            }
+            <p className="text-medium-contrast text-base mb-4">
+              {type === "photo" 
+                ? "Arraste uma imagem ou clique para fazer upload" 
+                : "Arraste um vídeo ou clique para fazer upload"
+              }
+            </p>
+            <input
+              type="file"
+              accept={type === "photo" ? "image/*" : "video/*"}
+              onChange={onImageUpload}
+              className="hidden"
+              id="media-upload"
+            />
+            <label htmlFor="media-upload">
+              <Button 
+                variant="outline" 
+                className="cursor-pointer flex items-center gap-2"
+                type="button"
+              >
+                <Upload className="w-4 h-4" />
+                Escolher arquivo
+              </Button>
+            </label>
+          </div>
+        </div>
+      ) : (
+        <div className="relative bg-galaxy-deepPurple/80 rounded-md overflow-hidden">
+          {type === "photo" ? (
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="w-full h-auto max-h-80 object-contain"
+            />
+          ) : (
+            <video 
+              src={imagePreview} 
+              controls 
+              className="w-full h-auto max-h-80"
+            />
+          )}
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2 bg-galaxy-dark/80 hover:bg-galaxy-dark"
             onClick={onClearImage}
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
-      ) : (
-        <div className="border-2 border-dashed border-gray-400 rounded-md p-6 text-center">
-          <Camera className="mx-auto h-8 w-8 text-gray-400" />
-          <div className="mt-2">
-            <label htmlFor="file-upload" className="cursor-pointer text-neon-cyan hover:underline">
-              Clique para enviar
-            </label>
-            <input
-              id="file-upload"
-              name="file-upload"
-              type="file"
-              className="sr-only"
-              accept={type === "photo" ? "image/*" : "video/*"}
-              onChange={onImageUpload}
-            />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {type === "photo" 
-              ? "PNG, JPG ou GIF até 5MB" 
-              : "MP4 ou MOV até 50MB"}
-          </p>
-        </div>
       )}
       
-      {type === "photo" && (
-        <p className="text-sm text-gray-400">
-          Dica: Certifique-se de que a foto esteja bem iluminada e claramente mostrando o produto.
-        </p>
-      )}
+      <p className="text-medium-contrast text-sm mt-2">
+        {type === "photo" 
+          ? "Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB." 
+          : "Formatos aceitos: MP4, MOV, AVI. Tamanho máximo: 50MB."
+        }
+      </p>
     </div>
   );
 };
