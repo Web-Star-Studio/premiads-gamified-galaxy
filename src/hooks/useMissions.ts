@@ -36,11 +36,19 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
     const fetchMissions = async () => {
       setLoading(true);
       try {
+        // Get current user id
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        
+        if (!userId) {
+          throw new Error("User not authenticated");
+        }
+        
         // Get user's submissions first to determine mission status
         const { data: userSubmissions, error: submissionsError } = await supabase
           .from("mission_submissions")
           .select("mission_id, status")
-          .eq("user_id", supabase.auth.getSession().then(({ data }) => data?.session?.user.id));
+          .eq("user_id", userId);
         
         if (submissionsError) throw submissionsError;
         
@@ -67,6 +75,15 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
             }
           }
 
+          // Convert requirements from JSON to string array
+          const requirementsArray: string[] = mission.requirements 
+            ? Array.isArray(mission.requirements) 
+              ? mission.requirements.map(req => String(req))
+              : typeof mission.requirements === 'object' 
+                ? Object.values(mission.requirements).map(req => String(req))
+                : [String(mission.requirements)]
+            : [];
+
           return {
             id: mission.id,
             title: mission.title,
@@ -76,7 +93,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
             points: mission.points,
             deadline: mission.end_date,
             status,
-            requirements: mission.requirements ? JSON.parse(mission.requirements) : [],
+            requirements: requirementsArray,
           };
         });
 

@@ -21,7 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { useUser } from "@/context/UserContext";
-import { useReferrals } from "@/hooks/useReferrals";
+import { useReferrals, ReferralReward } from "@/hooks/useReferrals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,35 +29,35 @@ import ClientDashboardHeader from "@/components/client/ClientDashboardHeader";
 import ReferralProgram from "@/components/client/ReferralProgram";
 
 // Mock rewards data - in a real app, this would come from the database
-const MOCK_REWARDS = [
+const MOCK_REWARDS: ReferralReward[] = [
   {
     id: 1,
     description: "Bônus de indicação - 3 amigos",
-    type: "points" as const,
+    type: "points",
     value: 500,
-    status: "claimed" as const
+    status: "claimed"
   },
   {
     id: 2,
     description: "Bônus de indicação - 5 amigos",
-    type: "points" as const,
+    type: "points",
     value: 1000,
-    status: "available" as const
+    status: "available"
   },
   {
     id: 3,
     description: "Bilhetes extras para sorteio",
-    type: "tickets" as const,
+    type: "tickets",
     value: 3,
-    status: "available" as const,
+    status: "available",
     expiresAt: "2025-05-30"
   },
   {
     id: 4,
     description: "Acesso VIP - Evento exclusivo",
-    type: "special" as const,
+    type: "special",
     value: 1,
-    status: "available" as const,
+    status: "available",
     expiresAt: "2025-06-15"
   }
 ];
@@ -75,7 +75,7 @@ const ClientReferrals = () => {
     sendInvites 
   } = useReferrals();
   
-  const [rewards, setRewards] = useState(MOCK_REWARDS);
+  const [rewards, setRewards] = useState<ReferralReward[]>(MOCK_REWARDS);
   const [emailInputs, setEmailInputs] = useState<string[]>(["", "", ""]);
   const [inviteMessage, setInviteMessage] = useState("Junte-se a mim no PremiAds e ganhe pontos para trocar por prêmios incríveis! Use meu código:");
 
@@ -139,11 +139,13 @@ const ClientReferrals = () => {
   };
 
   const handleClaimReward = (rewardId: number) => {
-    setRewards(rewards.map(reward => 
+    const updatedRewards = rewards.map(reward => 
       reward.id === rewardId 
-        ? { ...reward, status: "claimed" } 
+        ? { ...reward, status: "claimed" as const } 
         : reward
-    ));
+    );
+    
+    setRewards(updatedRewards);
     
     playSound("reward");
     toast({

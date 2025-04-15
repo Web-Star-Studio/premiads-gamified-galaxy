@@ -75,7 +75,7 @@ export const useReferrals = () => {
         // In a real app, this would be the actual website URL
         setReferralLink(`https://premiads.com/r/${userReferralCode}`);
         
-        // Get user's referrals
+        // Get user's referrals with proper error handling for join queries
         const { data: allReferrals, error: allReferralsError } = await supabase
           .from("referrals")
           .select(`
@@ -84,17 +84,41 @@ export const useReferrals = () => {
             status,
             created_at,
             completed_at,
-            referred_id,
-            profiles:referred_id(full_name)
+            referred_id
           `)
           .eq("referrer_id", userId);
         
         if (allReferralsError) throw allReferralsError;
         
+        // Get profile names for referred users in a separate query
+        const referredIds = allReferrals
+          ?.filter(ref => ref.referred_id)
+          .map(ref => ref.referred_id) || [];
+          
+        let profilesMap: Record<string, string> = {};
+        
+        if (referredIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", referredIds);
+            
+          if (profilesData) {
+            profilesMap = profilesData.reduce((acc, profile) => {
+              if (profile.id) {
+                acc[profile.id] = profile.full_name || "Usuário";
+              }
+              return acc;
+            }, {} as Record<string, string>);
+          }
+        }
+        
         // Transform data for UI
         const mappedReferrals: Referral[] = (allReferrals || []).map(referral => ({
           id: referral.id,
-          name: referral.profiles?.full_name || "Amigo convidado",
+          name: referral.referred_id 
+            ? profilesMap[referral.referred_id] || "Amigo convidado"
+            : "Amigo convidado",
           status: referral.status === "completed" 
             ? "completed" 
             : referral.referred_id 
