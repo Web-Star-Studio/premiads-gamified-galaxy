@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -17,6 +16,11 @@ export interface Mission {
   deadline?: string;
   status: MissionStatus;
   requirements?: string[];
+  business_type?: string;
+  target_audience_gender?: string;
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
 }
 
 interface UseMissionsOptions {
@@ -94,6 +98,11 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
             deadline: mission.end_date,
             status,
             requirements: requirementsArray,
+            business_type: mission.business_type,
+            target_audience_gender: mission.target_audience_gender,
+            target_audience_age_min: mission.target_audience_age_min,
+            target_audience_age_max: mission.target_audience_age_max,
+            target_audience_region: mission.target_audience_region
           };
         });
 
@@ -114,6 +123,7 @@ export const useMissions = (options: UseMissionsOptions = {}) => {
     fetchMissions();
   }, [toast, playSound]);
 
+  
   // Filter missions based on status
   const filteredMissions = missions.filter(mission => {
     if (filter === "available") return mission.status === "available";
