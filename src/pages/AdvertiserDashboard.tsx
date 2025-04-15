@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -16,28 +15,12 @@ import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdvertiserDashboard = () => {
-  const { userName, userType } = useUser();
-  const navigate = useNavigate();
+  const { userName } = useUser();
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only check userType once on initial load, not on every render
-    const checkUserType = () => {
-      if (userType !== "anunciante") {
-        toast({
-          title: "Acesso restrito",
-          description: "Você não tem permissão para acessar esta página. Redirecionando para a página principal.",
-          variant: "destructive",
-        });
-        navigate("/");
-      }
-    };
-    
-    // Execute check once
-    checkUserType();
-    
     // Simulate loading
     const loadTimer = setTimeout(() => {
       setLoading(false);
