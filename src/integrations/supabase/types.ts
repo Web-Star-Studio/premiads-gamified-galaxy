@@ -53,6 +53,7 @@ export type Database = {
       missions: {
         Row: {
           advertiser_id: string | null
+          business_type: string | null
           created_at: string
           description: string
           end_date: string | null
@@ -61,11 +62,16 @@ export type Database = {
           points: number
           requirements: Json | null
           start_date: string
+          target_audience_age_max: number | null
+          target_audience_age_min: number | null
+          target_audience_gender: string | null
+          target_audience_region: string | null
           title: string
           type: string
         }
         Insert: {
           advertiser_id?: string | null
+          business_type?: string | null
           created_at?: string
           description: string
           end_date?: string | null
@@ -74,11 +80,16 @@ export type Database = {
           points: number
           requirements?: Json | null
           start_date?: string
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
+          target_audience_gender?: string | null
+          target_audience_region?: string | null
           title: string
           type: string
         }
         Update: {
           advertiser_id?: string | null
+          business_type?: string | null
           created_at?: string
           description?: string
           end_date?: string | null
@@ -87,6 +98,10 @@ export type Database = {
           points?: number
           requirements?: Json | null
           start_date?: string
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
+          target_audience_gender?: string | null
+          target_audience_region?: string | null
           title?: string
           type?: string
         }
