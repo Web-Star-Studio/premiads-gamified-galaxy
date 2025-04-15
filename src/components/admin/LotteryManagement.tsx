@@ -371,8 +371,8 @@ const LotteryManagement = () => {
                                 ref={wheelRef}
                                 className="absolute inset-0 rounded-full border-4 border-neon-pink overflow-hidden"
                                 style={{
-                                  background: `conic-gradient(
-                                    ${selectedLottery.prizes.map((prize: any, index: number) => {
+                                  background: `conic-gradient(${
+                                    selectedLottery.prizes.map((prize: any, index: number) => {
                                       const startPercent = selectedLottery.prizes
                                         .slice(0, index)
                                         .reduce((sum: number, p: any) => sum + p.probability, 0);
@@ -383,7 +383,7 @@ const LotteryManagement = () => {
                                                     prize.rarity === 'epic' ? '#9b87f5' : '#FF00C8';
                                       return `${color} ${startPercent}%, ${color} ${endPercent}%`;
                                     }).join(', ')
-                                  )`
+                                  })`
                                 }}
                               />
                               
