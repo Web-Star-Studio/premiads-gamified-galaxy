@@ -1,8 +1,9 @@
 
-import { motion } from "framer-motion";
 import { Bell, Home, User, PieChart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -33,18 +34,33 @@ const DashboardHeader = ({ userName }: DashboardHeaderProps) => {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="rounded-full relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full"></span>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full"></span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Notificações</TooltipContent>
+        </Tooltip>
         
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <PieChart className="w-5 h-5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <PieChart className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Estatísticas</TooltipContent>
+        </Tooltip>
         
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <User className="w-5 h-5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <User className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Perfil</TooltipContent>
+        </Tooltip>
       </div>
     </header>
   );
