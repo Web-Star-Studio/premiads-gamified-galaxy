@@ -4,6 +4,28 @@ import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClientDashboard } from "@/hooks/useClientDashboard";
 
+// Icon component for reusability
+const TicketIcon = () => {
+  return <Gift className="w-6 h-6 mr-2 text-white" />;
+};
+
+// Text label component for reusability
+const TicketLabel = () => {
+  return <span className="text-xl font-heading">Sorteios</span>;
+};
+
+// Content container for the button
+const TicketButtonContent = () => {
+  return (
+    <div className="flex flex-col items-center justify-center w-full">
+      <div className="flex items-center">
+        <TicketIcon />
+        <TicketLabel />
+      </div>
+    </div>
+  );
+};
+
 const TicketsButton = () => {
   const navigate = useNavigate();
   const { points } = useClientDashboard(navigate);
@@ -13,12 +35,7 @@ const TicketsButton = () => {
       className="w-full neon-button py-6 px-4"
       onClick={() => navigate("/cliente/sorteios")}
     >
-      <div className="flex flex-col items-center justify-center w-full">
-        <div className="flex items-center">
-          <Gift className="w-6 h-6 mr-2 text-white" />
-          <span className="text-xl font-heading">Sorteios</span>
-        </div>
-      </div>
+      <TicketButtonContent />
     </Button>
   );
 };
