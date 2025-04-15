@@ -1,8 +1,17 @@
+
 import React, { useState } from 'react';
 import { useCashbackMarketplace } from '@/hooks/useCashbackMarketplace';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { 
   Wallet, 
   Search, 

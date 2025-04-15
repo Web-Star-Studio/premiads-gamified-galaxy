@@ -1,9 +1,8 @@
 
-import { Bell, Home, User, PieChart } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { motion } from "framer-motion";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Bell, Wallet, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -11,58 +10,41 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ userName }: DashboardHeaderProps) => {
   return (
-    <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-4">
-        <Link to="/">
-          <Button variant="ghost" size="icon" className="rounded-full w-10 h-10">
-            <Home className="w-5 h-5" />
-          </Button>
-        </Link>
-        
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h1 className="text-2xl font-bold md:text-3xl font-heading">
+    <div className="flex flex-col space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col md:flex-row md:items-center md:justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold font-heading">
             Olá, <span className="neon-text-pink">{userName}</span>!
           </h1>
-          <p className="text-sm text-gray-400">
-            Painel de Gestão de Campanhas | <span className="text-neon-cyan">350 créditos</span>
+          <p className="text-muted-foreground mt-1">
+            Bem-vindo ao seu Dashboard de Anunciante
           </p>
-        </motion.div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full"></span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Notificações</TooltipContent>
-        </Tooltip>
+        </div>
         
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <PieChart className="w-5 h-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Estatísticas</TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="w-5 h-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Perfil</TooltipContent>
-        </Tooltip>
-      </div>
-    </header>
+        <div className="flex items-center gap-3 mt-4 md:mt-0">
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2 bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30"
+          >
+            <Wallet className="h-4 w-4 text-neon-cyan" />
+            <span className="text-sm font-medium">Créditos Disponíveis</span>
+          </motion.div>
+          
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2 bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30"
+          >
+            <Star className="h-4 w-4 text-neon-pink" />
+            <span className="text-sm font-medium">Status Premium</span>
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

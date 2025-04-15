@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -11,6 +12,7 @@ import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import LoadingState from "@/components/advertiser/dashboard/LoadingState";
 import NotificationBanner from "@/components/advertiser/dashboard/NotificationBanner";
 import DashboardTabs from "@/components/advertiser/dashboard/DashboardTabs";
+import DashboardHeader from "@/components/advertiser/DashboardHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
 
 const AdvertiserDashboard = () => {
