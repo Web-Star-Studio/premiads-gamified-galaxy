@@ -14,6 +14,10 @@ import LotteryManagement from "@/components/admin/LotteryManagement";
 import NotificationTesting from "@/components/admin/NotificationTesting";
 import LoadingParticles from "@/components/admin/LoadingParticles";
 import AdminOverview from "@/components/admin/AdminOverview";
+import PlatformMonitoring from "@/components/admin/PlatformMonitoring";
+import RulesConfiguration from "@/components/admin/RulesConfiguration";
+import TechnicalSupport from "@/components/admin/TechnicalSupport";
+import AdvancedReporting from "@/components/admin/AdvancedReporting";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
@@ -65,6 +69,18 @@ const AdminPanel = () => {
             <TabsTrigger className="data-[state=active]:neon-text-pink" value="access">
               🔐 Controle de Acesso
             </TabsTrigger>
+            <TabsTrigger className="data-[state=active]:neon-text-pink" value="rules">
+              📝 Regras
+            </TabsTrigger>
+            <TabsTrigger className="data-[state=active]:neon-text-pink" value="monitoring">
+              🖥️ Monitoramento
+            </TabsTrigger>
+            <TabsTrigger className="data-[state=active]:neon-text-pink" value="support">
+              🎧 Suporte
+            </TabsTrigger>
+            <TabsTrigger className="data-[state=active]:neon-text-pink" value="reporting">
+              📈 Relatórios
+            </TabsTrigger>
             <TabsTrigger className="data-[state=active]:neon-text-pink" value="audit">
               📋 Auditoria
             </TabsTrigger>
@@ -86,6 +102,22 @@ const AdminPanel = () => {
           
           <TabsContent value="access" className="space-y-6">
             <AccessControl />
+          </TabsContent>
+          
+          <TabsContent value="rules" className="space-y-6">
+            <RulesConfiguration />
+          </TabsContent>
+          
+          <TabsContent value="monitoring" className="space-y-6">
+            <PlatformMonitoring />
+          </TabsContent>
+          
+          <TabsContent value="support" className="space-y-6">
+            <TechnicalSupport />
+          </TabsContent>
+          
+          <TabsContent value="reporting" className="space-y-6">
+            <AdvancedReporting />
           </TabsContent>
           
           <TabsContent value="audit" className="space-y-6">
