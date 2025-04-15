@@ -14,7 +14,6 @@ export { useToast } from './use-toast';
 export { useClientDashboard } from './useClientDashboard';
 export { useMissions } from './useMissions';
 export { 
-  MissionType, 
   missionTypeLabels, 
   getMissionTypeDescription, 
   getMissionIcon,
@@ -22,6 +21,8 @@ export {
   getMissionDifficulty,
   getEstimatedTime
 } from './useMissionsTypes';
+// Re-export types with the correct syntax for isolatedModules
+export type { MissionType } from './useMissionsTypes';
 export { useReferrals } from './useReferrals';
 
 // Mission-specific hooks
