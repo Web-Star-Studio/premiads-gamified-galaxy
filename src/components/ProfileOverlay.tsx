@@ -39,6 +39,8 @@ const ProfileOverlay = () => {
       // Navigate to dashboard if user is a participant
       if (userType === "participante") {
         navigate("/cliente");
+      } else {
+        navigate("/anunciante");
       }
     }, 800);
   };

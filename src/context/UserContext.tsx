@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type UserType = "participante" | "anunciante";
 
@@ -28,12 +28,40 @@ const UserContext = createContext<UserContextType>(defaultContextValue);
 export const useUser = () => useContext(UserContext);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [userType, setUserType] = useState<UserType>("participante");
-  const [userName, setUserName] = useState("");
-  const [isOverlayOpen, setIsOverlayOpen] = useState(true);
+  // Initialize state from localStorage if available
+  const [userType, setUserTypeState] = useState<UserType>(() => {
+    const savedType = localStorage.getItem("userType");
+    return (savedType as UserType) || "participante";
+  });
+  
+  const [userName, setUserNameState] = useState<string>(() => {
+    return localStorage.getItem("userName") || "";
+  });
+  
+  const [isOverlayOpen, setIsOverlayOpenState] = useState<boolean>(() => {
+    // Show overlay if no username is set
+    const savedName = localStorage.getItem("userName");
+    return !savedName || savedName === "";
+  });
+
+  // Update localStorage when state changes
+  const setUserType = (type: UserType) => {
+    localStorage.setItem("userType", type);
+    setUserTypeState(type);
+  };
+
+  const setUserName = (name: string) => {
+    localStorage.setItem("userName", name);
+    setUserNameState(name);
+  };
+
+  const setIsOverlayOpen = (isOpen: boolean) => {
+    setIsOverlayOpenState(isOpen);
+  };
 
   const resetUserInfo = () => {
-    setUserName("");
+    localStorage.removeItem("userName");
+    setUserNameState("");
     setIsOverlayOpen(true);
   };
 

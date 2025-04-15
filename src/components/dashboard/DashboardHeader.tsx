@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 
 interface DashboardHeaderProps {
   userName: string;
-  streak: number;
+  streak?: number;
 }
 
-const DashboardHeader = ({ userName, streak }: DashboardHeaderProps) => {
+const DashboardHeader = ({ userName, streak = 0 }: DashboardHeaderProps) => {
   return (
     <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
@@ -27,9 +27,11 @@ const DashboardHeader = ({ userName, streak }: DashboardHeaderProps) => {
           <h1 className="text-2xl font-bold md:text-3xl font-heading">
             Bem-vindo de volta, <span className="neon-text-cyan">{userName}</span>!
           </h1>
-          <p className="text-sm text-gray-400">
-            Seu streak atual: <span className="text-neon-pink font-semibold">{streak} dias</span>
-          </p>
+          {streak > 0 && (
+            <p className="text-sm text-gray-400">
+              Seu streak atual: <span className="text-neon-pink font-semibold">{streak} dias</span>
+            </p>
+          )}
         </motion.div>
       </div>
       

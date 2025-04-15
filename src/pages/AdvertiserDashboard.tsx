@@ -23,17 +23,21 @@ const AdvertiserDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Redirect if user is not an advertiser
-    if (userType !== "anunciante") {
-      toast({
-        title: "Acesso restrito",
-        description: "Você não tem permissão para acessar esta página",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
-    }
-
+    // Only check userType once on initial load, not on every render
+    const checkUserType = () => {
+      if (userType !== "anunciante") {
+        toast({
+          title: "Acesso restrito",
+          description: "Você não tem permissão para acessar esta página. Redirecionando para a página principal.",
+          variant: "destructive",
+        });
+        navigate("/");
+      }
+    };
+    
+    // Execute check once
+    checkUserType();
+    
     // Simulate loading
     const loadTimer = setTimeout(() => {
       setLoading(false);
@@ -52,7 +56,7 @@ const AdvertiserDashboard = () => {
     }, 1500);
 
     return () => clearTimeout(loadTimer);
-  }, [userType, navigate, toast, playSound]);
+  }, []); // Empty dependency array to run only once
 
   if (loading) {
     return (

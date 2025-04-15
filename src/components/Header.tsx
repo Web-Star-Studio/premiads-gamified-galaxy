@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,6 +14,7 @@ import { motion } from "framer-motion";
 const Header = () => {
   const { userType, setUserType, setIsOverlayOpen } = useUser();
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
   
   const sections = [
     { id: "como-funciona", label: "Como Funciona" },
@@ -38,6 +40,14 @@ const Header = () => {
   const changeUserType = (newType: "participante" | "anunciante") => {
     if (newType !== userType) {
       setUserType(newType);
+    }
+  };
+
+  const navigateToDashboard = () => {
+    if (userType === "participante") {
+      navigate("/cliente");
+    } else {
+      navigate("/anunciante");
     }
   };
 
@@ -114,13 +124,7 @@ const Header = () => {
 
           <Button 
             className="neon-button hidden md:block" 
-            onClick={() => {
-              if (userType === "participante") {
-                window.location.href = "/cliente";
-              } else {
-                window.location.href = "/anunciante";
-              }
-            }}
+            onClick={navigateToDashboard}
           >
             {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
           </Button>
