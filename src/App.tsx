@@ -19,6 +19,7 @@ import { UserProvider } from "./context/UserContext";
 
 // Admin section page imports
 import LotteryManagementPage from "./pages/admin/LotteryManagementPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => {
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/admin/sorteios" element={<LotteryManagementPage />} />
+              <Route path="/admin/usuarios" element={<UserManagementPage />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
