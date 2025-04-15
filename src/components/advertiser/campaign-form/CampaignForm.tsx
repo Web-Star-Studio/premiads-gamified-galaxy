@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Campaign } from "../campaignData";
-import { CampaignFormProps, initialFormData, FormData } from "./types";
+import { CampaignFormProps, initialFormData, FormData, MissionType } from "./types";
 import BasicInfoStep from "./BasicInfoStep";
 import RewardsStep from "./RewardsStep";
 import DatesStep from "./DatesStep";
@@ -75,7 +75,9 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   // Check if current step is valid
   const isCurrentStepValid = () => {
     if (step === 1) {
-      return formData.title.trim() !== "" && formData.type !== "" && formData.audience !== "";
+      return formData.title.trim() !== "" && 
+             formData.type !== "" && 
+             formData.audience !== "";
     }
     if (step === 2) {
       return formData.requirements.length > 0;

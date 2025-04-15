@@ -18,7 +18,7 @@ export type MissionType =
 
 export interface FormData {
   title: string;
-  type: MissionType;
+  type: MissionType | "";  // Allow empty string for initial state
   description: string;
   audience: string;
   pointsRange: [number, number];
@@ -33,7 +33,7 @@ export interface FormData {
 
 export const initialFormData: FormData = {
   title: "",
-  type: "",
+  type: "",  // This is now allowed by the type definition
   description: "",
   audience: "",
   pointsRange: [30, 50],

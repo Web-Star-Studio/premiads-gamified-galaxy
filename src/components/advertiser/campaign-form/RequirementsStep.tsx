@@ -11,7 +11,7 @@ interface RequirementsStepProps {
 }
 
 // Helper function to get mission-specific requirement placeholder text
-const getRequirementPlaceholder = (type: MissionType): string => {
+const getRequirementPlaceholder = (type: MissionType | ""): string => {
   switch (type) {
     case "form":
       return "URL do formulário a ser preenchido";
@@ -54,7 +54,7 @@ const RequirementsStep = ({ formData, updateFormData }: RequirementsStepProps) =
     <div className="space-y-6">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">
-          Requisitos da Missão: {formData.type ? missionTypeLabels[formData.type as MissionType] : ""}
+          Requisitos da Missão: {formData.type ? missionTypeLabels[formData.type as MissionType] || "" : ""}
         </h3>
         <p className="text-sm text-gray-400">
           Defina os requisitos específicos que os usuários devem cumprir para completar esta missão.
@@ -66,7 +66,7 @@ const RequirementsStep = ({ formData, updateFormData }: RequirementsStepProps) =
           <Input
             value={newRequirement}
             onChange={(e) => setNewRequirement(e.target.value)}
-            placeholder={formData.type ? getRequirementPlaceholder(formData.type as MissionType) : "Adicione um requisito"}
+            placeholder={formData.type ? getRequirementPlaceholder(formData.type) : "Adicione um requisito"}
             className="flex-1 bg-gray-800 border-gray-700 focus:border-neon-cyan"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
