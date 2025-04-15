@@ -1,9 +1,10 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "@/context/UserContext";
 import { AppProvider } from "@/context/AppContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -18,7 +19,7 @@ const ClientProfile = lazy(() => import("./pages/ClientProfile"));
 const ClientMissions = lazy(() => import("./pages/ClientMissions"));
 const ClientReferrals = lazy(() => import("./pages/ClientReferrals"));
 const ClientRaffles = lazy(() => import("./pages/ClientRaffles"));
-const Authentication = lazy(() => import("./pages/Authentication")); // Fixed incorrect path
+const Authentication = lazy(() => import("./pages/Authentication"));
 const AdvertiserDashboard = lazy(() => import("./pages/AdvertiserDashboard"));
 const AdvertiserProfile = lazy(() => import("./pages/AdvertiserProfile"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
@@ -32,6 +33,13 @@ const MonitoringPage = lazy(() => import("./pages/admin/MonitoringPage"));
 const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 const SettingsPage = lazy(() => import("./pages/admin/SettingsPage"));
 const RulesPage = lazy(() => import("./pages/admin/RulesPage"));
+
+// Create custom loading component for routes
+const RouteLoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen bg-galaxy-dark">
+    <LoadingSpinner />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,100 +59,102 @@ const App = () => {
           <UserProvider>
             <TooltipProvider>
               <Routes>
+                {/* Public Routes */}
                 <Route path="/" element={<Index />} />
-                
-                {/* Wrap lazy-loaded routes with Suspense */}
                 <Route path="/auth" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <Authentication />
                   </Suspense>
                 } />
                 
                 {/* Client Routes */}
                 <Route path="/cliente" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ClientDashboard />
                   </Suspense>
                 } />
                 <Route path="/cliente/missoes" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ClientMissions />
                   </Suspense>
                 } />
                 <Route path="/cliente/indicacoes" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ClientReferrals />
                   </Suspense>
                 } />
                 <Route path="/cliente/sorteios" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ClientRaffles />
                   </Suspense>
                 } />
                 <Route path="/cliente/perfil" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ClientProfile />
                   </Suspense>
                 } />
                 
                 {/* Advertiser Routes */}
                 <Route path="/anunciante" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <AdvertiserDashboard />
                   </Suspense>
                 } />
                 <Route path="/anunciante/perfil" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <AdvertiserProfile />
                   </Suspense>
                 } />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <AdminPanel />
                   </Suspense>
                 } />
                 <Route path="/admin/sorteios" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <LotteryManagementPage />
                   </Suspense>
                 } />
                 <Route path="/admin/usuarios" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <UserManagementPage />
                   </Suspense>
                 } />
                 <Route path="/admin/acesso" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <AccessControlPage />
                   </Suspense>
                 } />
                 <Route path="/admin/regras" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <RulesPage />
                   </Suspense>
                 } />
                 <Route path="/admin/monitoramento" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <MonitoringPage />
                   </Suspense>
                 } />
                 <Route path="/admin/relatorios" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <ReportsPage />
                   </Suspense>
                 } />
                 <Route path="/admin/notificacoes" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <NotificationsPage />
                   </Suspense>
                 } />
                 <Route path="/admin/configuracoes" element={
-                  <Suspense fallback={<LoadingSpinner />}>
+                  <Suspense fallback={<RouteLoadingSpinner />}>
                     <SettingsPage />
                   </Suspense>
                 } />
+                
+                {/* Redirect URLs com "/" no final para versões sem "/" */}
+                <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />

@@ -4,16 +4,11 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gift } from 'lucide-react';
 import { useSounds } from '@/hooks/use-sounds';
-import { toast } from '@/hooks/use-toast';
+import { toastSuccess } from '@/utils/toast';
 import LoadingParticles from './LoadingParticles';
-
-// Import the refactored components
-import { 
-  LotteryList, 
-  LotteryDetails, 
-  EmptyState,
-  Lottery
-} from './lottery';
+import LotteryList, { Lottery } from './lottery/LotteryList';
+import LotteryDetails from './lottery/LotteryDetails';
+import EmptyState from './lottery/EmptyState';
 
 // Mock lottery data
 const initialLotteries = [
@@ -71,6 +66,13 @@ const LotteryManagement: React.FC = () => {
 
   const handleSelectLottery = (lottery: Lottery) => {
     setSelectedLottery(lottery);
+    
+    // Toque um som ao selecionar
+    try {
+      playSound('click');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
   };
 
   const handleStatusChange = (id: number, newStatus: string) => {
@@ -83,15 +85,19 @@ const LotteryManagement: React.FC = () => {
       
       const lottery = lotteries.find(l => l.id === id);
       if (lottery) {
-        toast({
-          title: `Status Alterado`,
-          description: `O sorteio "${lottery.name}" foi ${
+        toastSuccess(
+          `Status Alterado`,
+          `O sorteio "${lottery.name}" foi ${
             newStatus === 'active' ? 'ativado' : 
             newStatus === 'pending' ? 'pausado' : 'finalizado'
-          }.`,
-        });
+          }.`
+        );
         
-        playSound('pop');
+        try {
+          playSound('pop');
+        } catch (error) {
+          console.log("Som não reproduzido", error);
+        }
       }
       
       setLoading(false);
@@ -104,6 +110,13 @@ const LotteryManagement: React.FC = () => {
     
     // Selecionar o novo sorteio
     setSelectedLottery(newLottery);
+    
+    // Tocar som de sucesso
+    try {
+      playSound('success');
+    } catch (error) {
+      console.log("Som não reproduzido", error);
+    }
   };
 
   return (

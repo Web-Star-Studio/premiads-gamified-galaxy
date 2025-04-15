@@ -1,11 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, Loader2 } from 'lucide-react';
+import * as z from 'zod';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Lottery } from './LotteryList';
 import {
   Form,
   FormControl,
@@ -14,139 +19,215 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { toastSuccess, toastError } from "@/utils/toast";
-import { useSounds } from "@/hooks/use-sounds";
 
-// Schema para validação do formulário
-const lotterySchema = z.object({
-  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
-  startDate: z.string().min(1, "Data de início é obrigatória"),
-  endDate: z.string().min(1, "Data de término é obrigatória"),
-}).refine(data => new Date(data.startDate) < new Date(data.endDate), {
-  message: "A data de término deve ser posterior à data de início",
-  path: ["endDate"], 
+// Schema de validação
+const formSchema = z.object({
+  name: z.string().min(3, { message: 'Nome deve ter pelo menos 3 caracteres' }),
+  startDate: z.date({ required_error: 'Data de início é obrigatória' }),
+  endDate: z.date({ required_error: 'Data de término é obrigatória' }),
+  status: z.enum(['active', 'pending'], { required_error: 'Status é obrigatório' }),
 });
 
-type LotteryFormValues = z.infer<typeof lotterySchema>;
+type FormSchema = z.infer<typeof formSchema>;
 
 interface NewLotteryFormProps {
-  onSuccess: (newLottery: any) => void;
+  onSuccess: (lottery: Lottery) => void;
   onCancel: () => void;
 }
 
 const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) => {
-  const { playSound } = useSounds();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const form = useForm<LotteryFormValues>({
-    resolver: zodResolver(lotterySchema),
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      startDate: new Date().toISOString().split('T')[0], // Data atual como padrão
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Uma semana depois como padrão
+      startDate: new Date(),
+      endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+      status: 'pending',
     },
   });
-
-  const onSubmit = async (data: LotteryFormValues) => {
+  
+  const onSubmit = async (values: FormSchema) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      
-      // Aqui seria feita a inserção no banco de dados
-      // Como estamos usando dados fictícios por enquanto, vamos simular
-      const newLottery = {
-        id: Math.floor(Math.random() * 1000), // ID temporário
-        name: data.name,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: 'pending',
-        prizes: [],
-      };
-      
-      // Simular um pequeno atraso como se estivesse salvando
+      // Simulando um atraso de rede
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      playSound('chime');
-      toastSuccess('Sorteio criado', 'O novo sorteio foi criado com sucesso.');
+      // Criar novo sorteio (simulado)
+      const newLottery: Lottery = {
+        id: Date.now(), // Usar timestamp como ID temporário
+        name: values.name,
+        startDate: format(values.startDate, 'yyyy-MM-dd'),
+        endDate: format(values.endDate, 'yyyy-MM-dd'),
+        status: values.status,
+        prizes: [] // Começar sem prêmios
+      };
+      
+      toastSuccess('Sorteio criado', `O sorteio "${values.name}" foi criado com sucesso.`);
       onSuccess(newLottery);
     } catch (error) {
-      console.error('Erro ao criar sorteio:', error);
-      playSound('error');
+      console.error("Erro ao criar sorteio:", error);
       toastError('Erro', 'Não foi possível criar o sorteio. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome do Sorteio</FormLabel>
+              <FormLabel className="text-white">Nome do Sorteio</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Sorteio Semanal" {...field} />
+                <Input placeholder="Ex: Sorteio Semanal" {...field} className="bg-galaxy-deep border-galaxy-purple/30" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="startDate"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Início</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input type="date" {...field} />
-                    <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-white">Data de Início</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "pl-3 text-left font-normal bg-galaxy-deep border-galaxy-purple/30",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "dd/MM/yyyy", { locale: pt })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-galaxy-deepPurple border-galaxy-purple/30" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
             name="endDate"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data de Término</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input type="date" {...field} />
-                    <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-white">Data de Término</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "pl-3 text-left font-normal bg-galaxy-deep border-galaxy-purple/30",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "dd/MM/yyyy", { locale: pt })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-galaxy-deepPurple border-galaxy-purple/30" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => 
+                        date < new Date() || 
+                        (form.getValues().startDate && date < form.getValues().startDate)
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white">Status Inicial</FormLabel>
+              <Select 
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="bg-galaxy-deep border-galaxy-purple/30">
+                    <SelectValue placeholder="Selecione um status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-galaxy-deepPurple border-galaxy-purple/30">
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
-            disabled={isSubmitting}
+            className="border-neon-cyan/30 text-white"
           >
             Cancelar
           </Button>
           <Button 
-            type="submit" 
-            className="bg-neon-pink hover:bg-neon-pink/90"
+            type="submit"
+            className="bg-neon-pink hover:bg-neon-pink/80"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span className="h-4 w-4 border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mr-2"></span>
                 Criando...
               </>
             ) : (
