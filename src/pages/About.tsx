@@ -1,9 +1,10 @@
-
 import { motion } from "framer-motion";
 import { Award, CheckCircle, LightbulbIcon, Shield, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { fadeInVariants } from "@/utils/animation";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const About = () => {
   const values = [
@@ -54,14 +55,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-galaxy-dark flex flex-col">
-      <header className="border-b border-galaxy-purple/30 py-4">
-        <div className="container mx-auto px-4">
-          <h1 className="text-2xl font-bold">
-            <span className="text-white">Premi</span>
-            <span className="neon-text-cyan">Ads</span>
-          </h1>
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-grow">
         {/* Hero Section */}
@@ -262,14 +256,7 @@ const About = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="py-8 border-t border-galaxy-purple/30">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-500">
-            &copy; {new Date().getFullYear()} PremiAds. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
