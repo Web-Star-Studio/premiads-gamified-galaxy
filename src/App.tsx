@@ -23,6 +23,9 @@ import UserManagementPage from "./pages/admin/UserManagementPage";
 import AccessControlPage from "./pages/admin/AccessControlPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import MonitoringPage from "./pages/admin/MonitoringPage";
+import NotificationsPage from "./pages/admin/NotificationsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
+import RulesPage from "./pages/admin/RulesPage";
 
 const queryClient = new QueryClient();
 
@@ -52,11 +55,11 @@ const App = () => {
               <Route path="/admin/sorteios" element={<LotteryManagementPage />} />
               <Route path="/admin/usuarios" element={<UserManagementPage />} />
               <Route path="/admin/acesso" element={<AccessControlPage />} />
-              <Route path="/admin/regras" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
+              <Route path="/admin/regras" element={<RulesPage />} />
               <Route path="/admin/monitoramento" element={<MonitoringPage />} />
               <Route path="/admin/relatorios" element={<ReportsPage />} />
-              <Route path="/admin/notificacoes" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
-              <Route path="/admin/configuracoes" element={<AccessControlPage />} /> {/* Temporary mapping to AccessControlPage */}
+              <Route path="/admin/notificacoes" element={<NotificationsPage />} />
+              <Route path="/admin/configuracoes" element={<SettingsPage />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
