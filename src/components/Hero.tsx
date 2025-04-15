@@ -27,7 +27,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="min-h-screen pt-28 pb-10 relative flex items-center">
+    <section className="min-h-screen pt-20 sm:pt-24 md:pt-28 pb-10 relative flex items-center">
       <Particles count={40} />
       
       <div className="container mx-auto px-4 relative z-10">
@@ -39,7 +39,7 @@ const Hero = () => {
         >
           <motion.h1 
             variants={itemVariants}
-            className="text-4xl md:text-6xl font-bold mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
           >
             {userType === "participante" ? (
               <>
@@ -56,7 +56,7 @@ const Hero = () => {
           
           <motion.p 
             variants={itemVariants}
-            className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto"
+            className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto"
           >
             {userType === "participante" ? (
               "Complete missões, acumule pontos e concorra a prêmios incríveis em nossa plataforma gamificada."
@@ -70,7 +70,7 @@ const Hero = () => {
             className="flex flex-col sm:flex-row justify-center gap-4"
           >
             <Button 
-              className="neon-button text-lg py-6" 
+              className="neon-button text-base sm:text-lg py-2 sm:py-3 md:py-4" 
               onClick={() => {
                 const section = document.getElementById("como-funciona");
                 section?.scrollIntoView({ behavior: "smooth" });
@@ -81,10 +81,7 @@ const Hero = () => {
             
             <Button 
               variant="outline" 
-              className="bg-transparent border-neon-pink text-white hover:bg-neon-pink/10 text-lg py-6"
-              onClick={() => {
-                // Calendario para especialista
-              }}
+              className="bg-transparent border-neon-pink text-white hover:bg-neon-pink/10 text-base sm:text-lg py-2 sm:py-3 md:py-4"
             >
               Fale com um Especialista
             </Button>
@@ -92,9 +89,9 @@ const Hero = () => {
           
           <motion.div 
             variants={itemVariants}
-            className="mt-12 pt-12 relative"
+            className="mt-8 sm:mt-10 md:mt-12 pt-8 sm:pt-10 md:pt-12 relative hidden sm:block"
           >
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24">
               <svg viewBox="0 0 24 24" className="animate-bounce text-neon-cyan w-8 h-8 mx-auto">
                 <path
                   fill="currentColor"

@@ -10,10 +10,12 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
 const Header = () => {
   const { userType, setUserType, setIsOverlayOpen } = useUser();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   
   const sections = [
@@ -36,6 +38,19 @@ const Header = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [scrolled]);
+
+  useEffect(() => {
+    // Prevent scrolling when mobile menu is open
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const changeUserType = (newType: "participante" | "anunciante") => {
     if (newType !== userType) {
@@ -62,6 +77,9 @@ const Header = () => {
         top: offsetPosition,
         behavior: "smooth"
       });
+      
+      // Fechar menu móvel após a navegação
+      setMobileMenuOpen(false);
     }
   };
 
@@ -70,17 +88,18 @@ const Header = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-40 py-4 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-40 py-2 sm:py-4 transition-all duration-300 ${
         scrolled ? "bg-galaxy-dark/80 backdrop-blur-md shadow-lg" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center">
-          <a href="#" className="text-2xl font-bold font-orbitron neon-text-cyan">
+          <a href="#" className="text-xl sm:text-2xl font-bold font-heading neon-text-cyan">
             <span className="text-white">Premi</span>Ads
           </a>
         </div>
 
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           {sections.map((section) => (
             <button
@@ -93,11 +112,11 @@ const Header = () => {
           ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-galaxy-deepPurple/70 border-neon-cyan/30">
-                Modo: {userType === "participante" ? "Participante" : "Anunciante"} 
+              <Button variant="outline" size="sm" className="bg-galaxy-deepPurple/70 border-neon-cyan/30">
+                {userType === "participante" ? "Participante" : "Anunciante"} 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">
@@ -123,13 +142,56 @@ const Header = () => {
           </DropdownMenu>
 
           <Button 
-            className="neon-button hidden md:block" 
+            className="hidden md:block neon-button" 
+            size="sm"
             onClick={navigateToDashboard}
           >
             {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
           </Button>
+
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </Button>
         </div>
       </div>
+
+      {/* Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed inset-0 top-16 bg-galaxy-dark/95 backdrop-blur-lg z-30 p-6"
+        >
+          <nav className="flex flex-col items-center space-y-6 pt-8">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => scrollToSection(section.id)}
+                className="text-gray-200 hover:text-white hover:neon-text-cyan transition-colors text-xl py-2"
+              >
+                {section.label}
+              </button>
+            ))}
+            <Button 
+              className="neon-button w-full mt-6" 
+              onClick={() => {
+                navigateToDashboard();
+                setMobileMenuOpen(false);
+              }}
+            >
+              {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+            </Button>
+          </nav>
+        </motion.div>
+      )}
     </motion.header>
   );
 };

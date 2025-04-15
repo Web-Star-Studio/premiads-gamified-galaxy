@@ -35,10 +35,10 @@ const AdminPanel = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
+          className="text-center p-4 max-w-[90vw]"
         >
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
-          <h2 className="text-xl font-heading neon-text-pink">Carregando painel master...</h2>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
+          <h2 className="text-lg sm:text-xl font-heading neon-text-pink truncate">Carregando painel master...</h2>
           <LoadingParticles />
         </motion.div>
       </div>
@@ -49,10 +49,10 @@ const AdminPanel = () => {
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdminSidebar />
-        <SidebarInset className="overflow-y-auto pb-20">
-          <div className="container px-4 py-8 mx-auto">
+        <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
+          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl">
             <DashboardHeader title="Painel Master" subtitle="Controle completo do sistema" />
-            <div className="mt-8">
+            <div className="mt-6 sm:mt-8">
               <AdminOverview />
             </div>
           </div>

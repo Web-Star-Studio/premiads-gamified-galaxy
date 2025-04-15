@@ -73,12 +73,15 @@ const LotteryManagementPage = () => {
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdminSidebar />
-        <SidebarInset className="overflow-y-auto pb-20">
-          <div className="container px-4 py-8 mx-auto">
+        <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
+          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl">
             <DashboardHeader title="Gestão de Sorteios" subtitle="Administração de sorteios e prêmios" />
             
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-galaxy-deepPurple/10 rounded-lg p-4 border border-galaxy-purple/30">
+            <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="bg-galaxy-deepPurple/10 rounded-lg p-3 sm:p-4 border border-galaxy-purple/30">
+                <h3 className="text-lg sm:text-xl font-semibold mb-3 text-contrast-high">
+                  Sorteios Disponíveis
+                </h3>
                 <LotteryList
                   lotteries={sampleLotteries}
                   selectedLotteryId={selectedLotteryId}
@@ -86,7 +89,7 @@ const LotteryManagementPage = () => {
                 />
               </div>
               
-              <div className="md:col-span-2 bg-galaxy-deepPurple/10 rounded-lg p-4 border border-galaxy-purple/30">
+              <div className="lg:col-span-2 bg-galaxy-deepPurple/10 rounded-lg p-3 sm:p-4 border border-galaxy-purple/30">
                 {selectedLottery ? (
                   <LotteryDetails
                     selectedLottery={selectedLottery}

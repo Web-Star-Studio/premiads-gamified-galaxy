@@ -24,16 +24,19 @@ import {
   Bell,
   BarChart4,
   Ticket,
-  FileText
+  FileText,
+  Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 export const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // Create navigation items
   const navigationItems = [
@@ -41,46 +44,55 @@ export const AdminSidebar = () => {
       title: "Dashboard",
       url: "/admin",
       icon: LayoutDashboard,
+      description: "Visão geral do sistema"
     },
     {
       title: "Usuários",
       url: "/admin/usuarios",
       icon: Users,
+      description: "Gerenciamento de usuários"
     },
     {
       title: "Acesso",
       url: "/admin/acesso",
       icon: Shield,
+      description: "Controle de permissões"
     },
     {
       title: "Regras",
       url: "/admin/regras",
       icon: FileText,
+      description: "Configurações de regras"
     },
     {
       title: "Monitoramento",
       url: "/admin/monitoramento",
       icon: DatabaseZap,
+      description: "Status do sistema"
     },
     {
       title: "Relatórios",
       url: "/admin/relatorios",
       icon: BarChart4,
+      description: "Análise de dados"
     },
     {
       title: "Sorteios",
       url: "/admin/sorteios",
       icon: Ticket,
+      description: "Gestão de sorteios"
     },
     {
       title: "Notificações",
       url: "/admin/notificacoes",
       icon: Bell,
+      description: "Gerenciar notificações"
     },
     {
       title: "Configurações",
       url: "/admin/configuracoes",
       icon: Settings,
+      description: "Configurações do sistema"
     },
   ];
 
@@ -89,6 +101,7 @@ export const AdminSidebar = () => {
       className="border-r border-galaxy-purple/30 bg-galaxy-dark"
       variant="sidebar"
       collapsible="icon"
+      defaultCollapsed={isMobile}
     >
       <SidebarHeader className="flex items-center justify-between p-4 pt-6">
         <div className="flex items-center gap-2">
@@ -97,7 +110,9 @@ export const AdminSidebar = () => {
           </div>
           <div className="text-lg font-bold font-heading neon-text-pink">Admin</div>
         </div>
-        <SidebarTrigger />
+        <SidebarTrigger>
+          <Menu className="w-5 h-5 text-gray-400" />
+        </SidebarTrigger>
       </SidebarHeader>
 
       <SidebarContent className="px-2">
@@ -119,24 +134,29 @@ export const AdminSidebar = () => {
           <SidebarGroupLabel>Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    isActive={location.pathname === item.url}
-                    asChild
-                    tooltip={item.title}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-2 h-10 px-3 text-base"
-                      onClick={() => navigate(item.url)}
+              {navigationItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      isActive={isActive}
+                      asChild
+                      tooltip={item.description}
                     >
-                      <item.icon className={location.pathname === item.url ? "text-neon-pink" : ""} />
-                      <span>{item.title}</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start gap-2 h-10 px-3 text-base ${
+                          isActive ? "bg-galaxy-purple/20" : ""
+                        }`}
+                        onClick={() => navigate(item.url)}
+                      >
+                        <item.icon className={isActive ? "text-neon-pink" : ""} size={20} />
+                        <span>{item.title}</span>
+                      </Button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

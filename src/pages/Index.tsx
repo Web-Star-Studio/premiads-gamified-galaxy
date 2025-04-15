@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { UserProvider, useUser } from "@/context/UserContext";
 import ProfileOverlay from "@/components/ProfileOverlay";
@@ -27,10 +28,10 @@ const MainContent = () => {
   }, [isOverlayOpen]);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen w-full">
       {isOverlayOpen && <ProfileOverlay />}
       <Header />
-      <main>
+      <main className="flex-grow">
         <Hero />
         <HowItWorks />
         <Benefits />
@@ -39,7 +40,7 @@ const MainContent = () => {
         <CallToAction />
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 
