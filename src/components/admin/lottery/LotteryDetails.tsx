@@ -1,11 +1,12 @@
 
-import React from 'react';
-import { Award, Play, Pause, Edit } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, Play, Pause, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PrizeTable from './PrizeTable';
 import SpinningWheel from './SpinningWheel';
 import { Lottery } from './LotteryList';
+import { toastInfo } from "@/utils/toast";
 
 interface LotteryDetailsProps {
   selectedLottery: Lottery;
@@ -16,6 +17,8 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
   selectedLottery,
   onStatusChange
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active': return <Badge className="bg-neon-lime text-black">Ativo</Badge>;
@@ -23,6 +26,22 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
       case 'completed': return <Badge className="bg-muted">Concluído</Badge>;
       default: return <Badge>Desconhecido</Badge>;
     }
+  };
+
+  const handleStatusChange = () => {
+    setIsLoading(true);
+    const newStatus = selectedLottery.status === 'active' ? 'pending' : 'active';
+    
+    // Simula um atraso na atualização de status
+    setTimeout(() => {
+      onStatusChange(selectedLottery.id, newStatus);
+      setIsLoading(false);
+    }, 600);
+  };
+
+  const handleEdit = () => {
+    // Por enquanto, apenas mostra uma mensagem
+    toastInfo("Funcionalidade em desenvolvimento", "A edição de sorteios será disponibilizada em breve.");
   };
 
   return (
@@ -40,12 +59,15 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
                 variant="outline"
                 size="sm"
                 className="border-galaxy-purple/30"
-                onClick={() => onStatusChange(
-                  selectedLottery.id, 
-                  selectedLottery.status === 'active' ? 'pending' : 'active'
-                )}
+                onClick={handleStatusChange}
+                disabled={isLoading}
               >
-                {selectedLottery.status === 'active' ? (
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <span className="h-4 w-4 border-2 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mr-1"></span>
+                    Atualizando...
+                  </span>
+                ) : selectedLottery.status === 'active' ? (
                   <>
                     <Pause className="h-4 w-4 mr-1" />
                     Pausar
@@ -62,6 +84,7 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
                 variant="outline"
                 size="sm"
                 className="border-neon-pink text-neon-pink hover:bg-neon-pink/20"
+                onClick={handleEdit}
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Editar
@@ -96,6 +119,18 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
         <PrizeTable prizes={selectedLottery.prizes} isCompleted={selectedLottery.status === 'completed'} />
         <SpinningWheel selectedLottery={selectedLottery} />
       </div>
+      
+      {selectedLottery.prizes.length === 0 && (
+        <div className="mt-6 bg-yellow-500/10 border border-yellow-500/20 rounded-md p-4 flex items-start">
+          <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-yellow-500">Atenção</h4>
+            <p className="text-sm text-muted-foreground">
+              Este sorteio ainda não possui prêmios configurados. Adicione prêmios para que ele possa funcionar corretamente.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

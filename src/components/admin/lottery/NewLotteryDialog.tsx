@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import NewLotteryForm from './NewLotteryForm';
 import { Gift } from 'lucide-react';
+import { Lottery } from './LotteryList';
 
 interface NewLotteryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLotteryCreated: (lottery: any) => void;
+  onLotteryCreated: (lottery: Lottery) => void;
 }
 
 const NewLotteryDialog: React.FC<NewLotteryDialogProps> = ({
@@ -21,7 +22,7 @@ const NewLotteryDialog: React.FC<NewLotteryDialogProps> = ({
   onOpenChange,
   onLotteryCreated
 }) => {
-  const handleSuccess = (newLottery: any) => {
+  const handleSuccess = (newLottery: Lottery) => {
     onLotteryCreated(newLottery);
     onOpenChange(false);
   };

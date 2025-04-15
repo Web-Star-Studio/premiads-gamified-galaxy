@@ -3,10 +3,9 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -23,6 +22,9 @@ const lotterySchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   startDate: z.string().min(1, "Data de início é obrigatória"),
   endDate: z.string().min(1, "Data de término é obrigatória"),
+}).refine(data => new Date(data.startDate) < new Date(data.endDate), {
+  message: "A data de término deve ser posterior à data de início",
+  path: ["endDate"], 
 });
 
 type LotteryFormValues = z.infer<typeof lotterySchema>;
@@ -34,6 +36,8 @@ interface NewLotteryFormProps {
 
 const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) => {
   const { playSound } = useSounds();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
   const form = useForm<LotteryFormValues>({
     resolver: zodResolver(lotterySchema),
     defaultValues: {
@@ -45,6 +49,8 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
 
   const onSubmit = async (data: LotteryFormValues) => {
     try {
+      setIsSubmitting(true);
+      
       // Aqui seria feita a inserção no banco de dados
       // Como estamos usando dados fictícios por enquanto, vamos simular
       const newLottery = {
@@ -57,7 +63,7 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       };
       
       // Simular um pequeno atraso como se estivesse salvando
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       playSound('chime');
       toastSuccess('Sorteio criado', 'O novo sorteio foi criado com sucesso.');
@@ -66,6 +72,8 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       console.error('Erro ao criar sorteio:', error);
       playSound('error');
       toastError('Erro', 'Não foi possível criar o sorteio. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -123,11 +131,27 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
         </div>
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
-          <Button type="submit" className="bg-neon-pink hover:bg-neon-pink/90">
-            Criar Sorteio
+          <Button 
+            type="submit" 
+            className="bg-neon-pink hover:bg-neon-pink/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Criando...
+              </>
+            ) : (
+              'Criar Sorteio'
+            )}
           </Button>
         </div>
       </form>

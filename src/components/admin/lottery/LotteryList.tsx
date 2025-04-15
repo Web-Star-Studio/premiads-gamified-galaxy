@@ -64,6 +64,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
         <button 
           className="bg-neon-pink hover:bg-neon-pink/80 text-white px-3 py-1.5 rounded-md text-sm flex items-center"
           onClick={handleNewLotteryClick}
+          aria-label="Adicionar novo sorteio"
         >
           <Plus className="h-4 w-4 mr-1" />
           Novo
@@ -71,31 +72,37 @@ const LotteryList: React.FC<LotteryListProps> = ({
       </div>
       
       <div className="space-y-3 max-h-[500px] overflow-y-auto fancy-scrollbar pr-2">
-        {lotteries.map(lottery => (
-          <div
-            key={lottery.id}
-            className={`p-3 rounded-md border cursor-pointer transition-all duration-200 ${
-              selectedLotteryId === lottery.id 
-                ? 'border-neon-cyan bg-galaxy-dark/50 shadow-[0_0_10px_rgba(0,255,231,0.3)]' 
-                : 'border-galaxy-purple/30 hover:border-galaxy-purple/60'
-            }`}
-            onClick={() => onSelectLottery(lottery)}
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="font-medium">{lottery.name}</div>
-                <div className="text-sm text-muted-foreground flex items-center mt-1">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {lottery.startDate} - {lottery.endDate}
+        {lotteries.length > 0 ? (
+          lotteries.map(lottery => (
+            <div
+              key={lottery.id}
+              className={`p-3 rounded-md border cursor-pointer transition-all duration-200 ${
+                selectedLotteryId === lottery.id 
+                  ? 'border-neon-cyan bg-galaxy-dark/50 shadow-[0_0_10px_rgba(0,255,231,0.3)]' 
+                  : 'border-galaxy-purple/30 hover:border-galaxy-purple/60'
+              }`}
+              onClick={() => onSelectLottery(lottery)}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-medium">{lottery.name}</div>
+                  <div className="text-sm text-muted-foreground flex items-center mt-1">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {lottery.startDate} - {lottery.endDate}
+                  </div>
                 </div>
+                <div>{getStatusBadge(lottery.status)}</div>
               </div>
-              <div>{getStatusBadge(lottery.status)}</div>
+              <div className="mt-3 text-xs text-muted-foreground">
+                {lottery.prizes.length} prêmios configurados
+              </div>
             </div>
-            <div className="mt-3 text-xs text-muted-foreground">
-              {lottery.prizes.length} prêmios configurados
-            </div>
+          ))
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">
+            Nenhum sorteio encontrado. Crie um novo sorteio clicando em "Novo".
           </div>
-        ))}
+        )}
       </div>
 
       <NewLotteryDialog 
