@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -37,15 +38,15 @@ const ClientMissions = () => {
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
 
   useEffect(() => {
-    // Redirect if user is not a participant
-    if (userType !== "participante") {
-      toast({
-        title: "Acesso restrito",
-        description: "Você não tem permissão para acessar esta página",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
+    // TEMPORARILY DISABLED: Redirect if user is not a participant
+    // if (userType !== "participante") {
+    //   toast({
+    //     title: "Acesso restrito",
+    //     description: "Você não tem permissão para acessar esta página",
+    //     variant: "destructive",
+    //   });
+    //   navigate("/");
+    // }
   }, [userType, navigate, toast]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +105,7 @@ const ClientMissions = () => {
         <SidebarInset className="overflow-y-auto pb-20">
           <ClientHeader />
           
-          <div className="container px-4 pt-20 py-8 mx-auto">
+          <div className="container px-4 py-8 mx-auto">
             <ClientDashboardHeader 
               title="Missões e Desafios" 
               description="Complete missões, ganhe pontos e resgate prêmios exclusivos" 

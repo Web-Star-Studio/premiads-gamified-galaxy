@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -21,16 +20,16 @@ const ClientRaffles = () => {
   const [selectedRaffleId, setSelectedRaffleId] = useState<number | null>(null);
 
   useEffect(() => {
-    // Redirect if user is not a participant
-    if (userType !== "participante") {
-      toast({
-        title: "Acesso restrito",
-        description: "Você não tem permissão para acessar esta página",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
-    }
+    // TEMPORARILY DISABLED: Redirect if user is not a participant
+    // if (userType !== "participante") {
+    //   toast({
+    //     title: "Acesso restrito",
+    //     description: "Você não tem permissão para acessar esta página",
+    //     variant: "destructive",
+    //   });
+    //   navigate("/");
+    //   return;
+    // }
 
     // Simulate loading
     const loadTimer = setTimeout(() => {
@@ -41,6 +40,11 @@ const ClientRaffles = () => {
 
     return () => clearTimeout(loadTimer);
   }, [userType, navigate, toast, playSound]);
+
+  const handleSelectRaffle = (raffleId: number) => {
+    setSelectedRaffleId(raffleId);
+    playSound("pop");
+  };
 
   if (loading) {
     return (
@@ -56,11 +60,6 @@ const ClientRaffles = () => {
       </div>
     );
   }
-
-  const handleSelectRaffle = (raffleId: number) => {
-    setSelectedRaffleId(raffleId);
-    playSound("pop");
-  };
 
   return (
     <div className="min-h-screen bg-galaxy-dark pb-20">
