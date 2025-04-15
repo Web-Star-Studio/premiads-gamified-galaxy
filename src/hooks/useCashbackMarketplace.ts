@@ -11,6 +11,10 @@ type RPCResponse<T> = {
   error: any;
 };
 
+// Constants for Supabase URL and API key - using the values from the client
+const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
+
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
   const [userCashback, setUserCashback] = useState(0);
@@ -22,12 +26,12 @@ export const useCashbackMarketplace = () => {
     const fetchCashbackData = async () => {
       try {
         // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
-        const campaignsResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/get_active_cashback_campaigns`, {
+        const campaignsResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_active_cashback_campaigns`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           }
         });
         
@@ -37,12 +41,12 @@ export const useCashbackMarketplace = () => {
         const { data: { user } } = await supabase.auth.getUser();
         
         // Get user's cashback balance using rpc
-        const profileResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/get_user_cashback_balance`, {
+        const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_cashback_balance`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           },
           body: JSON.stringify({ user_id: user?.id })
         });
@@ -75,12 +79,12 @@ export const useCashbackMarketplace = () => {
       }
 
       // Use direct fetch for RPC call to avoid TypeScript issues
-      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/rpc/redeem_cashback`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/redeem_cashback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': supabase.supabaseKey,
-          'Authorization': `Bearer ${supabase.supabaseKey}`
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
         },
         body: JSON.stringify({
           p_user_id: userId,
