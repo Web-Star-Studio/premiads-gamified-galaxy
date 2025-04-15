@@ -14,23 +14,21 @@ interface FilteredMissionsListProps {
 
 const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: FilteredMissionsListProps) => {
   return (
-    <div className="grid grid-cols-1 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 gap-4">
       {missions.length === 0 ? (
-        <div className="glass-panel p-6 md:p-8 text-center">
-          <p className="text-medium-contrast">
-            {emptyMessage}
-          </p>
+        <div className="glass-panel p-8 text-center">
+          <p className="text-gray-400">{emptyMessage}</p>
         </div>
       ) : (
         missions.map(mission => (
           <div 
             key={mission.id}
-            className="glass-panel p-4 md:p-5 card-mobile-spaced"
+            className="glass-panel p-4"
           >
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-medium text-base md:text-lg">{mission.title}</h4>
-                <p className="text-sm md:text-base text-medium-contrast">{mission.brand || "PremiAds"}</p>
+                <h4 className="font-medium">{mission.title}</h4>
+                <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
               </div>
               <Badge 
                 className={
@@ -42,27 +40,25 @@ const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: 
                 {mission.points} pts
               </Badge>
             </div>
-            <p className="mt-2 mb-2 text-sm md:text-base">
-              {mission.description}
-            </p>
+            <p className="mt-2 mb-2">{mission.description}</p>
             
             {type === "completed" && (
-              <div className="bg-green-600/20 rounded p-2 md:p-3 text-sm md:text-base flex items-center">
-                <CheckCircle className="w-4 h-4 md:w-5 md:h-5 mr-2 text-green-400" />
+              <div className="bg-green-600/20 rounded p-2 text-sm flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
                 <p className="text-green-400">Concluída e aprovada</p>
               </div>
             )}
             
             {type === "pending" && (
-              <div className="bg-yellow-600/20 rounded p-2 md:p-3 text-sm md:text-base">
+              <div className="bg-yellow-600/20 rounded p-2 text-sm">
                 <p className="text-yellow-300">Aguardando aprovação do anunciante</p>
               </div>
             )}
             
             {type === "in_progress" && onMissionClick && (
-              <div className="flex justify-end mt-3">
+              <div className="flex justify-end">
                 <Button 
-                  className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80 px-4 py-2 md:px-5 md:py-2.5"
+                  className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
                   onClick={() => onMissionClick(mission)}
                 >
                   Continuar
