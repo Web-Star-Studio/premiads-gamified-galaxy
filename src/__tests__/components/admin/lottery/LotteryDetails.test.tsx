@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LotteryDetails from '@/components/admin/lottery/LotteryDetails';
 import { toastInfo } from '@/utils/toast';
+import { Lottery } from '@/components/admin/lottery/types';
 
 // Mock the toast utility
 jest.mock('@/utils/toast', () => ({
@@ -10,7 +11,7 @@ jest.mock('@/utils/toast', () => ({
 }));
 
 describe('LotteryDetails Component', () => {
-  const mockLottery = {
+  const mockLottery: Lottery = {
     id: 1,
     name: 'Sorteio de Teste',
     startDate: '2025-04-15',
@@ -22,7 +23,7 @@ describe('LotteryDetails Component', () => {
     ]
   };
   
-  const mockCompletedLottery = {
+  const mockCompletedLottery: Lottery = {
     ...mockLottery,
     status: 'completed'
   };

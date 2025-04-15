@@ -5,4 +5,4 @@ export { default as LotteryDetails } from './LotteryDetails';
 export { default as PrizeTable } from './PrizeTable';
 export { default as SpinningWheel } from './SpinningWheel';
 export { default as EmptyState } from './EmptyState';
-export { Lottery } from './types';
+export type { Lottery } from './types';
