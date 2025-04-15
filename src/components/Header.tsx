@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -22,7 +23,6 @@ const Header = () => {
     { id: "beneficios", label: "Benefícios" },
     { id: "depoimentos", label: "Depoimentos" },
     { id: "faq", label: "FAQ" },
-    { id: "cashback", label: "Cashback", path: "/cashback" },
   ];
 
   useEffect(() => {

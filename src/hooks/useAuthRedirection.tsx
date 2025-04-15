@@ -13,7 +13,7 @@ export const useAuthRedirection = (user: User | null, userType: UserType | null)
       if (userType === "anunciante") {
         navigate("/anunciante");
       } else {
-        navigate("/cliente");
+        navigate("/"); // Redirect to home page for regular participants
       }
     }
   }, [user, userType, navigate]);

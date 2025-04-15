@@ -24,7 +24,8 @@ import {
   LogOut, 
   ChevronLeft,
   Wallet,
-  Star
+  Star,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +69,11 @@ export const ClientSidebar = () => {
       title: "Sorteios",
       url: "/cliente/sorteios",
       icon: Gift,
+    },
+    {
+      title: "Cashback",
+      url: "/cashback",
+      icon: DollarSign,
     },
     {
       title: "Perfil",
