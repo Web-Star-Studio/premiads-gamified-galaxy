@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { Lottery } from './LotteryList';
+import { Lottery } from './types';
 
 interface SpinningWheelProps {
   isSpinning?: boolean;

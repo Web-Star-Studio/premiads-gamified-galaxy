@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +61,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   {lottery.status === 'active' && (
-                    <Badge variant="success">
+                    <Badge variant="default">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       Ativo
                     </Badge>

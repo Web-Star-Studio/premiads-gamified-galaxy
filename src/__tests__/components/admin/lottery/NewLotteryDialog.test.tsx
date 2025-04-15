@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '../../../utils/test-utils';
 import userEvent from '@testing-library/user-event';
 import NewLotteryDialog from '@/components/admin/lottery/NewLotteryDialog';
-import { Lottery } from '@/components/admin/lottery/LotteryList';
+import { Lottery } from '@/components/admin/lottery/types';
 
 // Mock utils that rely on real implementation
 jest.mock('@/utils/toast', () => ({

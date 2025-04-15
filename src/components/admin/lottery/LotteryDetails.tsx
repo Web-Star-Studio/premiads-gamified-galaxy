@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PrizeTable from './PrizeTable';
 import SpinningWheel from './SpinningWheel';
-import { Lottery } from './LotteryList';
+import { Lottery } from './types';
 import { toastInfo } from "@/utils/toast";
 import { motion } from 'framer-motion';
 import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';

@@ -6,7 +6,8 @@ import { Gift } from 'lucide-react';
 import { useSounds } from '@/hooks/use-sounds';
 import { toastSuccess } from '@/utils/toast';
 import LoadingParticles from './LoadingParticles';
-import LotteryList, { Lottery } from './lottery/LotteryList';
+import LotteryList from './lottery/LotteryList';
+import { Lottery } from './lottery/types';
 import LotteryDetails from './lottery/LotteryDetails';
 import EmptyState from './lottery/EmptyState';
 

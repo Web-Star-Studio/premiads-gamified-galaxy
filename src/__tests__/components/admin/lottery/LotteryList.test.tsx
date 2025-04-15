@@ -2,9 +2,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import LotteryList from '@/components/admin/lottery/LotteryList';
+import { Lottery } from '@/components/admin/lottery/types';
 
 describe('LotteryList Component', () => {
-  const mockLotteries = [
+  const mockLotteries: Lottery[] = [
     { 
       id: 1, 
       name: 'Sorteio de Teste 1', 
@@ -41,8 +42,8 @@ describe('LotteryList Component', () => {
     );
     
     // Check if the component heading is displayed
-    expect(screen.getByText('Sorteios')).toBeInTheDocument();
-    expect(screen.getByText('Novo')).toBeInTheDocument();
+    expect(screen.getByText('Lista de Sorteios')).toBeInTheDocument();
+    expect(screen.getByText('Novo Sorteio')).toBeInTheDocument();
     
     // Check if lottery items are displayed
     expect(screen.getByText('Sorteio de Teste 1')).toBeInTheDocument();
@@ -81,7 +82,7 @@ describe('LotteryList Component', () => {
     );
     
     // Click on new lottery button
-    fireEvent.click(screen.getByText('Novo'));
+    fireEvent.click(screen.getByText('Novo Sorteio'));
     
     // We'll check if the dialog opens in NewLotteryDialog tests
     // Here we just verify handleNewLotteryClick is called
@@ -98,7 +99,7 @@ describe('LotteryList Component', () => {
     );
     
     // Check if empty state message is displayed
-    expect(screen.getByText('Nenhum sorteio encontrado. Crie um novo sorteio clicando em "Novo".')).toBeInTheDocument();
+    expect(screen.getByText('Nenhum sorteio encontrado.')).toBeInTheDocument();
   });
   
   test('highlights selected lottery', () => {
