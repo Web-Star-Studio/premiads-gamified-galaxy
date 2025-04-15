@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -9,7 +8,7 @@ import PointsCard from "@/components/dashboard/PointsCard";
 import MissionsCarousel from "@/components/dashboard/MissionsCarousel";
 import ActiveMissions from "@/components/dashboard/ActiveMissions";
 import DailyChallenge from "@/components/dashboard/DailyChallenge";
-import LootBoxes from "@/components/dashboard/LootBoxes";
+import SorteDoDia from "@/components/dashboard/SorteDoDia"; // Updated import
 import { Button } from "@/components/ui/button";
 import { Gift, Ticket } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
@@ -133,7 +132,7 @@ const ClientDashboard = () => {
           >
             <div className="grid gap-6">
               <DailyChallenge />
-              <LootBoxes count={3} />
+              <SorteDoDia /> {/* Updated component name */}
             </div>
           </motion.div>
         </div>
