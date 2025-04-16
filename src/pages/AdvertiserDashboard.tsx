@@ -54,13 +54,15 @@ const AdvertiserDashboard = () => {
             userName={userName}
           />
           
-          <div className="container px-4 py-8 mx-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <DashboardHeader userName={userName} credits={credits} isPremium={true} />
             
-            <NotificationBanner 
-              pendingSubmissions={pendingSubmissions} 
-              onViewClick={() => setActiveTab("finance")} 
-            />
+            <div className="mt-6">
+              <NotificationBanner 
+                pendingSubmissions={pendingSubmissions} 
+                onViewClick={() => setActiveTab("finance")} 
+              />
+            </div>
             
             <DashboardTabs 
               activeTab={activeTab} 

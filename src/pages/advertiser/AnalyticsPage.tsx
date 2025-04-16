@@ -56,14 +56,14 @@ const AnalyticsPage = () => {
             description="Monitore o desempenho das suas campanhas"
           />
           
-          <div className="container px-4 pt-20 py-8 mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
               <div>
                 <h1 className="text-2xl font-bold mb-2">Análises</h1>
                 <p className="text-muted-foreground">Monitore o desempenho das suas campanhas</p>
               </div>
               
-              <div className="flex items-center gap-3 mt-4 md:mt-0">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -84,9 +84,9 @@ const AnalyticsPage = () => {
               </div>
             </div>
             
-            <div className="mb-6">
+            <div className="mb-8">
               <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 px-6">
                   <Tabs value={dateRange} onValueChange={handleDateRangeChange}>
                     <TabsList>
                       <TabsTrigger value="week">7 dias</TabsTrigger>
@@ -108,7 +108,7 @@ const AnalyticsPage = () => {
               </TabsList>
               
               <TabsContent value="overview">
-                <div className="space-y-6">
+                <div className="space-y-6 mb-8">
                   <EngagementCharts showExtended={true} />
                 </div>
               </TabsContent>
@@ -117,13 +117,14 @@ const AnalyticsPage = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
                 >
                   <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader>
+                    <CardHeader className="px-6">
                       <CardTitle>Desempenho de Campanhas</CardTitle>
                       <CardDescription>Comparativo entre suas campanhas ativas</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-6 pb-6">
                       <div className="h-96 flex items-center justify-center text-muted-foreground">
                         Gráfico de desempenho comparativo de campanhas
                       </div>
@@ -136,13 +137,14 @@ const AnalyticsPage = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
                 >
                   <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader>
+                    <CardHeader className="px-6">
                       <CardTitle>Análise de Audiência</CardTitle>
                       <CardDescription>Perfil dos usuários que participam das suas campanhas</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-6 pb-6">
                       <div className="h-96 flex items-center justify-center text-muted-foreground">
                         Gráficos de demografia e comportamento da audiência
                       </div>
@@ -155,13 +157,14 @@ const AnalyticsPage = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
                 >
                   <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader>
+                    <CardHeader className="px-6">
                       <CardTitle>Retorno sobre Investimento</CardTitle>
                       <CardDescription>Análise de custo-benefício das suas campanhas</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-6 pb-6">
                       <div className="h-96 flex items-center justify-center text-muted-foreground">
                         Gráficos de ROI por campanha e por período
                       </div>

@@ -18,14 +18,14 @@ interface DashboardTabsProps {
 const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="mt-8">
-      <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex md:gap-4">
+      <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex md:gap-4 mb-6">
         <TabsTrigger className="data-[state=active]:neon-text-pink" value="overview">Visão Geral</TabsTrigger>
         <TabsTrigger className="data-[state=active]:neon-text-pink" value="campaigns">Missões</TabsTrigger>
         <TabsTrigger className="data-[state=active]:neon-text-pink" value="analytics">Relatórios</TabsTrigger>
         <TabsTrigger className="data-[state=active]:neon-text-pink" value="finance">Finanças</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="overview" className="mt-6 space-y-6">
+      <TabsContent value="overview" className="space-y-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -58,20 +58,21 @@ const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="mb-8"
         >
           <AlertsPanel />
         </motion.div>
       </TabsContent>
       
-      <TabsContent value="campaigns" className="mt-6">
+      <TabsContent value="campaigns" className="pb-8">
         <CampaignsList />
       </TabsContent>
       
-      <TabsContent value="analytics" className="mt-6">
+      <TabsContent value="analytics" className="pb-8">
         <EngagementCharts showExtended={true} />
       </TabsContent>
       
-      <TabsContent value="finance" className="mt-6 space-y-6">
+      <TabsContent value="finance" className="space-y-6 pb-8">
         <CreditsPurchase currentCredits={credits} />
         <SubmissionsApproval />
       </TabsContent>

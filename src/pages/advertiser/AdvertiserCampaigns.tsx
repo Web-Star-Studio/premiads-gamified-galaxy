@@ -64,9 +64,9 @@ const AdvertiserCampaigns = () => {
             description="Gerencie suas campanhas publicitárias"
           />
           
-          <div className="container px-4 pt-20 py-8 mx-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold">Gerenciamento de Campanhas</h1>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold mb-2">Gerenciamento de Campanhas</h1>
               <p className="text-muted-foreground">Crie e gerencie suas campanhas publicitárias</p>
             </div>
             
@@ -102,9 +102,9 @@ const AdvertiserCampaigns = () => {
               defaultValue="active" 
               value={activeTab}
               onValueChange={handleTabChange}
-              className="mb-6"
+              className="mb-8"
             >
-              <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">
                 <TabsTrigger value="active" className="data-[state=active]:bg-galaxy-purple/20">
                   Ativas
                 </TabsTrigger>
@@ -116,15 +116,15 @@ const AdvertiserCampaigns = () => {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="active" className="mt-4">
+              <TabsContent value="active">
                 <CampaignsList initialFilter="ativa" />
               </TabsContent>
               
-              <TabsContent value="pending" className="mt-4">
+              <TabsContent value="pending">
                 <CampaignsList initialFilter="pendente" />
               </TabsContent>
               
-              <TabsContent value="completed" className="mt-4">
+              <TabsContent value="completed">
                 <CampaignsList initialFilter="encerrada" />
               </TabsContent>
             </Tabs>

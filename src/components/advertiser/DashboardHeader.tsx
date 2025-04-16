@@ -14,23 +14,23 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHeaderProps) => {
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between"
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold font-heading">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold font-heading">
             Olá, <span className="neon-text-pink">{userName}</span>!
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground">
             Bem-vindo ao seu Dashboard de Anunciante
           </p>
         </div>
         
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
+        <div className="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

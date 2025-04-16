@@ -36,8 +36,8 @@ const SubmissionPreviewDialog = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl mx-auto p-6">
+        <DialogHeader className="mb-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarFallback>{getUserInitials(submission.user_name)}</AvatarFallback>
@@ -52,24 +52,24 @@ const SubmissionPreviewDialog = ({
           </div>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="my-5">
           {submissionType === 'image' ? (
-            <div className="flex items-center justify-center max-h-[70vh] bg-black/20 rounded-lg p-2">
+            <div className="flex items-center justify-center max-h-[65vh] bg-black/20 rounded-lg p-3">
               <img 
                 src={content} 
                 alt={`Submission by ${submission.user_name}`}
-                className="max-w-full max-h-[70vh] object-contain"
+                className="max-w-full max-h-[65vh] object-contain"
               />
             </div>
           ) : (
-            <div className="max-h-[70vh] overflow-auto bg-black/20 rounded-lg p-4">
+            <div className="max-h-[65vh] overflow-auto bg-black/20 rounded-lg p-5">
               <p className="whitespace-pre-line">{content}</p>
             </div>
           )}
         </div>
         
         {submission.feedback && (
-          <div className="mt-4 bg-gray-800/40 p-4 rounded-lg">
+          <div className="my-5 bg-gray-800/40 p-4 rounded-lg">
             <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
               <MessageSquare className="w-4 h-4" />
               Comentário do usuário
@@ -78,7 +78,7 @@ const SubmissionPreviewDialog = ({
           </div>
         )}
         
-        <div className="flex items-center justify-between text-sm text-gray-400 mt-4">
+        <div className="flex items-center justify-between text-sm text-gray-400 my-4">
           <div className="flex items-center gap-1">
             <User className="w-4 h-4" />
             <span>ID: {submission.user_id.substring(0, 8)}</span>
@@ -90,7 +90,7 @@ const SubmissionPreviewDialog = ({
         </div>
         
         {mode === 'pending' && (
-          <div className="flex justify-end mt-4 gap-3">
+          <div className="flex justify-end mt-6 gap-3">
             <Button 
               variant="destructive"
               onClick={onReject}
