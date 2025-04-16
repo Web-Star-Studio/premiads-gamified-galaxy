@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Clock } from "lucide-react";
 
 interface LastHourBadgeProps {
   timeRemaining: string;
@@ -10,19 +9,13 @@ interface LastHourBadgeProps {
 
 const LastHourBadge = ({ timeRemaining }: LastHourBadgeProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.05 }}
-      className="mb-4"
-    >
-      <Badge 
-        className="bg-amber-500 text-black px-3 py-1 text-sm font-medium flex items-center gap-1"
-      >
-        <AlertCircle className="w-3.5 h-3.5" />
-        ⚠️ Última hora para participar! Sorteio {timeRemaining}
-      </Badge>
-    </motion.div>
+    <Badge className="absolute top-4 right-4 bg-amber-500 text-black border border-amber-400/50 flex items-center gap-1 px-3 py-1 text-sm animate-pulse">
+      <Clock className="w-3.5 h-3.5" />
+      <div className="flex flex-col items-start">
+        <span className="font-semibold">Última hora!</span>
+        <span className="text-xs">Sorteio {timeRemaining}</span>
+      </div>
+    </Badge>
   );
 };
 

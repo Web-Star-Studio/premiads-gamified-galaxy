@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Timer, Calendar, Award, Users, Search, Tag, Filter, Clock, AlertCircle } from "lucide-react";
@@ -7,7 +6,6 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSounds } from "@/hooks/use-sounds";
-import { differenceInHours } from "date-fns";
 
 // Mock data for available raffles
 const RAFFLES = [

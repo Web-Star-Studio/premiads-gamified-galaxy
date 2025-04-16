@@ -34,11 +34,11 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       imageUrl: '',
       startDate: new Date(),
       endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
-      drawDate: new Date(new Date().setDate(new Date().getDate() + 8)),
       status: 'pending',
       numbersTotal: 1000,
       pointsPerNumber: 100,
       minPoints: 0,
+      isAutoScheduled: true,
     },
   });
   
@@ -66,11 +66,13 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
         imageUrl: values.imageUrl,
         startDate: format(values.startDate, 'yyyy-MM-dd'),
         endDate: format(values.endDate, 'yyyy-MM-dd'),
-        drawDate: format(values.drawDate, 'yyyy-MM-dd'),
+        drawDate: null, // Não definimos a data do sorteio, será automático
         status: values.status,
         numbersTotal: values.numbersTotal,
         pointsPerNumber: values.pointsPerNumber,
         minPoints: values.minPoints,
+        isAutoScheduled: values.isAutoScheduled,
+        minPointsReachedAt: null,
         prizes: [], // Começar sem prêmios
         progress: 0, // 0% inicial
         numbersSold: 0, // Nenhum número vendido inicialmente

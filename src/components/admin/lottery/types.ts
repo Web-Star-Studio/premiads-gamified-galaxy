@@ -11,11 +11,11 @@ export const lotteryFormSchema = z.object({
   imageUrl: z.string().url({ message: 'URL da imagem inválida' }),
   startDate: z.date({ required_error: 'Data de início é obrigatória' }),
   endDate: z.date({ required_error: 'Data de término é obrigatória' }),
-  drawDate: z.date({ required_error: 'Data do sorteio é obrigatória' }),
   status: z.enum(['active', 'pending', 'completed', 'canceled'], { required_error: 'Status é obrigatório' }),
   numbersTotal: z.number().int().min(1, { message: 'Total de números deve ser maior que zero' }),
   pointsPerNumber: z.number().int().min(1, { message: 'Pontos por número deve ser maior que zero' }),
   minPoints: z.number().int().min(0, { message: 'Pontuação mínima não pode ser negativa' }),
+  isAutoScheduled: z.boolean().default(true),
 });
 
 export type LotteryFormValues = z.infer<typeof lotteryFormSchema>;
@@ -30,11 +30,13 @@ export interface Lottery {
   imageUrl: string;
   startDate: string;
   endDate: string;
-  drawDate: string;
+  drawDate: string | null;
   status: 'active' | 'pending' | 'completed' | 'canceled';
   numbersTotal: number;
   pointsPerNumber: number;
   minPoints: number;
+  isAutoScheduled?: boolean;
+  minPointsReachedAt?: string | null;
   progress?: number; // Percentage of tickets sold
   numbersSold?: number; // Number of tickets sold
   prizes: Array<{
