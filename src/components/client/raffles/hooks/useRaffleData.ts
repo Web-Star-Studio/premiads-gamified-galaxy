@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,14 +144,7 @@ export const useRaffleData = (raffleId: number | null) => {
       }
       
       try {
-        // In a real app, this would be an API fetch 
-        // const { data, error } = await supabase
-        //   .from('raffles')
-        //   .select('*')
-        //   .eq('id', raffleId)
-        //   .single();
-        
-        // For now, use mock data
+        // In a real app, this would be an API fetch
         const foundRaffle = RAFFLES.find(r => r.id === raffleId);
         
         if (foundRaffle) {
@@ -164,10 +156,14 @@ export const useRaffleData = (raffleId: number | null) => {
           
           setRaffle(foundRaffle);
           setCountdownInfo(countdownInfo);
+          
+          // This was previously causing errors due to a delayed loading state
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error fetching raffle:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -186,7 +182,7 @@ export const useRaffleData = (raffleId: number | null) => {
     }, 60000); // Update every minute
     
     return () => clearInterval(intervalId);
-  }, [raffleId, raffle?.minPointsReachedAt, raffle?.drawDate]);
+  }, [raffleId]);
   
   return { 
     raffle, 

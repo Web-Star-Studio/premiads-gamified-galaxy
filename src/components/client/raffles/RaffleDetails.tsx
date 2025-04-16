@@ -19,12 +19,31 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
   const { raffle, isLoading, countdownInfo } = useRaffleData(raffleId);
   const { toast } = useToast();
   
-  if (isLoading || !raffle) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="glass-panel p-6 h-full flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-400">Carregando detalhes do sorteio...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Error state - no raffle found
+  if (!raffle) {
+    return (
+      <div className="glass-panel p-6 h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 text-red-500 mx-auto flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <p className="mt-4 text-gray-400">Sorteio não encontrado ou indisponível.</p>
         </div>
       </div>
     );
@@ -114,8 +133,6 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
         currentLevelName={currentLevelName}
         isParticipationClosed={countdownInfo.isParticipationClosed}
       />
-      
-      {/* Purchase Button - Now part of ParticipationCard component */}
     </div>
   );
 };
