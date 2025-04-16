@@ -23,17 +23,40 @@ export function useUserLevel(points: number, userId?: string) {
         if (levelsError) throw levelsError;
         
         if (levelsData && levelsData.length > 0) {
-          setLevels(levelsData as UserLevel[]);
+          // Convert the benefits JSON to the correct type
+          const typedLevelsData = levelsData.map(level => ({
+            ...level,
+            benefits: {
+              ticket_discount: level.benefits?.ticket_discount || 0,
+              access_to_exclusive_raffles: level.benefits?.access_to_exclusive_raffles || false,
+              priority_support: level.benefits?.priority_support || false,
+              early_access: level.benefits?.early_access || false
+            }
+          })) as UserLevel[];
+          
+          setLevels(typedLevelsData);
           
           // Calculate current level and next level based on points
-          const currentLevel = levelsData.find(
+          const currentLevel = typedLevelsData.find(
             level => points >= level.min_points && 
                    (level.max_points === null || points <= level.max_points)
           ) as UserLevel;
           
-          const currentLevelIndex = levelsData.findIndex(level => level.id === currentLevel.id);
-          const nextLevel = currentLevelIndex < levelsData.length - 1 
-                          ? levelsData[currentLevelIndex + 1] as UserLevel 
+          if (!currentLevel) {
+            // Fallback to the first level if nothing else matches
+            setLevelInfo({
+              currentLevel: typedLevelsData[0],
+              nextLevel: typedLevelsData.length > 1 ? typedLevelsData[1] : null,
+              progress: 0,
+              pointsToNextLevel: typedLevelsData.length > 1 ? typedLevelsData[1].min_points - points : 0
+            });
+            setLoading(false);
+            return;
+          }
+          
+          const currentLevelIndex = typedLevelsData.findIndex(level => level.id === currentLevel.id);
+          const nextLevel = currentLevelIndex < typedLevelsData.length - 1 
+                          ? typedLevelsData[currentLevelIndex + 1] as UserLevel 
                           : null;
           
           // Calculate progress as percentage within current level range
