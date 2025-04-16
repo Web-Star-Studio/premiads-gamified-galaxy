@@ -11,6 +11,7 @@ import RaffleDetails from "@/components/client/raffles/RaffleDetails";
 import TicketConversion from "@/components/client/raffles/TicketConversion";
 import ParticipationHistory from "@/components/client/raffles/ParticipationHistory";
 import { useSounds } from "@/hooks/use-sounds";
+import { RAFFLES } from "@/components/client/raffles/hooks/data/mockRaffles";
 
 const ClientRaffles = () => {
   const { userName, userType } = useUser();
@@ -37,12 +38,19 @@ const ClientRaffles = () => {
       setLoading(false);
       // Play welcome sound when page loads
       playSound("chime");
+      
+      // Auto-select the first raffle if there are any available
+      if (RAFFLES.length > 0 && !selectedRaffleId) {
+        console.log("Auto-selecting first raffle:", RAFFLES[0].id);
+        setSelectedRaffleId(RAFFLES[0].id);
+      }
     }, 1200);
 
     return () => clearTimeout(loadTimer);
-  }, [userType, navigate, toast, playSound]);
+  }, [userType, navigate, toast, playSound, selectedRaffleId]);
 
   const handleSelectRaffle = (raffleId: number) => {
+    console.log("Selected raffle ID:", raffleId);
     setSelectedRaffleId(raffleId);
     playSound("pop");
   };

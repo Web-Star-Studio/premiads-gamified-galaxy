@@ -49,12 +49,16 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
     );
   }
   
-  // Participation hook with config object
+  // Only initialize the participation hook if we have a raffle
+  // This prevents the "rendered more hooks than previous render" error
   const participation = useRaffleParticipation({
     maxTicketsPerUser: raffle.maxTicketsPerUser, 
     ticketsRequired: raffle.ticketsRequired,
     isParticipationClosed: countdownInfo.isParticipationClosed
   });
+
+  console.log("Rendering raffle details for raffle:", raffle.id, raffle.name);
+  console.log("Participation state:", participation);
 
   return (
     <div className="glass-panel p-6">

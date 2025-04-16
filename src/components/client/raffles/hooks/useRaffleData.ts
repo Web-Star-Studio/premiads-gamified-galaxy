@@ -33,9 +33,11 @@ export const useRaffleData = (raffleId: number | null): RaffleDataResult => {
       }
       
       try {
+        console.log("Loading raffle with ID:", raffleId);
         const foundRaffle = await fetchRaffleById(raffleId);
         
         if (foundRaffle) {
+          console.log("Raffle found, updating state");
           // Calculate countdown information
           const updatedCountdownInfo = calculateCountdownInfo(
             foundRaffle.minPointsReachedAt, 
@@ -44,6 +46,8 @@ export const useRaffleData = (raffleId: number | null): RaffleDataResult => {
           
           setRaffle(foundRaffle);
           setCountdownInfo(updatedCountdownInfo);
+        } else {
+          console.log("No raffle found");
         }
         
         // Set loading to false regardless of whether a raffle was found
@@ -71,7 +75,7 @@ export const useRaffleData = (raffleId: number | null): RaffleDataResult => {
     }, 60000); // Update every minute
     
     return () => clearInterval(intervalId);
-  }, [raffleId, raffle]);
+  }, [raffleId]);
   
   return { 
     raffle, 

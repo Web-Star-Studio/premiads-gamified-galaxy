@@ -16,8 +16,8 @@ export const fetchRaffleById = async (raffleId: number): Promise<Raffle | null> 
     // In a real app, this would be an API fetch
     const foundRaffle = RAFFLES.find(r => r.id === raffleId);
     
-    // Cast the status string to ensure it matches the expected union type
     if (foundRaffle) {
+      // Cast the status string to ensure it matches the expected union type
       const typedRaffle: Raffle = {
         ...foundRaffle,
         status: foundRaffle.status as "active" | "draft" | "finished" | "canceled",
@@ -26,9 +26,12 @@ export const fetchRaffleById = async (raffleId: number): Promise<Raffle | null> 
           rarity: prize.rarity as "common" | "uncommon" | "rare" | "legendary"
         }))
       };
+      
+      console.log("Fetched raffle data:", typedRaffle);
       return typedRaffle;
     }
     
+    console.log("No raffle found with ID:", raffleId);
     return null;
   } catch (error) {
     console.error("Error fetching raffle:", error);

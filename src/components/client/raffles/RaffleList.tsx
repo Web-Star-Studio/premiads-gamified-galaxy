@@ -22,6 +22,7 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
   useEffect(() => {
     // In a real app, we would fetch raffles from the API
     const timer = setTimeout(() => {
+      console.log("Raffles loaded:", RAFFLES.length);
       playSound("chime");
     }, 300);
     
@@ -40,6 +41,12 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
       setFilteredRaffles(filtered);
     }
   }, [searchTerm, activeRaffles]);
+  
+  const handleSelectRaffle = (id: number) => {
+    console.log("Selecting raffle with ID:", id);
+    onSelectRaffle(id);
+    playSound("pop");
+  };
   
   const formatTimeRemaining = (dateStr: string) => {
     const endDate = new Date(dateStr);
@@ -146,7 +153,7 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
                   ? "border border-neon-cyan shadow-[0_0_15px_rgba(0,200,255,0.15)]" 
                   : "border border-galaxy-purple/20 hover:border-galaxy-purple/50"
               }`}
-              onClick={() => onSelectRaffle(raffle.id)}
+              onClick={() => handleSelectRaffle(raffle.id)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
