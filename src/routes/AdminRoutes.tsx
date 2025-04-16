@@ -17,7 +17,7 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-const AdminRoutes = () => {
+export const AdminRoutes = () => {
   return (
     <>
       {/* Admin Routes */}

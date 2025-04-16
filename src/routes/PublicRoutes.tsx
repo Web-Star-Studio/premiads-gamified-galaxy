@@ -16,7 +16,7 @@ const Authentication = lazy(() => import("@/pages/Authentication"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-const PublicRoutes = () => {
+export const PublicRoutes = () => {
   return (
     <>
       {/* Public Routes */}

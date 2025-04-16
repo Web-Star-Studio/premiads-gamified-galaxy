@@ -17,7 +17,7 @@ const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-const AdvertiserRoutes = () => {
+export const AdvertiserRoutes = () => {
   return (
     <>
       {/* Advertiser Routes */}

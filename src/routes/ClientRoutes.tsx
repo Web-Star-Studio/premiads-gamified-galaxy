@@ -14,7 +14,7 @@ const CashbackMarketplace = lazy(() => import("@/pages/CashbackMarketplace"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-const ClientRoutes = () => {
+export const ClientRoutes = () => {
   return (
     <>
       {/* Client Routes */}
