@@ -4,6 +4,7 @@ import PublicRoutes from "./PublicRoutes";
 import ClientRoutes from "./ClientRoutes";
 import AdminRoutes from "./AdminRoutes";
 import AdvertiserRoutes from "./AdvertiserRoutes";
+import NotFound from "@/pages/NotFound";
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,9 @@ const AppRoutes = () => {
       
       {/* Redirect URLs with "/" at the end to versions without "/" */}
       <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
+      
+      {/* Global catch-all route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

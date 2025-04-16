@@ -1,228 +1,197 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, Loader2, Building } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useSounds } from "@/hooks/use-sounds";
-import { useAuth, SignUpCredentials } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useAuth, SignUpCredentials, SignInCredentials } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import Particles from "@/components/Particles";
 
 const Authentication = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<"participante" | "anunciante">("participante");
+  
+  const { signIn, signUp, loading } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { playSound } = useSounds();
-  const { loading, signIn, signUp } = useAuth();
-
-  const handleAuthentication = async (e: React.FormEvent) => {
+  
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      if (isLogin) {
-        // Login logic
-        await signIn({ email, password });
-      } else {
-        // Registration logic
-        if (!name.trim()) {
-          playSound("error");
-          toast({
-            title: "Nome obrigatório",
-            description: "Por favor, insira seu nome para realizar o cadastro.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        const credentials: SignUpCredentials = {
-          email, 
-          password, 
-          name,
-          userType
-        };
-        
-        await signUp(credentials);
-      }
-    } catch (error: any) {
-      // Error handling is done inside the auth hooks
-      console.error("Authentication error:", error);
+    if (!email || !password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    const credentials: SignInCredentials = {
+      email,
+      password
+    };
+    
+    await signIn(credentials);
   };
-
+  
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password || !name) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const credentials: SignUpCredentials = {
+      email,
+      password,
+      name,
+      userType
+    };
+    
+    await signUp(credentials);
+    setActiveTab("login");
+  };
+  
   return (
-    <div className="min-h-screen bg-galaxy-dark flex flex-col items-center justify-center px-4 py-12">
-      <div className="absolute top-0 left-0 w-full h-full bg-purple-glow opacity-10 blur-3xl -z-10"></div>
-      
-      <Link to="/" className="mb-8">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-4xl font-bold font-heading neon-text-cyan text-center"
-        >
-          PremiAds
-        </motion.div>
-      </Link>
+    <div className="min-h-screen flex items-center justify-center bg-galaxy-dark overflow-hidden">
+      <Particles count={30} />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel w-full max-w-md p-8 rounded-xl"
+        className="relative z-10 w-full max-w-md p-8 rounded-xl border border-galaxy-purple/30 bg-galaxy-darkPurple/60 backdrop-blur-md shadow-xl"
       >
-        <Tabs defaultValue="login" onValueChange={(v) => setIsLogin(v === "login")}>
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold neon-text-cyan mb-1">PremiAds</h1>
+          <p className="text-muted-foreground">Entrar ou criar sua conta</p>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")}>
           <TabsList className="grid grid-cols-2 mb-6">
             <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Cadastro</TabsTrigger>
+            <TabsTrigger value="signup">Cadastro</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
-            <form onSubmit={handleAuthentication} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-galaxy-dark"
+                />
               </div>
               
               <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Senha"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <a href="#" className="text-xs text-neon-pink hover:underline">
+                    Esqueceu a senha?
+                  </a>
                 </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-galaxy-dark"
+                />
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full neon-button"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                )}
-                Entrar
+              <Button type="submit" className="w-full bg-neon-cyan/80 hover:bg-neon-cyan" disabled={loading}>
+                {loading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </TabsContent>
           
-          <TabsContent value="register">
-            <form onSubmit={handleAuthentication} className="space-y-4">
+          <TabsContent value="signup">
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Nome completo"
-                    className="pl-10"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                <Label htmlFor="name">Nome completo</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Seu nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="bg-galaxy-dark"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email-signup">Email</Label>
+                <Input
+                  id="email-signup"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-galaxy-dark"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password-signup">Senha</Label>
+                <Input
+                  id="password-signup"
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-galaxy-dark"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Tipo de conta</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={userType === "participante" ? "default" : "outline"}
+                    className={userType === "participante" ? "bg-neon-cyan/80 hover:bg-neon-cyan" : ""}
+                    onClick={() => setUserType("participante")}
+                  >
+                    Participante
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={userType === "anunciante" ? "default" : "outline"}
+                    className={userType === "anunciante" ? "bg-neon-pink/80 hover:bg-neon-pink" : ""}
+                    onClick={() => setUserType("anunciante")}
+                  >
+                    Anunciante
+                  </Button>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Senha"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground mb-2 block">Tipo de conta</Label>
-                <RadioGroup 
-                  defaultValue="participante" 
-                  className="flex gap-4"
-                  value={userType}
-                  onValueChange={(v) => setUserType(v as "participante" | "anunciante")}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="participante" id="participant" />
-                    <Label htmlFor="participant" className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      Participante
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="anunciante" id="advertiser" />
-                    <Label htmlFor="advertiser" className="flex items-center gap-1">
-                      <Building className="h-4 w-4" />
-                      Anunciante
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full neon-button"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                )}
-                Cadastrar
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Cadastrando..." : "Cadastrar"}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
         
-        <div className="mt-6 pt-6 border-t border-galaxy-purple/20 text-center text-sm text-gray-400">
-          <p>
-            Ao entrar ou se cadastrar, você concorda com nossos{" "}
-            <a href="#" className="text-neon-cyan hover:underline">
-              Termos de Serviço
-            </a>{" "}
-            e{" "}
-            <a href="#" className="text-neon-cyan hover:underline">
-              Política de Privacidade
-            </a>
-            .
-          </p>
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <a href="/" className="underline hover:text-white">
+            Voltar para a página inicial
+          </a>
         </div>
       </motion.div>
     </div>

@@ -2,14 +2,19 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import NotFound from "@/pages/NotFound";
 
 // Lazy load client pages
 const ClientDashboard = lazy(() => import("@/pages/ClientDashboard"));
-const ClientProfile = lazy(() => import("@/pages/ClientProfile"));
 const ClientMissions = lazy(() => import("@/pages/ClientMissions"));
-const ClientReferrals = lazy(() => import("@/pages/ClientReferrals"));
+const ClientProfile = lazy(() => import("@/pages/ClientProfile"));
 const ClientRaffles = lazy(() => import("@/pages/ClientRaffles"));
+const ClientReferrals = lazy(() => import("@/pages/ClientReferrals"));
 const CashbackMarketplace = lazy(() => import("@/pages/CashbackMarketplace"));
+const Support = lazy(() => import("@/pages/Support"));
+const Tour = lazy(() => import("@/pages/Tour"));
+const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
+const Faq = lazy(() => import("@/pages/Faq"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -27,9 +32,9 @@ const ClientRoutes = () => {
           <ClientMissions />
         </Suspense>
       } />
-      <Route path="indicacoes" element={
+      <Route path="perfil" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientReferrals />
+          <ClientProfile />
         </Suspense>
       } />
       <Route path="sorteios" element={
@@ -37,18 +42,39 @@ const ClientRoutes = () => {
           <ClientRaffles />
         </Suspense>
       } />
-      <Route path="perfil" element={
+      <Route path="indicacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientProfile />
+          <ClientReferrals />
         </Suspense>
       } />
-      
-      {/* Cashback Route */}
       <Route path="cashback" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <CashbackMarketplace />
         </Suspense>
       } />
+      <Route path="suporte" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <Support />
+        </Suspense>
+      } />
+      <Route path="tour" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <Tour />
+        </Suspense>
+      } />
+      <Route path="como-funciona" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <HowItWorks />
+        </Suspense>
+      } />
+      <Route path="faq" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <Faq />
+        </Suspense>
+      } />
+      
+      {/* Catch-all route for 404 handling within client routes */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

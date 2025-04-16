@@ -55,7 +55,7 @@ export const AdvertiserSidebar = () => {
   // Get the first letter of the user name for the avatar fallback
   const userInitial = userName?.charAt(0) || "A";
   
-  // Create navigation items
+  // Create navigation items with routes matching the AdvertiserRoutes.tsx paths
   const navigationItems = [
     {
       title: "Dashboard",

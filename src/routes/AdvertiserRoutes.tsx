@@ -2,6 +2,7 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import NotFound from "@/pages/NotFound";
 
 // Lazy load advertiser pages
 const AdvertiserDashboard = lazy(() => import("@/pages/AdvertiserDashboard"));
@@ -65,6 +66,9 @@ const AdvertiserRoutes = () => {
           <ModerationPage />
         </Suspense>
       } />
+      
+      {/* Catch-all route for 404 handling within advertiser routes */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
