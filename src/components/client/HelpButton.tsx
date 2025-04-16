@@ -4,10 +4,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSounds } from "@/hooks/use-sounds";
+import { useNavigate } from "react-router-dom";
 
 const HelpButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { playSound } = useSounds();
+  const navigate = useNavigate();
 
   const toggleHelpMenu = () => {
     setIsOpen(!isOpen);
@@ -15,10 +17,28 @@ const HelpButton = () => {
   };
 
   const handleOptionClick = (option: string) => {
-    // In the future, this could navigate to specific help pages or open modals
-    console.log(`Selected help option: ${option}`);
     setIsOpen(false);
     playSound("chime");
+    
+    switch (option) {
+      case "faq":
+        navigate("/faq");
+        break;
+      case "support":
+        navigate("/suporte");
+        break;
+      case "tour":
+        navigate("/tour");
+        break;
+      case "how-it-works":
+        navigate("/como-funciona");
+        break;
+      case "feedback":
+        navigate("/feedback");
+        break;
+      default:
+        break;
+    }
   };
 
   return (

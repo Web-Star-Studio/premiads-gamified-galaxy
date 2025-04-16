@@ -11,6 +11,11 @@ import Faq from "@/pages/Faq";
 import Support from "@/pages/Support";
 import About from "@/pages/About";
 
+// Import the new pages
+import Tour from "@/pages/Tour";
+import HowItWorksPage from "@/pages/HowItWorks";
+import Feedback from "@/pages/Feedback";
+
 // Lazy loaded components for public routes
 const Authentication = lazy(() => import("@/pages/Authentication"));
 
@@ -59,11 +64,14 @@ const AppRoutes = () => {
         </Suspense>
       } />
       
-      {/* Information Pages */}
+      {/* Information and Help Pages */}
       <Route path="/tutoriais" element={<Tutorials />} />
       <Route path="/faq" element={<Faq />} />
       <Route path="/suporte" element={<Support />} />
       <Route path="/sobre" element={<About />} />
+      <Route path="/tour" element={<Tour />} />
+      <Route path="/como-funciona" element={<HowItWorksPage />} />
+      <Route path="/feedback" element={<Feedback />} />
       
       {/* Client Routes */}
       <Route path="/cliente" element={
