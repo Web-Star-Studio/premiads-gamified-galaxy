@@ -8,10 +8,16 @@ import AdvertiserRoutes from "./AdvertiserRoutes";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Include route components properly */}
+      {/* Public routes */}
       <Route path="/*" element={<PublicRoutes />} />
+      
+      {/* Client routes */}
       <Route path="/cliente/*" element={<ClientRoutes />} />
+      
+      {/* Advertiser routes */}
       <Route path="/anunciante/*" element={<AdvertiserRoutes />} />
+      
+      {/* Admin routes */}
       <Route path="/admin/*" element={<AdminRoutes />} />
       
       {/* Redirect URLs with "/" at the end to versions without "/" */}

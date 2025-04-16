@@ -17,50 +17,50 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-export const AdminRoutes = () => {
+const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
+      <Route index element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdminPanel />
         </Suspense>
       } />
-      <Route path="/sorteios" element={
+      <Route path="sorteios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <LotteryManagementPage />
         </Suspense>
       } />
-      <Route path="/usuarios" element={
+      <Route path="usuarios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <UserManagementPage />
         </Suspense>
       } />
-      <Route path="/acesso" element={
+      <Route path="acesso" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AccessControlPage />
         </Suspense>
       } />
-      <Route path="/regras" element={
+      <Route path="regras" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <RulesPage />
         </Suspense>
       } />
-      <Route path="/monitoramento" element={
+      <Route path="monitoramento" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <MonitoringPage />
         </Suspense>
       } />
-      <Route path="/relatorios" element={
+      <Route path="relatorios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ReportsPage />
         </Suspense>
       } />
-      <Route path="/notificacoes" element={
+      <Route path="notificacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <NotificationsPage />
         </Suspense>
       } />
-      <Route path="/configuracoes" element={
+      <Route path="configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <SettingsPage />
         </Suspense>

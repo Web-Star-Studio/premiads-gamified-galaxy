@@ -14,37 +14,37 @@ const CashbackMarketplace = lazy(() => import("@/pages/CashbackMarketplace"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-export const ClientRoutes = () => {
+const ClientRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
+      <Route index element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ClientDashboard />
         </Suspense>
       } />
-      <Route path="/missoes" element={
+      <Route path="missoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ClientMissions />
         </Suspense>
       } />
-      <Route path="/indicacoes" element={
+      <Route path="indicacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ClientReferrals />
         </Suspense>
       } />
-      <Route path="/sorteios" element={
+      <Route path="sorteios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ClientRaffles />
         </Suspense>
       } />
-      <Route path="/perfil" element={
+      <Route path="perfil" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ClientProfile />
         </Suspense>
       } />
       
       {/* Cashback Route */}
-      <Route path="/cashback" element={
+      <Route path="cashback" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <CashbackMarketplace />
         </Suspense>

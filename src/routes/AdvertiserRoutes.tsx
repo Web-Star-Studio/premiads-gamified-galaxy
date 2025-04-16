@@ -17,50 +17,50 @@ const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-export const AdvertiserRoutes = () => {
+const AdvertiserRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
+      <Route index element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserDashboard />
         </Suspense>
       } />
-      <Route path="/campanhas" element={
+      <Route path="campanhas" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserCampaigns />
         </Suspense>
       } />
-      <Route path="/nova-campanha" element={
+      <Route path="nova-campanha" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserNewCampaign />
         </Suspense>
       } />
-      <Route path="/analises" element={
+      <Route path="analises" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserAnalytics />
         </Suspense>
       } />
-      <Route path="/creditos" element={
+      <Route path="creditos" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserCredits />
         </Suspense>
       } />
-      <Route path="/notificacoes" element={
+      <Route path="notificacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserNotifications />
         </Suspense>
       } />
-      <Route path="/perfil" element={
+      <Route path="perfil" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserProfilePage />
         </Suspense>
       } />
-      <Route path="/configuracoes" element={
+      <Route path="configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserSettings />
         </Suspense>
       } />
-      <Route path="/moderacao" element={
+      <Route path="moderacao" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ModerationPage />
         </Suspense>

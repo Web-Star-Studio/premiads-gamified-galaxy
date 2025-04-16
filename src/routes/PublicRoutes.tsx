@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -25,21 +24,21 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 const PublicRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={
+      <Route index element={<Index />} />
+      <Route path="auth" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <Authentication />
         </Suspense>
       } />
       
       {/* Information Pages */}
-      <Route path="/tutoriais" element={<Tutorials />} />
-      <Route path="/faq" element={<Faq />} />
-      <Route path="/suporte" element={<Support />} />
-      <Route path="/sobre" element={<About />} />
-      <Route path="/tour" element={<Tour />} />
-      <Route path="/como-funciona" element={<HowItWorksPage />} />
-      <Route path="/feedback" element={<Feedback />} />
+      <Route path="tutoriais" element={<Tutorials />} />
+      <Route path="faq" element={<Faq />} />
+      <Route path="suporte" element={<Support />} />
+      <Route path="sobre" element={<About />} />
+      <Route path="tour" element={<Tour />} />
+      <Route path="como-funciona" element={<HowItWorksPage />} />
+      <Route path="feedback" element={<Feedback />} />
       
       {/* Not Found Route - Keep at the bottom of routes */}
       <Route path="*" element={<NotFound />} />
