@@ -1,14 +1,8 @@
 
 import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from 'react-hook-form';
 import { LotteryFormValues } from '../types';
 
 interface BasicInfoSectionProps {
@@ -17,19 +11,28 @@ interface BasicInfoSectionProps {
 
 const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
   return (
-    <FormField
-      control={form.control}
-      name="name"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="text-white">Nome do Sorteio</FormLabel>
-          <FormControl>
-            <Input placeholder="Ex: Sorteio Semanal" {...field} className="bg-galaxy-deep border-galaxy-purple/30" />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-muted-foreground">Informações Básicas</h3>
+      
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="name">Nome do Sorteio</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                id="name"
+                placeholder="Ex: Sorteio de Smartphone Premium"
+                className="bg-galaxy-dark/50 border-galaxy-purple/20"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
   );
 };
 

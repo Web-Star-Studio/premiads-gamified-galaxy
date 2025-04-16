@@ -1,89 +1,121 @@
-import React from 'react';
+
+import React, { useState } from 'react';
+import { Award, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Lottery } from './types';
+import { useSounds } from '@/hooks/use-sounds';
+import { toastSuccess, toastInfo } from '@/utils/toast';
 
 interface SpinningWheelProps {
-  isSpinning?: boolean;
-  onComplete?: () => void;
-  selectedLottery?: Lottery;
+  selectedLottery: Lottery;
 }
 
-const SpinningWheel: React.FC<SpinningWheelProps> = ({ 
-  isSpinning = false, 
-  onComplete,
-  selectedLottery
-}) => {
-  const wheelSegments = [
-    { color: 'bg-neon-cyan', value: '100 Pontos' },
-    { color: 'bg-neon-pink', value: '50 Pontos' },
-    { color: 'bg-neon-lime', value: '200 Pontos' },
-    { color: 'bg-amber-400', value: '10 Pontos' },
-    { color: 'bg-purple-500', value: '500 Pontos' },
-    { color: 'bg-blue-500', value: '75 Pontos' },
-    { color: 'bg-red-500', value: '25 Pontos' },
-    { color: 'bg-green-500', value: '300 Pontos' },
-  ];
+const SpinningWheel: React.FC<SpinningWheelProps> = ({ selectedLottery }) => {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const { playSound } = useSounds();
 
-  // Animation control
-  const spinDuration = 5; // seconds
-  const spinRotations = isSpinning ? 5 : 0; // total rotations
-
-  React.useEffect(() => {
-    if (isSpinning) {
-      const timer = setTimeout(() => {
-        onComplete?.();
-      }, spinDuration * 1000);
-      
-      return () => clearTimeout(timer);
+  const handleSpin = () => {
+    try {
+      playSound('chime');
+    } catch (error) {
+      console.log("Error playing sound", error);
     }
-  }, [isSpinning, onComplete]);
-
+    
+    setIsSpinning(true);
+    
+    // Simulate spinning for 3 seconds
+    setTimeout(() => {
+      setIsSpinning(false);
+      
+      // Show toast for winning
+      if (selectedLottery.prizes.length > 0) {
+        // Get a random prize based on probability
+        const randomPrize = getRandomPrize(selectedLottery.prizes);
+        
+        toastSuccess(
+          'Prêmio sorteado!',
+          `O prêmio "${randomPrize.name}" foi sorteado!`
+        );
+        
+        try {
+          playSound('reward');
+        } catch (error) {
+          console.log("Error playing sound", error);
+        }
+      } else {
+        toastInfo('Sem prêmios', 'Adicione prêmios para poder sortear.');
+      }
+    }, 3000);
+  };
+  
+  // Function to get a random prize based on probability
+  const getRandomPrize = (prizes: Array<{id: number, name: string, probability: number}>) => {
+    // Calculate total probability
+    const totalProbability = prizes.reduce((sum, prize) => sum + prize.probability, 0);
+    
+    // Generate a random number between 0 and total probability
+    let random = Math.random() * totalProbability;
+    
+    // Find the prize based on probability
+    for (const prize of prizes) {
+      random -= prize.probability;
+      if (random <= 0) {
+        return prize;
+      }
+    }
+    
+    // Fallback
+    return prizes[0];
+  };
+  
   return (
-    <div className="relative flex justify-center items-center my-8">
-      {/* Wheel container */}
-      <div className="relative w-64 h-64">
-        {/* Spinning wheel */}
-        <motion.div 
-          className="w-full h-full rounded-full overflow-hidden border-4 border-galaxy-purple relative"
-          animate={{ 
-            rotate: isSpinning ? 360 * spinRotations : 0 
-          }}
-          transition={{ 
-            duration: spinDuration,
-            ease: "easeInOut",
-            times: [0, 0.7, 1],
-          }}
-        >
-          <div className="absolute inset-0 grid grid-cols-2 grid-rows-4">
-            {wheelSegments.map((segment, i) => (
-              <div 
-                key={i}
-                className={`${segment.color} flex items-center justify-center transform origin-center rotate-${45 * i} opacity-80`}
-                style={{ 
-                  clipPath: "polygon(50% 50%, 100% 0, 100% 100%)",
-                  transform: `rotate(${45 * i}deg)`,
-                  transformOrigin: "0 50%",
-                  padding: "0 0 0 50%"
-                }}
-              >
-                <span className="text-white text-xs font-semibold ml-8 transform -rotate-45">
-                  {segment.value}
-                </span>
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium flex items-center">
+        <Award className="h-5 w-5 mr-2 text-neon-pink" />
+        Roda de Sorteio
+      </h3>
+      
+      <div className="flex flex-col items-center justify-center p-6 bg-galaxy-dark/50 rounded-md border border-galaxy-purple/20 h-[280px]">
+        {selectedLottery.status === 'active' || selectedLottery.status === 'completed' ? (
+          <>
+            <motion.div
+              animate={isSpinning ? { rotate: 1440 } : { rotate: 0 }}
+              transition={{ duration: 3, ease: "easeInOut" }}
+              className="mb-6"
+            >
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-neon-pink via-galaxy-purple to-neon-cyan flex items-center justify-center">
+                <div className="w-28 h-28 rounded-full bg-galaxy-dark flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-neon-lime" />
+                </div>
               </div>
-            ))}
+            </motion.div>
+            
+            <Button
+              variant="neon"
+              disabled={isSpinning || selectedLottery.status === 'completed' || selectedLottery.prizes.length === 0}
+              onClick={handleSpin}
+              className="w-40"
+            >
+              {isSpinning ? 'Sorteando...' : 'Sortear Agora'}
+            </Button>
+            
+            {selectedLottery.status === 'completed' && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Este sorteio já foi finalizado.
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-muted-foreground mb-2">
+              O sorteio precisa estar ativo para permitir sorteios.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Status atual: <span className="text-white capitalize">{selectedLottery.status}</span>
+            </p>
           </div>
-        </motion.div>
-        
-        {/* Center of wheel */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-galaxy-dark border-2 border-galaxy-purple flex items-center justify-center z-10">
-          <Sparkles className="w-4 h-4 text-neon-pink" />
-        </div>
-        
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-8 z-10">
-          <div className="w-0 h-0 border-l-8 border-r-8 border-b-16 border-l-transparent border-r-transparent border-b-neon-cyan"></div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -269,6 +269,113 @@ export type Database = {
         }
         Relationships: []
       }
+      raffle_numbers: {
+        Row: {
+          id: string
+          number_value: number
+          purchased_at: string
+          raffle_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          number_value: number
+          purchased_at?: string
+          raffle_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          number_value?: number
+          purchased_at?: string
+          raffle_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "raffle_numbers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string
+          description: string
+          detailed_description: string
+          draw_date: string | null
+          end_date: string | null
+          id: string
+          image_url: string
+          min_points: number
+          numbers_total: number
+          points_per_number: number
+          prize_type: string
+          prize_value: number
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          winner_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          detailed_description: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          image_url: string
+          min_points?: number
+          numbers_total: number
+          points_per_number: number
+          prize_type: string
+          prize_value: number
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          winner_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          detailed_description?: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string
+          min_points?: number
+          numbers_total?: number
+          points_per_number?: number
+          prize_type?: string
+          prize_value?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          winner_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffles_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           completed_at: string | null
@@ -331,7 +438,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      select_raffle_winner: {
+        Args: { raffle_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
