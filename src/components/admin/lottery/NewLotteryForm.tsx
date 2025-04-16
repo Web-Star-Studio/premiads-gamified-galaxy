@@ -10,7 +10,9 @@ import { lotteryFormSchema, LotteryFormValues, Lottery } from './types';
 import BasicInfoSection from './form-sections/BasicInfoSection';
 import DateSelectionSection from './form-sections/DateSelectionSection';
 import StatusSelectionSection from './form-sections/StatusSelectionSection';
+import NumbersSection from './form-sections/NumbersSection';
 import FormActions from './form-sections/FormActions';
+import { Card } from '@/components/ui/card';
 
 interface NewLotteryFormProps {
   onSuccess: (lottery: Lottery) => void;
@@ -25,9 +27,18 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
     resolver: zodResolver(lotteryFormSchema),
     defaultValues: {
       name: '',
+      description: '',
+      detailedDescription: '',
+      prizeType: '',
+      prizeValue: 0,
+      imageUrl: '',
       startDate: new Date(),
       endDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+      drawDate: new Date(new Date().setDate(new Date().getDate() + 8)),
       status: 'pending',
+      numbersTotal: 1000,
+      pointsPerNumber: 100,
+      minPoints: 0,
     },
   });
   
@@ -48,10 +59,21 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       const newLottery: Lottery = {
         id: Date.now(), // Usar timestamp como ID temporário
         name: values.name,
+        description: values.description,
+        detailedDescription: values.detailedDescription,
+        prizeType: values.prizeType,
+        prizeValue: values.prizeValue,
+        imageUrl: values.imageUrl,
         startDate: format(values.startDate, 'yyyy-MM-dd'),
         endDate: format(values.endDate, 'yyyy-MM-dd'),
+        drawDate: format(values.drawDate, 'yyyy-MM-dd'),
         status: values.status,
-        prizes: [] // Começar sem prêmios
+        numbersTotal: values.numbersTotal,
+        pointsPerNumber: values.pointsPerNumber,
+        minPoints: values.minPoints,
+        prizes: [], // Começar sem prêmios
+        progress: 0, // 0% inicial
+        numbersSold: 0, // Nenhum número vendido inicialmente
       };
       
       toastSuccess('Sorteio criado', `O sorteio "${values.name}" foi criado com sucesso.`);
@@ -79,10 +101,16 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <BasicInfoSection form={form} />
-        <DateSelectionSection form={form} />
-        <StatusSelectionSection form={form} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Card className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 p-4">
+          <BasicInfoSection form={form} />
+          <div className="my-8 border-t border-galaxy-purple/10"></div>
+          <NumbersSection form={form} />
+          <div className="my-8 border-t border-galaxy-purple/10"></div>
+          <DateSelectionSection form={form} />
+          <div className="my-8 border-t border-galaxy-purple/10"></div>
+          <StatusSelectionSection form={form} />
+        </Card>
         <FormActions isSubmitting={isSubmitting} onCancel={onCancel} />
       </form>
     </Form>

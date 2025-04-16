@@ -34,7 +34,7 @@ const NewLotteryDialog: React.FC<NewLotteryDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-galaxy-deepPurple border-galaxy-purple/30">
+      <DialogContent className="sm:max-w-[700px] bg-galaxy-deepPurple border-galaxy-purple/30">
         <DialogHeader>
           <DialogTitle className="flex items-center text-white">
             <motion.div
@@ -47,13 +47,15 @@ const NewLotteryDialog: React.FC<NewLotteryDialogProps> = ({
             Novo Sorteio
           </DialogTitle>
           <DialogDescription>
-            Configure os detalhes do novo sorteio. Você poderá adicionar prêmios após a criação.
+            Configure os detalhes do novo sorteio. Preencha todas as informações obrigatórias.
           </DialogDescription>
         </DialogHeader>
-        <NewLotteryForm 
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+        <div className="max-h-[75vh] overflow-y-auto pr-2 fancy-scrollbar">
+          <NewLotteryForm 
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
