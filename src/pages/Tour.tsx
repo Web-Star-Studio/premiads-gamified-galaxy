@@ -68,6 +68,9 @@ const Tour = () => {
     playSound("pop");
   };
 
+  // Get the current step's icon component
+  const CurrentIcon = steps[currentStep].icon;
+
   return (
     <KnowledgeLayout
       title="Tour Guiado"
@@ -106,7 +109,7 @@ const Tour = () => {
               className="flex flex-col md:flex-row items-center gap-6"
             >
               <div className={`p-6 rounded-full ${steps[currentStep].bgColor}`}>
-                <steps[currentStep].icon className={`h-16 w-16 ${steps[currentStep].color}`} />
+                <CurrentIcon className={`h-16 w-16 ${steps[currentStep].color}`} />
               </div>
               
               <div className="flex-1 text-center md:text-left">
