@@ -119,5 +119,6 @@ describe("CampaignsList", () => {
     render(<CampaignsList campaigns={[]} onDelete={jest.fn()} />);
     
     expect(screen.getByText("Nenhuma campanha encontrada")).toBeInTheDocument();
+    expect(screen.getByText("Crie uma nova campanha para começar")).toBeInTheDocument();
   });
 });

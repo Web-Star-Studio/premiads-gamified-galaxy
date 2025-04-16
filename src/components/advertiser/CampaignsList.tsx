@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
@@ -5,21 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
-import { Campaign } from "./campaignData";
+import { mockCampaigns, Campaign } from "./campaignData";
 
 interface CampaignsListProps {
   initialFilter?: string | null;
-  campaigns?: Campaign[];
-  onDelete?: (id: number) => void;
 }
 
-const CampaignsList = ({ 
-  initialFilter = null, 
-  campaigns: externalCampaigns, 
-  onDelete: externalOnDelete 
-}: CampaignsListProps) => {
+const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>(externalCampaigns || []);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
@@ -31,13 +26,6 @@ const CampaignsList = ({
     setFilterStatus(initialFilter);
   }, [initialFilter]);
   
-  // Update internal campaigns state when external campaigns change
-  useEffect(() => {
-    if (externalCampaigns) {
-      setCampaigns(externalCampaigns);
-    }
-  }, [externalCampaigns]);
-  
   // Filter campaigns based on search term and status filter
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -46,16 +34,12 @@ const CampaignsList = ({
   });
 
   const handleDelete = (id: number) => {
-    if (externalOnDelete) {
-      externalOnDelete(id);
-    } else {
-      setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
-      playSound("error");
-      toast({
-        title: "Campanha removida",
-        description: `A campanha #${id} foi removida com sucesso`,
-      });
-    }
+    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
+    playSound("error");
+    toast({
+      title: "Campanha removida",
+      description: `A campanha #${id} foi removida com sucesso`,
+    });
   };
   
   const handleCreateNew = () => {
@@ -108,7 +92,7 @@ const CampaignsList = ({
   };
   
   return (
-    <div className="space-y-6" data-testid="campaigns-list">
+    <div className="space-y-6">
       {showCreateForm ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
