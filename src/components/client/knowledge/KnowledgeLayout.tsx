@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BookOpen, HelpCircle, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface KnowledgeLayoutProps {
   title: string;
@@ -13,6 +14,7 @@ interface KnowledgeLayoutProps {
 
 const KnowledgeLayout: FC<KnowledgeLayoutProps> = ({ title, subtitle, children }) => {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const navItems = [
     { path: "/tutoriais", label: "Tutoriais", icon: BookOpen },
@@ -28,20 +30,20 @@ const KnowledgeLayout: FC<KnowledgeLayoutProps> = ({ title, subtitle, children }
             <span className="text-white">Premi</span>Ads
           </Link>
           
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Button
                   key={item.path}
                   variant={isActive ? "default" : "ghost"}
-                  size="sm"
+                  size={isMobile ? "icon" : "sm"}
                   className={isActive ? "bg-galaxy-purple" : ""}
                   asChild
                 >
-                  <Link to={item.path}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
+                  <Link to={item.path} className="flex items-center">
+                    <item.icon className={isMobile ? "h-4 w-4" : "mr-2 h-4 w-4"} />
+                    {!isMobile && <span>{item.label}</span>}
                   </Link>
                 </Button>
               );
