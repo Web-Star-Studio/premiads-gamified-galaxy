@@ -5,15 +5,60 @@ import { useToast } from '@/hooks/use-toast';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
 import { useUser } from '@/context/UserContext';
 
-// Helper type for RPC calls
-type RPCResponse<T> = {
-  data: T | null;
-  error: any;
-};
-
-// Constants for Supabase URL and API key - using the values from the client
-const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
+// Mock data for when no authenticated user is available
+const MOCK_CASHBACK_CAMPAIGNS: CashbackCampaign[] = [
+  {
+    id: "1",
+    advertiser_id: "101",
+    title: "Cashback 15% Ciao Moda Masculina",
+    description: "Ganhe 15% de cashback em compras acima de R$80",
+    discount_percentage: 15,
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    minimum_purchase: 80,
+    maximum_discount: 60,
+    is_active: true,
+    conditions: "Válido para compras acima de R$80",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    advertiser_logo: "https://via.placeholder.com/80x80.png?text=CM",
+    advertiser_name: "Ciao Moda Masculina"
+  },
+  {
+    id: "2",
+    advertiser_id: "102",
+    title: "Cashback 20% Forneria 1121",
+    description: "Ganhe 20% de cashback em pizzas",
+    discount_percentage: 20,
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    minimum_purchase: 50,
+    maximum_discount: 40,
+    is_active: true,
+    conditions: "Válido para pedidos acima de R$50",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    advertiser_logo: "https://via.placeholder.com/80x80.png?text=F1121",
+    advertiser_name: "Forneria 1121"
+  },
+  {
+    id: "3",
+    advertiser_id: "103",
+    title: "Cashback 25% Homepizza",
+    description: "Ganhe 25% de cashback em delivery de pizza",
+    discount_percentage: 25,
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    minimum_purchase: 40,
+    maximum_discount: 30,
+    is_active: true,
+    conditions: "Válido para pedidos acima de R$40",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    advertiser_logo: "https://via.placeholder.com/80x80.png?text=HP",
+    advertiser_name: "Homepizza"
+  }
+];
 
 // Mock data for advertiser logos and names
 const advertisers = [
@@ -53,6 +98,16 @@ const conditions = [
   "Válido apenas para a primeira compra."
 ];
 
+// Helper type for RPC calls
+type RPCResponse<T> = {
+  data: T | null;
+  error: any;
+};
+
+// Constants for Supabase URL and API key - using the values from the client
+const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
+
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
   const [userCashback, setUserCashback] = useState(0);
@@ -63,55 +118,74 @@ export const useCashbackMarketplace = () => {
   useEffect(() => {
     const fetchCashbackData = async () => {
       try {
-        // Using rpc call to fetch campaigns since TypeScript doesn't recognize our new tables
-        const campaignsResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_active_cashback_campaigns`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          }
-        });
+        // Check if user is authenticated
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         
-        const campaignsData = await campaignsResponse.json();
+        if (authError || !user) {
+          console.log("No authenticated user found - using mock cashback data");
+          setCampaigns(MOCK_CASHBACK_CAMPAIGNS);
+          // Set mock cashback balance for demo
+          setUserCashback(57.25);
+          setLoading(false);
+          return;
+        }
         
-        // Get user authenticated user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // Get user's cashback balance using rpc
-        const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_cashback_balance`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          },
-          body: JSON.stringify({ user_id: user?.id })
-        });
-        
-        const profileData = await profileResponse.json();
-
-        // Enhance campaigns with advertiser data (in a real app, this would come from the database)
-        const enhancedCampaigns = (campaignsData || []).map((campaign: CashbackCampaign) => {
-          const index = parseInt(campaign.id.substring(0, 2), 16) % advertisers.length;
-          const conditionIndex = parseInt(campaign.id.substring(2, 4), 16) % conditions.length;
+        // Using direct fetch for RPC call because our DB schema can change
+        try {
+          // Get active campaigns
+          const campaignsResponse = await fetch(`${SUPABASE_URL}/rest/v1/cashback_campaigns?is_active=eq.true`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
           
-          return {
-            ...campaign,
-            advertiser_logo: advertisers[index].logo,
-            advertiser_name: advertisers[index].name,
-            conditions: conditions[conditionIndex]
-          };
-        });
+          let campaignsData = await campaignsResponse.json();
+          
+          // Get user's cashback balance
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("cashback_balance")
+            .eq("id", user.id)
+            .single();
+            
+          // Enhance campaigns with advertiser data if needed
+          const enhancedCampaigns = (campaignsData || []).map((campaign: CashbackCampaign) => {
+            // Only add advertiser info if it's missing
+            if (!campaign.advertiser_logo || !campaign.advertiser_name) {
+              const index = parseInt(campaign.id.substring(0, 2), 16) % advertisers.length;
+              const conditionIndex = parseInt(campaign.id.substring(2, 4), 16) % conditions.length;
+              
+              return {
+                ...campaign,
+                advertiser_logo: campaign.advertiser_logo || advertisers[index].logo,
+                advertiser_name: campaign.advertiser_name || advertisers[index].name,
+                conditions: campaign.conditions || conditions[conditionIndex]
+              };
+            }
+            return campaign;
+          });
 
-        setCampaigns(enhancedCampaigns);
-        setUserCashback(profileData && profileData[0] ? profileData[0].cashback_balance || 0 : 0);
+          setCampaigns(enhancedCampaigns);
+          setUserCashback(profileData?.cashback_balance || 0);
+        } catch (rpcError: any) {
+          // Fallback to mock data if RPC fails
+          console.error("Error with cashback RPC calls, using mock data:", rpcError);
+          setCampaigns(MOCK_CASHBACK_CAMPAIGNS);
+          setUserCashback(57.25);
+        }
       } catch (error: any) {
+        console.error("Error fetching cashback data:", error);
         toast({
           title: 'Erro ao carregar cashback',
           description: error.message,
           variant: 'destructive'
         });
+        // Fallback to mock data in case of any error
+        setCampaigns(MOCK_CASHBACK_CAMPAIGNS);
+        setUserCashback(57.25);
       } finally {
         setLoading(false);
       }
@@ -122,12 +196,18 @@ export const useCashbackMarketplace = () => {
 
   const redeemCashback = async (campaignId: string, amount: number) => {
     try {
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-
-      if (!userId) {
-        throw new Error('Usuário não autenticado');
+      // Check if user is authenticated first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        toast({
+          title: 'Modo Demo',
+          description: 'No modo de demonstração, você pode visualizar mas não resgatar cashback. Faça login para utilizar esta função.',
+        });
+        return null;
       }
+      
+      const userId = user.id;
 
       // Use direct fetch for RPC call to avoid TypeScript issues
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/redeem_cashback`, {
@@ -156,7 +236,7 @@ export const useCashbackMarketplace = () => {
         });
         
         // Update user cashback balance
-        setUserCashback(0); // Since we're using all cashback in this version
+        setUserCashback(prevCashback => prevCashback - amount);
         
         return data as CashbackRedemption;
       } else {

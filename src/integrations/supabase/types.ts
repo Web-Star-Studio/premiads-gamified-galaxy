@@ -9,6 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cashback_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          advertiser_image: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          conditions: string | null
+          created_at: string | null
+          description: string | null
+          discount_percentage: number
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          maximum_discount: number | null
+          minimum_purchase: number | null
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percentage: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          maximum_discount?: number | null
+          minimum_purchase?: number | null
+          start_date?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percentage?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          maximum_discount?: number | null
+          minimum_purchase?: number | null
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cashback_redemptions: {
+        Row: {
+          amount: number
+          campaign_id: string
+          code: string
+          created_at: string | null
+          id: string
+          redeemed_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          campaign_id: string
+          code: string
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string
+          code?: string
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashback_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "cashback_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashback_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_submissions: {
         Row: {
           feedback: string | null

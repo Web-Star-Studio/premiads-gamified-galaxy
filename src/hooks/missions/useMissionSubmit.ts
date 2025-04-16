@@ -5,46 +5,66 @@ import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { Mission } from "./types";
 
-export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateAction<Mission[]>>) => {
-  const [loading, setLoading] = useState(false);
+type SetMissionsFunction = React.Dispatch<React.SetStateAction<Mission[]>>;
+
+export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
+  const [submissionLoading, setSubmissionLoading] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  // Submit a mission
   const submitMission = async (missionId: string, submissionData: any) => {
-    setLoading(true);
-    
+    setSubmissionLoading(true);
     try {
-      const session = await supabase.auth.getSession();
-      const userId = session.data.session?.user.id;
-      
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
+      // Check if user is authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.log("No authenticated session for mission submission");
+        
+        // Demo mode: update the mission status in local state
+        setMissions(prevMissions => 
+          prevMissions.map(mission => 
+            mission.id === missionId 
+              ? { ...mission, status: "pending_approval" } 
+              : mission
+          )
+        );
+        
+        playSound("reward");
+        toast({
+          title: "Missão enviada (modo demo)",
+          description: "Em um ambiente real, sua submissão seria analisada pelo anunciante."
+        });
+        
+        setSubmissionLoading(false);
+        return true;
       }
-      
+
+      // Real mode: submit to database
       const { error } = await supabase
         .from("mission_submissions")
         .insert({
           mission_id: missionId,
-          user_id: userId,
+          user_id: session.user.id,
           submission_data: submissionData,
+          status: "pending"
         });
-      
+
       if (error) throw error;
-      
-      // Update local mission status
-      setMissions(prev => 
-        prev.map(mission => 
+
+      // Update mission status in local state
+      setMissions(prevMissions => 
+        prevMissions.map(mission => 
           mission.id === missionId 
             ? { ...mission, status: "pending_approval" } 
             : mission
         )
       );
-      
+
       playSound("reward");
       toast({
         title: "Missão enviada com sucesso!",
-        description: "Sua submissão está em análise e será avaliada em breve.",
+        description: "Sua submissão será analisada pelo anunciante."
       });
       
       return true;
@@ -52,15 +72,14 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       console.error("Error submitting mission:", error);
       toast({
         title: "Erro ao enviar missão",
-        description: error.message || "Ocorreu um erro ao enviar a missão",
-        variant: "destructive",
+        description: error.message || "Ocorreu um erro ao enviar sua missão. Tente novamente mais tarde.",
+        variant: "destructive"
       });
-      playSound("error");
       return false;
     } finally {
-      setLoading(false);
+      setSubmissionLoading(false);
     }
   };
 
-  return { submitMission, submissionLoading: loading };
+  return { submitMission, submissionLoading };
 };

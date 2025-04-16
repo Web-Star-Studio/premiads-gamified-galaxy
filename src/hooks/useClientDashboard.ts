@@ -15,19 +15,9 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
   const [points, setPoints] = useState(0);
   const [streak, setStreak] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isProfileCompleted, setIsProfileCompleted] = useState(false);
 
   useEffect(() => {
-    // TEMPORARILY DISABLED: Redirect if user is not a participant
-    // if (userType !== "participante" && navigate) {
-    //   toast({
-    //     title: "Acesso restrito",
-    //     description: "Você não tem permissão para acessar esta página",
-    //     variant: "destructive",
-    //   });
-    //   navigate("/");
-    //   return;
-    // }
-
     // Check if onboarding has been completed
     const onboardingComplete = localStorage.getItem("onboardingComplete");
     if (!onboardingComplete) {
@@ -40,26 +30,28 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     // Fetch user data from Supabase
     const fetchUserData = async () => {
       try {
-        // For testing: Set default values if not authenticated
+        // Check if user is authenticated
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.log("Session error - using test data:", sessionError);
-          // Use test data instead of throwing error
+        if (sessionError || !sessionData.session) {
+          console.log("Session error or no session - using test data");
+          // Use test data for demo mode
           setPoints(1500);
           setStreak(3);
+          setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
           return;
         }
         
-        const userId = sessionData.session?.user.id;
+        const userId = sessionData.session.user.id;
         
         if (!userId) {
           console.log("No authenticated user found - using test data");
           // Use test data for non-authenticated users
           setPoints(1500);
           setStreak(3);
+          setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
           return;
@@ -70,7 +62,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         // Get user profile with points
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("points")
+          .select("points, profile_completed")
           .eq("id", userId)
           .single();
         
@@ -79,6 +71,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
           // Still use test data instead of throwing error
           setPoints(1500);
           setStreak(3);
+          setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
           return;
@@ -86,6 +79,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         
         if (profileData) {
           setPoints(profileData.points || 0);
+          setIsProfileCompleted(profileData.profile_completed || false);
           console.log("User points:", profileData.points);
         }
         
@@ -100,6 +94,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         // For testing, don't redirect on error and still show data
         setPoints(1500);
         setStreak(3);
+        setIsProfileCompleted(false);
       } finally {
         setLoading(false);
         playSound("chime");
@@ -119,7 +114,6 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     setTimeout(() => {
       fetchUserData();
     }, 1500);
-
   }, [userType, navigate, toast, playSound]);
 
   const handleExtendSession = () => {
@@ -151,6 +145,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     setShowOnboarding,
     handleExtendSession,
     handleSessionTimeout,
-    authError
+    authError,
+    isProfileCompleted
   };
 };
