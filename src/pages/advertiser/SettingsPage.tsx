@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
+import { useUser } from "@/context/UserContext";
 import { 
   User, 
   Bell, 
@@ -32,6 +33,7 @@ const SettingsPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
   const [isLoading, setIsLoading] = useState(false);
+  const { userName = "Desenvolvedor" } = useUser();
   
   // Form states for various settings
   const [notificationsSettings, setNotificationsSettings] = useState({
@@ -88,7 +90,11 @@ const SettingsPage = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Configurações"
+            userName={userName}
+            description="Gerencie suas preferências e configurações da conta"
+          />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="mb-6">

@@ -24,16 +24,18 @@ import {
   Building,
   Calendar
 } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const ProfilePage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { playSound } = useSounds();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const { userName = "Desenvolvedor PremiAds" } = useUser();
   
   // User profile data
   const user = {
-    name: "Desenvolvedor PremiAds",
+    name: userName,
     role: "Marketing Manager",
     company: "PremiAds Tecnologia",
     email: "desenvolvedor@premiads.com",
@@ -77,7 +79,11 @@ const ProfilePage = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Perfil do Anunciante"
+            userName={userName}
+            description="Visualize e gerencie suas informações"
+          />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="mb-6">

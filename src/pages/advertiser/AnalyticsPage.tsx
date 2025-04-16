@@ -11,6 +11,7 @@ import EngagementCharts from "@/components/advertiser/EngagementCharts";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Download, Filter, RefreshCw } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const AnalyticsPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -18,6 +19,7 @@ const AnalyticsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState("month");
+  const { userName = "Desenvolvedor" } = useUser();
   
   const refreshData = () => {
     setIsLoading(true);
@@ -48,7 +50,11 @@ const AnalyticsPage = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Análises"
+            userName={userName}
+            description="Monitore o desempenho das suas campanhas"
+          />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">

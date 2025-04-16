@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, AlertCircle, CheckCircle2, Info, Circle, X } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
 import { motion } from "framer-motion";
+import { useUser } from "@/context/UserContext";
 
 // Interface para as notificações
 interface Notification {
@@ -26,6 +27,7 @@ const NotificationsPage = () => {
   const { playSound } = useSounds();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userName = "Desenvolvedor" } = useUser();
 
   // Simulação de carregamento de notificações
   useEffect(() => {
@@ -124,7 +126,11 @@ const NotificationsPage = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Notificações"
+            userName={userName}
+            description="Acompanhe suas notificações e alertas do sistema"
+          />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">

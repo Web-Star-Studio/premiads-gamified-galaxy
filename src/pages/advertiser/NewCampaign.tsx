@@ -10,11 +10,13 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useUser } from "@/context/UserContext";
 
 const NewCampaign = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [showForm, setShowForm] = useState(true);
   const navigate = useNavigate();
+  const { userName = "Desenvolvedor" } = useUser();
   
   const handleClose = () => {
     navigate('/anunciante/campanhas');
@@ -25,7 +27,11 @@ const NewCampaign = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Nova Campanha"
+            userName={userName}
+            description="Crie uma nova campanha publicitária"
+          />
           
           <div className="container px-4 py-8 mx-auto">
             <div className="flex items-center mb-6">

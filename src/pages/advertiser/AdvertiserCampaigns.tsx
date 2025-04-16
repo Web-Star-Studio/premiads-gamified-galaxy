@@ -11,12 +11,14 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, LineChart, PieChart, TrendingUp, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { useUser } from "@/context/UserContext";
 
 const AdvertiserCampaigns = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { playSound } = useSounds();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("active");
+  const { userName = "Desenvolvedor" } = useUser();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -56,7 +58,11 @@ const AdvertiserCampaigns = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader
+            title="Campanhas"
+            userName={userName}
+            description="Gerencie suas campanhas publicitárias"
+          />
           
           <div className="container px-4 pt-20 py-8 mx-auto">
             <div className="mb-6">

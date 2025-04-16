@@ -49,7 +49,10 @@ const AdvertiserDashboard = () => {
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <AdvertiserSidebar />
         <SidebarInset className="overflow-y-auto pb-20">
-          <AdvertiserHeader />
+          <AdvertiserHeader 
+            title="Dashboard do Anunciante" 
+            userName={userName}
+          />
           
           <div className="container px-4 py-8 mx-auto">
             <DashboardHeader userName={userName} credits={credits} isPremium={true} />
