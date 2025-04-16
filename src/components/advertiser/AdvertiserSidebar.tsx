@@ -28,16 +28,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { setOpen } = useSidebar();
+  const { setOpen, state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   
   // Close sidebar on mobile by default
   useEffect(() => {
@@ -108,20 +109,25 @@ export const AdvertiserSidebar = () => {
           <div className="w-8 h-8 rounded-full bg-galaxy-purple flex items-center justify-center">
             <span className="text-white font-bold">P</span>
           </div>
-          <div className="text-lg font-bold font-heading neon-text-cyan">PremiAds</div>
+          <div className={cn("text-lg font-bold font-heading neon-text-cyan transition-opacity duration-200", 
+            isCollapsed ? "opacity-0" : "opacity-100")}>
+            PremiAds
+          </div>
         </div>
         <SidebarTrigger />
       </SidebarHeader>
 
       <SidebarContent className="px-2">
         <div className="mb-6">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-galaxy-deepPurple/30 my-2">
-            <Avatar className="h-10 w-10 border-2 border-neon-cyan">
+          <div className={cn("flex items-center gap-3 p-3 rounded-lg bg-galaxy-deepPurple/30 my-2",
+            isCollapsed ? "justify-center" : "")}>
+            <Avatar className="h-10 w-10 border-2 border-neon-cyan flex-shrink-0">
               <AvatarFallback className="bg-galaxy-purple text-white">
                 {userInitial}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className={cn("flex flex-col transition-opacity duration-200", 
+              isCollapsed ? "hidden" : "")}>
               <span className="font-medium truncate">{userName}</span>
               <span className="text-xs text-muted-foreground">{userCredits} créditos</span>
             </div>
@@ -129,7 +135,10 @@ export const AdvertiserSidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className={cn("transition-opacity duration-200", 
+            isCollapsed ? "sr-only" : "")}>
+            Menu
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -141,11 +150,17 @@ export const AdvertiserSidebar = () => {
                   >
                     <Button
                       variant="ghost"
-                      className="w-full justify-start gap-2 h-10 px-3 text-base"
+                      className={cn(
+                        "w-full justify-start gap-2 h-10 px-3 text-base",
+                        location.pathname === item.url ? "bg-galaxy-purple/20" : ""
+                      )}
                       onClick={() => navigate(item.url)}
                     >
                       <item.icon className={location.pathname === item.url ? "text-neon-cyan" : ""} />
-                      <span>{item.title}</span>
+                      <span className={cn("transition-opacity duration-200", 
+                        isCollapsed ? "opacity-0 w-0 p-0 overflow-hidden" : "opacity-100")}>
+                        {item.title}
+                      </span>
                     </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -155,9 +170,12 @@ export const AdvertiserSidebar = () => {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Status</SidebarGroupLabel>
+          <SidebarGroupLabel className={cn("transition-opacity duration-200", 
+            isCollapsed ? "sr-only" : "")}>
+            Status
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="space-y-2 px-2">
+            <div className={cn("space-y-2 px-2", isCollapsed ? "hidden" : "")}>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Créditos</span>
                 <span className="text-sm text-neon-cyan flex items-center">
@@ -172,11 +190,17 @@ export const AdvertiserSidebar = () => {
       <SidebarFooter className="p-4">
         <Button 
           variant="ghost" 
-          className="w-full justify-start gap-2 text-gray-400 hover:text-white"
+          className={cn(
+            "w-full text-gray-400 hover:text-white", 
+            isCollapsed ? "justify-center px-0" : "justify-start gap-2"
+          )}
           onClick={signOut}
         >
           <LogOut className="w-4 h-4" />
-          <span>Sair</span>
+          <span className={cn("transition-opacity duration-200", 
+            isCollapsed ? "hidden" : "")}>
+            Sair
+          </span>
         </Button>
       </SidebarFooter>
     </Sidebar>

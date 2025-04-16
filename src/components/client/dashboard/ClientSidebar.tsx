@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -19,9 +20,7 @@ import {
   Users, 
   Gift, 
   User, 
-  Settings, 
   LogOut, 
-  ChevronLeft,
   Wallet,
   Star,
   DollarSign
@@ -29,8 +28,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -40,7 +37,8 @@ export const ClientSidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { setOpen } = useSidebar();
+  const { setOpen, state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   
   // Close sidebar on mobile by default
   useEffect(() => {
@@ -103,20 +101,25 @@ export const ClientSidebar = () => {
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neon-cyan to-galaxy-purple flex items-center justify-center shadow-lg">
             <span className="text-white font-bold">P</span>
           </div>
-          <div className="text-lg font-bold font-heading neon-text-cyan">PremiAds</div>
+          <div className={cn("text-lg font-bold font-heading neon-text-cyan transition-opacity duration-200", 
+            isCollapsed ? "opacity-0" : "opacity-100")}>
+            PremiAds
+          </div>
         </div>
         <SidebarTrigger />
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">
         <div className="mb-6">
-          <div className="flex items-center gap-3 p-3 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 my-2 hover:bg-white/10 transition-colors">
-            <Avatar className="h-11 w-11 border-2 border-neon-cyan shadow-lg shadow-neon-cyan/20">
+          <div className={cn("flex items-center gap-3 p-3 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 my-2 hover:bg-white/10 transition-all",
+            isCollapsed ? "justify-center" : "")}>
+            <Avatar className="h-11 w-11 border-2 border-neon-cyan shadow-lg shadow-neon-cyan/20 flex-shrink-0">
               <AvatarFallback className="bg-gradient-to-br from-galaxy-blue to-galaxy-purple text-white font-semibold">
                 {userInitial}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className={cn("flex flex-col transition-opacity duration-200", 
+              isCollapsed ? "hidden" : "")}>
               <span className="font-medium truncate">{userName}</span>
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Wallet className="w-3 h-3 text-neon-cyan" /> {userPoints} pontos
@@ -126,7 +129,10 @@ export const ClientSidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 px-3 py-2">Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className={cn("text-xs font-semibold text-gray-400 px-3 py-2",
+            isCollapsed ? "sr-only" : "")}>
+            Menu
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -147,8 +153,11 @@ export const ClientSidebar = () => {
                       onClick={() => navigate(item.url)}
                     >
                       <item.icon className={location.pathname === item.url ? "text-white" : "text-gray-400"} />
-                      <span>{item.title}</span>
-                      {item.title === "Sorteios" && (
+                      <span className={cn("transition-opacity duration-200", 
+                        isCollapsed ? "opacity-0 w-0 p-0 overflow-hidden" : "opacity-100")}>
+                        {item.title}
+                      </span>
+                      {item.title === "Sorteios" && !isCollapsed && (
                         <span className="ml-auto px-2 py-0.5 text-xs bg-neon-pink/20 text-neon-pink rounded-full font-semibold">
                           Novo
                         </span>
@@ -161,7 +170,8 @@ export const ClientSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <div className="p-3 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 mt-6">
+        <div className={cn("p-3 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 mt-6 transition-all",
+          isCollapsed ? "hidden" : "")}>
           <h4 className="text-xs font-semibold text-gray-400 mb-3">Estatísticas</h4>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -198,11 +208,17 @@ export const ClientSidebar = () => {
       <SidebarFooter className="p-3 mt-auto border-t border-white/5">
         <Button 
           variant="ghost" 
-          className="w-full justify-start gap-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl"
+          className={cn(
+            "w-full text-gray-400 hover:text-white hover:bg-white/5 rounded-xl", 
+            isCollapsed ? "justify-center px-0" : "justify-start gap-2"
+          )}
           onClick={signOut}
         >
           <LogOut className="w-4 h-4" />
-          <span>Sair</span>
+          <span className={cn("transition-opacity duration-200", 
+            isCollapsed ? "hidden" : "")}>
+            Sair
+          </span>
         </Button>
       </SidebarFooter>
     </Sidebar>
