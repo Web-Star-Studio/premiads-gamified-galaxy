@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormProgress } from "./FormProgress";
 import { FormNavigation } from "./FormNavigation";
@@ -10,9 +9,11 @@ import RequirementsStep from "./RequirementsStep";
 import RewardsStep from "./RewardsStep";
 import DatesStep from "./DatesStep";
 import { useFormNavigation } from "@/hooks/use-form-navigation";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { FormData, initialFormData } from "./types";
+import { Button } from "@/components/ui/button";
+import { useFeedback } from "@/hooks/use-feedback";
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -21,8 +22,11 @@ interface CampaignFormProps {
 
 const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const isEditing = !!editCampaign;
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { isLoading, withFeedback } = useFeedback({
+    successMessage: isEditing ? "Campanha atualizada com sucesso" : "Campanha criada com sucesso",
+    errorMessage: "Erro ao salvar campanha",
+  });
   
   const steps = [
     "Informações Básicas",
@@ -64,14 +68,23 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }));
   };
   
-  const handleSave = () => {
-    setLoading(true);
+  const handleSave = async () => {
+    await withFeedback(async () => {
+      // Simulating save operation
+      return new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+    });
     
-    // Simulating save operation
-    setTimeout(() => {
-      setLoading(false);
-      onClose();
-    }, 1000);
+    onClose();
+  };
+  
+  const handleNextStep = () => {
+    if (isLastStep) {
+      handleSave();
+    } else {
+      nextStep();
+    }
   };
   
   // Shows the current step content based on the current index
@@ -104,6 +117,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
               size="icon" 
               onClick={onClose}
               className="mr-2 text-muted-foreground"
+              disabled={isLoading}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -126,9 +140,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
             step={currentStep}
             totalSteps={steps.length}
             handleBack={prevStep}
-            handleNext={nextStep}
+            handleNext={handleNextStep}
             onClose={onClose}
             isNextDisabled={false}
+            isSubmitting={isLoading}
           />
         </CardFooter>
       </Card>

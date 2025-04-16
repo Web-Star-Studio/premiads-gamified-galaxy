@@ -1,146 +1,124 @@
 
-import { render, screen, fireEvent, waitFor } from "@/utils/test-utils";
-import CampaignsList from "@/components/advertiser/CampaignsList";
+import { render, screen, fireEvent, waitFor, getByTextContent } from "@/utils/test-utils";
+import CampaignsList from "@/components/advertiser/campaigns/CampaignsList";
+import { mockCampaigns } from "@/mocks/campaignMocks";
+import { useNavigate } from "react-router-dom";
 import { useSounds } from "@/hooks/use-sounds";
-import { useToast } from "@/hooks/use-toast";
 
-// Mock hooks
+// Mock the hooks
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: jest.fn(),
+}));
+
 jest.mock("@/hooks/use-sounds", () => ({
   useSounds: jest.fn(),
 }));
 
-jest.mock("@/hooks/use-toast", () => ({
-  useToast: jest.fn(),
+jest.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div data-testid="dialog-content">{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-// Mock CampaignForm component to avoid rendering complex UI
-jest.mock("@/components/advertiser/CampaignForm", () => ({
-  onClose,
-  editCampaign
-}: any) => (
-  <div data-testid="campaign-form">
-    <div>Editing: {editCampaign ? editCampaign.title : 'New Campaign'}</div>
-    <button onClick={onClose} data-testid="close-form-btn">Close Form</button>
-  </div>
-));
-
 describe("CampaignsList", () => {
+  const navigate = jest.fn();
   const playSound = jest.fn();
-  const toast = jest.fn();
   
   beforeEach(() => {
     jest.clearAllMocks();
+    (useNavigate as jest.Mock).mockReturnValue(navigate);
+    (useSounds as jest.Mock).mockReturnValue({ playSound });
+  });
+  
+  it("renders campaigns list correctly", () => {
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={jest.fn()} />);
     
-    (useSounds as jest.Mock).mockReturnValue({
-      playSound,
-    });
-    
-    (useToast as jest.Mock).mockReturnValue({
-      toast,
+    // Check if campaigns are rendered
+    mockCampaigns.forEach(campaign => {
+      expect(screen.getByText(campaign.title)).toBeInTheDocument();
     });
   });
   
-  it("renders campaigns list with filter options", () => {
-    render(<CampaignsList />);
+  it("navigates to campaign detail when view button is clicked", () => {
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={jest.fn()} />);
     
-    // Check if campaign header and table are rendered
-    expect(screen.getByText(/Gerenciar Campanhas/i)).toBeInTheDocument();
-    expect(screen.getByRole("table")).toBeInTheDocument();
+    // Click on view button of first campaign
+    const viewButtons = screen.getAllByText("Ver Detalhes");
+    fireEvent.click(viewButtons[0]);
     
-    // Check if sample campaigns are rendered
-    expect(screen.getAllByRole("row").length).toBeGreaterThan(1);
-  });
-  
-  it("shows campaign form when create new button is clicked", () => {
-    render(<CampaignsList />);
-    
-    // Find and click create new campaign button
-    const createButton = screen.getByRole("button", { name: /Nova Campanha/i });
-    fireEvent.click(createButton);
-    
-    // Check if form is displayed
-    expect(screen.getByTestId("campaign-form")).toBeInTheDocument();
+    // Check if navigate was called with correct path
+    expect(navigate).toHaveBeenCalledWith(`/anunciante/campanhas/${mockCampaigns[0].id}`);
     expect(playSound).toHaveBeenCalledWith("pop");
   });
   
-  it("shows edit form when edit button is clicked", () => {
-    render(<CampaignsList />);
+  it("navigates to edit page when edit button is clicked", () => {
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={jest.fn()} />);
     
-    // Find first edit button and click it
-    const editButtons = screen.getAllByRole("button", { name: /Editar campanha/i });
+    // Click on edit button of first campaign
+    const editButtons = screen.getAllByText("Editar");
     fireEvent.click(editButtons[0]);
     
-    // Check if form is displayed with campaign data
-    expect(screen.getByTestId("campaign-form")).toBeInTheDocument();
-    expect(screen.getByText(/Editing:/i)).toBeInTheDocument();
+    // Check if navigate was called with correct path
+    expect(navigate).toHaveBeenCalledWith(`/anunciante/campanhas/editar/${mockCampaigns[0].id}`);
     expect(playSound).toHaveBeenCalledWith("pop");
   });
   
-  it("removes campaign when delete button is clicked", () => {
-    render(<CampaignsList />);
+  it("calls onDelete with campaign id when delete is confirmed", async () => {
+    const onDeleteMock = jest.fn();
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={onDeleteMock} />);
     
-    // Count initial number of rows
-    const initialRowCount = screen.getAllByRole("row").length;
-    
-    // Find first delete button and click it
-    const deleteButtons = screen.getAllByRole("button", { name: /Excluir campanha/i });
+    // Click on delete button of first campaign
+    const deleteButtons = screen.getAllByText("Excluir");
     fireEvent.click(deleteButtons[0]);
     
-    // Check if a row was removed
-    expect(screen.getAllByRole("row").length).toBe(initialRowCount - 1);
+    // Find and click confirm button in dialog
+    const confirmButton = screen.getByText("Sim, excluir");
+    fireEvent.click(confirmButton);
     
-    // Check if toast was shown and sound played
-    expect(toast).toHaveBeenCalled();
+    // Wait for delete operation to complete
+    await waitFor(() => {
+      expect(onDeleteMock).toHaveBeenCalledWith(mockCampaigns[0].id);
+    });
+    
     expect(playSound).toHaveBeenCalledWith("error");
   });
   
-  it("adds new campaign when form is completed", () => {
-    render(<CampaignsList />);
+  it("displays status badge with correct color", () => {
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={jest.fn()} />);
     
-    // Count initial number of rows
-    const initialRowCount = screen.getAllByRole("row").length;
+    // Check status badges
+    const activeBadges = screen.getAllByText("Ativa");
+    const draftBadges = screen.getAllByText("Rascunho");
     
-    // Open form
-    const createButton = screen.getByRole("button", { name: /Nova Campanha/i });
-    fireEvent.click(createButton);
-    
-    // Close form (simulates form submission)
-    const closeButton = screen.getByTestId("close-form-btn");
-    fireEvent.click(closeButton);
-    
-    // Check if new campaign was added
-    expect(screen.getAllByRole("row").length).toBe(initialRowCount + 1);
-    
-    // Check if toast was shown
-    expect(toast).toHaveBeenCalled();
-    expect(playSound).toHaveBeenCalledWith("pop");
-  });
-  
-  it("filters campaigns when search is used", () => {
-    render(<CampaignsList />);
-    
-    // Find search input
-    const searchInput = screen.getByPlaceholderText(/Buscar campanha/i);
-    
-    // Type a search term that should match only one campaign
-    fireEvent.change(searchInput, { target: { value: "Missão #1" } });
-    
-    // Should show only one campaign row plus header row
-    expect(screen.getAllByRole("row").length).toBe(2);
-  });
-  
-  it("filters campaigns by status when filter is changed", () => {
-    render(<CampaignsList />);
-    
-    // Find and click the status filter dropdown
-    const statusFilter = screen.getByRole("combobox");
-    fireEvent.change(statusFilter, { target: { value: "ativa" } });
-    
-    // Should show only active campaigns
-    screen.getAllByRole("row").forEach((row, index) => {
-      if (index > 0) { // Skip header row
-        expect(row).toHaveTextContent(/ativa/i);
-      }
+    activeBadges.forEach(badge => {
+      expect(badge.closest('div')).toHaveClass("bg-green-500/20");
     });
+    
+    draftBadges.forEach(badge => {
+      expect(badge.closest('div')).toHaveClass("bg-gray-500/20");
+    });
+  });
+  
+  it("shows correct date format", () => {
+    render(<CampaignsList campaigns={mockCampaigns} onDelete={jest.fn()} />);
+    
+    // Use the new helper function to find text matching a pattern
+    const container = screen.getByTestId("campaigns-list");
+    
+    // NOTE: Using a string pattern instead of RegExp to fix the build error
+    expect(screen.getByText("01/05/2023")).toBeInTheDocument();
+    expect(screen.getByText("15/06/2023")).toBeInTheDocument();
+  });
+  
+  it("displays empty message when no campaigns", () => {
+    render(<CampaignsList campaigns={[]} onDelete={jest.fn()} />);
+    
+    expect(screen.getByText("Nenhuma campanha encontrada")).toBeInTheDocument();
+    expect(screen.getByText("Crie uma nova campanha para começar")).toBeInTheDocument();
   });
 });
