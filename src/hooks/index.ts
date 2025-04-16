@@ -24,7 +24,7 @@ export {
 // Re-export types with the correct syntax for isolatedModules
 export type { MissionType } from './useMissionsTypes';
 export { useReferrals } from './useReferrals';
-export { useCashbackMarketplace } from './useCashbackMarketplace';
+export { useCashbackMarketplace } from './cashback';
 
 // Mission-specific hooks
 export * from './missions/useMissionFilters';
@@ -34,3 +34,4 @@ export * from './missions/types';
 
 // Admin hooks
 export * from './admin';
+
