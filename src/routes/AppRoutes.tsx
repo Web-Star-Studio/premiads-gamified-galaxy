@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -31,6 +32,7 @@ const AdvertiserCredits = lazy(() => import("@/pages/advertiser/CreditsPage"));
 const AdvertiserNotifications = lazy(() => import("@/pages/advertiser/NotificationsPage"));
 const AdvertiserSettings = lazy(() => import("@/pages/advertiser/SettingsPage"));
 const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"));
+const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -136,6 +138,11 @@ const AppRoutes = () => {
       <Route path="/anunciante/configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserSettings />
+        </Suspense>
+      } />
+      <Route path="/anunciante/moderacao" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <ModerationPage />
         </Suspense>
       } />
       

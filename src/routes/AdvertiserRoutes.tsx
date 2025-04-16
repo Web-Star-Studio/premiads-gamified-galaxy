@@ -13,6 +13,7 @@ const AdvertiserCredits = lazy(() => import("@/pages/advertiser/CreditsPage"));
 const AdvertiserNotifications = lazy(() => import("@/pages/advertiser/NotificationsPage"));
 const AdvertiserSettings = lazy(() => import("@/pages/advertiser/SettingsPage"));
 const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"));
+const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -59,6 +60,11 @@ export const AdvertiserRoutes = () => {
       <Route path="/anunciante/configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserSettings />
+        </Suspense>
+      } />
+      <Route path="/anunciante/moderacao" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <ModerationPage />
         </Suspense>
       } />
     </Fragment>

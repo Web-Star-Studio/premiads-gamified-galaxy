@@ -28,6 +28,9 @@ export interface MissionSubmission {
   submitted_at: string;
   status: 'pending' | 'approved' | 'rejected';
   feedback?: string;
+  user_name?: string;
+  user_avatar?: string;
+  mission_title?: string;
 }
 
 export interface MissionFilter {

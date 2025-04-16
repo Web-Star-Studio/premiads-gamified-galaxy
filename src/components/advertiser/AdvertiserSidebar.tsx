@@ -23,7 +23,8 @@ import {
   Settings, 
   LogOut,
   BellRing,
-  BadgePlus
+  BadgePlus,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -70,6 +71,11 @@ export const AdvertiserSidebar = () => {
       title: "Nova Campanha",
       url: "/anunciante/nova-campanha",
       icon: BadgePlus,
+    },
+    {
+      title: "Moderação",
+      url: "/anunciante/moderacao",
+      icon: Shield,
     },
     {
       title: "Análises",
@@ -161,6 +167,11 @@ export const AdvertiserSidebar = () => {
                         isCollapsed ? "opacity-0 w-0 p-0 overflow-hidden" : "opacity-100")}>
                         {item.title}
                       </span>
+                      {item.title === "Moderação" && !isCollapsed && (
+                        <span className="ml-auto px-2 py-0.5 text-xs bg-neon-cyan/20 text-neon-cyan rounded-full font-semibold">
+                          Novo
+                        </span>
+                      )}
                     </Button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
