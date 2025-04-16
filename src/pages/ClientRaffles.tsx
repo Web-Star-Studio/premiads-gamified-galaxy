@@ -13,6 +13,7 @@ import ParticipationHistory from "@/components/client/raffles/ParticipationHisto
 import { useSounds } from "@/hooks/use-sounds";
 import { RAFFLES } from "@/components/client/raffles/hooks/data/mockRaffles";
 import SupportTools from "@/components/client/SupportTools";
+import Particles from "@/components/Particles";
 
 const ClientRaffles = () => {
   const { userName, userType } = useUser();
@@ -59,12 +60,16 @@ const ClientRaffles = () => {
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark">
+        <Particles count={15} />
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin"></div>
+          <div className="w-16 h-16 mx-auto mb-4 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-t-neon-cyan border-galaxy-purple animate-spin"></div>
+            <div className="absolute inset-2 rounded-full border-4 border-t-neon-pink border-galaxy-purple animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
           <h2 className="text-xl font-heading neon-text-cyan">Carregando sorteios disponíveis...</h2>
         </motion.div>
       </div>
@@ -72,8 +77,9 @@ const ClientRaffles = () => {
   }
 
   return (
-    <div className="min-h-screen bg-galaxy-dark pb-20">
-      <div className="container px-4 py-8 mx-auto">
+    <div className="min-h-screen bg-galaxy-dark pb-20 relative">
+      <Particles count={15} className="opacity-50" />
+      <div className="container px-4 py-8 mx-auto relative z-10">
         <ClientDashboardHeader 
           title="Sorteios e Prêmios" 
           description="Use seus pontos para ganhar tickets e participe de sorteios exclusivos" 
@@ -84,10 +90,25 @@ const ClientRaffles = () => {
         
         <div className="mt-8">
           <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
-              <TabsTrigger value="active">Sorteios Ativos</TabsTrigger>
-              <TabsTrigger value="conversion">Converter Pontos</TabsTrigger>
-              <TabsTrigger value="history">Histórico</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden p-1">
+              <TabsTrigger 
+                value="active" 
+                className="rounded-lg data-[state=active]:bg-gradient-to-r from-neon-cyan to-galaxy-purple data-[state=active]:text-white"
+              >
+                Sorteios Ativos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="conversion"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r from-neon-cyan to-galaxy-purple data-[state=active]:text-white"
+              >
+                Converter Pontos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r from-neon-cyan to-galaxy-purple data-[state=active]:text-white"
+              >
+                Histórico
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active" className="mt-6">
@@ -113,7 +134,7 @@ const ClientRaffles = () => {
                   {selectedRaffleId ? (
                     <RaffleDetails raffleId={selectedRaffleId} />
                   ) : (
-                    <div className="glass-panel p-8 text-center h-full flex flex-col items-center justify-center">
+                    <div className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">
                       <motion.div
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
@@ -123,7 +144,7 @@ const ClientRaffles = () => {
                           duration: 2
                         }}
                       >
-                        <div className="w-24 h-24 rounded-full bg-galaxy-deepPurple/50 flex items-center justify-center border border-neon-cyan/30">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-galaxy-dark to-galaxy-deepPurple flex items-center justify-center border border-neon-cyan/30 shadow-lg shadow-neon-cyan/10">
                           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neon-cyan">
                             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                             <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>

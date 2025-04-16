@@ -63,23 +63,23 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// PremiAds theme colors
+				// Updated color palette
 				neon: {
-					cyan: '#00FFE7',
-					pink: '#FF00C8',
-					lime: '#b4f10a'
+					cyan: '#2F80ED',
+					pink: '#FF4ECD',
+					lime: '#00C48C',
+					red: '#FF5252'
 				},
 				galaxy: {
-					dark: '#0A0A18',
-					purple: '#9b87f5',
-					deepPurple: '#1A1F2C',
+					dark: '#0A0B14',
+					purple: '#9B53FF',
+					deepPurple: '#1A1F30',
 					lightPurple: '#D6BCFA',
-					magenta: '#D946EF',
-					blue: '#1EAEDB'
+					magenta: '#FF4ECD',
+					blue: '#2F80ED'
 				}
 			},
 			fontFamily: {
-				// Replace existing font families with Montserrat for headings and Inter as default
 				'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', "Segoe UI", 'Roboto', "Helvetica Neue", 'Arial', "Noto Sans", 'sans-serif', "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"],
 				'heading': ['Montserrat', 'ui-sans-serif', 'system-ui', '-apple-system'],
 			},
@@ -118,8 +118,8 @@ export default {
 					'100%': { transform: 'scale(1)', opacity: '1' }
 				},
 				'pulse-neon': {
-					'0%, 100%': { boxShadow: '0 0 10px 0 rgba(0, 255, 231, 0.8)' },
-					'50%': { boxShadow: '0 0 20px 5px rgba(0, 255, 231, 0.5)' }
+					'0%, 100%': { boxShadow: '0 0 10px 0 rgba(47, 128, 237, 0.8)' },
+					'50%': { boxShadow: '0 0 20px 5px rgba(47, 128, 237, 0.5)' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
@@ -129,6 +129,18 @@ export default {
 					'0%': { transform: 'translateY(0) translateX(0) rotate(0)', opacity: '0' },
 					'50%': { opacity: '1' },
 					'100%': { transform: 'translateY(-100px) translateX(100px) rotate(360deg)', opacity: '0' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px 0 rgba(47, 128, 237, 0.5)' },
+					'50%': { boxShadow: '0 0 20px 5px rgba(47, 128, 237, 0.8)' }
+				},
+				'pulse': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.05)' }
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-500px 0' },
+					'100%': { backgroundPosition: '500px 0' }
 				}
 			},
 			animation: {
@@ -141,12 +153,18 @@ export default {
 				'scale-in': 'scale-in 0.6s ease-out',
 				'pulse-neon': 'pulse-neon 2s infinite',
 				'float': 'float 3s ease-in-out infinite',
-				'particles': 'particles 8s ease-in-out infinite'
+				'particles': 'particles 8s ease-in-out infinite',
+				'glow': 'glow 2s infinite',
+				'pulse': 'pulse 2s infinite',
+				'shimmer': 'shimmer 2s infinite linear'
 			},
 			backgroundImage: {
-				'galaxy-gradient': 'linear-gradient(to right, rgba(10, 10, 24, 0.9), rgba(26, 31, 44, 0.9))',
-				'neon-gradient': 'linear-gradient(to right, #00FFE7, #FF00C8, #b4f10a)',
-				'purple-glow': 'radial-gradient(circle, rgba(155, 135, 245, 0.3) 0%, rgba(26, 31, 44, 0) 70%)',
+				'galaxy-gradient': 'linear-gradient(to right, rgba(10, 11, 20, 0.9), rgba(26, 31, 48, 0.9))',
+				'neon-gradient': 'linear-gradient(to right, #2F80ED, #FF4ECD, #00C48C)',
+				'purple-glow': 'radial-gradient(circle, rgba(155, 83, 255, 0.3) 0%, rgba(26, 31, 48, 0) 70%)',
+				'blue-purple-gradient': 'linear-gradient(135deg, #2F80ED 0%, #9B53FF 100%)',
+				'pink-purple-gradient': 'linear-gradient(135deg, #FF4ECD 0%, #9B53FF 100%)',
+				'green-blue-gradient': 'linear-gradient(135deg, #00C48C 0%, #2F80ED 100%)',
 			}
 		}
 	},
