@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, CheckCircle, Circle, Timer, Plus, FileSpreadsheet, Search, Filter, ArrowDown, Dice, Edit, Trash2, Eye } from 'lucide-react';
+import { CalendarIcon, CheckCircle, Circle, Timer, Plus, FileSpreadsheet, Search, Filter, ArrowDown, Dice1, Edit, Trash2, Eye, Gift } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,7 +32,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [lotteries, setLotteries] = useState(initialLotteries);
+  const [lotteries, setLotteries] = useState<Lottery[]>(initialLotteries);
   const { playSound } = useSounds();
   
   // Filter lotteries based on search term and status
@@ -106,10 +106,14 @@ const LotteryList: React.FC<LotteryListProps> = ({
       avatar: "https://i.pravatar.cc/150?img=1"
     };
     
-    // Update lottery with winner
+    // Update lottery with winner - ensuring type safety
     const updatedLotteries = lotteries.map(item => {
       if (item.id === lottery.id) {
-        return { ...item, winner, status: 'completed' };
+        return { 
+          ...item, 
+          winner, 
+          status: 'completed' as const // Use const assertion to ensure correct type
+        };
       }
       return item;
     });
@@ -253,7 +257,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
                           className="h-7 w-7 text-muted-foreground hover:text-foreground"
                           onClick={(e) => handleSelectWinnerClick(e, lottery)}
                         >
-                          <Dice className="h-4 w-4" />
+                          <Dice1 className="h-4 w-4" />
                         </Button>
                       )}
                       <Button
@@ -284,7 +288,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Números:</span>
-                      <span className="text-white">{lottery.numbersSold} / {lottery.numbersTotal}</span>
+                      <span className="text-white">{lottery.numbersSold || 0} / {lottery.numbersTotal}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Pontos por número:</span>

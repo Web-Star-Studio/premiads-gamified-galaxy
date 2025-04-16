@@ -12,7 +12,7 @@ export const lotteryFormSchema = z.object({
   startDate: z.date({ required_error: 'Data de início é obrigatória' }),
   endDate: z.date({ required_error: 'Data de término é obrigatória' }),
   drawDate: z.date({ required_error: 'Data do sorteio é obrigatória' }),
-  status: z.enum(['active', 'pending'], { required_error: 'Status é obrigatório' }),
+  status: z.enum(['active', 'pending', 'completed', 'canceled'], { required_error: 'Status é obrigatório' }),
   numbersTotal: z.number().int().min(1, { message: 'Total de números deve ser maior que zero' }),
   pointsPerNumber: z.number().int().min(1, { message: 'Pontos por número deve ser maior que zero' }),
   minPoints: z.number().int().min(0, { message: 'Pontuação mínima não pode ser negativa' }),
@@ -35,8 +35,8 @@ export interface Lottery {
   numbersTotal: number;
   pointsPerNumber: number;
   minPoints: number;
-  progress: number; // Percentage of tickets sold
-  numbersSold: number; // Number of tickets sold
+  progress?: number; // Percentage of tickets sold
+  numbersSold?: number; // Number of tickets sold
   prizes: Array<{
     id: number;
     name: string;

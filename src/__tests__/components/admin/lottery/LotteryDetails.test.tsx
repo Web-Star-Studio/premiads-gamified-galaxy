@@ -14,9 +14,18 @@ describe('LotteryDetails Component', () => {
   const mockLottery: Lottery = {
     id: 1,
     name: 'Sorteio de Teste',
+    description: 'Descrição do sorteio de teste',
+    detailedDescription: 'Uma descrição detalhada do sorteio de teste',
+    prizeType: 'electronics',
+    prizeValue: 1000,
+    imageUrl: 'https://example.com/image.jpg',
     startDate: '2025-04-15',
     endDate: '2025-04-22',
+    drawDate: '2025-04-23',
     status: 'active',
+    numbersTotal: 100,
+    pointsPerNumber: 50,
+    minPoints: 100,
     prizes: [
       { id: 1, name: 'Prêmio 1', rarity: 'common', probability: 60 },
       { id: 2, name: 'Prêmio 2', rarity: 'uncommon', probability: 40 }

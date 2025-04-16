@@ -9,17 +9,39 @@ describe('LotteryList Component', () => {
     { 
       id: 1, 
       name: 'Sorteio de Teste 1', 
+      description: 'Descrição do sorteio 1',
+      detailedDescription: 'Descrição detalhada do sorteio 1',
+      prizeType: 'electronics',
+      prizeValue: 1000,
+      imageUrl: 'https://example.com/image1.jpg',
       startDate: '2025-04-15', 
-      endDate: '2025-04-22', 
+      endDate: '2025-04-22',
+      drawDate: '2025-04-23',
       status: 'active',
+      numbersTotal: 100,
+      pointsPerNumber: 50,
+      minPoints: 100,
+      progress: 0,
+      numbersSold: 0,
       prizes: []
     },
     { 
       id: 2, 
-      name: 'Sorteio de Teste 2', 
+      name: 'Sorteio de Teste 2',
+      description: 'Descrição do sorteio 2',
+      detailedDescription: 'Descrição detalhada do sorteio 2',
+      prizeType: 'travel',
+      prizeValue: 2000,
+      imageUrl: 'https://example.com/image2.jpg',
       startDate: '2025-04-17', 
-      endDate: '2025-04-24', 
+      endDate: '2025-04-24',
+      drawDate: '2025-04-25',
       status: 'pending',
+      numbersTotal: 200,
+      pointsPerNumber: 100,
+      minPoints: 200,
+      progress: 0,
+      numbersSold: 0,
       prizes: []
     }
   ];
@@ -42,7 +64,7 @@ describe('LotteryList Component', () => {
     );
     
     // Check if the component heading is displayed
-    expect(screen.getByText('Lista de Sorteios')).toBeInTheDocument();
+    expect(screen.getByText('Gerenciamento de Sorteios')).toBeInTheDocument();
     expect(screen.getByText('Novo Sorteio')).toBeInTheDocument();
     
     // Check if lottery items are displayed
@@ -51,7 +73,7 @@ describe('LotteryList Component', () => {
     
     // Check if status badges are displayed
     expect(screen.getByText('Ativo')).toBeInTheDocument();
-    expect(screen.getByText('Pendente')).toBeInTheDocument();
+    expect(screen.getByText('Rascunho')).toBeInTheDocument();
   });
   
   test('selects a lottery when clicked', () => {
@@ -99,7 +121,7 @@ describe('LotteryList Component', () => {
     );
     
     // Check if empty state message is displayed
-    expect(screen.getByText('Nenhum sorteio encontrado.')).toBeInTheDocument();
+    expect(screen.getByText('Nenhum sorteio encontrado')).toBeInTheDocument();
   });
   
   test('highlights selected lottery', () => {
