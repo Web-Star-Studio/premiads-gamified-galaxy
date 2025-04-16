@@ -1,7 +1,7 @@
 
 import { useCallback } from "react";
 
-type SoundType = "success" | "error" | "notification" | "click" | "reward";
+type SoundType = "success" | "error" | "notification" | "click" | "reward" | "pop" | "chime";
 
 export const useSounds = () => {
   const playSound = useCallback((type: SoundType) => {
@@ -22,6 +22,12 @@ export const useSounds = () => {
         break;
       case "reward":
         soundUrl = "/sounds/reward.mp3";
+        break;
+      case "pop":
+        soundUrl = "/sounds/pop.mp3";
+        break;
+      case "chime":
+        soundUrl = "/sounds/chime.mp3";
         break;
       default:
         soundUrl = "/sounds/click.mp3";
