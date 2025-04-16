@@ -7,7 +7,7 @@ import RaffleHeader from "./components/RaffleHeader";
 import RaffleInfoCard from "./components/RaffleInfoCard";
 import RafflePrizesCard from "./components/RafflePrizesCard";
 import ParticipationCard from "./components/ParticipationCard";
-import CountdownBadge from "./components/CountdownBadge";
+import { CountdownBadge } from "./components/countdown";
 import { useToast } from "@/hooks/use-toast";
 
 interface RaffleDetailsProps {

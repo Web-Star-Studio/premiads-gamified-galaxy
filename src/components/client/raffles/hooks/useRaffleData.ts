@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from 'date-fns';
@@ -96,6 +97,9 @@ export const useRaffleData = (raffleId: number | null) => {
     isParticipationClosed: false
   });
   
+  // Use refs to prevent stale closure issues
+  const raffleIdRef = useRef(raffleId);
+  
   // Function to calculate countdown information
   const calculateCountdownInfo = (minPointsReachedAt: string | null, drawDate: string | null) => {
     if (!minPointsReachedAt || !drawDate) {
@@ -115,7 +119,13 @@ export const useRaffleData = (raffleId: number | null) => {
     const isCountingDown = minPointsReachedAtTime <= now && now <= drawDateTime;
     
     // Calculate time remaining until draw
-    const timeRemaining = formatDistanceToNow(drawDateTime, { addSuffix: true, locale: ptBR });
+    let timeRemaining = '';
+    try {
+      timeRemaining = formatDistanceToNow(drawDateTime, { addSuffix: true, locale: ptBR });
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      timeRemaining = "em breve";
+    }
     
     // Check if we're in the last hour
     const oneHourBeforeDraw = new Date(drawDateTime);
@@ -134,6 +144,9 @@ export const useRaffleData = (raffleId: number | null) => {
   };
   
   useEffect(() => {
+    // Update the ref whenever raffleId changes
+    raffleIdRef.current = raffleId;
+    
     const fetchRaffle = async () => {
       setIsLoading(true);
       
@@ -156,12 +169,10 @@ export const useRaffleData = (raffleId: number | null) => {
           
           setRaffle(foundRaffle);
           setCountdownInfo(countdownInfo);
-          
-          // This was previously causing errors due to a delayed loading state
-          setIsLoading(false);
-        } else {
-          setIsLoading(false);
         }
+        
+        // Set loading to false regardless of whether a raffle was found
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching raffle:", error);
         setIsLoading(false);
@@ -172,12 +183,19 @@ export const useRaffleData = (raffleId: number | null) => {
     
     // Set up interval to update countdown information every minute
     const intervalId = setInterval(() => {
-      if (raffle?.minPointsReachedAt) {
-        const updatedCountdownInfo = calculateCountdownInfo(
-          raffle.minPointsReachedAt,
-          raffle.drawDate
-        );
-        setCountdownInfo(updatedCountdownInfo);
+      // Use the ref value to avoid stale closures
+      const currentRaffleId = raffleIdRef.current;
+      
+      if (currentRaffleId) {
+        const currentRaffle = RAFFLES.find(r => r.id === currentRaffleId);
+        
+        if (currentRaffle?.minPointsReachedAt) {
+          const updatedCountdownInfo = calculateCountdownInfo(
+            currentRaffle.minPointsReachedAt,
+            currentRaffle.drawDate
+          );
+          setCountdownInfo(updatedCountdownInfo);
+        }
       }
     }, 60000); // Update every minute
     
