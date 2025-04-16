@@ -49,29 +49,12 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
     );
   }
   
-  // Participation hook
-  const {
-    userTickets,
-    userPoints,
-    participationCount,
-    isParticipating,
-    purchaseAmount,
-    purchaseMode,
-    pointsNeeded,
-    canPurchaseWithTickets,
-    canPurchaseWithPoints,
-    handleDecreasePurchase,
-    handleIncreasePurchase,
-    handlePurchase,
-    setPurchaseMode,
-    discountPercentage,
-    currentLevelName,
-    isParticipationClosed
-  } = useRaffleParticipation(
-    raffle.maxTicketsPerUser, 
-    raffle.ticketsRequired,
-    countdownInfo.isParticipationClosed
-  );
+  // Participation hook with config object
+  const participation = useRaffleParticipation({
+    maxTicketsPerUser: raffle.maxTicketsPerUser, 
+    ticketsRequired: raffle.ticketsRequired,
+    isParticipationClosed: countdownInfo.isParticipationClosed
+  });
 
   return (
     <div className="glass-panel p-6">
@@ -116,22 +99,22 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
       <ParticipationCard 
         ticketsRequired={raffle.ticketsRequired}
         maxTicketsPerUser={raffle.maxTicketsPerUser}
-        participationCount={participationCount}
-        userTickets={userTickets}
-        userPoints={userPoints}
-        isParticipating={isParticipating}
-        onPurchase={handlePurchase}
-        purchaseMode={purchaseMode}
-        setPurchaseMode={setPurchaseMode}
-        purchaseAmount={purchaseAmount}
-        handleDecreasePurchase={handleDecreasePurchase}
-        handleIncreasePurchase={handleIncreasePurchase}
-        canPurchaseWithTickets={canPurchaseWithTickets}
-        canPurchaseWithPoints={canPurchaseWithPoints}
-        pointsNeeded={pointsNeeded}
-        discountPercentage={discountPercentage}
-        currentLevelName={currentLevelName}
-        isParticipationClosed={countdownInfo.isParticipationClosed}
+        participationCount={participation.participationCount}
+        userTickets={participation.userTickets}
+        userPoints={participation.userPoints}
+        isParticipating={participation.isParticipating}
+        onPurchase={participation.handlePurchase}
+        purchaseMode={participation.purchaseMode}
+        setPurchaseMode={participation.setPurchaseMode}
+        purchaseAmount={participation.purchaseAmount}
+        handleDecreasePurchase={participation.handleDecreasePurchase}
+        handleIncreasePurchase={participation.handleIncreasePurchase}
+        canPurchaseWithTickets={participation.canPurchaseWithTickets}
+        canPurchaseWithPoints={participation.canPurchaseWithPoints}
+        pointsNeeded={participation.pointsNeeded}
+        discountPercentage={participation.discountPercentage}
+        currentLevelName={participation.currentLevelName}
+        isParticipationClosed={participation.isParticipationClosed}
       />
     </div>
   );

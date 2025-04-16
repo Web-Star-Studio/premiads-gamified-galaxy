@@ -1,5 +1,5 @@
 
-import { Raffle } from '../types/raffleTypes';
+import { Raffle, RafflePrize } from '../types/raffleTypes';
 import { RAFFLES } from '../data/mockRaffles';
 
 /**
@@ -20,7 +20,11 @@ export const fetchRaffleById = async (raffleId: number): Promise<Raffle | null> 
     if (foundRaffle) {
       const typedRaffle: Raffle = {
         ...foundRaffle,
-        status: foundRaffle.status as "active" | "draft" | "finished" | "canceled"
+        status: foundRaffle.status as "active" | "draft" | "finished" | "canceled",
+        prizes: foundRaffle.prizes.map(prize => ({
+          ...prize,
+          rarity: prize.rarity as "common" | "uncommon" | "rare" | "legendary"
+        }))
       };
       return typedRaffle;
     }

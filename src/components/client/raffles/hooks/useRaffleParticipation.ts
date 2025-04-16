@@ -3,19 +3,25 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { useUserLevel } from "@/hooks/useUserLevel";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  calculatePointsNeeded, 
+  canPurchaseWithTickets, 
+  canPurchaseWithPoints,
+  getDiscountPercentage,
+  POINTS_PER_TICKET
+} from './utils/participationUtils';
+import { fetchUserData, participateInRaffle } from './services/participationService';
+import { ParticipationConfig, ParticipationResult } from './types/participationTypes';
 
-const POINTS_PER_TICKET = 100;
-
-export const useRaffleParticipation = (
-  maxTicketsPerUser: number, 
-  ticketsRequired: number,
-  isParticipationClosed: boolean = false
-) => {
+export const useRaffleParticipation = ({
+  maxTicketsPerUser, 
+  ticketsRequired,
+  isParticipationClosed = false
+}: ParticipationConfig): ParticipationResult => {
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const [userTickets, setUserTickets] = useState(8); // Mock data - would come from API
-  const [userPoints, setUserPoints] = useState(750); // Mock data - would come from API
+  const [userTickets, setUserTickets] = useState(8); // Default value before data loads
+  const [userPoints, setUserPoints] = useState(750); // Default value before data loads
   const [participationCount, setParticipationCount] = useState(0);
   const [isParticipating, setIsParticipating] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
@@ -24,55 +30,44 @@ export const useRaffleParticipation = (
   
   const remainingSlots = maxTicketsPerUser - participationCount;
   
-  // Calculate points needed with level discount (if available)
-  const calculatePointsNeeded = () => {
-    if (!levelInfo) return purchaseAmount * ticketsRequired * POINTS_PER_TICKET;
-    
-    const discount = levelInfo.currentLevel.benefits.ticket_discount / 100;
-    const basePointsNeeded = purchaseAmount * ticketsRequired * POINTS_PER_TICKET;
-    return Math.round(basePointsNeeded * (1 - discount));
-  };
+  // Get level discount percentage
+  const discountPercentage = getDiscountPercentage(levelInfo);
   
-  const pointsNeeded = calculatePointsNeeded();
+  // Calculate points needed with level discount
+  const pointsNeeded = calculatePointsNeeded(
+    purchaseAmount,
+    ticketsRequired,
+    discountPercentage
+  );
+  
+  // Determine if purchases are possible
+  const canBuyWithTickets = canPurchaseWithTickets(
+    userTickets,
+    purchaseAmount,
+    participationCount,
+    maxTicketsPerUser,
+    isParticipationClosed
+  );
+  
+  const canBuyWithPoints = canPurchaseWithPoints(
+    userPoints,
+    pointsNeeded,
+    participationCount,
+    purchaseAmount,
+    maxTicketsPerUser,
+    isParticipationClosed
+  );
   
   // Fetch user data
   useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user?.id) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('points')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profileData) {
-          setUserPoints(profileData.points);
-        }
-        
-        // Here we would also fetch tickets information
-      }
+    const loadUserData = async () => {
+      const userData = await fetchUserData();
+      setUserPoints(userData.points);
+      setUserTickets(userData.tickets);
     };
     
-    fetchUserData();
+    loadUserData();
   }, []);
-  
-  const canPurchaseWithTickets = () => {
-    return (
-      userTickets >= purchaseAmount && 
-      participationCount + purchaseAmount <= maxTicketsPerUser &&
-      !isParticipationClosed
-    );
-  };
-  
-  const canPurchaseWithPoints = () => {
-    return (
-      userPoints >= pointsNeeded && 
-      participationCount + purchaseAmount <= maxTicketsPerUser &&
-      !isParticipationClosed
-    );
-  };
   
   const handleDecreasePurchase = () => {
     if (purchaseAmount > 1) {
@@ -86,7 +81,7 @@ export const useRaffleParticipation = (
     }
   };
   
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (isParticipationClosed) {
       toast({
         title: "Participação encerrada",
@@ -97,7 +92,7 @@ export const useRaffleParticipation = (
       return;
     }
     
-    if (purchaseMode === 'tickets' && !canPurchaseWithTickets()) {
+    if (purchaseMode === 'tickets' && !canBuyWithTickets) {
       toast({
         title: "Não foi possível participar",
         description: userTickets < purchaseAmount
@@ -109,7 +104,7 @@ export const useRaffleParticipation = (
       return;
     }
     
-    if (purchaseMode === 'points' && !canPurchaseWithPoints()) {
+    if (purchaseMode === 'points' && !canBuyWithPoints) {
       toast({
         title: "Não foi possível participar",
         description: "Você não tem pontos suficientes",
@@ -121,50 +116,68 @@ export const useRaffleParticipation = (
     
     setIsParticipating(true);
     
-    // Simulate participation process
-    setTimeout(() => {
-      if (purchaseMode === 'tickets') {
-        setUserTickets(prev => prev - purchaseAmount);
-      } else {
-        setUserPoints(prev => prev - pointsNeeded);
+    try {
+      // Simulate participation process
+      const result = await participateInRaffle(
+        1, // Raffle ID would come from props in a real scenario
+        purchaseAmount,
+        purchaseMode,
+        pointsNeeded
+      );
+      
+      if (result.success) {
+        if (purchaseMode === 'tickets') {
+          setUserTickets(prev => prev - purchaseAmount);
+        } else {
+          setUserPoints(prev => prev - pointsNeeded);
+        }
+        
+        setParticipationCount(prev => prev + purchaseAmount);
+        
+        // Show success message
+        toast({
+          title: "Participação confirmada!",
+          description: `Você está participando com ${participationCount + purchaseAmount} ticket(s)!`,
+        });
+        
+        playSound("reward");
       }
-      
-      setParticipationCount(prev => prev + purchaseAmount);
-      setIsParticipating(false);
-      
-      // Show success message
+    } catch (error) {
       toast({
-        title: "Participação confirmada!",
-        description: `Você está participando com ${participationCount + purchaseAmount} ticket(s)!`,
+        title: "Erro ao participar",
+        description: "Ocorreu um erro ao processar sua participação. Tente novamente.",
+        variant: "destructive",
       });
-      
-      playSound("reward");
-    }, 1500);
-  };
-  
-  // Get discount percentage from user level
-  const getDiscountPercentage = () => {
-    if (!levelInfo) return 0;
-    return levelInfo.currentLevel.benefits.ticket_discount;
+      playSound("error");
+    } finally {
+      setIsParticipating(false);
+    }
   };
   
   return {
+    // State
     userTickets,
     userPoints,
     participationCount,
     isParticipating,
     purchaseAmount,
     purchaseMode,
+    remainingSlots,
+    
+    // Calculations
     pointsNeeded,
-    canPurchaseWithTickets: canPurchaseWithTickets(),
-    canPurchaseWithPoints: canPurchaseWithPoints(),
+    canPurchaseWithTickets: canBuyWithTickets,
+    canPurchaseWithPoints: canBuyWithPoints,
+    discountPercentage,
+    currentLevelName: levelInfo?.currentLevel.name || 'Bronze',
+    
+    // Handlers
     handleDecreasePurchase,
     handleIncreasePurchase,
     handlePurchase,
     setPurchaseMode,
-    remainingSlots,
-    discountPercentage: getDiscountPercentage(),
-    currentLevelName: levelInfo?.currentLevel.name || 'Bronze',
+    
+    // Config
     isParticipationClosed
   };
 };
