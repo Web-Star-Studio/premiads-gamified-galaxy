@@ -3,14 +3,17 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: any;
-  signIn: (email: string, password: string) => Promise<void>;
+  user: any; // Add user property
+  loading: boolean; // Add loading property alias for isLoading
+  signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
+  signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,12 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (credentials: SignInCredentials) => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: credentials.email,
+        password: credentials.password,
       });
 
       if (error) throw error;
@@ -102,14 +105,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (credentials: SignUpCredentials, metadata?: any) => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: credentials.email,
+        password: credentials.password,
         options: {
-          data: metadata,
+          data: {
+            full_name: credentials.name,
+            user_type: credentials.userType || "participante",
+            ...metadata
+          },
         },
       });
 
@@ -136,6 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         currentUser,
+        user: currentUser, // Alias for currentUser
+        loading: isLoading, // Alias for isLoading
         signIn,
         signOut,
         signUp,
@@ -155,3 +164,6 @@ export const useAuth = () => {
   
   return context;
 };
+
+// Re-export the types
+export type { SignUpCredentials, SignInCredentials };

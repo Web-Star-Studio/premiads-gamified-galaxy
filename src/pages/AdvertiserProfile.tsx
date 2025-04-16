@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const AdvertiserProfile = () => {
   const { userName, userType } = useUser();
-  const { signOut, user } = useAuth();
+  const { signOut, currentUser } = useAuth(); // Using currentUser instead of user
   const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();
@@ -50,12 +51,12 @@ const AdvertiserProfile = () => {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
-        if (!user?.id) return;
+        if (!currentUser?.id) return; // Using currentUser instead of user
         
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", currentUser.id) // Using currentUser instead of user
           .single();
         
         if (error) throw error;
@@ -63,7 +64,7 @@ const AdvertiserProfile = () => {
         if (data) {
           setProfileData({
             companyName: data.full_name || "",
-            email: user.email || "",
+            email: currentUser.email || "", // Using currentUser instead of user
             phone: data.phone || "",
             website: data.website || "",
             description: data.description || "",
@@ -85,12 +86,12 @@ const AdvertiserProfile = () => {
     };
     
     fetchProfileData();
-  }, [user, userType, navigate, toast]);
+  }, [currentUser, userType, navigate, toast]); // Updated dependency array
   
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      if (!user?.id) return;
+      if (!currentUser?.id) return; // Using currentUser instead of user
       
       const { error } = await supabase
         .from("profiles")
@@ -102,7 +103,7 @@ const AdvertiserProfile = () => {
           email_notifications: profileData.emailNotifications,
           push_notifications: profileData.pushNotifications
         })
-        .eq("id", user.id);
+        .eq("id", currentUser.id); // Using currentUser instead of user
       
       if (error) throw error;
       
