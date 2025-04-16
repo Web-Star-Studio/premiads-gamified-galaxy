@@ -7,6 +7,7 @@ import { AppProvider } from "@/context/AppContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { HelmetProvider } from "react-helmet-async";
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -27,15 +28,17 @@ const AppProviders = ({ children }: AppProvidersProps) => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <UserProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </UserProvider>
-        </AppProvider>
+        <HelmetProvider>
+          <AppProvider>
+            <UserProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+                <Sonner />
+              </TooltipProvider>
+            </UserProvider>
+          </AppProvider>
+        </HelmetProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
