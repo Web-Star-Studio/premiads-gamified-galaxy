@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";  // Add this import
+import { RaffleImage, RaffleDescription, RaffleProgress } from './header';
 
 interface RaffleHeaderProps {
   name: string;
@@ -24,32 +23,19 @@ const RaffleHeader = ({
 }: RaffleHeaderProps) => {
   return (
     <div className="mb-6">
-      <div className="relative h-56 rounded-lg overflow-hidden mb-4">
-        <img 
-          src={imageUrl} 
-          alt={name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-galaxy-deepPurple/90 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-heading text-white">{name}</h2>
-            <Badge className="bg-galaxy-deepPurple text-neon-cyan border border-neon-cyan/30">
-              {ticketsRequired} {ticketsRequired > 1 ? "tickets" : "ticket"}
-            </Badge>
-          </div>
-        </div>
-      </div>
+      <RaffleImage 
+        imageUrl={imageUrl} 
+        name={name} 
+        ticketsRequired={ticketsRequired} 
+      />
       
-      <p className="text-gray-400 mb-4">{description}</p>
+      <RaffleDescription description={description} />
       
-      <div className="mb-4">
-        <div className="flex justify-between text-sm text-gray-400 mb-1">
-          <span>Progresso do sorteio</span>
-          <span>{progress}% ({soldTickets}/{totalTickets})</span>
-        </div>
-        <Progress value={progress} className="h-2" />
-      </div>
+      <RaffleProgress 
+        progress={progress} 
+        soldTickets={soldTickets} 
+        totalTickets={totalTickets} 
+      />
     </div>
   );
 };
