@@ -1,26 +1,45 @@
 
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UserProvider } from '@/context/UserContext';
+import { AppProvider } from '@/context/AppContext';
 
-// Create a custom render function that includes common providers
+// Create a custom render function that includes providers
 const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: ({ children }) => <BrowserRouter>{children}</BrowserRouter>, ...options });
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
 
-// Re-export everything from testing-library
+  return render(
+    ui,
+    {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          <AppProvider>
+            <UserProvider>
+              <BrowserRouter>
+                {children}
+              </BrowserRouter>
+            </UserProvider>
+          </AppProvider>
+        </QueryClientProvider>
+      ),
+      ...options,
+    }
+  );
+};
+
+// Re-export everything
 export * from '@testing-library/react';
 
-// Override the render method with our custom one
+// Override render method
 export { customRender as render };
-
-// Utility for finding text that matches a regex
-export const getByTextContent = (container: HTMLElement, regex: RegExp) => {
-  const elements = Array.from(container.querySelectorAll('*'));
-  const element = elements.find(el => el.textContent && regex.test(el.textContent));
-  if (!element) {
-    throw new Error(`Unable to find an element with text content matching ${regex}`);
-  }
-  return element;
-};
