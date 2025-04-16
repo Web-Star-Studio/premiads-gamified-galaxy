@@ -1,9 +1,11 @@
 
-import { Trophy, TrendingUp, Award } from "lucide-react";
+import { Trophy, TrendingUp, Award, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
 import { useUserLevel } from "@/hooks/useUserLevel";
 import { useEffect } from "react";
+import { getMoneyValue } from "@/utils/formatCurrency";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LifetimePointsProps {
   totalPoints: number;
@@ -40,9 +42,30 @@ const LifetimePoints = ({ totalPoints, rank, totalUsers }: LifetimePointsProps) 
         <Trophy className="w-5 h-5 text-neon-pink" />
       </div>
       
-      <div className="flex items-baseline">
-        <span className="text-3xl font-bold text-white">{totalPoints.toLocaleString()}</span>
-        <span className="ml-1 text-sm text-neon-pink">pontos</span>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-baseline cursor-help">
+              <span className="text-3xl font-bold text-white">{totalPoints.toLocaleString()}</span>
+              <span className="ml-1 text-sm text-neon-pink">pontos</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
+            <div className="space-y-1 text-xs">
+              <p className="font-medium text-sm">Conversão de valores</p>
+              <p>{totalPoints.toLocaleString()} pontos = {totalPoints.toLocaleString()} créditos</p>
+              <p>Valor estimado: {getMoneyValue(totalPoints)}</p>
+              <p className="text-gray-400">10 pontos = R$1,00</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      <div className="flex items-center mt-2">
+        <Wallet className="w-4 h-4 text-neon-cyan mr-2" />
+        <span className="text-sm text-gray-300">
+          {totalPoints.toLocaleString()} créditos • {getMoneyValue(totalPoints)}
+        </span>
       </div>
       
       {!loading && levelInfo && (

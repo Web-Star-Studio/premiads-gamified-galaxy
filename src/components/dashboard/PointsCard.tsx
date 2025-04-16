@@ -3,18 +3,23 @@ import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { useSounds } from "@/hooks/use-sounds";
 import { useEffect } from "react";
-import { Award, TrendingUp } from "lucide-react";
+import { Award, TrendingUp, Wallet } from "lucide-react";
 import { useUserLevel } from "@/hooks/useUserLevel";
+import { getMoneyValue } from "@/utils/formatCurrency";
 
 interface PointsCardProps {
   points: number;
+  credits?: number;
   level?: number; // Keep for backward compatibility
   progress?: number; // Keep for backward compatibility
 }
 
-const PointsCard = ({ points }: PointsCardProps) => {
+const PointsCard = ({ points, credits }: PointsCardProps) => {
   const { playSound } = useSounds();
   const { levelInfo, loading } = useUserLevel(points);
+  
+  // If credits are not provided, assume they equal points (1:1 conversion)
+  const effectiveCredits = credits !== undefined ? credits : points;
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -44,6 +49,12 @@ const PointsCard = ({ points }: PointsCardProps) => {
           <div className="flex items-baseline">
             <span className="text-3xl font-bold text-white">{points}</span>
             <span className="ml-1 text-sm text-neon-cyan">pontos</span>
+          </div>
+          <div className="flex items-baseline mt-1">
+            <Wallet className="w-3 h-3 text-neon-pink mr-1" />
+            <span className="text-sm text-gray-400">
+              {effectiveCredits} créditos • {getMoneyValue(effectiveCredits)}
+            </span>
           </div>
         </div>
         

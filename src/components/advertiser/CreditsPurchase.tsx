@@ -1,13 +1,14 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { CreditCard, Sparkles, Clock, Zap, CheckCircle } from "lucide-react";
+import { CreditCard, Sparkles, Clock, Zap, CheckCircle, Info } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCurrency, getMoneyValue } from "@/utils/formatCurrency";
 
 interface CreditsPurchaseProps {
   currentCredits?: number;
@@ -20,12 +21,14 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   
+  // Update credit packages to reflect the new conversion rate (10 credits = R$1.00)
+  // Package price now equals credits / 10 (10 credits = R$1.00)
   const creditPackages = [
-    { value: 1, credits: 500, price: 250, bonus: 0 },
-    { value: 2, credits: 1000, price: 450, bonus: 100 },
-    { value: 3, credits: 2500, price: 1000, bonus: 350 },
-    { value: 4, credits: 5000, price: 1800, bonus: 1000 },
-    { value: 5, credits: 10000, price: 3200, bonus: 2500 },
+    { value: 1, credits: 500, price: 50, bonus: 0 },
+    { value: 2, credits: 1000, price: 100, bonus: 100 },
+    { value: 3, credits: 2500, price: 250, bonus: 350 },
+    { value: 4, credits: 5000, price: 500, bonus: 1000 },
+    { value: 5, credits: 10000, price: 1000, bonus: 2500 },
   ];
   
   const selectedPackage = creditPackages[selectedAmount[0] - 1];
@@ -90,17 +93,14 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
     }
   };
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
+  const formatCurrencyValue = (value: number) => {
+    return formatCurrency(value);
   };
   
   const getDiscountPercentage = (pkg: typeof selectedPackage) => {
-    const standardRate = creditPackages[0].price / creditPackages[0].credits;
+    const standardRate = 0.1; // R$0.10 per credit
     const packageRate = pkg.price / (pkg.credits + pkg.bonus);
-    const discount = ((standardRate - packageRate) / standardRate) * 100;
+    const discount = ((standardRate - packageRate / 10) / standardRate) * 100;
     return Math.round(discount);
   };
   
@@ -111,9 +111,26 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
           <CreditCard className="w-5 h-5 text-neon-pink" />
           Comprar Créditos
         </CardTitle>
-        <CardDescription>
-          Créditos para criar e gerenciar campanhas
-        </CardDescription>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 cursor-help">
+                <CardDescription>
+                  Créditos para criar e gerenciar campanhas
+                </CardDescription>
+                <Info className="w-3.5 h-3.5 text-gray-500" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
+              <div className="space-y-1 text-xs">
+                <p className="font-medium text-sm">Conversão de valores</p>
+                <p>10 créditos = R$1,00</p>
+                <p>Cada crédito vale R$0,10</p>
+                <p className="text-gray-400 mt-1">Créditos são usados para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardHeader>
       <CardContent>
         {showConfirmation ? (
@@ -127,7 +144,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
             </div>
             <h3 className="text-xl font-bold mb-2">Compra Confirmada!</h3>
             <p className="text-gray-400 mb-4">
-              Seu pagamento de {formatCurrency(selectedPackage.price)} foi aprovado.
+              Seu pagamento de {formatCurrencyValue(selectedPackage.price / 10)} foi aprovado.
             </p>
             <div className="p-3 bg-gray-800/50 rounded-md mb-4">
               <p className="font-medium">
@@ -175,6 +192,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
                 >
                   <p className="text-sm font-medium">{pkg.credits.toLocaleString()}</p>
                   <p className="text-xs text-gray-400">créditos</p>
+                  <p className="text-xs mt-1">{formatCurrencyValue(pkg.price / 10)}</p>
                   
                   {pkg.bonus > 0 && (
                     <div className="absolute -top-2 -right-2 bg-neon-pink text-white text-xs px-2 py-0.5 rounded-full">
@@ -189,7 +207,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium">Resumo</span>
                 <span className="text-sm text-neon-pink font-bold">
-                  {formatCurrency(selectedPackage.price)}
+                  {formatCurrencyValue(selectedPackage.price / 10)}
                 </span>
               </div>
               
@@ -223,7 +241,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
                     Preço por crédito
                   </span>
                   <span>
-                    {formatCurrency(selectedPackage.price / (selectedPackage.credits + selectedPackage.bonus))}
+                    {formatCurrencyValue((selectedPackage.price / 10) / (selectedPackage.credits + selectedPackage.bonus))}
                   </span>
                 </div>
               </div>
@@ -249,7 +267,10 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
             
             <div className="flex items-center justify-between border-t border-gray-700 pt-4 mt-4">
               <span className="text-sm text-gray-400">Saldo atual</span>
-              <span className="text-lg font-bold">{currentCredits.toLocaleString()} créditos</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold">{currentCredits.toLocaleString()} créditos</span>
+                <span className="text-xs text-gray-400">~{getMoneyValue(currentCredits)}</span>
+              </div>
             </div>
             
             <p className="text-xs text-center text-gray-400">

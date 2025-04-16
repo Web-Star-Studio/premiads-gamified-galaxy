@@ -1,8 +1,10 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Bell, Wallet, Star } from "lucide-react";
+import { Bell, Wallet, Star, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getMoneyValue } from "@/utils/formatCurrency";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -29,15 +31,29 @@ const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHead
         </div>
         
         <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-2 bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30"
-          >
-            <Wallet className="h-4 w-4 text-neon-cyan" />
-            <span className="text-sm font-medium">
-              {credits !== undefined ? `${credits} Créditos` : 'Créditos Disponíveis'}
-            </span>
-          </motion.div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30 cursor-help"
+                >
+                  <Wallet className="h-4 w-4 text-neon-cyan" />
+                  <span className="text-sm font-medium">
+                    {credits !== undefined ? `${credits} Créditos` : 'Créditos Disponíveis'}
+                  </span>
+                  <Info className="h-3 w-3 text-gray-400" />
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Valor estimado: {credits !== undefined ? getMoneyValue(credits) : 'R$0,00'}</p>
+                  <p className="text-xs text-gray-400">10 créditos = R$1,00</p>
+                  <p className="text-xs text-gray-400">Cada crédito vale R$0,10</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           {isPremium && (
             <motion.div

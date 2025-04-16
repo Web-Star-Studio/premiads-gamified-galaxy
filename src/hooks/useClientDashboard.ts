@@ -13,6 +13,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [points, setPoints] = useState(0);
+  const [credits, setCredits] = useState(0); // New state for credits
   const [streak, setStreak] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isProfileCompleted, setIsProfileCompleted] = useState(false);
@@ -37,6 +38,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
           console.log("Session error or no session - using test data");
           // Use test data for demo mode
           setPoints(1500);
+          setCredits(1500); // Set credits equal to points for the 1:1 conversion
           setStreak(3);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -50,6 +52,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
           console.log("No authenticated user found - using test data");
           // Use test data for non-authenticated users
           setPoints(1500);
+          setCredits(1500); // Set credits equal to points for the 1:1 conversion
           setStreak(3);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -62,7 +65,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         // Get user profile with points
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("points, profile_completed")
+          .select("points, credits, profile_completed")
           .eq("id", userId)
           .single();
         
@@ -70,6 +73,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
           console.error("Profile error:", profileError);
           // Still use test data instead of throwing error
           setPoints(1500);
+          setCredits(1500); // Set credits equal to points for the 1:1 conversion
           setStreak(3);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -79,8 +83,11 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         
         if (profileData) {
           setPoints(profileData.points || 0);
+          // If credits exist in the database, use them, otherwise use points (1:1 conversion)
+          setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
           setIsProfileCompleted(profileData.profile_completed || false);
           console.log("User points:", profileData.points);
+          console.log("User credits:", profileData.credits);
         }
         
         // For streak, we would ideally have a user_activity table
@@ -93,6 +100,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         console.error("Error fetching user data:", error);
         // For testing, don't redirect on error and still show data
         setPoints(1500);
+        setCredits(1500); // Set credits equal to points for the 1:1 conversion
         setStreak(3);
         setIsProfileCompleted(false);
       } finally {
@@ -139,6 +147,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
   return {
     userName,
     points,
+    credits, // Add credits to the returned values
     streak,
     loading,
     showOnboarding,
