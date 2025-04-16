@@ -1,5 +1,5 @@
 
-import { Calendar, MessageSquare, User } from "lucide-react";
+import { Calendar, MessageSquare, User, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -113,7 +113,7 @@ const SubmissionPreviewDialog = ({
               {processing ? (
                 <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
               ) : (
-                <X className="w-4 h-4" />
+                <Check className="w-4 h-4" />
               )}
               Aprovar
             </Button>
