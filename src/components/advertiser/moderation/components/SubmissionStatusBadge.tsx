@@ -8,13 +8,20 @@ interface SubmissionStatusBadgeProps {
 
 const SubmissionStatusBadge = ({ submission }: SubmissionStatusBadgeProps) => {
   switch (submission.status) {
-    case 'approved':
-      return <Badge variant="success">Aprovado</Badge>;
-    case 'rejected':
-      return <Badge variant="warning">Rejeitado</Badge>;
-    case 'pending':
+    case "pending":
+      return (
+        <Badge variant="glow" className="text-xs">Pendente</Badge>
+      );
+    case "approved":
+      return (
+        <Badge variant="success" className="text-xs">Aprovado</Badge>
+      );
+    case "rejected":
+      return (
+        <Badge variant="warning" className="text-xs">Rejeitado</Badge>
+      );
     default:
-      return <Badge variant="glow">Pendente</Badge>;
+      return null;
   }
 };
 

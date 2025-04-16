@@ -1,47 +1,24 @@
 
-import { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { UserProvider } from "@/context/UserContext";
-import { AppProvider } from "@/context/AppContext";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { HelmetProvider } from "react-helmet-async";
+import { UserProvider } from "@/context/UserContext";
+import { AuthProvider } from "@/hooks/useAuth";
 
-interface AppProvidersProps {
-  children: ReactNode;
-}
+// Create a client
+const queryClient = new QueryClient();
 
-// Create query client with default options
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const AppProviders = ({ children }: AppProvidersProps) => {
+export const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <AppProvider>
-            <UserProvider>
-              <TooltipProvider>
-                {children}
-                <Toaster />
-                <Sonner />
-              </TooltipProvider>
-            </UserProvider>
-          </AppProvider>
-        </HelmetProvider>
+        <AuthProvider>
+          <UserProvider>
+            {children}
+            <Toaster />
+          </UserProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
 };
-
-export default AppProviders;

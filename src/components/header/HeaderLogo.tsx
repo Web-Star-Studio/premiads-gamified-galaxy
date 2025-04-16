@@ -1,11 +1,12 @@
 
 import { FC } from "react";
+import { Link } from "react-router-dom";
 
 const HeaderLogo: FC = () => {
   return (
-    <a href="#" className="text-xl sm:text-2xl font-bold font-heading neon-text-cyan">
+    <Link to="/" className="text-xl sm:text-2xl font-bold font-heading neon-text-cyan">
       <span className="text-white">Premi</span>Ads
-    </a>
+    </Link>
   );
 };
 

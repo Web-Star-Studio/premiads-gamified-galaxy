@@ -1,44 +1,43 @@
 
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
-// Sound URLs - would typically be imported from actual audio files
-const SOUND_URLS = {
-  chime: "https://assets.mixkit.co/active_storage/sfx/2019/chime-notification-alert.wav",
-  pop: "https://assets.mixkit.co/active_storage/sfx/2044/game-pop-alert.wav",
-  reward: "https://assets.mixkit.co/active_storage/sfx/2020/coin-win-notification.wav",
-  error: "https://assets.mixkit.co/active_storage/sfx/2021/error-negative-alert.wav",
-};
+type SoundType = "success" | "error" | "notification" | "click" | "reward";
 
-type SoundName = keyof typeof SOUND_URLS;
-
-export function useSounds() {
-  const audioCache = useRef<Record<SoundName, HTMLAudioElement>>({} as Record<SoundName, HTMLAudioElement>);
-
-  // Preload sounds
-  useEffect(() => {
-    const soundsToLoad = Object.entries(SOUND_URLS) as [SoundName, string][];
+export const useSounds = () => {
+  const playSound = useCallback((type: SoundType) => {
+    let soundUrl: string;
     
-    soundsToLoad.forEach(([name, url]) => {
-      const audio = new Audio(url);
-      audio.preload = "auto";
-      audioCache.current[name] = audio;
-    });
+    switch (type) {
+      case "success":
+        soundUrl = "/sounds/success.mp3";
+        break;
+      case "error":
+        soundUrl = "/sounds/error.mp3";
+        break;
+      case "notification":
+        soundUrl = "/sounds/notification.mp3";
+        break;
+      case "click":
+        soundUrl = "/sounds/click.mp3";
+        break;
+      case "reward":
+        soundUrl = "/sounds/reward.mp3";
+        break;
+      default:
+        soundUrl = "/sounds/click.mp3";
+    }
     
-    return () => {
-      Object.values(audioCache.current).forEach(audio => {
-        audio.pause();
-        audio.src = "";
+    try {
+      const audio = new Audio(soundUrl);
+      audio.volume = 0.5; // Set volume to 50%
+      audio.play().catch((error) => {
+        // Silently handle error - browsers often block autoplay
+        console.log("Sound not played:", error);
       });
-    };
-  }, []);
-
-  const playSound = useCallback((name: SoundName) => {
-    const audio = audioCache.current[name];
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(err => console.error("Failed to play sound:", err));
+    } catch (error) {
+      console.error("Error playing sound:", error);
     }
   }, []);
-
+  
   return { playSound };
-}
+};
