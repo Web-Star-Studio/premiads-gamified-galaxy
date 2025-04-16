@@ -1,4 +1,5 @@
-import { Suspense, lazy } from "react";
+
+import { Suspense, lazy, Fragment } from "react";
 import { Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -18,7 +19,7 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const PublicRoutes = () => {
   return (
-    <>
+    <Fragment>
       {/* Public Routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={
@@ -27,7 +28,7 @@ export const PublicRoutes = () => {
         </Suspense>
       } />
       
-      {/* Páginas informativas */}
+      {/* Information Pages */}
       <Route path="/tutoriais" element={<Tutorials />} />
       <Route path="/faq" element={<Faq />} />
       <Route path="/suporte" element={<Support />} />
@@ -35,7 +36,7 @@ export const PublicRoutes = () => {
       
       {/* Not Found Route - Keep at the bottom of routes */}
       <Route path="*" element={<NotFound />} />
-    </>
+    </Fragment>
   );
 };
 

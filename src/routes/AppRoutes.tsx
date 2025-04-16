@@ -8,13 +8,13 @@ import { AdminRoutes } from "./AdminRoutes";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Include all route groups */}
+      {/* Include all route groups using React Fragment */}
       <PublicRoutes />
       <ClientRoutes />
       <AdvertiserRoutes />
       <AdminRoutes />
       
-      {/* Redirect URLs com "/" no final para versões sem "/" */}
+      {/* Redirect URLs with "/" at the end to versions without "/" */}
       <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
     </Routes>
   );

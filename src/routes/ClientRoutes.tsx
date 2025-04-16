@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, Fragment } from "react";
 import { Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -16,7 +16,7 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const ClientRoutes = () => {
   return (
-    <>
+    <Fragment>
       {/* Client Routes */}
       <Route path="/cliente" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -50,7 +50,7 @@ export const ClientRoutes = () => {
           <CashbackMarketplace />
         </Suspense>
       } />
-    </>
+    </Fragment>
   );
 };
 

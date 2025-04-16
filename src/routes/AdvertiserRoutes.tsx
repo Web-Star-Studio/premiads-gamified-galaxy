@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, Fragment } from "react";
 import { Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -19,7 +19,7 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const AdvertiserRoutes = () => {
   return (
-    <>
+    <Fragment>
       {/* Advertiser Routes */}
       <Route path="/anunciante" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -61,7 +61,7 @@ export const AdvertiserRoutes = () => {
           <AdvertiserSettings />
         </Suspense>
       } />
-    </>
+    </Fragment>
   );
 };
 

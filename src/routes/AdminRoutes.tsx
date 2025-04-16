@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, Fragment } from "react";
 import { Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -19,7 +19,7 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const AdminRoutes = () => {
   return (
-    <>
+    <Fragment>
       {/* Admin Routes */}
       <Route path="/admin" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -66,7 +66,7 @@ export const AdminRoutes = () => {
           <SettingsPage />
         </Suspense>
       } />
-    </>
+    </Fragment>
   );
 };
 
