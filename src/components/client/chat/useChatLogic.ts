@@ -1,131 +1,96 @@
 
-import { useState, useEffect, useRef } from "react";
-import { useSounds } from "@/hooks/use-sounds";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Message } from "./types";
+import { useSounds } from "@/hooks/use-sounds";
 
-export interface UseChatLogicReturn {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  message: string;
-  messages: Message[];
-  isTyping: boolean;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
-  inputRef: React.RefObject<HTMLInputElement>;
-  setMessage: (message: string) => void;
-  toggleChat: () => void;
-  handleSendMessage: () => void;
-  handleKeyPress: (e: React.KeyboardEvent) => void;
-  closeChat: () => void;
-}
-
-export const useChatLogic = (): UseChatLogicReturn => {
+export const useChatLogic = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      content: "Olá! Como posso ajudar você hoje?",
+      sender: "agent",
+      timestamp: new Date().toISOString()
+    }
+  ]);
   const [isTyping, setIsTyping] = useState(false);
-  const { playSound } = useSounds();
-  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { playSound } = useSounds();
 
-  // Mensagem inicial de saudação
-  useEffect(() => {
-    if (messages.length === 0 && isOpen) {
-      setIsTyping(true);
-      setTimeout(() => {
-        setMessages([
-          {
-            id: 1,
-            text: "Olá! Como posso ajudar você hoje?",
-            sender: "agent",
-            timestamp: new Date(),
-          },
-        ]);
-        setIsTyping(false);
-      }, 1500);
-    }
-  }, [isOpen, messages.length]);
-
-  // Rolagem automática para o final das mensagens
+  // Auto-scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages]);
 
-  // Foco no input quando o chat é aberto
+  // Focus input when chat is opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
         inputRef.current?.focus();
-      }, 300);
+      }, 100);
     }
   }, [isOpen]);
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
+  const toggleChat = useCallback(() => {
+    setIsOpen(prev => !prev);
     playSound("pop");
-  };
+  }, [playSound]);
 
-  const handleSendMessage = () => {
-    if (message.trim() === "") return;
+  const closeChat = useCallback(() => {
+    setIsOpen(false);
+    playSound("pop");
+  }, [playSound]);
 
-    // Adiciona mensagem do usuário
-    const newUserMessage: Message = {
-      id: Date.now(),
-      text: message,
+  const handleSendMessage = useCallback(() => {
+    if (!message.trim()) return;
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: message,
       sender: "user",
-      timestamp: new Date(),
+      timestamp: new Date().toISOString()
     };
-    
-    setMessages((prev) => [...prev, newUserMessage]);
+
+    setMessages(prev => [...prev, userMessage]);
     setMessage("");
     playSound("pop");
 
-    // Simula digitação do agente
+    // Simulate typing indicator
     setIsTyping(true);
-    
-    // Simula resposta do agente após um atraso
+
+    // Simulate response after a delay
     setTimeout(() => {
       const responses = [
-        "Entendi! Vou verificar isso para você.",
-        "Obrigado por explicar. Posso ajudar com mais alguma coisa?",
-        "Essa é uma ótima pergunta. Deixe-me consultar mais informações.",
-        "Estamos trabalhando para resolver esse problema o mais rápido possível.",
-        "Suas missões estão indo muito bem! Continue assim para ganhar mais pontos.",
+        "Obrigado pelo seu contato! Um agente entrará em contato em breve.",
+        "Entendi sua dúvida. Vamos resolver isso rapidamente.",
+        "Vou verificar essa informação e retorno para você.",
+        "Claro, posso ajudar com isso. Poderia fornecer mais detalhes?",
+        "Essa é uma ótima pergunta. Deixe-me consultar e volto com a resposta.",
       ];
-      
+
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
-      const newAgentMessage: Message = {
-        id: Date.now() + 1,
-        text: randomResponse,
+      const agentMessage: Message = {
+        id: Date.now().toString(),
+        content: randomResponse,
         sender: "agent",
-        timestamp: new Date(),
+        timestamp: new Date().toISOString()
       };
-      
-      setMessages((prev) => [...prev, newAgentMessage]);
+
+      setMessages(prev => [...prev, agentMessage]);
       setIsTyping(false);
       playSound("chime");
-    }, 2000);
-  };
+    }, 1500);
+  }, [message, playSound]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSendMessage();
     }
-  };
-
-  const closeChat = () => {
-    setIsOpen(false);
-    playSound("pop");
-    
-    if (messages.length > 1) {
-      toast({
-        title: "Chat encerrado",
-        description: "Histórico de conversa disponível em seu perfil",
-      });
-    }
-  };
+  }, [handleSendMessage]);
 
   return {
     isOpen,

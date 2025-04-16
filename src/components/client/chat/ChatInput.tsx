@@ -1,62 +1,47 @@
 
-import { FC, RefObject, memo, useCallback } from "react";
+import { FC, RefObject, ChangeEvent } from "react";
 import { Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   message: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onSend: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   inputRef: RefObject<HTMLInputElement>;
-  placeholder?: string;
 }
 
-const ChatInput: FC<ChatInputProps> = ({ 
-  message, 
-  onChange, 
-  onSend, 
-  onKeyPress, 
+const ChatInput: FC<ChatInputProps> = ({
+  message,
+  onChange,
+  onSend,
+  onKeyPress,
   inputRef,
-  placeholder = "Digite sua mensagem..."
 }) => {
-  const isDisabled = !message.trim();
-  
-  // Use useCallback to prevent recreating this function on every render
-  const handleSend = useCallback(() => {
-    if (!isDisabled) {
-      onSend();
-    }
-  }, [isDisabled, onSend]);
-  
   return (
-    <div className="border-t border-galaxy-purple/30 p-4 bg-galaxy-darkPurple/30">
+    <div className="p-4 border-t border-galaxy-purple/30 bg-gradient-to-r from-galaxy-purple/10 to-galaxy-blue/10">
       <div className="flex gap-2">
-        <Input
+        <input
           ref={inputRef}
-          className="flex-1 bg-galaxy-deepPurple/70 border-galaxy-purple/30 focus-visible:ring-neon-cyan/50"
-          placeholder={placeholder}
+          type="text"
           value={message}
           onChange={onChange}
           onKeyDown={onKeyPress}
-          aria-label="Mensagem de chat"
+          placeholder="Digite sua mensagem..."
+          className="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-neon-cyan text-white placeholder:text-gray-400"
         />
-        <button
-          onClick={handleSend}
-          disabled={isDisabled}
-          aria-label="Enviar mensagem"
-          className={`p-2 rounded-full transition-colors ${
-            isDisabled
-              ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-              : "bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
-          }`}
+        <Button 
+          onClick={onSend} 
+          disabled={!message.trim()} 
+          variant="default" 
+          size="icon"
+          className="rounded-full bg-neon-cyan text-galaxy-dark"
         >
-          <Send size={18} />
-        </button>
+          <Send className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   );
 };
 
-// Use memo to prevent unnecessary re-renders
-export default memo(ChatInput);
+export default ChatInput;

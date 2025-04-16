@@ -1,39 +1,29 @@
 
-import { FC, memo, useCallback } from "react";
+import { FC } from "react";
 import { X } from "lucide-react";
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface ChatHeaderProps {
   onClose: () => void;
-  title?: string;
 }
 
-/**
- * Header component for chat interface
- * Displays title and close button
- */
-const ChatHeader: FC<ChatHeaderProps> = ({ 
-  onClose, 
-  title = "Atendimento" 
-}) => {
-  const handleCloseChat = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
+const ChatHeader: FC<ChatHeaderProps> = ({ onClose }) => {
   return (
-    <SheetHeader className="border-b border-galaxy-purple/30 p-4">
+    <div className="p-4 border-b border-galaxy-purple/30 bg-gradient-to-r from-galaxy-purple/20 to-galaxy-blue/20">
       <div className="flex items-center justify-between">
-        <SheetTitle className="text-lg font-heading">{title}</SheetTitle>
-        <button
-          onClick={handleCloseChat}
-          className="rounded-full h-8 w-8 flex items-center justify-center hover:bg-galaxy-deepPurple/50 text-gray-400 hover:text-white transition-colors"
-          aria-label="Fechar chat"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-neon-lime animate-pulse"></div>
+          <h3 className="font-heading text-lg">Suporte</h3>
+        </div>
+        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+          <X className="h-5 w-5" />
+        </Button>
       </div>
-    </SheetHeader>
+      <p className="text-sm text-gray-400 mt-1">
+        Tempo estimado de resposta: 5 minutos
+      </p>
+    </div>
   );
 };
 
-export default memo(ChatHeader);
+export default ChatHeader;

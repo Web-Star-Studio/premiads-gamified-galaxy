@@ -1,35 +1,32 @@
 
-import React from "react";
-import { motion } from "framer-motion";
+import { FC } from "react";
 import { Message } from "./types";
+import { cn } from "@/lib/utils";
 
 interface ChatBubbleProps {
   message: Message;
 }
 
-const ChatBubble = ({ message }: ChatBubbleProps) => {
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+const ChatBubble: FC<ChatBubbleProps> = ({ message }) => {
+  const isAgent = message.sender === "agent";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} mb-4`}
+    <div
+      className={cn(
+        "flex w-max max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 text-sm",
+        isAgent
+          ? "ml-0 mr-auto bg-galaxy-deepPurple/70"
+          : "ml-auto mr-0 bg-galaxy-purple"
+      )}
     >
-      <div className={`max-w-[80%] ${
-        message.sender === "user" 
-          ? "bg-neon-pink/20 rounded-t-lg rounded-bl-lg" 
-          : "bg-galaxy-purple/30 rounded-t-lg rounded-br-lg"
-      } p-3 relative`}>
-        <p className="text-sm">{message.text}</p>
-        <span className="text-xs text-gray-400 block mt-1 text-right">
-          {formatTime(message.timestamp)}
-        </span>
+      <div className="text-white">{message.content}</div>
+      <div className="ml-auto text-xs text-white/50">
+        {new Date(message.timestamp).toLocaleTimeString([], { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -83,9 +83,13 @@ const MainHeader = () => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center">
-          <a href="#" className="text-xl sm:text-2xl font-bold font-heading neon-text-cyan">
+          <Button 
+            variant="ghost" 
+            className="text-xl sm:text-2xl font-bold font-heading neon-text-cyan p-0"
+            onClick={() => navigate("/")}
+          >
             <span className="text-white">Premi</span>Ads
-          </a>
+          </Button>
         </div>
 
         {/* Desktop Navigation */}
