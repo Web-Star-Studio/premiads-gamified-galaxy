@@ -4,4 +4,5 @@ export { default as CampaignHeader } from './CampaignHeader';
 export { default as CampaignContent } from './CampaignContent';
 export { default as CampaignFooter } from './CampaignFooter';
 export { default as RedemptionDialog } from './RedemptionDialog';
+export { default as CampaignCardSkeleton } from './CampaignCardSkeleton';
 export { formatDate, getImage, defaultLogo } from './utils';

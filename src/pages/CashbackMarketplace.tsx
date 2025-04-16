@@ -122,6 +122,7 @@ const CashbackMarketplace: React.FC = () => {
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
               discountRange={discountRange}
+              isLoading={loading}
             />
 
             {/* Help banner */}

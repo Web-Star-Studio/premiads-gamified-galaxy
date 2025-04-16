@@ -5,6 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CashbackCampaign } from '@/types/cashback';
 import CashbackCampaignCard from './CashbackCampaignCard';
+import { CampaignCardSkeleton } from './campaign-card';
 
 interface CashbackTabsContentProps {
   currentTab: string;
@@ -16,6 +17,7 @@ interface CashbackTabsContentProps {
   searchTerm: string;
   selectedCategory: string;
   discountRange: [number, number];
+  isLoading?: boolean;
 }
 
 const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
@@ -27,7 +29,8 @@ const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
   clearFilters,
   searchTerm,
   selectedCategory,
-  discountRange
+  discountRange,
+  isLoading = false
 }) => {
   return (
     <Tabs 
@@ -52,7 +55,14 @@ const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
       </TabsList>
 
       <div className="mt-6">
-        {filteredCampaigns.length > 0 ? (
+        {isLoading ? (
+          // Display skeleton cards while loading
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <CampaignCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : filteredCampaigns.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCampaigns.map((campaign) => (
               <CashbackCampaignCard

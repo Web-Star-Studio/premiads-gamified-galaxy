@@ -13,17 +13,20 @@ import {
   getImage,
   defaultLogo
 } from './campaign-card';
+import CampaignCardSkeleton from './campaign-card/CampaignCardSkeleton';
 
 interface CashbackCampaignCardProps {
   campaign: CashbackCampaign;
   userCashback: number;
   onRedeem: (campaignId: string, amount: number) => Promise<any>;
+  isLoading?: boolean;
 }
 
 export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({ 
   campaign, 
   userCashback,
-  onRedeem 
+  onRedeem,
+  isLoading = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -37,6 +40,19 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
       setIsRedeeming(false);
     }
   };
+
+  // If loading, show the skeleton
+  if (isLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <CampaignCardSkeleton />
+      </motion.div>
+    );
+  }
 
   const imageUrl = getImage(campaign.id, campaign.advertiser_image);
 
