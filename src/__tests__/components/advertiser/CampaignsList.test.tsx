@@ -1,6 +1,6 @@
 
-import { render, screen, fireEvent, waitFor, getByTextContent } from "@/utils/test-utils";
-import CampaignsList from "@/components/advertiser/campaigns/CampaignsList";
+import { render, screen, fireEvent, waitFor } from "@/utils/test-utils";
+import CampaignsList from "@/components/advertiser/CampaignsList";
 import { mockCampaigns } from "@/mocks/campaignMocks";
 import { useNavigate } from "react-router-dom";
 import { useSounds } from "@/hooks/use-sounds";

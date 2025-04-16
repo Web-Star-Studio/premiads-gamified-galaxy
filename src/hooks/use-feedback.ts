@@ -11,6 +11,15 @@ interface UseFeedbackOptions {
   playSounds?: boolean;
 }
 
+interface WithFeedbackOptions {
+  successTitle?: string;
+  successDescription?: string;
+  errorTitle?: string;
+  errorDescription?: string;
+  showSuccessFeedback?: boolean;
+  showErrorFeedback?: boolean;
+}
+
 /**
  * Hook for managing loading states and feedback notifications
  */
@@ -27,7 +36,8 @@ export const useFeedback = (options: UseFeedbackOptions = {}) => {
         info: 'notification',
         warning: 'notification'
       };
-      playSound(soundMap[type]);
+      // Use type assertion to ensure compatibility with SoundType
+      playSound(soundMap[type] as 'success' | 'error' | 'notification' | 'click' | 'reward' | 'pop' | 'chime');
     }
     
     switch (type) {
@@ -58,7 +68,7 @@ export const useFeedback = (options: UseFeedbackOptions = {}) => {
       errorDescription,
       showSuccessFeedback = true,
       showErrorFeedback = true,
-    } = {}
+    }: WithFeedbackOptions = {}
   ): Promise<T | undefined> => {
     setIsLoading(true);
     
