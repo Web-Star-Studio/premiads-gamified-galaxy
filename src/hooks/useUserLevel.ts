@@ -26,24 +26,25 @@ export function useUserLevel(points: number, userId?: string) {
           // Convert the benefits JSON to the correct type
           const typedLevelsData = levelsData.map(level => {
             // Safely extract benefits with default values
-            let benefitsObj = {};
+            let benefitsObj: Record<string, any> = {};
             try {
               // If benefits is a string, parse it, otherwise use it directly
-              benefitsObj = typeof level.benefits === 'string' 
-                ? JSON.parse(level.benefits) 
-                : level.benefits || {};
+              if (typeof level.benefits === 'string') {
+                benefitsObj = JSON.parse(level.benefits);
+              } else if (level.benefits && typeof level.benefits === 'object') {
+                benefitsObj = level.benefits;
+              }
             } catch (e) {
               console.error("Error parsing benefits JSON:", e);
-              benefitsObj = {};
             }
             
             return {
               ...level,
               benefits: {
-                ticket_discount: benefitsObj?.ticket_discount || 0,
-                access_to_exclusive_raffles: benefitsObj?.access_to_exclusive_raffles || false,
-                priority_support: benefitsObj?.priority_support || false,
-                early_access: benefitsObj?.early_access || false
+                ticket_discount: benefitsObj.ticket_discount ?? 0,
+                access_to_exclusive_raffles: benefitsObj.access_to_exclusive_raffles ?? false,
+                priority_support: benefitsObj.priority_support ?? false,
+                early_access: benefitsObj.early_access ?? false
               }
             };
           }) as UserLevel[];
