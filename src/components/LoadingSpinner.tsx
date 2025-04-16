@@ -1,18 +1,21 @@
 
 import { memo } from "react";
+import { motion } from "framer-motion";
 
-/**
- * Full-screen loading spinner with overlay
- * Used for route transitions and async operations
- */
 const LoadingSpinner = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark bg-opacity-80">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mb-4" 
-             aria-hidden="true"></div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center"
+      >
+        <div 
+          className="w-12 h-12 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mb-4" 
+          aria-hidden="true"
+        />
         <p className="text-neon-cyan font-heading">Carregando...</p>
-      </div>
+      </motion.div>
     </div>
   );
 };
