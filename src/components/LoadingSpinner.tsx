@@ -11,10 +11,9 @@ const LoadingSpinner = () => {
         className="text-center"
       >
         <div 
-          className="w-12 h-12 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin mb-4" 
-          aria-hidden="true"
+          className="w-12 h-12 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin"
+          aria-label="Loading"
         />
-        <p className="text-neon-cyan font-heading">Carregando...</p>
       </motion.div>
     </div>
   );
