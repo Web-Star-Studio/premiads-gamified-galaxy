@@ -186,7 +186,7 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
                     </div>
                     <div className="flex items-center">
                       <Users className="w-3 h-3 mr-1" />
-                      <span>{raffle.participants} participantes</span>
+                      <span>{raffle.totalParticipants} participantes</span>
                     </div>
                   </div>
                   
