@@ -6,76 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSounds } from "@/hooks/use-sounds";
-
-// Mock data for available raffles
-const RAFFLES = [
-  {
-    id: 1,
-    name: "Sorteio Semanal de Pontos",
-    description: "Acumule pontos extras para usar em outras promoções e vantagens exclusivas.",
-    endDate: "2025-04-22",
-    drawDate: "2025-04-23",
-    status: "active",
-    ticketsRequired: 1,
-    participants: 147,
-    totalTickets: 500,
-    soldTickets: 238,
-    progress: 47,
-    imageUrl: "https://source.unsplash.com/random/300x200/?prize",
-    prizes: [
-      { name: "5000 Pontos", rarity: "common" },
-      { name: "10000 Pontos", rarity: "uncommon" },
-      { name: "Premium por 1 mês", rarity: "rare" }
-    ],
-    minPointsReachedAt: null,
-    isAutoScheduled: true,
-    minPoints: 10000
-  },
-  {
-    id: 2,
-    name: "Loot Box Especial",
-    description: "Ganhe itens raros e exclusivos para personalizar sua experiência.",
-    endDate: "2025-04-24",
-    drawDate: "2025-04-25",
-    status: "active",
-    ticketsRequired: 3,
-    participants: 72,
-    totalTickets: 200,
-    soldTickets: 86,
-    progress: 43,
-    imageUrl: "https://source.unsplash.com/random/300x200/?lootbox",
-    prizes: [
-      { name: "Skin Exclusiva", rarity: "common" },
-      { name: "Título Raro", rarity: "uncommon" },
-      { name: "Pacote VIP", rarity: "legendary" }
-    ],
-    minPointsReachedAt: "2025-04-19T14:30:00Z",
-    isAutoScheduled: true,
-    minPoints: 5000
-  },
-  {
-    id: 3,
-    name: "Sorteio de Eletrônicos",
-    description: "Concorra a incríveis produtos eletrônicos que serão enviados para sua casa.",
-    endDate: "2025-05-10",
-    drawDate: "2025-05-12",
-    status: "active",
-    ticketsRequired: 5,
-    participants: 238,
-    totalTickets: 1000,
-    soldTickets: 680,
-    progress: 68,
-    imageUrl: "https://source.unsplash.com/random/300x200/?electronics",
-    prizes: [
-      { name: "Fone de Ouvido", rarity: "uncommon" },
-      { name: "SmartWatch", rarity: "rare" },
-      { name: "Smartphone", rarity: "legendary" }
-    ],
-    minPointsReachedAt: "2025-04-15T10:00:00Z",
-    isAutoScheduled: true,
-    minPoints: 30000
-  }
-];
+import { RAFFLES } from "./hooks/data/mockRaffles";
 
 interface RaffleListProps {
   onSelectRaffle: (raffleId: number) => void;
