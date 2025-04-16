@@ -1,7 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
+import { useUserLevel } from "@/hooks/useUserLevel";
+import { supabase } from "@/integrations/supabase/client";
 
 const POINTS_PER_TICKET = 100;
 
@@ -14,9 +16,43 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
   const [isParticipating, setIsParticipating] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
   const [purchaseMode, setPurchaseMode] = useState<'tickets' | 'points'>('tickets');
+  const { levelInfo } = useUserLevel(userPoints);
   
   const remainingSlots = maxTicketsPerUser - participationCount;
-  const pointsNeeded = purchaseAmount * ticketsRequired * POINTS_PER_TICKET;
+  
+  // Calculate points needed with level discount (if available)
+  const calculatePointsNeeded = () => {
+    if (!levelInfo) return purchaseAmount * ticketsRequired * POINTS_PER_TICKET;
+    
+    const discount = levelInfo.currentLevel.benefits.ticket_discount / 100;
+    const basePointsNeeded = purchaseAmount * ticketsRequired * POINTS_PER_TICKET;
+    return Math.round(basePointsNeeded * (1 - discount));
+  };
+  
+  const pointsNeeded = calculatePointsNeeded();
+  
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user?.id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileData) {
+          setUserPoints(profileData.points);
+        }
+        
+        // Here we would also fetch tickets information
+      }
+    };
+    
+    fetchUserData();
+  }, []);
   
   const canPurchaseWithTickets = () => {
     return (
@@ -90,6 +126,12 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
     }, 1500);
   };
   
+  // Get discount percentage from user level
+  const getDiscountPercentage = () => {
+    if (!levelInfo) return 0;
+    return levelInfo.currentLevel.benefits.ticket_discount;
+  };
+  
   return {
     userTickets,
     userPoints,
@@ -104,6 +146,8 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
     handleIncreasePurchase,
     handlePurchase,
     setPurchaseMode,
-    remainingSlots
+    remainingSlots,
+    discountPercentage: getDiscountPercentage(),
+    currentLevelName: levelInfo?.currentLevel.name || 'Bronze'
   };
 };

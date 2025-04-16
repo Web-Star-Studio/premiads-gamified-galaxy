@@ -4,15 +4,17 @@ import { Progress } from "@/components/ui/progress";
 import { useSounds } from "@/hooks/use-sounds";
 import { useEffect } from "react";
 import { Award, TrendingUp } from "lucide-react";
+import { useUserLevel } from "@/hooks/useUserLevel";
 
 interface PointsCardProps {
   points: number;
-  level: number;
-  progress: number;
+  level?: number; // Keep for backward compatibility
+  progress?: number; // Keep for backward compatibility
 }
 
-const PointsCard = ({ points, level, progress }: PointsCardProps) => {
+const PointsCard = ({ points }: PointsCardProps) => {
   const { playSound } = useSounds();
+  const { levelInfo, loading } = useUserLevel(points);
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,36 +47,58 @@ const PointsCard = ({ points, level, progress }: PointsCardProps) => {
           </div>
         </div>
         
-        <motion.div 
-          className="flex items-center gap-2 px-3 py-1 bg-galaxy-deepPurple rounded-full"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Award className="w-4 h-4 text-neon-pink" />
-          <span className="text-sm font-semibold">Nível {level}</span>
-        </motion.div>
+        {!loading && levelInfo && (
+          <motion.div 
+            className="flex items-center gap-2 px-3 py-1 rounded-full"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ 
+              backgroundColor: `${levelInfo.currentLevel.color}30`,
+              borderColor: levelInfo.currentLevel.color,
+              borderWidth: '1px'
+            }}
+          >
+            <Award className="w-4 h-4" style={{ color: levelInfo.currentLevel.color }} />
+            <span className="text-sm font-semibold" style={{ color: levelInfo.currentLevel.color }}>
+              {levelInfo.currentLevel.name}
+            </span>
+          </motion.div>
+        )}
       </div>
       
       <div className="mt-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-400">Progresso para o próximo nível</span>
-          <span className="text-xs font-medium text-neon-cyan">{progress}%</span>
-        </div>
-        <motion.div
-          initial={{ opacity: 0, width: 0 }}
-          animate={{ opacity: 1, width: "100%" }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <Progress 
-            value={progress} 
-            className="h-2 bg-galaxy-deepPurple/50" 
-          />
-        </motion.div>
-      </div>
-      
-      <div className="flex justify-between mt-3">
-        <span className="text-xs text-gray-500">Nível {level}</span>
-        <span className="text-xs text-gray-500">Nível {level + 1}</span>
+        {!loading && levelInfo && levelInfo.nextLevel && (
+          <>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-400">
+                Progresso para {levelInfo.nextLevel.name}
+              </span>
+              <span className="text-xs font-medium text-neon-cyan">{levelInfo.progress}%</span>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "100%" }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              <Progress 
+                value={levelInfo.progress} 
+                className="h-2 bg-galaxy-deepPurple/50" 
+                indicatorClassName="bg-gradient-to-r from-[#8A2387] via-[#E94057] to-[#F27121]"
+              />
+            </motion.div>
+            
+            <div className="flex justify-between mt-3">
+              <span className="text-xs text-gray-500">{levelInfo.currentLevel.name}</span>
+              <span className="text-xs text-gray-500">{levelInfo.nextLevel.name}</span>
+            </div>
+          </>
+        )}
+        
+        {!loading && levelInfo && !levelInfo.nextLevel && (
+          <div className="mt-2 text-center py-2 px-3 bg-galaxy-deepPurple/50 rounded-md border border-neon-pink/30">
+            <span className="text-sm text-neon-pink">Nível máximo atingido!</span>
+          </div>
+        )}
       </div>
     </motion.div>
   );

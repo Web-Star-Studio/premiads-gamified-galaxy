@@ -1,7 +1,8 @@
 
-import { Trophy, TrendingUp } from "lucide-react";
+import { Trophy, TrendingUp, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
+import { useUserLevel } from "@/hooks/useUserLevel";
 import { useEffect } from "react";
 
 interface LifetimePointsProps {
@@ -12,6 +13,7 @@ interface LifetimePointsProps {
 
 const LifetimePoints = ({ totalPoints, rank, totalUsers }: LifetimePointsProps) => {
   const { playSound } = useSounds();
+  const { levelInfo, loading } = useUserLevel(totalPoints);
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,6 +44,20 @@ const LifetimePoints = ({ totalPoints, rank, totalUsers }: LifetimePointsProps) 
         <span className="text-3xl font-bold text-white">{totalPoints.toLocaleString()}</span>
         <span className="ml-1 text-sm text-neon-pink">pontos</span>
       </div>
+      
+      {!loading && levelInfo && (
+        <div className="flex items-center gap-2 mt-2">
+          <Award className="w-4 h-4" style={{ color: levelInfo.currentLevel.color }} />
+          <span style={{ color: levelInfo.currentLevel.color }}>
+            Nível {levelInfo.currentLevel.name}
+          </span>
+          {levelInfo.nextLevel && (
+            <span className="text-xs text-gray-400">
+              ({levelInfo.pointsToNextLevel} pontos para {levelInfo.nextLevel.name})
+            </span>
+          )}
+        </div>
+      )}
       
       <div className="mt-6 pt-4 border-t border-galaxy-purple/20">
         <div className="flex items-center justify-between">

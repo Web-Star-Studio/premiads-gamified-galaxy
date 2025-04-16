@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Gift, Plus, Minus, Ticket, CreditCard } from "lucide-react";
+import { AlertTriangle, Gift, Plus, Minus, Ticket, CreditCard, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ParticipationCardProps {
   ticketsRequired: number;
@@ -20,6 +21,8 @@ interface ParticipationCardProps {
   canPurchaseWithTickets: boolean;
   canPurchaseWithPoints: boolean;
   pointsNeeded: number;
+  discountPercentage?: number;
+  currentLevelName?: string;
 }
 
 const ParticipationCard = ({
@@ -37,7 +40,9 @@ const ParticipationCard = ({
   handleIncreasePurchase,
   canPurchaseWithTickets,
   canPurchaseWithPoints,
-  pointsNeeded
+  pointsNeeded,
+  discountPercentage = 0,
+  currentLevelName = 'Bronze'
 }: ParticipationCardProps) => {
   const remainingSlots = maxTicketsPerUser - participationCount;
 
@@ -126,9 +131,26 @@ const ParticipationCard = ({
                 Custo: <span className="text-neon-cyan">{purchaseAmount} tickets</span>
               </div>
             ) : (
-              <div className="text-sm text-gray-400">
-                Custo: <span className="text-neon-pink">{pointsNeeded} pontos</span> 
-                <span className="text-xs ml-1">({purchaseAmount} x {ticketsRequired} tickets x 100 pontos)</span>
+              <div className="flex flex-col gap-1">
+                <div className="text-sm text-gray-400 flex items-center justify-between">
+                  <div>
+                    Custo: <span className="text-neon-pink">{pointsNeeded} pontos</span> 
+                    <span className="text-xs ml-1">({purchaseAmount} x {ticketsRequired} tickets x 100 pontos)</span>
+                  </div>
+                  
+                  {discountPercentage > 0 && (
+                    <Badge className="bg-gradient-to-r from-neon-cyan to-neon-pink text-white">
+                      -{discountPercentage}%
+                    </Badge>
+                  )}
+                </div>
+                
+                {discountPercentage > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <Award className="w-3 h-3 text-neon-cyan" />
+                    <span>Benefício nível {currentLevelName}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -141,6 +163,30 @@ const ParticipationCard = ({
               </div>
             </div>
           )}
+          
+          <Button 
+            className="neon-button w-full"
+            disabled={
+              (purchaseMode === 'tickets' && !canPurchaseWithTickets) || 
+              (purchaseMode === 'points' && !canPurchaseWithPoints) ||
+              isParticipating
+            }
+            onClick={onPurchase}
+          >
+            {isParticipating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-t-white/20 border-white rounded-full animate-spin mr-2"></div>
+                Processando...
+              </>
+            ) : (
+              <>
+                <Gift className="w-4 h-4 mr-2" />
+                {purchaseMode === 'tickets' 
+                  ? `Participar com ${purchaseAmount} ticket${purchaseAmount > 1 ? 's' : ''}` 
+                  : `Comprar com ${pointsNeeded} pontos`}
+              </>
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>

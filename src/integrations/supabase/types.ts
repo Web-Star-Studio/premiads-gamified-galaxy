@@ -220,10 +220,12 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           credits: number | null
+          current_level_id: number | null
           description: string | null
           email_notifications: boolean | null
           full_name: string | null
           id: string
+          next_points_threshold: number | null
           phone: string | null
           points: number
           profile_completed: boolean | null
@@ -237,10 +239,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           credits?: number | null
+          current_level_id?: number | null
           description?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          next_points_threshold?: number | null
           phone?: string | null
           points?: number
           profile_completed?: boolean | null
@@ -254,10 +258,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           credits?: number | null
+          current_level_id?: number | null
           description?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          next_points_threshold?: number | null
           phone?: string | null
           points?: number
           profile_completed?: boolean | null
@@ -267,7 +273,15 @@ export type Database = {
           user_type?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_level_id_fkey"
+            columns: ["current_level_id"]
+            isOneToOne: false
+            referencedRelation: "user_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       raffle_numbers: {
         Row: {
@@ -433,11 +447,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_levels: {
+        Row: {
+          benefits: Json | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: number
+          max_points: number | null
+          min_points: number
+          name: string
+          points_multiplier: number
+          updated_at: string
+        }
+        Insert: {
+          benefits?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: number
+          max_points?: number | null
+          min_points: number
+          name: string
+          points_multiplier: number
+          updated_at?: string
+        }
+        Update: {
+          benefits?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: number
+          max_points?: number | null
+          min_points?: number
+          name?: string
+          points_multiplier?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      increment_points_with_multiplier: {
+        Args: { points_to_add: number; user_id: string }
+        Returns: undefined
+      }
       select_raffle_winner: {
         Args: { raffle_id: string }
         Returns: string
