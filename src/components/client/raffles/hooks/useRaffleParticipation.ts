@@ -7,7 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 const POINTS_PER_TICKET = 100;
 
-export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequired: number) => {
+export const useRaffleParticipation = (
+  maxTicketsPerUser: number, 
+  ticketsRequired: number,
+  isParticipationClosed: boolean = false
+) => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [userTickets, setUserTickets] = useState(8); // Mock data - would come from API
@@ -57,14 +61,16 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
   const canPurchaseWithTickets = () => {
     return (
       userTickets >= purchaseAmount && 
-      participationCount + purchaseAmount <= maxTicketsPerUser
+      participationCount + purchaseAmount <= maxTicketsPerUser &&
+      !isParticipationClosed
     );
   };
   
   const canPurchaseWithPoints = () => {
     return (
       userPoints >= pointsNeeded && 
-      participationCount + purchaseAmount <= maxTicketsPerUser
+      participationCount + purchaseAmount <= maxTicketsPerUser &&
+      !isParticipationClosed
     );
   };
   
@@ -81,6 +87,16 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
   };
   
   const handlePurchase = () => {
+    if (isParticipationClosed) {
+      toast({
+        title: "Participação encerrada",
+        description: "Este sorteio não está mais aceitando novas participações pois falta menos de 1 hora para o sorteio.",
+        variant: "destructive",
+      });
+      playSound("error");
+      return;
+    }
+    
     if (purchaseMode === 'tickets' && !canPurchaseWithTickets()) {
       toast({
         title: "Não foi possível participar",
@@ -148,6 +164,7 @@ export const useRaffleParticipation = (maxTicketsPerUser: number, ticketsRequire
     setPurchaseMode,
     remainingSlots,
     discountPercentage: getDiscountPercentage(),
-    currentLevelName: levelInfo?.currentLevel.name || 'Bronze'
+    currentLevelName: levelInfo?.currentLevel.name || 'Bronze',
+    isParticipationClosed
   };
 };

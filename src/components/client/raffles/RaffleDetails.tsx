@@ -7,7 +7,8 @@ import RaffleHeader from "./components/RaffleHeader";
 import RaffleInfoCard from "./components/RaffleInfoCard";
 import RafflePrizesCard from "./components/RafflePrizesCard";
 import ParticipationCard from "./components/ParticipationCard";
-import PurchaseButton from "./components/PurchaseButton";
+import CountdownBadge from "./components/CountdownBadge";
+import { useToast } from "@/hooks/use-toast";
 
 interface RaffleDetailsProps {
   raffleId: number;
@@ -15,9 +16,10 @@ interface RaffleDetailsProps {
 
 const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
   // Fetch raffle data
-  const { raffle } = useRaffleData(raffleId);
+  const { raffle, isLoading, countdownInfo } = useRaffleData(raffleId);
+  const { toast } = useToast();
   
-  if (!raffle) {
+  if (isLoading || !raffle) {
     return (
       <div className="glass-panel p-6 h-full flex items-center justify-center">
         <div className="text-center">
@@ -42,11 +44,27 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
     handleDecreasePurchase,
     handleIncreasePurchase,
     handlePurchase,
-    setPurchaseMode
-  } = useRaffleParticipation(raffle.maxTicketsPerUser, raffle.ticketsRequired);
+    setPurchaseMode,
+    discountPercentage,
+    currentLevelName,
+    isParticipationClosed
+  } = useRaffleParticipation(
+    raffle.maxTicketsPerUser, 
+    raffle.ticketsRequired,
+    countdownInfo.isParticipationClosed
+  );
 
   return (
     <div className="glass-panel p-6">
+      {/* Countdown Badge for Raffles in Countdown */}
+      {countdownInfo.isCountingDown && (
+        <CountdownBadge 
+          timeRemaining={countdownInfo.timeRemaining}
+          isLastHour={countdownInfo.isLastHour}
+          isParticipationClosed={countdownInfo.isParticipationClosed}
+        />
+      )}
+      
       {/* Raffle Header with Image, Title and Progress */}
       <RaffleHeader 
         name={raffle.name}
@@ -67,6 +85,9 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
           totalParticipants={raffle.totalParticipants}
           ticketsRequired={raffle.ticketsRequired}
           maxTicketsPerUser={raffle.maxTicketsPerUser}
+          minPoints={raffle.minPoints}
+          isAutoScheduled={raffle.isAutoScheduled}
+          minPointsReachedAt={raffle.minPointsReachedAt}
         />
         
         <RafflePrizesCard prizes={raffle.prizes} />
@@ -89,21 +110,12 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
         canPurchaseWithTickets={canPurchaseWithTickets}
         canPurchaseWithPoints={canPurchaseWithPoints}
         pointsNeeded={pointsNeeded}
+        discountPercentage={discountPercentage}
+        currentLevelName={currentLevelName}
+        isParticipationClosed={countdownInfo.isParticipationClosed}
       />
       
-      {/* Purchase Button */}
-      <div className="flex justify-end">
-        <PurchaseButton 
-          isDisabled={(purchaseMode === 'tickets' && !canPurchaseWithTickets) || 
-                      (purchaseMode === 'points' && !canPurchaseWithPoints) || 
-                      isParticipating}
-          isParticipating={isParticipating}
-          purchaseMode={purchaseMode}
-          purchaseAmount={purchaseAmount}
-          pointsNeeded={pointsNeeded}
-          onClick={handlePurchase}
-        />
-      </div>
+      {/* Purchase Button - Now part of ParticipationCard component */}
     </div>
   );
 };

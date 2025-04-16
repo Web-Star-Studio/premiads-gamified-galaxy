@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Gift, Plus, Minus, Ticket, CreditCard, Award } from "lucide-react";
+import { AlertTriangle, Gift, Plus, Minus, Ticket, CreditCard, Award, Clock, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ParticipationCardProps {
@@ -23,6 +23,7 @@ interface ParticipationCardProps {
   pointsNeeded: number;
   discountPercentage?: number;
   currentLevelName?: string;
+  isParticipationClosed?: boolean;
 }
 
 const ParticipationCard = ({
@@ -42,7 +43,8 @@ const ParticipationCard = ({
   canPurchaseWithPoints,
   pointsNeeded,
   discountPercentage = 0,
-  currentLevelName = 'Bronze'
+  currentLevelName = 'Bronze',
+  isParticipationClosed = false
 }: ParticipationCardProps) => {
   const remainingSlots = maxTicketsPerUser - participationCount;
 
@@ -54,9 +56,16 @@ const ParticipationCard = ({
           Participar do Sorteio
         </CardTitle>
         <CardDescription>
-          {remainingSlots > 0 
-            ? `Você pode adicionar até ${remainingSlots} participações neste sorteio.`
-            : "Você atingiu o limite máximo de participações neste sorteio."}
+          {isParticipationClosed ? (
+            <div className="flex items-center text-amber-400">
+              <Lock className="w-3.5 h-3.5 mr-1" />
+              Participação encerrada: o sorteio ocorrerá em menos de 1 hora
+            </div>
+          ) : remainingSlots > 0 ? (
+            `Você pode adicionar até ${remainingSlots} participações neste sorteio.`
+          ) : (
+            "Você atingiu o limite máximo de participações neste sorteio."
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -69,7 +78,7 @@ const ParticipationCard = ({
                   size="sm" 
                   className="w-8 h-8 p-0"
                   onClick={handleDecreasePurchase}
-                  disabled={purchaseAmount <= 1 || isParticipating}
+                  disabled={purchaseAmount <= 1 || isParticipating || isParticipationClosed}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -79,7 +88,7 @@ const ParticipationCard = ({
                   size="sm" 
                   className="w-8 h-8 p-0"
                   onClick={handleIncreasePurchase}
-                  disabled={purchaseAmount >= remainingSlots || isParticipating}
+                  disabled={purchaseAmount >= remainingSlots || isParticipating || isParticipationClosed}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -92,7 +101,7 @@ const ParticipationCard = ({
                 variant={purchaseMode === 'tickets' ? "secondary" : "outline"}
                 size="sm"
                 onClick={() => setPurchaseMode('tickets')}
-                disabled={isParticipating}
+                disabled={isParticipating || isParticipationClosed}
                 className={purchaseMode === 'tickets' ? "bg-neon-cyan/20 text-neon-cyan" : "bg-galaxy-deepPurple/30"}
               >
                 <Ticket className="w-3 h-3 mr-1" />
@@ -102,7 +111,7 @@ const ParticipationCard = ({
                 variant={purchaseMode === 'points' ? "secondary" : "outline"}
                 size="sm"
                 onClick={() => setPurchaseMode('points')}
-                disabled={isParticipating}
+                disabled={isParticipating || isParticipationClosed}
                 className={purchaseMode === 'points' ? "bg-neon-pink/20 text-neon-pink" : "bg-galaxy-deepPurple/30"}
               >
                 <CreditCard className="w-3 h-3 mr-1" />
@@ -155,6 +164,15 @@ const ParticipationCard = ({
             )}
           </div>
           
+          {isParticipationClosed && (
+            <div className="bg-amber-500/10 p-3 rounded-md border border-amber-500/20 text-sm">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 text-amber-500 mr-2" />
+                <span>Este sorteio ocorrerá em menos de 1 hora e não aceita mais participações</span>
+              </div>
+            </div>
+          )}
+          
           {participationCount > 0 && (
             <div className="bg-galaxy-deepPurple/50 p-3 rounded-md border border-neon-cyan/20 text-sm">
               <div className="flex items-center">
@@ -169,7 +187,8 @@ const ParticipationCard = ({
             disabled={
               (purchaseMode === 'tickets' && !canPurchaseWithTickets) || 
               (purchaseMode === 'points' && !canPurchaseWithPoints) ||
-              isParticipating
+              isParticipating ||
+              isParticipationClosed
             }
             onClick={onPurchase}
           >
@@ -177,6 +196,11 @@ const ParticipationCard = ({
               <>
                 <div className="w-4 h-4 border-2 border-t-white/20 border-white rounded-full animate-spin mr-2"></div>
                 Processando...
+              </>
+            ) : isParticipationClosed ? (
+              <>
+                <Lock className="w-4 h-4 mr-2" />
+                Participação encerrada
               </>
             ) : (
               <>

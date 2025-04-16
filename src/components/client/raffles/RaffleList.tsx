@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Gift, Timer, Calendar, Award, Users, Search, Tag, Filter } from "lucide-react";
+import { Gift, Timer, Calendar, Award, Users, Search, Tag, Filter, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSounds } from "@/hooks/use-sounds";
+import { differenceInHours } from "date-fns";
 
 // Mock data for available raffles
 const RAFFLES = [
@@ -27,7 +28,10 @@ const RAFFLES = [
       { name: "5000 Pontos", rarity: "common" },
       { name: "10000 Pontos", rarity: "uncommon" },
       { name: "Premium por 1 mês", rarity: "rare" }
-    ]
+    ],
+    minPointsReachedAt: null,
+    isAutoScheduled: true,
+    minPoints: 10000
   },
   {
     id: 2,
@@ -46,7 +50,10 @@ const RAFFLES = [
       { name: "Skin Exclusiva", rarity: "common" },
       { name: "Título Raro", rarity: "uncommon" },
       { name: "Pacote VIP", rarity: "legendary" }
-    ]
+    ],
+    minPointsReachedAt: "2025-04-19T14:30:00Z",
+    isAutoScheduled: true,
+    minPoints: 5000
   },
   {
     id: 3,
@@ -65,7 +72,10 @@ const RAFFLES = [
       { name: "Fone de Ouvido", rarity: "uncommon" },
       { name: "SmartWatch", rarity: "rare" },
       { name: "Smartphone", rarity: "legendary" }
-    ]
+    ],
+    minPointsReachedAt: "2025-04-15T10:00:00Z",
+    isAutoScheduled: true,
+    minPoints: 30000
   }
 ];
 
@@ -130,6 +140,38 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
       default: return "text-gray-300";
     }
   };
+  
+  const getCountdownBadge = (raffle: any) => {
+    if (!raffle.minPointsReachedAt) return null;
+    
+    const minPointsDate = new Date(raffle.minPointsReachedAt);
+    const drawDate = new Date(raffle.drawDate);
+    const now = new Date();
+    
+    // Check if we're in the last hour
+    const oneHourBeforeDraw = new Date(drawDate);
+    oneHourBeforeDraw.setHours(oneHourBeforeDraw.getHours() - 1);
+    
+    if (now >= oneHourBeforeDraw && now <= drawDate) {
+      return (
+        <Badge className="absolute top-2 left-2 bg-amber-500 text-black border border-amber-400/50 flex items-center gap-1 px-2 py-0.5">
+          <AlertCircle className="w-3 h-3" />
+          Última hora!
+        </Badge>
+      );
+    }
+    
+    if (now >= minPointsDate && now <= drawDate) {
+      return (
+        <Badge className="absolute top-2 left-2 bg-blue-500 text-white border border-blue-400/50 flex items-center gap-1 px-2 py-0.5">
+          <Clock className="w-3 h-3" />
+          Contagem regressiva
+        </Badge>
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <div className="glass-panel p-6">
@@ -186,6 +228,10 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-galaxy-deepPurple/90 to-transparent" />
+                
+                {/* Countdown Badge */}
+                {getCountdownBadge(raffle)}
+                
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <h3 className="font-medium text-white text-lg">{raffle.name}</h3>
                 </div>
@@ -203,7 +249,11 @@ const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
                   <div className="flex justify-between text-xs text-gray-400">
                     <div className="flex items-center">
                       <Timer className="w-3 h-3 mr-1" />
-                      <span>Encerra em: {formatTimeRemaining(raffle.endDate)}</span>
+                      {raffle.isAutoScheduled && raffle.minPointsReachedAt ? (
+                        <span>Sorteio em: {formatTimeRemaining(raffle.drawDate)}</span>
+                      ) : (
+                        <span>Meta: {raffle.minPoints.toLocaleString('pt-BR')} pontos</span>
+                      )}
                     </div>
                     <div className="flex items-center">
                       <Users className="w-3 h-3 mr-1" />
