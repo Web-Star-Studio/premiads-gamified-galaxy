@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -34,6 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export const ClientSidebar = () => {
   const navigate = useNavigate();
