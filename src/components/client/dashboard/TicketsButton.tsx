@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClientDashboard } from "@/hooks/useClientDashboard";
+import { useToast } from "@/hooks/use-toast";
+import { useSounds } from "@/hooks/use-sounds";
 
 // Icon component for reusability
 const TicketIcon = () => {
@@ -29,11 +31,27 @@ const TicketButtonContent = () => {
 const TicketsButton = () => {
   const navigate = useNavigate();
   const { points } = useClientDashboard(navigate);
+  const { toast } = useToast();
+  const { playSound } = useSounds();
+  
+  const handleNavigateToRaffles = () => {
+    try {
+      playSound("pop");
+      navigate("/cliente/sorteios");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast({
+        title: "Erro de navegação",
+        description: "Não foi possível acessar a página de sorteios. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Button
       className="w-full neon-button py-6 px-4"
-      onClick={() => navigate("/cliente/sorteios")}
+      onClick={handleNavigateToRaffles}
     >
       <TicketButtonContent />
     </Button>

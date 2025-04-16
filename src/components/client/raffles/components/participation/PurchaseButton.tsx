@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Gift, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';
 
 interface PurchaseButtonProps {
   isDisabled: boolean;
@@ -38,12 +39,12 @@ const PurchaseButton = ({
       
       <Button 
         className="neon-button w-full"
-        disabled={isDisabled || isParticipationClosed}
+        disabled={isDisabled || isParticipationClosed || isParticipating}
         onClick={onClick}
       >
         {isParticipating ? (
           <>
-            <div className="w-4 h-4 border-2 border-t-white/20 border-white rounded-full animate-spin mr-2"></div>
+            <ButtonLoadingSpinner />
             Processando...
           </>
         ) : (

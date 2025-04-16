@@ -12,6 +12,7 @@ import TicketConversion from "@/components/client/raffles/TicketConversion";
 import ParticipationHistory from "@/components/client/raffles/ParticipationHistory";
 import { useSounds } from "@/hooks/use-sounds";
 import { RAFFLES } from "@/components/client/raffles/hooks/data/mockRaffles";
+import SupportTools from "@/components/client/SupportTools";
 
 const ClientRaffles = () => {
   const { userName, userType } = useUser();
@@ -153,6 +154,7 @@ const ClientRaffles = () => {
           </Tabs>
         </div>
       </div>
+      <SupportTools />
     </div>
   );
 };
