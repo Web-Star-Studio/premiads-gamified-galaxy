@@ -1,11 +1,10 @@
 
-import { Suspense, lazy, Fragment } from "react";
-import { Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Lazy load advertiser pages
 const AdvertiserDashboard = lazy(() => import("@/pages/AdvertiserDashboard"));
-const AdvertiserProfile = lazy(() => import("@/pages/AdvertiserProfile"));
 const AdvertiserCampaigns = lazy(() => import("@/pages/advertiser/AdvertiserCampaigns"));
 const AdvertiserNewCampaign = lazy(() => import("@/pages/advertiser/NewCampaign"));
 const AdvertiserAnalytics = lazy(() => import("@/pages/advertiser/AnalyticsPage"));
@@ -20,54 +19,53 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const AdvertiserRoutes = () => {
   return (
-    <Fragment>
-      {/* Advertiser Routes */}
-      <Route path="/anunciante" element={
+    <Routes>
+      <Route path="/" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserDashboard />
         </Suspense>
       } />
-      <Route path="/anunciante/campanhas" element={
+      <Route path="/campanhas" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserCampaigns />
         </Suspense>
       } />
-      <Route path="/anunciante/nova-campanha" element={
+      <Route path="/nova-campanha" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserNewCampaign />
         </Suspense>
       } />
-      <Route path="/anunciante/analises" element={
+      <Route path="/analises" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserAnalytics />
         </Suspense>
       } />
-      <Route path="/anunciante/creditos" element={
+      <Route path="/creditos" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserCredits />
         </Suspense>
       } />
-      <Route path="/anunciante/notificacoes" element={
+      <Route path="/notificacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserNotifications />
         </Suspense>
       } />
-      <Route path="/anunciante/perfil" element={
+      <Route path="/perfil" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserProfilePage />
         </Suspense>
       } />
-      <Route path="/anunciante/configuracoes" element={
+      <Route path="/configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdvertiserSettings />
         </Suspense>
       } />
-      <Route path="/anunciante/moderacao" element={
+      <Route path="/moderacao" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ModerationPage />
         </Suspense>
       } />
-    </Fragment>
+    </Routes>
   );
 };
 

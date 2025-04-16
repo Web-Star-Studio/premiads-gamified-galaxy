@@ -1,6 +1,6 @@
 
-import { Suspense, lazy, Fragment } from "react";
-import { Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Lazy load admin pages
@@ -19,54 +19,53 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 export const AdminRoutes = () => {
   return (
-    <Fragment>
-      {/* Admin Routes */}
-      <Route path="/admin" element={
+    <Routes>
+      <Route path="/" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AdminPanel />
         </Suspense>
       } />
-      <Route path="/admin/sorteios" element={
+      <Route path="/sorteios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <LotteryManagementPage />
         </Suspense>
       } />
-      <Route path="/admin/usuarios" element={
+      <Route path="/usuarios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <UserManagementPage />
         </Suspense>
       } />
-      <Route path="/admin/acesso" element={
+      <Route path="/acesso" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <AccessControlPage />
         </Suspense>
       } />
-      <Route path="/admin/regras" element={
+      <Route path="/regras" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <RulesPage />
         </Suspense>
       } />
-      <Route path="/admin/monitoramento" element={
+      <Route path="/monitoramento" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <MonitoringPage />
         </Suspense>
       } />
-      <Route path="/admin/relatorios" element={
+      <Route path="/relatorios" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <ReportsPage />
         </Suspense>
       } />
-      <Route path="/admin/notificacoes" element={
+      <Route path="/notificacoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <NotificationsPage />
         </Suspense>
       } />
-      <Route path="/admin/configuracoes" element={
+      <Route path="/configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <SettingsPage />
         </Suspense>
       } />
-    </Fragment>
+    </Routes>
   );
 };
 

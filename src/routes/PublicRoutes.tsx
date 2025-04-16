@@ -1,5 +1,6 @@
-import { Suspense, lazy, Fragment } from "react";
-import { Route } from "react-router-dom";
+
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 // Regular import for essential components
@@ -21,10 +22,9 @@ const Authentication = lazy(() => import("@/pages/Authentication"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-export const PublicRoutes = () => {
+const PublicRoutes = () => {
   return (
-    <Fragment>
-      {/* Public Routes */}
+    <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -43,7 +43,7 @@ export const PublicRoutes = () => {
       
       {/* Not Found Route - Keep at the bottom of routes */}
       <Route path="*" element={<NotFound />} />
-    </Fragment>
+    </Routes>
   );
 };
 
