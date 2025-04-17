@@ -1,6 +1,13 @@
 
 import React from 'react';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 import { useToast } from "@/components/ui/use-toast";
 import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';
 
@@ -21,6 +28,8 @@ const BlogPagination: React.FC<BlogPaginationProps> = ({
 
   // Calculate which page numbers to show
   const getPageNumbers = () => {
+    if (!totalPages || totalPages <= 0) return [1];
+    
     // Always show first page, last page, current page, and one before/after current
     const pageNumbers: number[] = [];
     
@@ -69,7 +78,7 @@ const BlogPagination: React.FC<BlogPaginationProps> = ({
         {pageNumbers.map((page, index) => {
           // Add ellipsis if there's a gap
           const previousPage = pageNumbers[index - 1];
-          let showEllipsis = previousPage && page - previousPage > 1;
+          const showEllipsis = previousPage && page - previousPage > 1;
           
           return (
             <React.Fragment key={page}>
@@ -82,7 +91,7 @@ const BlogPagination: React.FC<BlogPaginationProps> = ({
                 <PaginationLink 
                   isActive={page === currentPage}
                   onClick={() => handlePageChange(page)}
-                  className={isLoading ? 'pointer-events-none' : ''}
+                  className={isLoading ? 'pointer-events-none' : 'cursor-pointer'}
                 >
                   {page}
                 </PaginationLink>
