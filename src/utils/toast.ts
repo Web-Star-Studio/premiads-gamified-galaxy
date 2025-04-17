@@ -23,7 +23,8 @@ export const toastSuccess = (title: string, description?: string) => {
   toast({
     title,
     description,
-    variant: "success",
+    variant: "default", // Using default variant with custom classes
+    className: "bg-green-600 text-white",
   });
 };
 
@@ -49,6 +50,7 @@ export const toastWarning = (title: string, description?: string) => {
   toast({
     title,
     description,
-    variant: "warning",
+    variant: "default", // Using default variant with custom classes
+    className: "bg-yellow-500 text-white",
   });
 };

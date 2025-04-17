@@ -44,7 +44,7 @@ describe("CampaignsList", () => {
     render(<CampaignsList />);
     
     // Check if campaign header and table are rendered
-    expect(screen.getByText(/Gerenciar Campanhas/i)).toBeInTheDocument();
+    expect(screen.getByText("Gerenciar Campanhas")).toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();
     
     // Check if sample campaigns are rendered
@@ -55,7 +55,7 @@ describe("CampaignsList", () => {
     render(<CampaignsList />);
     
     // Find and click create new campaign button
-    const createButton = screen.getByRole("button", { name: /Nova Campanha/i });
+    const createButton = screen.getByRole("button", { name: "Nova Campanha" });
     fireEvent.click(createButton);
     
     // Check if form is displayed
@@ -67,7 +67,7 @@ describe("CampaignsList", () => {
     render(<CampaignsList />);
     
     // Find first edit button and click it
-    const editButtons = screen.getAllByRole("button", { name: /Editar campanha/i });
+    const editButtons = screen.getAllByRole("button", { name: "Editar campanha" });
     fireEvent.click(editButtons[0]);
     
     // Check if form is displayed with campaign data
@@ -83,7 +83,7 @@ describe("CampaignsList", () => {
     const initialRowCount = screen.getAllByRole("row").length;
     
     // Find first delete button and click it
-    const deleteButtons = screen.getAllByRole("button", { name: /Excluir campanha/i });
+    const deleteButtons = screen.getAllByRole("button", { name: "Excluir campanha" });
     fireEvent.click(deleteButtons[0]);
     
     // Check if a row was removed
@@ -101,7 +101,7 @@ describe("CampaignsList", () => {
     const initialRowCount = screen.getAllByRole("row").length;
     
     // Open form
-    const createButton = screen.getByRole("button", { name: /Nova Campanha/i });
+    const createButton = screen.getByRole("button", { name: "Nova Campanha" });
     fireEvent.click(createButton);
     
     // Close form (simulates form submission)
@@ -120,7 +120,7 @@ describe("CampaignsList", () => {
     render(<CampaignsList />);
     
     // Find search input
-    const searchInput = screen.getByPlaceholderText(/Buscar campanha/i);
+    const searchInput = screen.getByPlaceholderText("Buscar campanha");
     
     // Type a search term that should match only one campaign
     fireEvent.change(searchInput, { target: { value: "Missão #1" } });
