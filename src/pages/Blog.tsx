@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Card } from "@/components/ui/card";
@@ -254,19 +253,6 @@ const Blog = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Blog PremiAds - Artigos sobre Marketing e Gamificação</title>
-        <meta name="description" content="Confira as últimas tendências, dicas e estratégias sobre marketing digital, gamificação e campanhas de engajamento no blog da PremiAds." />
-        <meta name="keywords" content="blog premiads, marketing gamificado, gamificação, engajamento, campanhas digitais, recompensas" />
-        <meta property="og:title" content="Blog PremiAds - Artigos sobre Marketing e Gamificação" />
-        <meta property="og:description" content="Confira as últimas tendências, dicas e estratégias sobre marketing digital, gamificação e campanhas de engajamento." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.premiads.com/blog" />
-        <meta property="og:image" content="https://www.premiads.com/og-image-blog.jpg" />
-        <link rel="canonical" href="https://www.premiads.com/blog" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
-
       <Header />
       
       <main className="min-h-screen bg-zinc-950/90 pt-20">

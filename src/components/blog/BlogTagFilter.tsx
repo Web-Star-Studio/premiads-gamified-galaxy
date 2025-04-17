@@ -17,13 +17,13 @@ const BlogTagFilter: React.FC<BlogTagFilterProps> = ({
   onTagToggle,
   onClearTags 
 }) => {
-  if (!availableTags.length) return null;
+  if (!availableTags || !availableTags.length) return null;
 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-400">Filtrar por tags:</h3>
-        {activeTags.length > 0 && (
+        {activeTags && activeTags.length > 0 && (
           <Button 
             variant="ghost" 
             size="sm" 
@@ -43,7 +43,7 @@ const BlogTagFilter: React.FC<BlogTagFilterProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={() => onTagToggle(tag)}
             className={`px-3 py-1 text-sm rounded-full transition-colors ${
-              activeTags.includes(tag)
+              activeTags && activeTags.includes(tag)
                 ? 'bg-neon-cyan/20 text-neon-cyan'
                 : 'bg-zinc-800 hover:bg-zinc-700 text-gray-300'
             }`}
