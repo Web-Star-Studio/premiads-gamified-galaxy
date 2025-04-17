@@ -12,6 +12,8 @@ const Faq = lazy(() => import("@/pages/Faq"));
 const Feedback = lazy(() => import("@/pages/Feedback"));
 const Tutorials = lazy(() => import("@/pages/Tutorials"));
 const Authentication = lazy(() => import("@/pages/Authentication"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -52,6 +54,16 @@ const PublicRoutes = () => {
       <Route path="auth" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <Authentication />
+        </Suspense>
+      } />
+      <Route path="blog" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <Blog />
+        </Suspense>
+      } />
+      <Route path="blog/:slug" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <BlogPost />
         </Suspense>
       } />
       

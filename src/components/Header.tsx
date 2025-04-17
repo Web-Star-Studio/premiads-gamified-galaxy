@@ -23,6 +23,7 @@ const Header = () => {
     { id: "beneficios", label: "Benefícios" },
     { id: "depoimentos", label: "Depoimentos" },
     { id: "faq", label: "FAQ" },
+    { id: "blog", label: "Blog", isLink: true, to: "/blog" },
   ];
 
   return (

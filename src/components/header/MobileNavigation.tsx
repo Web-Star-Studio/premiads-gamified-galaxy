@@ -1,21 +1,26 @@
 
-import { FC } from "react";
-import { motion } from "framer-motion";
+import React from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
+interface Section {
+  id: string;
+  label: string;
+  isLink?: boolean;
+  to?: string;
+}
+
 interface MobileNavigationProps {
-  sections: Array<{
-    id: string;
-    label: string;
-  }>;
+  sections: Section[];
   mobileMenuOpen: boolean;
   scrollToSection: (sectionId: string) => void;
   navigateToDashboard: () => void;
   userType: "participante" | "anunciante";
-  setMobileMenuOpen: (open: boolean) => void;
+  setMobileMenuOpen: (isOpen: boolean) => void;
 }
 
-const MobileNavigation: FC<MobileNavigationProps> = ({
+const MobileNavigation: React.FC<MobileNavigationProps> = ({
   sections,
   mobileMenuOpen,
   scrollToSection,
@@ -23,39 +28,65 @@ const MobileNavigation: FC<MobileNavigationProps> = ({
   userType,
   setMobileMenuOpen,
 }) => {
-  if (!mobileMenuOpen) return null;
+  const handleNavigation = (section: Section) => {
+    setMobileMenuOpen(false);
+    
+    if (section.isLink && section.to) {
+      // For direct links, the Link component will handle navigation
+      return;
+    } else {
+      scrollToSection(section.id);
+    }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="fixed inset-0 top-16 bg-galaxy-dark/95 backdrop-blur-lg z-30 p-6"
-    >
-      <nav className="flex flex-col items-center space-y-6 pt-8">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => {
-              scrollToSection(section.id);
-              setMobileMenuOpen(false);
-            }}
-            className="text-gray-200 hover:text-white hover:neon-text-cyan transition-colors text-xl py-2"
-          >
-            {section.label}
-          </button>
-        ))}
-        <Button 
-          className="neon-button w-full mt-6" 
-          onClick={() => {
-            navigateToDashboard();
-            setMobileMenuOpen(false);
-          }}
+    <AnimatePresence>
+      {mobileMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 top-[60px] bg-black/95 backdrop-blur-md z-30 md:hidden overflow-auto pt-6"
         >
-          {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
-        </Button>
-      </nav>
-    </motion.div>
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col space-y-4">
+              {sections.map((section) => (
+                section.isLink && section.to ? (
+                  <Link
+                    key={section.id}
+                    to={section.to}
+                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {section.label}
+                  </Link>
+                ) : (
+                  <button
+                    key={section.id}
+                    onClick={() => handleNavigation(section)}
+                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors text-left"
+                  >
+                    {section.label}
+                  </button>
+                )
+              ))}
+
+              <Button
+                className="neon-button mt-6"
+                size="lg"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigateToDashboard();
+                }}
+              >
+                {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
