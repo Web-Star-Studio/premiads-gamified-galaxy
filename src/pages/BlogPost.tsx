@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Share2, Facebook, Twitter, Linkedin, Copy, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,9 @@ import { useToast } from "@/components/ui/use-toast";
 import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
-import { BlogPostCard, BlogNewsletter } from '@/components/blog';
+import { BlogPostCard } from '@/components/blog';
 
-// Dados mockados para demonstração
+// Mock data for demonstration
 const BLOG_POSTS = [
   {
     id: 1,
@@ -69,10 +69,10 @@ const BLOG_POSTS = [
     tags: ['engajamento', 'gamificação', 'campanhas', 'marketing digital', 'interatividade'],
     slug: 'como-engajar-audiencia-campanhas-interativas'
   },
-  // Os demais posts do array BLOG_POSTS
+  // Additional mock posts would go here
 ];
 
-// Related posts data
+// Related posts mock data
 const RELATED_POSTS = [
   {
     id: 2,
@@ -119,7 +119,7 @@ const BlogPost = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Simulação de carregamento de dados
+    // Simulate data loading
     setIsLoading(true);
     window.scrollTo(0, 0);
     
@@ -257,25 +257,6 @@ const BlogPost = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{post.title} | Blog PremiAds</title>
-        <meta name="description" content={post.excerpt} />
-        <meta name="keywords" content={post.tags.join(', ')} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`https://www.premiads.com/blog/${post.slug}`} />
-        <meta property="og:image" content={post.imageUrl} />
-        <link rel="canonical" href={`https://www.premiads.com/blog/${post.slug}`} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta property="article:published_time" content="2025-04-15T10:00:00Z" />
-        <meta property="article:author" content={post.author} />
-        <meta property="article:section" content={post.category} />
-        {post.tags.map((tag: string) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-      </Helmet>
-
       <Header />
       
       <main className="min-h-screen bg-zinc-950/90 pt-20 pb-16">
@@ -485,7 +466,23 @@ const BlogPost = () => {
                 
                 {/* Sidebar */}
                 <div className="space-y-8">
-                  <BlogNewsletter />
+                  {/* Newsletter */}
+                  <Card className="bg-gradient-to-br from-galaxy-deepPurple/70 to-galaxy-purple/10 border-galaxy-purple/30 overflow-hidden relative">
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-bold mb-2">Inscreva-se na nossa newsletter</h3>
+                      <p className="text-gray-400 text-sm mb-4">Receba as últimas novidades e dicas diretamente no seu email.</p>
+                      <form className="space-y-3">
+                        <input
+                          type="email"
+                          placeholder="Seu email"
+                          className="w-full px-4 py-2 rounded-lg bg-zinc-800/80 border border-zinc-700 text-white"
+                        />
+                        <Button className="w-full bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80">
+                          Inscrever-se
+                        </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
                   
                   {/* Popular posts */}
                   <Card className="bg-zinc-900/50 border-zinc-800">
