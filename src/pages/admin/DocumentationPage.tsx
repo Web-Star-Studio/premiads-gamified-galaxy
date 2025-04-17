@@ -683,7 +683,10 @@ const DocumentationPage = () => {
       <AdminSidebar />
       
       <div className="flex-1 flex flex-col">
-        <DashboardHeader title="Documentação" description="Base de conhecimento técnico" />
+        <DashboardHeader 
+          title="Documentação" 
+          subtitle="Base de conhecimento técnico" 
+        />
         
         <div className="p-6">
           <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">

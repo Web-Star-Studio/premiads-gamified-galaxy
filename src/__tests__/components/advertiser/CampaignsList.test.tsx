@@ -72,7 +72,7 @@ describe("CampaignsList", () => {
     
     // Check if form is displayed with campaign data
     expect(screen.getByTestId("campaign-form")).toBeInTheDocument();
-    expect(screen.getByText(/Editing:/i)).toBeInTheDocument();
+    expect(screen.getByText("Editing:")).toBeInTheDocument();
     expect(playSound).toHaveBeenCalledWith("pop");
   });
   
@@ -139,7 +139,7 @@ describe("CampaignsList", () => {
     // Should show only active campaigns
     screen.getAllByRole("row").forEach((row, index) => {
       if (index > 0) { // Skip header row
-        expect(row).toHaveTextContent(/ativa/i);
+        expect(row).toHaveTextContent("ativa");
       }
     });
   });
