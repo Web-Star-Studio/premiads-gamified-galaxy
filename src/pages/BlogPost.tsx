@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Share2, Facebook, Twitter, Linkedin, Copy, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import ButtonLoadingSpinner from '@/components/ui/ButtonLoadingSpinner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { BlogPostCard, BlogNewsletter } from '@/components/blog';
@@ -73,7 +72,7 @@ const BLOG_POSTS = [
   // Os demais posts do array BLOG_POSTS
 ];
 
-// Posts relacionados
+// Related posts data
 const RELATED_POSTS = [
   {
     id: 2,
@@ -112,9 +111,11 @@ const RELATED_POSTS = [
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [post, setPost] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -126,26 +127,87 @@ const BlogPost = () => {
       const foundPost = BLOG_POSTS.find(p => p.slug === slug);
       setPost(foundPost || null);
       setIsLoading(false);
+      
+      // Check if post was bookmarked
+      const bookmarkedPosts = JSON.parse(localStorage.getItem('bookmarkedPosts') || '[]');
+      if (bookmarkedPosts.includes(slug)) {
+        setIsBookmarked(true);
+      }
     }, 1000);
   }, [slug]);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copiado!",
-      description: "O link do artigo foi copiado para a área de transferência.",
-      variant: "default",
-      className: "bg-neon-cyan/90 text-galaxy-dark border-0"
-    });
+    setSharingLoading('copy');
+    setTimeout(() => {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copiado!",
+        description: "O link do artigo foi copiado para a área de transferência.",
+        variant: "default",
+        className: "bg-neon-cyan/90 text-galaxy-dark border-0"
+      });
+      setSharingLoading(null);
+    }, 500);
+  };
+
+  const handleShare = (platform: string) => {
+    setSharingLoading(platform);
+    
+    setTimeout(() => {
+      let shareUrl = '';
+      const postUrl = window.location.href;
+      const postTitle = post?.title || 'Artigo PremiAds';
+      
+      switch (platform) {
+        case 'facebook':
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`;
+          break;
+        case 'twitter':
+          shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(postTitle)}`;
+          break;
+        case 'linkedin':
+          shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`;
+          break;
+      }
+      
+      if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+      }
+      
+      setSharingLoading(null);
+    }, 500);
   };
 
   const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    toast({
-      title: isBookmarked ? "Artigo removido dos favoritos" : "Artigo salvo nos favoritos",
-      description: isBookmarked ? "O artigo foi removido da sua lista de leitura." : "O artigo foi adicionado à sua lista de leitura.",
-      variant: "default",
-      className: "bg-neon-cyan/90 text-galaxy-dark border-0"
+    setIsBookmarked(prev => {
+      const newState = !prev;
+      
+      // Save to localStorage
+      const bookmarkedPosts = JSON.parse(localStorage.getItem('bookmarkedPosts') || '[]');
+      
+      if (newState && slug) {
+        // Add to bookmarks
+        if (!bookmarkedPosts.includes(slug)) {
+          bookmarkedPosts.push(slug);
+        }
+      } else if (slug) {
+        // Remove from bookmarks
+        const index = bookmarkedPosts.indexOf(slug);
+        if (index > -1) {
+          bookmarkedPosts.splice(index, 1);
+        }
+      }
+      
+      localStorage.setItem('bookmarkedPosts', JSON.stringify(bookmarkedPosts));
+      
+      toast({
+        title: newState ? "Artigo salvo nos favoritos" : "Artigo removido dos favoritos",
+        description: newState ? "O artigo foi adicionado à sua lista de leitura." : "O artigo foi removido da sua lista de leitura.",
+        variant: "default",
+        className: "bg-neon-cyan/90 text-galaxy-dark border-0"
+      });
+      
+      return newState;
     });
   };
 
@@ -223,19 +285,45 @@ const BlogPost = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link to="/blog" className="inline-flex items-center text-gray-400 hover:text-neon-cyan mb-6 transition-colors">
-              <ArrowLeft size={16} className="mr-2" />
-              Voltar para o Blog
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild 
+              className="text-gray-400 hover:text-neon-cyan mb-6 transition-colors"
+            >
+              <Link to="/blog" className="inline-flex items-center">
+                <ArrowLeft size={16} className="mr-2" />
+                Voltar para o Blog
+              </Link>
+            </Button>
             
             <article>
               {/* Header */}
               <header className="mb-10">
-                <div className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-galaxy-deepPurple text-neon-cyan mb-4">
-                  {post.category}
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">{post.title}</h1>
-                <div className="flex flex-wrap items-center text-gray-400 gap-4 mb-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-galaxy-deepPurple text-neon-cyan mb-4"
+                >
+                  <Link to={`/blog?category=${post.category}`}>
+                    {post.category}
+                  </Link>
+                </motion.div>
+                <motion.h1 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6"
+                >
+                  {post.title}
+                </motion.h1>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex flex-wrap items-center text-gray-400 gap-4 mb-6"
+                >
                   <div className="flex items-center">
                     <Calendar size={16} className="mr-2" />
                     <span>{post.date}</span>
@@ -244,36 +332,48 @@ const BlogPost = () => {
                     <User size={16} className="mr-2" />
                     <span>{post.author}</span>
                   </div>
-                </div>
-                <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] rounded-xl overflow-hidden mb-8">
+                </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] rounded-xl overflow-hidden mb-8"
+                >
                   <img 
                     src={post.imageUrl} 
                     alt={post.title} 
                     className="w-full h-full object-cover" 
                   />
-                </div>
+                </motion.div>
               </header>
               
               {/* Content Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-2">
-                  <div 
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
                     className="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-headings:font-bold prose-p:text-gray-300 prose-a:text-neon-cyan prose-a:no-underline hover:prose-a:underline prose-blockquote:border-neon-cyan prose-blockquote:bg-zinc-900/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg"
                     dangerouslySetInnerHTML={{ __html: post.content }}
-                  ></div>
+                  ></motion.div>
                   
                   {/* Tags */}
                   <div className="mt-10 mb-6">
                     <div className="flex flex-wrap gap-2">
                       {post.tags.map((tag: string) => (
-                        <Link 
-                          key={tag} 
-                          to={`/blog?tag=${tag}`}
-                          className="px-3 py-1 text-sm rounded-full bg-zinc-800 hover:bg-neon-cyan/20 text-gray-300 hover:text-neon-cyan transition-colors"
+                        <Button 
+                          key={tag}
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="rounded-full hover:bg-neon-cyan/20 hover:text-neon-cyan transition-colors"
                         >
-                          #{tag}
-                        </Link>
+                          <Link to={`/blog?tag=${tag}`}>
+                            #{tag}
+                          </Link>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -283,22 +383,57 @@ const BlogPost = () => {
                     <div className="flex items-center">
                       <span className="mr-3 text-gray-400">Compartilhar:</span>
                       <div className="flex space-x-2">
-                        <Button size="icon" variant="outline" className="rounded-full w-9 h-9 p-0">
-                          <Facebook size={16} />
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          className="rounded-full w-9 h-9 p-0"
+                          onClick={() => handleShare('facebook')}
+                          disabled={sharingLoading !== null}
+                        >
+                          {sharingLoading === 'facebook' ? (
+                            <ButtonLoadingSpinner size="sm" color="cyan" />
+                          ) : (
+                            <Facebook size={16} />
+                          )}
                         </Button>
-                        <Button size="icon" variant="outline" className="rounded-full w-9 h-9 p-0">
-                          <Twitter size={16} />
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          className="rounded-full w-9 h-9 p-0"
+                          onClick={() => handleShare('twitter')}
+                          disabled={sharingLoading !== null}
+                        >
+                          {sharingLoading === 'twitter' ? (
+                            <ButtonLoadingSpinner size="sm" color="cyan" />
+                          ) : (
+                            <Twitter size={16} />
+                          )}
                         </Button>
-                        <Button size="icon" variant="outline" className="rounded-full w-9 h-9 p-0">
-                          <Linkedin size={16} />
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          className="rounded-full w-9 h-9 p-0"
+                          onClick={() => handleShare('linkedin')}
+                          disabled={sharingLoading !== null}
+                        >
+                          {sharingLoading === 'linkedin' ? (
+                            <ButtonLoadingSpinner size="sm" color="cyan" />
+                          ) : (
+                            <Linkedin size={16} />
+                          )}
                         </Button>
                         <Button 
                           size="icon" 
                           variant="outline" 
                           className="rounded-full w-9 h-9 p-0"
                           onClick={handleCopyLink}
+                          disabled={sharingLoading !== null}
                         >
-                          <Copy size={16} />
+                          {sharingLoading === 'copy' ? (
+                            <ButtonLoadingSpinner size="sm" color="cyan" />
+                          ) : (
+                            <Copy size={16} />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -358,22 +493,33 @@ const BlogPost = () => {
                       <h3 className="text-xl font-bold mb-4">Mais Populares</h3>
                       <div className="space-y-4">
                         {BLOG_POSTS.slice(0, 3).map(popularPost => (
-                          <a 
-                            key={popularPost.id} 
-                            href={`/blog/${popularPost.slug}`} 
-                            className="flex group items-start gap-3 hover:bg-zinc-800/30 p-2 rounded-lg transition-colors"
+                          <motion.div
+                            key={popularPost.id}
+                            whileHover={{ x: 3 }}
+                            className="group"
                           >
-                            <div className="w-16 h-16 rounded-lg bg-zinc-800 shrink-0 overflow-hidden">
-                              <img src={popularPost.imageUrl} alt={popularPost.title} className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium group-hover:text-neon-cyan transition-colors">{popularPost.title}</h4>
-                              <div className="flex items-center text-xs text-gray-400 mt-1">
-                                <Calendar size={12} className="mr-1" />
-                                <span>{popularPost.date}</span>
-                              </div>
-                            </div>
-                          </a>
+                            <Button 
+                              variant="ghost" 
+                              className="w-full p-0 h-auto justify-start" 
+                              asChild
+                            >
+                              <motion.div 
+                                className="flex items-start gap-3 hover:bg-zinc-800/30 p-2 rounded-lg transition-colors w-full"
+                                onClick={() => navigate(`/blog/${popularPost.slug}`)}
+                              >
+                                <div className="w-16 h-16 rounded-lg bg-zinc-800 shrink-0 overflow-hidden">
+                                  <img src={popularPost.imageUrl} alt={popularPost.title} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="text-left">
+                                  <h4 className="font-medium group-hover:text-neon-cyan transition-colors line-clamp-2">{popularPost.title}</h4>
+                                  <div className="flex items-center text-xs text-gray-400 mt-1">
+                                    <Calendar size={12} className="mr-1" />
+                                    <span>{popularPost.date}</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            </Button>
+                          </motion.div>
                         ))}
                       </div>
                     </CardContent>

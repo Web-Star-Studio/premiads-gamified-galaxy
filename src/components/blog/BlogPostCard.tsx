@@ -4,6 +4,7 @@ import { Calendar, User, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
 
 interface BlogPost {
   id: number;
@@ -42,7 +43,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
             {post.category}
           </div>
           <h3 className="text-xl font-bold mb-2 line-clamp-2 hover:text-neon-cyan transition-colors">
-            <a href={`/blog/${post.slug}`}>{post.title}</a>
+            <Link to={`/blog/${post.slug}`}>{post.title}</Link>
           </h3>
           <p className="text-gray-400 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
           <div className="flex justify-between items-center">
@@ -57,9 +58,9 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
               </div>
             </div>
             <Button variant="link" size="sm" className="text-neon-cyan p-0" asChild>
-              <a href={`/blog/${post.slug}`} className="flex items-center">
+              <Link to={`/blog/${post.slug}`} className="flex items-center">
                 Ler mais <ArrowRight size={14} className="ml-1" />
-              </a>
+              </Link>
             </Button>
           </div>
         </CardContent>

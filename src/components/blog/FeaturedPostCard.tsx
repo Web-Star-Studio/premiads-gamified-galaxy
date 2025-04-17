@@ -3,6 +3,7 @@ import React from 'react';
 import { Calendar, User, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
+import { Link } from 'react-router-dom';
 
 interface BlogPost {
   id: number;
@@ -41,9 +42,9 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
             {post.category}
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-3">
-            <a href={`/blog/${post.slug}`} className="hover:text-neon-cyan transition-colors">
+            <Link to={`/blog/${post.slug}`} className="hover:text-neon-cyan transition-colors">
               {post.title}
-            </a>
+            </Link>
           </h2>
           <p className="text-gray-300 mb-4 max-w-3xl">{post.excerpt}</p>
           <div className="flex flex-wrap justify-between items-center">
@@ -58,9 +59,9 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
               </div>
             </div>
             <Button className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80" asChild>
-              <a href={`/blog/${post.slug}`} className="flex items-center">
+              <Link to={`/blog/${post.slug}`} className="flex items-center">
                 Ler artigo completo <ArrowRight size={16} className="ml-1" />
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

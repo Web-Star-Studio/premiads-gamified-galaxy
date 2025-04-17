@@ -4,3 +4,5 @@ export { default as FeaturedPostCard } from './FeaturedPostCard';
 export { default as BlogCategories } from './BlogCategories';
 export { default as BlogNewsletter } from './BlogNewsletter';
 export { default as BlogPostSkeleton } from './BlogPostSkeleton';
+export { default as BlogPagination } from './BlogPagination';
+export { default as BlogTagFilter } from './BlogTagFilter';
