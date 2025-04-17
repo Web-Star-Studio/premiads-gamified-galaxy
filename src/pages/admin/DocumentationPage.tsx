@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { 
@@ -663,3 +664,174 @@ const DocumentationPage = () => {
           </div>
           
           <div className="bg-red-500/10 p-4 rounded-lg border border-red-500/30">
+            <h4 className="font-medium flex items-center gap-2 text-red-400">
+              <Shield size={16} />
+              Importante
+            </h4>
+            <p className="text-sm mt-1">
+              A integridade do processo de sorteio é fundamental para a credibilidade da plataforma.
+              Qualquer modificação no algoritmo de sorteio deve ser cuidadosamente documentada e auditada.
+            </p>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="flex min-h-screen bg-zinc-950/90">
+      <AdminSidebar />
+      
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader title="Documentação" description="Base de conhecimento técnico" />
+        
+        <div className="p-6">
+          <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-zinc-800 pb-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="text-xl font-semibold">
+                  Documentação Técnica
+                </CardTitle>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Pesquisar na documentação..."
+                    className="w-full pl-8 bg-zinc-900 border-zinc-800"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <CardDescription className="mt-2">
+                Guia completo de funcionamento e configuração do sistema PremiAds
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row">
+                <aside className="w-full md:w-64 border-r border-zinc-800 shrink-0">
+                  <ScrollArea className="h-[calc(100vh-13rem)]">
+                    <div className="p-4 space-y-1">
+                      {docSections.map((section) => {
+                        const Icon = section.icon;
+                        const isActive = activeSection === section.id;
+                        
+                        return (
+                          <Button
+                            key={section.id}
+                            variant="ghost"
+                            className={`w-full justify-start ${
+                              isActive 
+                                ? "bg-galaxy-deepPurple/40 hover:bg-galaxy-deepPurple/50 text-white" 
+                                : "hover:bg-zinc-900 text-zinc-400 hover:text-white"
+                            }`}
+                            onClick={() => {
+                              setActiveSection(section.id);
+                              toastInfo(`Seção "${section.title}" carregada`);
+                            }}
+                          >
+                            <Icon className="mr-2 h-4 w-4" />
+                            {section.title}
+                            {isActive && <ChevronRight className="ml-auto h-4 w-4" />}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </aside>
+                
+                <div className="flex-1">
+                  <Tabs defaultValue="content" className="w-full">
+                    <div className="px-4 pt-3 border-b border-zinc-800">
+                      <TabsList className="bg-zinc-900">
+                        <TabsTrigger value="content">Conteúdo</TabsTrigger>
+                        <TabsTrigger value="examples">Exemplos</TabsTrigger>
+                        <TabsTrigger value="api">API</TabsTrigger>
+                      </TabsList>
+                    </div>
+                    
+                    <TabsContent value="content" className="p-0 m-0">
+                      <ScrollArea className="h-[calc(100vh-16rem)]">
+                        <div className="p-4">
+                          {docContent.find(item => item.id === activeSection)?.content || (
+                            <div className="flex flex-col items-center justify-center h-64">
+                              <FileText className="h-12 w-12 text-zinc-700 mb-4" />
+                              <p className="text-zinc-500 text-center">
+                                Selecione uma seção da documentação para visualizar o conteúdo
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                    
+                    <TabsContent value="examples" className="p-0 m-0">
+                      <ScrollArea className="h-[calc(100vh-16rem)]">
+                        <div className="p-6 text-center">
+                          <div className="border border-dashed border-zinc-800 rounded-lg p-8">
+                            <FileText className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">Exemplos de Código</h3>
+                            <p className="text-zinc-400 text-sm mb-4">
+                              Os exemplos para esta seção estão em desenvolvimento.
+                            </p>
+                            <Button variant="outline">
+                              <div className="flex items-center">
+                                <Download className="mr-2 h-4 w-4" />
+                                Baixar Exemplos
+                              </div>
+                            </Button>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                    
+                    <TabsContent value="api" className="p-0 m-0">
+                      <ScrollArea className="h-[calc(100vh-16rem)]">
+                        <div className="p-6">
+                          <div className="border border-zinc-800 rounded-lg p-4 mb-6">
+                            <h3 className="text-sm font-semibold mb-2 text-zinc-400">ENDPOINT</h3>
+                            <div className="bg-zinc-900 p-2 rounded font-mono text-sm mb-3">
+                              <code className="text-green-500">GET</code> /api/v1/{activeSection}
+                            </div>
+                            <h3 className="text-sm font-semibold mb-2 text-zinc-400">AUTHENTICATION</h3>
+                            <p className="text-sm text-zinc-500">
+                              Requer token de autenticação JWT no header Authorization
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-6">
+                            <div>
+                              <h3 className="text-lg font-semibold mb-2">Documentação da API</h3>
+                              <p className="text-zinc-400">
+                                API REST para interação com o módulo {docContent.find(item => item.id === activeSection)?.title || activeSection}.
+                              </p>
+                            </div>
+                            
+                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg">
+                              <div className="border-b border-zinc-800 p-3">
+                                <h4 className="font-medium">Detalhes da API</h4>
+                              </div>
+                              <div className="p-3">
+                                <p className="text-sm text-zinc-400">
+                                  Documentação completa da API em desenvolvimento.
+                                  Consulte a equipe de desenvolvimento para acesso antecipado.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DocumentationPage;
