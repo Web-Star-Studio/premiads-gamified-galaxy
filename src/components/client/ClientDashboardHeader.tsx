@@ -47,7 +47,7 @@ export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
               Voltar
             </Button>}
           
-          {description && <p className="mt-2 text-gray-400 max-w-2xl">{description}</p>}
+          {description}
         </div>
         
         <div className="text-right hidden md:block">
