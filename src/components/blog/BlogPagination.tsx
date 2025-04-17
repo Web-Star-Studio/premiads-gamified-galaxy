@@ -19,8 +19,8 @@ interface BlogPaginationProps {
 }
 
 const BlogPagination: React.FC<BlogPaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
+  currentPage = 1, 
+  totalPages = 1, 
   onPageChange,
   isLoading = false
 }) => {
