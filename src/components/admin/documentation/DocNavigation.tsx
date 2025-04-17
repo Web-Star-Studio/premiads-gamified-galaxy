@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronRight } from "lucide-react";
@@ -40,6 +40,15 @@ export const docSections: DocSectionItem[] = [
 ];
 
 const DocNavigation: React.FC<DocNavigationProps> = ({ activeSection, setActiveSection }) => {
+  useEffect(() => {
+    console.log("DocNavigation rendered with activeSection:", activeSection);
+    // Ensure there's always an active section
+    if (!activeSection && docSections.length > 0) {
+      console.log("Setting default section to:", docSections[0].id);
+      setActiveSection(docSections[0].id);
+    }
+  }, [activeSection, setActiveSection]);
+
   return (
     <ScrollArea className="h-[calc(100vh-13rem)]">
       <div className="p-4 space-y-1">
@@ -57,6 +66,7 @@ const DocNavigation: React.FC<DocNavigationProps> = ({ activeSection, setActiveS
                   : "hover:bg-zinc-900 text-zinc-400 hover:text-white"
               }`}
               onClick={() => {
+                console.log("Navigation button clicked for section:", section.id);
                 setActiveSection(section.id);
                 toastInfo(`Seção "${section.title}" carregada`);
               }}

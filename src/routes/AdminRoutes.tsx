@@ -1,6 +1,6 @@
 
-import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
 
@@ -20,6 +20,12 @@ const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log("AdminRoutes rendered, current path:", location.pathname);
+  }, [location]);
+
   return (
     <Routes>
       <Route index element={

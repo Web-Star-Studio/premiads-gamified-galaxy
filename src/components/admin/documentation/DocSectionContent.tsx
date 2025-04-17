@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,15 +12,22 @@ interface DocSectionContentProps {
 }
 
 const DocSectionContent: React.FC<DocSectionContentProps> = ({ sectionId }) => {
+  useEffect(() => {
+    console.log("DocSectionContent rendered for section:", sectionId);
+  }, [sectionId]);
+
   // Find the appropriate content for this section
   const content = docContent.find(item => item.id === sectionId)?.content;
   
   if (!content) {
+    console.warn(`No content found for section: ${sectionId}`);
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <FileText className="h-12 w-12 text-zinc-700 mb-4" />
         <p className="text-zinc-500 text-center">
-          Selecione uma seção da documentação para visualizar o conteúdo
+          {sectionId === "" 
+            ? "Selecione uma seção da documentação para visualizar o conteúdo" 
+            : `Nenhum conteúdo encontrado para a seção "${sectionId}"`}
         </p>
       </div>
     );

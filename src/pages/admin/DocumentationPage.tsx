@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { AdminSidebar } from '@/components/admin';
 import { DashboardHeader } from '@/components/admin';
@@ -12,6 +12,10 @@ import {
 const DocumentationPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
+  
+  useEffect(() => {
+    console.log("DocumentationPage rendered with activeSection:", activeSection);
+  }, [activeSection]);
   
   return (
     <div className="flex min-h-screen bg-zinc-950/90">
@@ -33,7 +37,7 @@ const DocumentationPage = () => {
             </CardHeader>
             
             <CardContent className="p-0">
-              <div className="flex flex-col md:flex-row">
+              <div className="flex flex-col md:flex-row min-h-[600px]">
                 <aside className="w-full md:w-64 border-r border-zinc-800 shrink-0">
                   <DocNavigation 
                     activeSection={activeSection} 

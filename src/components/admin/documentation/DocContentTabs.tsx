@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText } from "lucide-react";
@@ -10,6 +10,10 @@ interface DocContentTabsProps {
 }
 
 const DocContentTabs: React.FC<DocContentTabsProps> = ({ activeSection }) => {
+  useEffect(() => {
+    console.log("DocContentTabs rendered with activeSection:", activeSection);
+  }, [activeSection]);
+
   return (
     <Tabs defaultValue="content" className="w-full">
       <div className="px-4 pt-3 border-b border-zinc-800">
@@ -51,7 +55,7 @@ const DocContentTabs: React.FC<DocContentTabsProps> = ({ activeSection }) => {
             <div className="border border-zinc-800 rounded-lg p-4 mb-6">
               <h3 className="text-sm font-semibold mb-2 text-zinc-400">ENDPOINT</h3>
               <div className="bg-zinc-900 p-2 rounded font-mono text-sm mb-3">
-                <code className="text-green-500">GET</code> /api/v1/{activeSection}
+                <code className="text-green-500">GET</code> /api/v1/{activeSection || "overview"}
               </div>
               <h3 className="text-sm font-semibold mb-2 text-zinc-400">AUTHENTICATION</h3>
               <p className="text-sm text-zinc-500">
@@ -63,7 +67,7 @@ const DocContentTabs: React.FC<DocContentTabsProps> = ({ activeSection }) => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Documentação da API</h3>
                 <p className="text-zinc-400">
-                  API REST para interação com o módulo {activeSection}.
+                  API REST para interação com o módulo {activeSection || "overview"}.
                 </p>
               </div>
               
