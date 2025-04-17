@@ -42,6 +42,10 @@ class MockIntersectionObserver {
   disconnect() {
     return null;
   }
+
+  takeRecords() {
+    return [];
+  }
 }
 
 global.IntersectionObserver = MockIntersectionObserver;
