@@ -8,7 +8,8 @@ import {
   Bell,
   BarChart4,
   Ticket,
-  FileText
+  FileText,
+  BookOpen
 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import NavigationItem, { NavigationItemProps } from "./NavigationItem";
@@ -63,6 +64,12 @@ export const NavigationItems = () => {
       url: "/admin/notificacoes",
       icon: Bell,
       description: "Gerenciar notificações"
+    },
+    {
+      title: "Documentação",
+      url: "/admin/documentacao",
+      icon: BookOpen,
+      description: "Manual técnico do sistema"
     },
     {
       title: "Configurações",

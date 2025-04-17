@@ -14,6 +14,7 @@ const NotificationsPage = lazy(() => import("@/pages/admin/NotificationsPage"));
 const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
+const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -64,6 +65,11 @@ const AdminRoutes = () => {
       <Route path="configuracoes" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <SettingsPage />
+        </Suspense>
+      } />
+      <Route path="documentacao" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <DocumentationPage />
         </Suspense>
       } />
       
