@@ -41,14 +41,7 @@ export const ClientDashboardHeader: FC<ClientDashboardHeaderProps> = ({
       <div className="absolute top-0 left-0 w-full h-40 bg-purple-glow opacity-10 blur-3xl -z-10"></div>
       
       <div className="flex items-center justify-between">
-        <div>
-          {showBackButton && <Button variant="ghost" size="sm" onClick={handleBackClick} className="mb-4 text-neon-cyan hover:text-neon-cyan/80 hover:bg-galaxy-deepPurple/30 -ml-2">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Voltar
-            </Button>}
-          
-          {description}
-        </div>
+        
         
         <div className="text-right hidden md:block">
           
