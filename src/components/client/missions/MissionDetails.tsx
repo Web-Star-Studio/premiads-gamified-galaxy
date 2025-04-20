@@ -127,14 +127,16 @@ const getReadableMissionType = (type: MissionType): string => {
     case "form": return "Formulário";
     case "photo": return "Foto";
     case "video": return "Vídeo";
-    case "checkin":
-    case "visit": return "Check-in";
-    case "social":
+    case "checkin": return "Check-in";
+    case "visit": return "Visita Local";
+    case "social": return "Redes Sociais";
     case "social_share": return "Compartilhamento Social";
     case "coupon": return "Cupom";
     case "survey": return "Pesquisa";
     case "review": return "Avaliação";
-    default: return type.replace("_", " ");
+    default: 
+      // Fix: Ensure we don't call replace on a potentially 'never' type
+      return typeof type === 'string' ? type.replace("_", " ") : String(type);
   }
 };
 
