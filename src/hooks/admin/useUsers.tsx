@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -52,10 +53,17 @@ export const useUsers = () => {
           status = 'pending';
         }
         
+        // Safely access email from profile_data
+        let email = 'Email não disponível';
+        if (profile.profile_data && typeof profile.profile_data === 'object') {
+          // Access email property if profile_data is an object
+          email = (profile.profile_data as Record<string, any>)?.email || email;
+        }
+        
         return {
           id: profile.id,
           name: profile.full_name || 'Usuário sem nome',
-          email: profile.profile_data?.email || 'Email não disponível', // Use profile_data for email if available
+          email,
           role: profile.user_type || 'participante',
           status,
           lastLogin: profile.updated_at 
