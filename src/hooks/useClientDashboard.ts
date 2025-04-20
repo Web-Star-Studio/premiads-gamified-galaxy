@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavigateFunction } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +7,12 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useUserProfile } from "./user/useUserProfile";
 import { useUserPoints } from "./user/useUserPoints";
 import { useUserSession } from "./user/useUserSession";
+import { Profile } from "@/types";
 
 export const useClientDashboard = (navigate?: NavigateFunction) => {
   const { userName, userType, setUserName } = useUser();
   const { playSound } = useSounds();
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   const {
     profileData,
@@ -94,7 +96,8 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
             const newProfile = await createUserProfile(userId, session.user.user_metadata);
             
             if (newProfile) {
-              setProfileData(newProfile);
+              // Make sure we properly type cast the profile data
+              setProfileData(newProfile as Profile);
               setPoints(0);
               setCredits(0);
               setIsProfileCompleted(false);
@@ -121,7 +124,13 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
             return false;
           }
         } else if (profileData) {
-          setProfileData(profileData);
+          // Convert string user_type to the proper enum type for Profile
+          const typedProfile: Profile = {
+            ...profileData,
+            user_type: (profileData.user_type || "participante") as "participante" | "anunciante" | "admin"
+          };
+          
+          setProfileData(typedProfile);
           setPoints(profileData.points || 0);
           setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
           setIsProfileCompleted(profileData.profile_completed || false);
@@ -162,7 +171,9 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
       setLoading(false);
       setAuthError("Não foi possível carregar seus dados após várias tentativas. Por favor, recarregue a página.");
     }
-  }, [fetchAttempts, retrying, userName, setUserName, playSound]);
+  }, [fetchAttempts, retrying, userName, setUserName, playSound, setPoints, setCredits, setStreak, setAuthError, 
+      setIsProfileCompleted, setFetchAttempts, setLoading, setProfileData, loading, checkInactivity, 
+      createUserProfile, fetchAttempts, playSound, points, setUserName, userName]);
 
   return {
     userName,
@@ -170,6 +181,8 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     credits,
     streak,
     loading,
+    showOnboarding,
+    setShowOnboarding,
     handleExtendSession,
     handleSessionTimeout,
     authError,

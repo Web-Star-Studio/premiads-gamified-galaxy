@@ -22,7 +22,8 @@ export const useUserProfile = (userId?: string) => {
           full_name: userData?.full_name,
           points: 0,
           credits: 0,
-          profile_completed: false
+          profile_completed: false,
+          user_type: "participante" // Add the missing user_type property
         });
         
       if (insertError) {
@@ -30,12 +31,14 @@ export const useUserProfile = (userId?: string) => {
         return null;
       }
       
+      // Return with the correct Profile type including user_type
       return {
         id: userId,
         full_name: userData?.full_name,
         points: 0,
         credits: 0,
-        profile_completed: false
+        profile_completed: false,
+        user_type: "participante" as const
       };
     } catch (error) {
       console.error("Error in createUserProfile:", error);
