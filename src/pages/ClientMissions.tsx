@@ -71,15 +71,23 @@ const ClientMissions = () => {
   };
 
   const handleSubmitMission = async (submissionData: any) => {
-    if (!selectedMission) return;
+    if (!selectedMission) return false;
     
-    // Submit the mission - make sure we pass the correct parameters
+    // If submission is null (cancel button pressed), just close the dialog
+    if (submissionData === null) {
+      setIsSubmissionOpen(false);
+      return true;
+    }
+    
+    // Submit the mission - use "in_progress" as the status
     const success = await submitMission(selectedMission.id, submissionData, "in_progress");
     
     if (success) {
       setSelectedMission(null);
       setIsSubmissionOpen(false);
     }
+    
+    return success;
   };
 
   if (loading) {

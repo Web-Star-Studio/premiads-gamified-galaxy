@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Camera, X } from "lucide-react";
+import { Camera, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Mission } from "@/hooks/useMissions";
 import { useToast } from "@/hooks/use-toast";
+import { MissionType } from "@/hooks/useMissionsTypes";
 
 interface MissionSubmissionFormProps {
   mission: Mission | null;
@@ -42,7 +43,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
     // Prepare submission data based on mission type
     let submissionData = {};
     
-    if (mission.type === "survey") {
+    if (mission.type === "form" || mission.type === "survey") {
       submissionData = { answer: missionAnswer };
     } else if (mission.type === "photo" || mission.type === "video") {
       if (!imagePreview) {
@@ -54,7 +55,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         return;
       }
       submissionData = { mediaUrl: imagePreview };
-    } else if (mission.type === "social_share") {
+    } else if (mission.type === "social" || mission.type === "social_share") {
       submissionData = { shareLink: missionAnswer };
     }
     
@@ -63,7 +64,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
 
   return (
     <div className="space-y-4 my-4">
-      {mission.type === "survey" && (
+      {(mission.type === "form" || mission.type === "survey") && (
         <div className="space-y-2">
           <Label htmlFor="answer">Sua resposta</Label>
           <Textarea 
@@ -127,7 +128,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         </div>
       )}
       
-      {mission.type === "social_share" && (
+      {(mission.type === "social" || mission.type === "social_share") && (
         <div className="space-y-2">
           <Label htmlFor="share-link">Link da postagem</Label>
           <Input
@@ -142,7 +143,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         </div>
       )}
       
-      {mission.type === "visit" && (
+      {(mission.type === "checkin" || mission.type === "visit") && (
         <div className="space-y-2">
           <Label>Check-in na loja</Label>
           <div className="bg-galaxy-deepPurple/80 rounded-md p-4">
@@ -150,6 +151,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
               Pressione o botão abaixo para realizar check-in usando sua localização atual
             </p>
             <Button className="w-full mt-4">
+              <MapPin className="w-4 h-4 mr-2" />
               Fazer Check-in
             </Button>
           </div>
@@ -185,7 +187,8 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         <Button 
           onClick={handleSubmit}
           disabled={
-            (!missionAnswer && !imagePreview && mission.type !== "visit") || 
+            (!(mission.type === "checkin" || mission.type === "visit") && 
+             !missionAnswer && !imagePreview) || 
             !agreedToTerms || 
             loading
           }

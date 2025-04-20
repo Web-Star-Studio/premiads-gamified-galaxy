@@ -1,10 +1,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { FileText, Image, Camera, Upload, CheckCircle, Clock } from "lucide-react";
+import { FileText, Image, Camera, Share2, MapPin, Tag, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mission } from "@/hooks/useMissions";
+import { MissionType } from "@/hooks/useMissionsTypes";
 
 interface MissionDetailsProps {
   mission: Mission | null;
@@ -71,18 +72,13 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
       <div className="mb-6">
         <h3 className="text-lg font-medium mb-2">Tipo de Missão</h3>
         <div className="flex items-center">
-          {mission.type === "survey" && <FileText className="w-5 h-5 mr-2 text-neon-pink" />}
-          {mission.type === "photo" && <Image className="w-5 h-5 mr-2 text-neon-pink" />}
-          {mission.type === "video" && <Camera className="w-5 h-5 mr-2 text-neon-pink" />}
-          {mission.type === "visit" && <CheckCircle className="w-5 h-5 mr-2 text-neon-pink" />}
-          {mission.type === "social_share" && <Upload className="w-5 h-5 mr-2 text-neon-pink" />}
-          <span className="capitalize">{mission.type.replace("_", " ")}</span>
+          {renderMissionTypeIcon(mission.type)}
+          <span className="capitalize">{getReadableMissionType(mission.type)}</span>
         </div>
       </div>
       
       <div className="flex justify-between items-center text-sm text-gray-400 mb-6">
         <div className="flex items-center">
-          <Clock className="w-4 h-4 mr-1" />
           <span>Prazo: {mission.deadline 
             ? new Date(mission.deadline).toLocaleDateString('pt-BR') 
             : "Sem prazo"}</span>
@@ -97,6 +93,49 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
       </Button>
     </motion.div>
   );
+};
+
+// Helper function to render the correct icon based on mission type
+const renderMissionTypeIcon = (type: MissionType) => {
+  switch (type) {
+    case "form":
+      return <FileText className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "photo":
+      return <Image className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "video":
+      return <Camera className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "checkin":
+    case "visit":
+      return <MapPin className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "social":
+    case "social_share":
+      return <Share2 className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "coupon":
+      return <Tag className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "survey":
+      return <FileText className="w-5 h-5 mr-2 text-neon-pink" />;
+    case "review":
+      return <Star className="w-5 h-5 mr-2 text-neon-pink" />;
+    default:
+      return <FileText className="w-5 h-5 mr-2 text-neon-pink" />;
+  }
+};
+
+// Helper function to get a readable mission type name
+const getReadableMissionType = (type: MissionType): string => {
+  switch (type) {
+    case "form": return "Formulário";
+    case "photo": return "Foto";
+    case "video": return "Vídeo";
+    case "checkin":
+    case "visit": return "Check-in";
+    case "social":
+    case "social_share": return "Compartilhamento Social";
+    case "coupon": return "Cupom";
+    case "survey": return "Pesquisa";
+    case "review": return "Avaliação";
+    default: return type.replace("_", " ");
+  }
 };
 
 export default MissionDetails;

@@ -14,12 +14,14 @@ export { useToast } from './use-toast';
 export { useClientDashboard } from './useClientDashboard';
 export { useMissions } from './useMissions';
 export { 
-  missionTypeLabels, 
+  missionTypeLabels,
+  missionTypeDescriptions,
   getMissionTypeDescription, 
   getMissionIcon,
   filterMissionsByType,
   getMissionDifficulty,
-  getEstimatedTime
+  getEstimatedTime,
+  useMissionTypes
 } from './useMissionsTypes';
 // Re-export types with the correct syntax for isolatedModules
 export type { MissionType } from './useMissionsTypes';
@@ -34,4 +36,3 @@ export * from './missions/types';
 
 // Admin hooks
 export * from './admin';
-
