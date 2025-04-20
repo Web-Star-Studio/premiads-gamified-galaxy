@@ -115,10 +115,12 @@ export const redeemCashback = async (
     
     // Deduct points from user profile (10x because cashback is 10% of points)
     const pointsToDeduct = amount * 10;
+    
+    // Fix: Use the correct update syntax instead of rpc for decrementing points
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
-        points: supabase.rpc('decrement_points', { points_to_subtract: pointsToDeduct }) 
+        points: supabase.sql`profiles.points - ${pointsToDeduct}` 
       })
       .eq('id', session.user.id);
     
