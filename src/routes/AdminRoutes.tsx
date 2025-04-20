@@ -1,10 +1,8 @@
-
-import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
+import RouteGuard from "@/components/auth/RouteGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
-import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
-import { useToast } from "@/hooks/use-toast";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -23,92 +21,69 @@ const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
-  const location = useLocation();
-  const { isAdmin, loading, userId } = useAdminAuth();
-  const { toast } = useToast();
-  
-  useEffect(() => {
-    console.log("AdminRoutes rendered, current path:", location.pathname);
-  }, [location]);
-
-  // Show loading spinner while checking admin status
-  if (loading) {
-    return <RouteLoadingSpinner />;
-  }
-  
-  // If not admin, don't render routes (the hook will handle redirection)
-  if (!isAdmin) {
-    if (userId) {
-      toast({
-        title: "Acesso restrito",
-        description: "Esta área é restrita para administradores.",
-        variant: "destructive"
-      });
-    }
-    return null;
-  }
-
   return (
-    <Routes>
-      <Route index element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdminPanel />
-        </Suspense>
-      } />
-      <Route path="usuarios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <UserManagementPage />
-        </Suspense>
-      } />
-      <Route path="sorteios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <LotteryManagementPage />
-        </Suspense>
-      } />
-      <Route path="relatorios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ReportsPage />
-        </Suspense>
-      } />
-      <Route path="monitoramento" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <MonitoringPage />
-        </Suspense>
-      } />
-      <Route path="notificacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <NotificationsPage />
-        </Suspense>
-      } />
-      <Route path="regras" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <RulesPage />
-        </Suspense>
-      } />
-      <Route path="acessos" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AccessControlPage />
-        </Suspense>
-      } />
-      <Route path="configuracoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <SettingsPage />
-        </Suspense>
-      } />
-      <Route path="documentacao" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <DocumentationPage />
-        </Suspense>
-      } />
-      <Route path="moderacao" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ModerationPage />
-        </Suspense>
-      } />
-      
-      {/* Catch-all route for 404 handling within admin routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <RouteGuard userType="admin">
+      <Routes>
+        <Route index element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdminPanel />
+          </Suspense>
+        } />
+        <Route path="usuarios" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <UserManagementPage />
+          </Suspense>
+        } />
+        <Route path="sorteios" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <LotteryManagementPage />
+          </Suspense>
+        } />
+        <Route path="relatorios" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ReportsPage />
+          </Suspense>
+        } />
+        <Route path="monitoramento" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <MonitoringPage />
+          </Suspense>
+        } />
+        <Route path="notificacoes" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <NotificationsPage />
+          </Suspense>
+        } />
+        <Route path="regras" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <RulesPage />
+          </Suspense>
+        } />
+        <Route path="acessos" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AccessControlPage />
+          </Suspense>
+        } />
+        <Route path="configuracoes" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <SettingsPage />
+          </Suspense>
+        } />
+        <Route path="documentacao" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <DocumentationPage />
+          </Suspense>
+        } />
+        <Route path="moderacao" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ModerationPage />
+          </Suspense>
+        } />
+        
+        {/* Catch-all route for 404 handling within admin routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </RouteGuard>
   );
 };
 

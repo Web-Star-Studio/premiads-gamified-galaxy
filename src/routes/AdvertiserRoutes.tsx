@@ -1,6 +1,6 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
+import RouteGuard from "@/components/auth/RouteGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
 
@@ -20,56 +20,58 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdvertiserRoutes = () => {
   return (
-    <Routes>
-      <Route index element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserDashboard />
-        </Suspense>
-      } />
-      <Route path="campanhas" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserCampaigns />
-        </Suspense>
-      } />
-      <Route path="nova-campanha" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserNewCampaign />
-        </Suspense>
-      } />
-      <Route path="analises" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserAnalytics />
-        </Suspense>
-      } />
-      <Route path="creditos" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserCredits />
-        </Suspense>
-      } />
-      <Route path="notificacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserNotifications />
-        </Suspense>
-      } />
-      <Route path="perfil" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserProfilePage />
-        </Suspense>
-      } />
-      <Route path="configuracoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserSettings />
-        </Suspense>
-      } />
-      <Route path="moderacao" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ModerationPage />
-        </Suspense>
-      } />
-      
-      {/* Catch-all route for 404 handling within advertiser routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <RouteGuard userType="anunciante">
+      <Routes>
+        <Route index element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserDashboard />
+          </Suspense>
+        } />
+        <Route path="campanhas" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserCampaigns />
+          </Suspense>
+        } />
+        <Route path="nova-campanha" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserNewCampaign />
+          </Suspense>
+        } />
+        <Route path="analises" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserAnalytics />
+          </Suspense>
+        } />
+        <Route path="creditos" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserCredits />
+          </Suspense>
+        } />
+        <Route path="notificacoes" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserNotifications />
+          </Suspense>
+        } />
+        <Route path="perfil" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserProfilePage />
+          </Suspense>
+        } />
+        <Route path="configuracoes" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserSettings />
+          </Suspense>
+        } />
+        <Route path="moderacao" element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ModerationPage />
+          </Suspense>
+        } />
+        
+        {/* Catch-all route for 404 handling within advertiser routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </RouteGuard>
   );
 };
 
