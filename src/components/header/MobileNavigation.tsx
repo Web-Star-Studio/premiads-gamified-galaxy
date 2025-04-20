@@ -1,8 +1,8 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { UserType } from "@/types/auth";
 
 interface Section {
   id: string;
@@ -14,37 +14,52 @@ interface Section {
 interface MobileNavigationProps {
   sections: Section[];
   mobileMenuOpen: boolean;
-  scrollToSection: (sectionId: string) => void;
+  scrollToSection: (id: string) => void;
   navigateToDashboard: () => void;
-  userType: "participante" | "anunciante";
-  setMobileMenuOpen: (isOpen: boolean) => void;
+  userType: UserType;
+  setMobileMenuOpen: (open: boolean) => void;
 }
 
-const MobileNavigation: React.FC<MobileNavigationProps> = ({
+const MobileNavigation = ({
   sections,
   mobileMenuOpen,
   scrollToSection,
   navigateToDashboard,
   userType,
-  setMobileMenuOpen,
-}) => {
-  const handleNavigation = (section: Section) => {
-    setMobileMenuOpen(false);
-    
-    if (section.isLink && section.to) {
-      // For direct links, the Link component will handle navigation
-      return;
+  setMobileMenuOpen
+}: MobileNavigationProps) => {
+  // Prevents scrolling when the mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
     } else {
-      scrollToSection(section.id);
+      document.body.style.overflow = "";
     }
-  };
+    
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
-  const openWhatsApp = () => {
-    const phoneNumber = "5581985595912";
-    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  // Close mobile menu after clicking a link
+  const handleSectionClick = (id: string) => {
+    scrollToSection(id);
+    setMobileMenuOpen(false);
   };
-
+  
+  // Handle dashboard navigation
+  const handleDashboardClick = () => {
+    navigateToDashboard();
+    setMobileMenuOpen(false);
+  };
+  
+  // Get button text based on user type
+  const getButtonText = () => {
+    if (userType === "participante") return "Ver Missões";
+    if (userType === "anunciante") return "Criar Campanha";
+    return "Acessar Painel";
+  };
+  
   return (
     <AnimatePresence>
       {mobileMenuOpen && (
@@ -52,55 +67,50 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 top-[60px] bg-black/95 backdrop-blur-md z-30 md:hidden overflow-auto pt-6"
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 top-[60px] z-30 bg-galaxy-dark/95 backdrop-blur-sm overflow-y-auto"
         >
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col space-y-4">
+          <div className="container mx-auto py-8 px-4">
+            <ul className="space-y-4">
               {sections.map((section) => (
-                section.isLink && section.to ? (
-                  <Link
-                    key={section.id}
-                    to={section.to}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {section.label}
-                  </Link>
-                ) : (
-                  <button
-                    key={section.id}
-                    onClick={() => handleNavigation(section)}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors text-left"
-                  >
-                    {section.label}
-                  </button>
-                )
+                <motion.li
+                  key={section.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  {section.isLink ? (
+                    <a
+                      href={section.to}
+                      className="text-xl font-medium py-2 px-4 block text-white hover:text-neon-cyan transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {section.label}
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handleSectionClick(section.id)}
+                      className="text-xl font-medium py-2 px-4 block text-white hover:text-neon-cyan transition-colors w-full text-left"
+                    >
+                      {section.label}
+                    </button>
+                  )}
+                </motion.li>
               ))}
-
-              <Button
-                className="neon-button mt-6"
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigateToDashboard();
-                }}
+              <motion.li
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="pt-6"
               >
-                {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="bg-transparent border-white/20 hover:bg-white/5 mt-2"
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openWhatsApp();
-                }}
-              >
-                Fale com um Especialista
-              </Button>
-            </div>
+                <Button
+                  className="w-full neon-button text-lg py-6"
+                  onClick={handleDashboardClick}
+                >
+                  {getButtonText()}
+                </Button>
+              </motion.li>
+            </ul>
           </div>
         </motion.div>
       )}
