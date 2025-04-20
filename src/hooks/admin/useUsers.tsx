@@ -43,11 +43,12 @@ export const useUsers = () => {
       const parsedData = Array.isArray(data) ? data.map(item => {
         // Handle each item as a JSON object with expected properties
         if (typeof item === 'object' && item !== null) {
+          const jsonItem = item as Record<string, unknown>;
           return {
-            id: item.id as string,
-            email: item.email as string,
-            created_at: item.created_at as string,
-            last_sign_in_at: item.last_sign_in_at as string | null
+            id: jsonItem.id as string,
+            email: jsonItem.email as string,
+            created_at: jsonItem.created_at as string,
+            last_sign_in_at: jsonItem.last_sign_in_at as string | null
           } as UserData;
         }
         return null;
