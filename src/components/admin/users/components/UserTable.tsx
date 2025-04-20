@@ -32,8 +32,8 @@ const UserTable = ({
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={selectedUsers.size === users.length}
-                onCheckedChange={onSelectAll}
+                checked={selectedUsers.size === users.length && users.length > 0}
+                onCheckedChange={(checked) => onSelectAll(!!checked)}
               />
             </TableHead>
             <TableHead>Name</TableHead>
@@ -50,7 +50,7 @@ const UserTable = ({
               <TableCell>
                 <Checkbox
                   checked={selectedUsers.has(user.id)}
-                  onCheckedChange={(checked) => onSelectUser(user.id, checked)}
+                  onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
                 />
               </TableCell>
               <TableCell className="font-medium">{user.name}</TableCell>
