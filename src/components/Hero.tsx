@@ -1,4 +1,3 @@
-
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -6,6 +5,12 @@ import Particles from "./Particles";
 
 const Hero = () => {
   const { userType, userName } = useUser();
+
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -82,6 +87,7 @@ const Hero = () => {
             <Button 
               variant="outline" 
               className="bg-transparent border-neon-pink text-white hover:bg-neon-pink/10 text-base sm:text-lg py-2 sm:py-3 md:py-4"
+              onClick={openWhatsApp}
             >
               Fale com um Especialista
             </Button>
