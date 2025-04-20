@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -36,26 +35,15 @@ export const useUsers = () => {
       // Note: This requires special permissions, so we'll use profiles data primarily
       let authData: Record<string, any> = {};
       try {
-        // Attempt to get user auth data (may fail if not admin)
-        const { data: authUsers } = await supabase
-          .rpc('get_all_users');
-          
-        if (authUsers && Array.isArray(authUsers)) {
-          // Create a map of user ids to their auth data
-          authData = authUsers.reduce((acc, user) => {
-            acc[user.id] = user;
-            return acc;
-          }, {} as Record<string, any>);
-        }
+        // Instead of using RPC, we'll just get the relevant data from profiles
+        // We'll work with what we have in the profiles table
+        console.log("Working with profile data only since we can't access auth users directly");
       } catch (authError) {
         console.warn('Could not fetch auth users data, using profiles only', authError);
       }
       
-      // Combine the data
+      // Combine the data - using only profiles data
       const combinedUsers: User[] = profiles.map(profile => {
-        // Get auth data for this user if available
-        const authUser = authData[profile.id];
-        
         // Determine status based on profile data
         let status: 'active' | 'inactive' | 'pending';
         if (profile.profile_completed) {
@@ -67,11 +55,11 @@ export const useUsers = () => {
         return {
           id: profile.id,
           name: profile.full_name || 'Usuário sem nome',
-          email: authUser?.email || profile.email || 'Email não disponível',
+          email: profile.profile_data?.email || 'Email não disponível', // Use profile_data for email if available
           role: profile.user_type || 'participante',
           status,
-          lastLogin: authUser?.last_sign_in_at 
-            ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR')
+          lastLogin: profile.updated_at 
+            ? new Date(profile.updated_at).toLocaleDateString('pt-BR')
             : undefined,
           avatar_url: profile.avatar_url
         };
