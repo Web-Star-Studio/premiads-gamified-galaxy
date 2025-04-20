@@ -7,6 +7,12 @@ import Particles from "./Particles";
 const CallToAction = () => {
   const { userType } = useUser();
 
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+
   return (
     <section id="cta" className="py-12 sm:py-16 md:py-20 relative overflow-hidden">
       <Particles count={30} />
@@ -70,6 +76,7 @@ const CallToAction = () => {
               <Button
                 variant="outline"
                 className="bg-transparent border-white/20 hover:bg-white/5 text-base sm:text-lg py-2 sm:py-3 md:py-4"
+                onClick={openWhatsApp}
               >
                 Fale com um Especialista
               </Button>
@@ -82,3 +89,4 @@ const CallToAction = () => {
 };
 
 export default CallToAction;
+
