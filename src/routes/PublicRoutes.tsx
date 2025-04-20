@@ -1,36 +1,84 @@
 
+import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Index from "@/pages/Index";
-import About from "@/pages/About";
-import HowItWorks from "@/pages/HowItWorks";
-import Faq from "@/pages/Faq";
-import Feedback from "@/pages/Feedback";
-import Tutorials from "@/pages/Tutorials";
-import Authentication from "@/pages/Authentication";
-import Blog from "@/pages/Blog";
-import BlogPost from "@/pages/BlogPost";
-import Support from "@/pages/Support";
-import NotFound from "@/pages/NotFound";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+// Lazy load public pages
+const Index = lazy(() => import("@/pages/Index"));
+const About = lazy(() => import("@/pages/About"));
+const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
+const Faq = lazy(() => import("@/pages/Faq"));
+const Feedback = lazy(() => import("@/pages/Feedback"));
+const Tutorials = lazy(() => import("@/pages/Tutorials"));
+const Authentication = lazy(() => import("@/pages/Authentication"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
+const Support = lazy(() => import("@/pages/Support"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const PublicRoutes = () => {
   return (
     <Routes>
-      <Route index element={<Index />} />
-      <Route path="sobre" element={<About />} />
-      <Route path="como-funciona" element={<HowItWorks />} />
-      <Route path="faq" element={<Faq />} />
-      <Route path="feedback" element={<Feedback />} />
-      <Route path="tutoriais" element={<Tutorials />} />
-      <Route path="auth" element={<Authentication />} />
-      <Route path="blog" element={<Blog />} />
-      <Route path="blog/:id" element={<BlogPost />} />
-      <Route path="suporte" element={<Support />} />
+      <Route index element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Index />
+        </Suspense>
+      } />
+      <Route path="sobre" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <About />
+        </Suspense>
+      } />
+      <Route path="como-funciona" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <HowItWorks />
+        </Suspense>
+      } />
+      <Route path="faq" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Faq />
+        </Suspense>
+      } />
+      <Route path="feedback" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Feedback />
+        </Suspense>
+      } />
+      <Route path="tutoriais" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Tutorials />
+        </Suspense>
+      } />
+      <Route path="auth" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Authentication />
+        </Suspense>
+      } />
+      <Route path="blog" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Blog />
+        </Suspense>
+      } />
+      <Route path="blog/:id" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <BlogPost />
+        </Suspense>
+      } />
+      <Route path="suporte" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Support />
+        </Suspense>
+      } />
       
       {/* Redirect /documentacao to /admin/documentacao */}
       <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
       
       {/* Catch-all for missing routes */}
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <NotFound />
+        </Suspense>
+      } />
     </Routes>
   );
 };

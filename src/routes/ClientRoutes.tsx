@@ -1,7 +1,7 @@
 
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load client pages
@@ -15,9 +15,7 @@ const Support = lazy(() => import("@/pages/Support"));
 const Tour = lazy(() => import("@/pages/Tour"));
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Faq = lazy(() => import("@/pages/Faq"));
-
-// Custom loading component for routes
-const RouteLoadingSpinner = () => <LoadingSpinner />;
+const ClientNotifications = lazy(() => import("@/pages/client/ClientNotifications"));
 
 const ClientRoutes = () => {
   return (
@@ -70,6 +68,11 @@ const ClientRoutes = () => {
       <Route path="faq" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <Faq />
+        </Suspense>
+      } />
+      <Route path="notificacoes" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <ClientNotifications />
         </Suspense>
       } />
       
