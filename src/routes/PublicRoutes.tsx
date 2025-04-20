@@ -10,7 +10,6 @@ const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Faq = lazy(() => import("@/pages/Faq"));
 const Feedback = lazy(() => import("@/pages/Feedback"));
 const Tutorials = lazy(() => import("@/pages/Tutorials"));
-const Authentication = lazy(() => import("@/pages/Authentication"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
@@ -49,11 +48,6 @@ const PublicRoutes = () => {
           <Tutorials />
         </Suspense>
       } />
-      <Route path="auth" element={
-        <Suspense fallback={<LoadingSpinner />}>
-          <Authentication />
-        </Suspense>
-      } />
       <Route path="blog" element={
         <Suspense fallback={<LoadingSpinner />}>
           <Blog />
@@ -69,6 +63,9 @@ const PublicRoutes = () => {
           <Support />
         </Suspense>
       } />
+      
+      {/* Redirect /auth to / as we now use an overlay */}
+      <Route path="auth" element={<Navigate to="/" replace />} />
       
       {/* Redirect /documentacao to /admin/documentacao */}
       <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />

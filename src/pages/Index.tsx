@@ -1,7 +1,6 @@
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { UserProvider, useUser } from "@/context/UserContext";
-import ProfileOverlay from "@/components/ProfileOverlay";
 import MainHeader from "@/components/MainHeader";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
@@ -11,13 +10,15 @@ import Faq from "@/components/Faq";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
+import AuthOverlay from "@/components/auth/AuthOverlay";
 
 const MainContent = () => {
-  const { isOverlayOpen } = useUser();
+  const { isOverlayOpen, setIsOverlayOpen } = useUser();
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     // Prevent scrolling when overlay is open
-    if (isOverlayOpen) {
+    if (isOverlayOpen || showAuth) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -26,22 +27,24 @@ const MainContent = () => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOverlayOpen]);
+  }, [isOverlayOpen, showAuth]);
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {isOverlayOpen && <ProfileOverlay />}
-      <MainHeader />
+      <MainHeader onLoginClick={() => setShowAuth(true)} />
       <main className="flex-grow">
         <Hero />
         <HowItWorks />
         <Benefits />
         <Testimonials />
         <Faq />
-        <CallToAction />
+        <CallToAction onGetStartedClick={() => setShowAuth(true)} />
       </main>
       <Footer />
       <SupportTools />
+      
+      {/* Auth overlay */}
+      <AuthOverlay isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 };

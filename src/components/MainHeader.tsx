@@ -13,8 +13,12 @@ import { useHeaderScroll } from "./header/useHeaderScroll";
 import { useMobileMenu } from "./header/useMobileMenu";
 import { useNavigation } from "./header/useNavigation";
 
-const MainHeader = () => {
-  const { userType, setIsOverlayOpen } = useUser();
+interface MainHeaderProps {
+  onLoginClick?: () => void;
+}
+
+const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
+  const { userType, isAuthenticated, setIsOverlayOpen } = useUser();
   const scrolled = useHeaderScroll();
   const { mobileMenuOpen, setMobileMenuOpen, toggleMobileMenu } = useMobileMenu();
   const { changeUserType, navigateToDashboard, scrollToSection } = useNavigation();
@@ -32,11 +36,15 @@ const MainHeader = () => {
     { id: "faq", label: "FAQ" },
   ];
 
-  // Get the button text based on user type
+  // Get the button text based on user type and authentication state
   const getButtonText = () => {
-    if (userType === "participante") return "Ver Missões";
-    if (userType === "anunciante") return "Criar Campanha";
-    return "Acessar Painel";
+    if (isAuthenticated) {
+      if (userType === "participante") return "Ver Missões";
+      if (userType === "anunciante") return "Criar Campanha";
+      return "Acessar Painel";
+    } else {
+      return "Entrar";
+    }
   };
 
   return (
@@ -56,16 +64,18 @@ const MainHeader = () => {
         <DesktopNavigation sections={sections} scrollToSection={scrollToSection} />
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <UserTypeSelector 
-            userType={userType} 
-            changeUserType={changeUserType} 
-            setIsOverlayOpen={setIsOverlayOpen} 
-          />
+          {!isAuthenticated && (
+            <UserTypeSelector 
+              userType={userType} 
+              changeUserType={changeUserType} 
+              setIsOverlayOpen={setIsOverlayOpen} 
+            />
+          )}
 
           <Button 
             className="hidden md:flex neon-button items-center justify-center" 
             size="sm"
-            onClick={navigateToDashboard}
+            onClick={isAuthenticated ? navigateToDashboard : onLoginClick}
           >
             {getButtonText()}
           </Button>
@@ -88,7 +98,7 @@ const MainHeader = () => {
         sections={sections}
         mobileMenuOpen={mobileMenuOpen}
         scrollToSection={scrollToSection}
-        navigateToDashboard={navigateToDashboard}
+        navigateToDashboard={isAuthenticated ? navigateToDashboard : onLoginClick}
         userType={userType}
         setMobileMenuOpen={setMobileMenuOpen}
       />

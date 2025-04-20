@@ -2,14 +2,17 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { UserType } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type UserContextType = {
   userName: string;
   userType: UserType;
   isOverlayOpen: boolean;
+  isAuthenticated: boolean;
   setUserName: (name: string) => void;
   setUserType: (type: UserType) => void;
   setIsOverlayOpen: (isOpen: boolean) => void;
+  setIsAuthenticated: (isAuth: boolean) => void;
   resetUserInfo: () => void;
   saveUserPreferences: () => Promise<void>;
 };
@@ -18,9 +21,11 @@ const defaultContext: UserContextType = {
   userName: "",
   userType: "participante",
   isOverlayOpen: false,
+  isAuthenticated: false,
   setUserName: () => {},
   setUserType: () => {},
   setIsOverlayOpen: () => {},
+  setIsAuthenticated: () => {},
   resetUserInfo: () => {},
   saveUserPreferences: async () => {},
 };
@@ -31,17 +36,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState<string>("");
   const [userType, setUserType] = useState<UserType>("participante");
   const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Carrega informações do usuário quando o componente é montado
+  // Load user data when component mounts
   useEffect(() => {
     const loadUserData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user?.id) {
         setUserId(session.user.id);
+        setIsAuthenticated(true);
         
-        // Buscar perfil do usuário
+        // Fetch user profile
         const { data, error } = await supabase
           .from("profiles")
           .select("full_name, user_type")
@@ -49,7 +57,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           .single();
         
         if (error) {
-          console.error("Erro ao carregar perfil do usuário:", error);
+          console.error("Error loading user profile:", error);
           return;
         }
         
@@ -62,13 +70,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     
     loadUserData();
     
-    // Configurar listener para mudanças na autenticação
+    // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event);
+        
         if (event === "SIGNED_IN" && session) {
           setUserId(session.user.id);
+          setIsAuthenticated(true);
           
-          // Buscar perfil do usuário
+          // Fetch user profile
           const { data, error } = await supabase
             .from("profiles")
             .select("full_name, user_type")
@@ -82,6 +93,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         } else if (event === "SIGNED_OUT") {
           resetUserInfo();
           setUserId(null);
+          setIsAuthenticated(false);
         }
       }
     );
@@ -95,9 +107,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUserName("");
     setUserType("participante");
     setIsOverlayOpen(false);
+    setIsAuthenticated(false);
   };
 
-  // Função para salvar preferências do usuário no Supabase
+  // Save user preferences to Supabase
   const saveUserPreferences = async () => {
     if (!userId) return;
     
@@ -107,18 +120,29 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         .update({
           full_name: userName,
           user_type: userType,
-          updated_at: new Date().toISOString() // Convert Date to ISO string
+          updated_at: new Date().toISOString(),
+          profile_completed: true
         })
         .eq("id", userId);
       
       if (error) {
-        console.error("Erro ao salvar preferências:", error);
+        console.error("Error saving preferences:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível salvar suas preferências.",
+          variant: "destructive"
+        });
         throw error;
       }
       
-      console.log("Preferências de usuário salvas com sucesso");
+      toast({
+        title: "Sucesso",
+        description: "Suas preferências foram salvas com sucesso.",
+      });
+      
+      console.log("User preferences saved successfully");
     } catch (error) {
-      console.error("Erro ao salvar preferências:", error);
+      console.error("Error saving preferences:", error);
       throw error;
     }
   };
@@ -129,9 +153,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         userName,
         userType,
         isOverlayOpen,
+        isAuthenticated,
         setUserName,
         setUserType,
         setIsOverlayOpen,
+        setIsAuthenticated,
         resetUserInfo,
         saveUserPreferences,
       }}

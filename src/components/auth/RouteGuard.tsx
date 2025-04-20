@@ -1,9 +1,10 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -11,25 +12,50 @@ interface RouteGuardProps {
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
-  const { isAuthenticated, isLoading, currentUser } = useAuth();
+  const { isAuthenticated, userType: contextUserType } = useUser();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isValidSession, setIsValidSession] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
+    // Check for current session
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
+          setIsValidSession(false);
+          setIsCheckingAuth(false);
+          return;
+        }
+        
+        setIsValidSession(!!data.session);
+        setIsCheckingAuth(false);
+      } catch (error) {
+        console.error("Session check error:", error);
+        setIsValidSession(false);
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkSession();
+    
     // Add a timeout to detect if authentication is taking too long
     const timeoutId = setTimeout(() => {
-      if (isLoading) {
+      if (isCheckingAuth) {
         console.log("Authentication check is taking longer than expected");
         setAuthTimeout(true);
       }
     }, 5000);
 
     return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+  }, []);
 
   // Show error message if auth check takes too long
-  if (authTimeout && isLoading) {
+  if (authTimeout && isCheckingAuth) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-galaxy-dark p-4" data-testid="auth-timeout">
         <div className="text-center max-w-md space-y-4">
@@ -47,7 +73,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // Show loading spinner while checking authentication
-  if (isLoading) {
+  if (isCheckingAuth) {
     return (
       <div className="flex h-screen items-center justify-center bg-galaxy-dark" data-testid="route-loading-spinner">
         <LoadingSpinner />
@@ -56,15 +82,12 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // If not authenticated, redirect to login with return path
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  if (!isValidSession || !isAuthenticated) {
+    return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
-  // Get user's role from metadata
-  const userRole = currentUser?.user_metadata?.user_type || 'participante';
-
   // If userType is specified, check if user has correct type
-  if (userType && userRole !== userType) {
+  if (userType && contextUserType !== userType) {
     // Show access denied toast
     toast({
       title: "Acesso negado",
@@ -73,9 +96,9 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     });
 
     // Redirect to appropriate dashboard based on user type
-    if (userRole === "anunciante") {
+    if (contextUserType === "anunciante") {
       return <Navigate to="/anunciante" replace />;
-    } else if (userRole === "admin") {
+    } else if (contextUserType === "admin") {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/cliente" replace />;
