@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +14,14 @@ export interface User {
   avatar_url?: string;
 }
 
+// Interface for the JSON structure returned by get_all_users function
+interface UserData {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+}
+
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,14 +33,14 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use the new Postgres function to get all users
+      // Use the Postgres function to get all users
       const { data, error: usersError } = await supabase
         .rpc('get_all_users');
         
       if (usersError) throw usersError;
       
-      // Map the raw data to our User interface
-      const mappedUsers: User[] = data.map(user => ({
+      // Map the raw data to our User interface, ensuring proper type casting
+      const mappedUsers: User[] = (data as UserData[]).map(user => ({
         id: user.id,
         name: '', // We might want to fetch full names separately
         email: user.email,
