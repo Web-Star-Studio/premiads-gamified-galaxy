@@ -6,10 +6,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { 
   Sidebar, 
   SidebarHeader, 
-  SidebarBody, 
+  SidebarContent, 
   SidebarMenu,
   SidebarMenuItem, 
-  SidebarMenuGroup, 
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenuButton,
   SidebarFooter
 } from '@/components/ui/sidebar';
 
@@ -44,64 +47,103 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
         </div>
       </SidebarHeader>
       
-      <SidebarBody>
+      <SidebarContent>
         <SidebarMenu>
-          <SidebarMenuGroup title="Principal">
-            <SidebarMenuItem 
-              active={isActive('/cliente')}
-              icon={Home}
-              title="Dashboard"
-              href="/cliente"
-              component={Link}
-            />
-            <SidebarMenuItem 
-              active={isActive('/cliente/missoes')}
-              icon={Zap}
-              title="Missões"
-              href="/cliente/missoes"
-              component={Link}
-            />
-            <SidebarMenuItem 
-              active={isActive('/cliente/perfil')}
-              icon={User}
-              title="Perfil"
-              href="/cliente/perfil"
-              component={Link}
-            />
-            <SidebarMenuItem 
-              active={isActive('/cliente/sorteios')}
-              icon={Gift}
-              title="Sorteios"
-              href="/cliente/sorteios"
-              component={Link}
-            />
-          </SidebarMenuGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Principal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente')}
+                  asChild
+                >
+                  <Link to="/cliente">
+                    <Home />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/missoes')}
+                  asChild
+                >
+                  <Link to="/cliente/missoes">
+                    <Zap />
+                    <span>Missões</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/perfil')}
+                  asChild
+                >
+                  <Link to="/cliente/perfil">
+                    <User />
+                    <span>Perfil</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/sorteios')}
+                  asChild
+                >
+                  <Link to="/cliente/sorteios">
+                    <Gift />
+                    <span>Sorteios</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarGroupContent>
+          </SidebarGroup>
           
-          <SidebarMenuGroup title="Outros">
-            <SidebarMenuItem 
-              active={isActive('/cliente/indicacoes')}
-              icon={UserPlus}
-              title="Indicações"
-              href="/cliente/indicacoes"
-              component={Link}
-            />
-            <SidebarMenuItem 
-              active={isActive('/cliente/cashback')}
-              icon={Wallet}
-              title="Cashback"
-              href="/cliente/cashback"
-              component={Link}
-            />
-            <SidebarMenuItem 
-              active={isActive('/cliente/suporte')}
-              icon={HelpCircle}
-              title="Suporte"
-              href="/cliente/suporte"
-              component={Link}
-            />
-          </SidebarMenuGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Outros</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/indicacoes')}
+                  asChild
+                >
+                  <Link to="/cliente/indicacoes">
+                    <UserPlus />
+                    <span>Indicações</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/cashback')}
+                  asChild
+                >
+                  <Link to="/cliente/cashback">
+                    <Wallet />
+                    <span>Cashback</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/suporte')}
+                  asChild
+                >
+                  <Link to="/cliente/suporte">
+                    <HelpCircle />
+                    <span>Suporte</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarMenu>
-      </SidebarBody>
+      </SidebarContent>
       
       <SidebarFooter>
         <button 

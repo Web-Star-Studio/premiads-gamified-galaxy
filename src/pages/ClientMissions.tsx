@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -32,7 +31,7 @@ const ClientMissions = () => {
     currentFilter, 
     setFilter,
     submitMission
-  } = useMissions({ initialFilter: "available" });
+  } = useMissions({ initialFilter: "available", enableNotifications: false });
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
