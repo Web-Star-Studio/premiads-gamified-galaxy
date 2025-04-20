@@ -1,79 +1,41 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
+import { UserType } from "@/types/auth";
 
-type UserType = "participante" | "anunciante";
-
-interface UserContextType {
-  userType: UserType;
+type UserContextType = {
   userName: string;
-  isOverlayOpen: boolean;
-  setUserType: (type: UserType) => void;
+  userType: UserType;
   setUserName: (name: string) => void;
-  setIsOverlayOpen: (isOpen: boolean) => void;
+  setUserType: (type: UserType) => void;
   resetUserInfo: () => void;
-}
+};
 
-const defaultContextValue: UserContextType = {
-  userType: "participante",
+const defaultContext: UserContextType = {
   userName: "",
-  isOverlayOpen: true,
-  setUserType: () => {},
+  userType: "participante",
   setUserName: () => {},
-  setIsOverlayOpen: () => {},
+  setUserType: () => {},
   resetUserInfo: () => {},
 };
 
-const UserContext = createContext<UserContextType>(defaultContextValue);
+const UserContext = createContext<UserContextType>(defaultContext);
 
-export const useUser = () => useContext(UserContext);
-
-export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage if available
-  const [userType, setUserTypeState] = useState<UserType>(() => {
-    const savedType = localStorage.getItem("userType");
-    return (savedType as UserType) || "participante";
-  });
-  
-  const [userName, setUserNameState] = useState<string>(() => {
-    return localStorage.getItem("userName") || "";
-  });
-  
-  const [isOverlayOpen, setIsOverlayOpenState] = useState<boolean>(() => {
-    // Show overlay if no username is set
-    const savedName = localStorage.getItem("userName");
-    return !savedName || savedName === "";
-  });
-
-  // Update localStorage when state changes
-  const setUserType = (type: UserType) => {
-    localStorage.setItem("userType", type);
-    setUserTypeState(type);
-  };
-
-  const setUserName = (name: string) => {
-    localStorage.setItem("userName", name);
-    setUserNameState(name);
-  };
-
-  const setIsOverlayOpen = (isOpen: boolean) => {
-    setIsOverlayOpenState(isOpen);
-  };
+export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [userName, setUserName] = useState<string>("");
+  const [userType, setUserType] = useState<UserType>("participante");
 
   const resetUserInfo = () => {
-    localStorage.removeItem("userName");
-    setUserNameState("");
-    setIsOverlayOpen(true);
+    setUserName("");
+    setUserType("participante");
   };
 
   return (
     <UserContext.Provider
       value={{
-        userType,
         userName,
-        isOverlayOpen,
-        setUserType,
+        userType,
         setUserName,
-        setIsOverlayOpen,
+        setUserType,
         resetUserInfo,
       }}
     >
@@ -81,3 +43,5 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </UserContext.Provider>
   );
 };
+
+export const useUser = () => useContext(UserContext);

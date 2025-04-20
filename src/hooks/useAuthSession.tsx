@@ -38,7 +38,7 @@ export const useAuthSession = () => {
             if (profileData) {
               setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
               // Set user type from profile
-              setUserType((profileData.user_type || "participante") as UserType);
+              setUserType(profileData.user_type as UserType || "participante");
               
               // Check if profile is incomplete and show toast
               if (!profileData.profile_completed) {
@@ -86,8 +86,8 @@ export const useAuthSession = () => {
             
             if (profileData) {
               setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
-              // Set user type from profile
-              setUserType((profileData.user_type || "participante") as UserType);
+              // Set user type from profile with explicit type casting
+              setUserType(profileData.user_type as UserType || "participante");
               
               // Check if profile is incomplete and show toast
               if (!profileData.profile_completed) {
