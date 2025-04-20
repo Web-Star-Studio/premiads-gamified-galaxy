@@ -1,8 +1,10 @@
+
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import RouteGuard from "@/components/auth/RouteGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
+import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 
 // Lazy load client pages
 const ClientDashboard = lazy(() => import("@/pages/ClientDashboard"));
@@ -22,12 +24,12 @@ const ClientRoutes = () => {
     <RouteGuard userType="participante">
       <Routes>
         <Route index element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientDashboard />
           </Suspense>
         } />
         <Route path="missoes" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientMissions />
           </Suspense>
         } />
@@ -72,7 +74,7 @@ const ClientRoutes = () => {
           </Suspense>
         } />
         <Route path="notificacoes" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientNotifications />
           </Suspense>
         } />

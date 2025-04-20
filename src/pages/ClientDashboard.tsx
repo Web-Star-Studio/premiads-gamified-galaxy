@@ -16,13 +16,14 @@ import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
 import ProfileCompletionBanner from "@/components/client/dashboard/ProfileCompletionBanner";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { toast } = useToast();
+  const [errorState, setErrorState] = useState<string | null>(null);
   
   const {
     userName,
@@ -39,15 +40,37 @@ const ClientDashboard = () => {
   } = useClientDashboard(navigate);
 
   useEffect(() => {
+    // For debugging purposes, log the loading state
+    console.log("ClientDashboard loading state:", loading);
+    
     // Check for authentication errors
     if (authError) {
+      setErrorState(authError);
       toast({
         title: "Erro de autenticação",
         description: authError,
         variant: "destructive",
       });
     }
-  }, [authError, toast]);
+  }, [authError, loading, toast]);
+
+  // If we encounter an error, show a more user-friendly error state
+  if (errorState) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-galaxy-dark p-4">
+        <div className="text-center space-y-4 max-w-md">
+          <h2 className="text-2xl font-bold text-red-400">Oops! Encontramos um problema</h2>
+          <p className="text-gray-300">{errorState}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-neon-cyan text-galaxy-dark rounded-md hover:bg-neon-cyan/80 transition-colors"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <LoadingState />;

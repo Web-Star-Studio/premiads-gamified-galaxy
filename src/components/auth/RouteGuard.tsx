@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,10 +15,21 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const location = useLocation();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Add a timeout to detect if authentication is taking too long
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("Authentication check is taking longer than expected");
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
+
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-galaxy-dark">
+      <div className="flex h-screen items-center justify-center bg-galaxy-dark" data-testid="route-loading-spinner">
         <LoadingSpinner />
       </div>
     );
