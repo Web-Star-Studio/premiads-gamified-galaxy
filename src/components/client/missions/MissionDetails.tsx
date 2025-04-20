@@ -135,8 +135,8 @@ const getReadableMissionType = (type: MissionType): string => {
     case "survey": return "Pesquisa";
     case "review": return "Avaliação";
     default: 
-      // Fix: Ensure we don't call replace on a potentially 'never' type
-      return typeof type === 'string' ? type.replace("_", " ") : String(type);
+      // Safely handle any potential 'never' type values
+      return String(type);
   }
 };
 
