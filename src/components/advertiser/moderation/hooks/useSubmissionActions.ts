@@ -27,6 +27,9 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         
       if (error) throw error;
       
+      // Update user points - will trigger the database function award_mission_points
+      // This is handled by the trigger automatically, no need to update points manually
+      
       playSound("reward");
       toast({
         title: "Submissão aprovada",
@@ -55,7 +58,10 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       // Update submission status in database
       const { error } = await supabase
         .from("mission_submissions")
-        .update({ status: "rejected" })
+        .update({ 
+          status: "rejected",
+          feedback: submission.feedback || "Submissão não atende aos requisitos." 
+        })
         .eq("id", submission.id);
         
       if (error) throw error;

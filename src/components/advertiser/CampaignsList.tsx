@@ -7,6 +7,7 @@ import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
 import { mockCampaigns, Campaign } from "./campaignData";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CampaignsListProps {
   initialFilter?: string | null;
@@ -18,8 +19,42 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
+  const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
   const { toast } = useToast();
+  
+  // Fetch real campaigns when component mounts
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true);
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setCampaigns(mockCampaigns);
+          return;
+        }
+        
+        // Ideally, this would fetch actual campaigns from the database
+        // For now, let's use mock data but log to show this would be a real fetch
+        console.log("Would fetch campaigns for user:", session.user.id);
+        
+        // Set mock campaigns after a delay to simulate API call
+        setTimeout(() => {
+          setCampaigns(mockCampaigns);
+          setLoading(false);
+        }, 1000);
+        
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+        setCampaigns(mockCampaigns);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCampaigns();
+  }, []);
   
   // Set initial filter when prop changes
   useEffect(() => {
@@ -110,11 +145,17 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
             onSearchChange={handleSearchChange}
             onFilterChange={handleFilterChange}
           />
-          <CampaignTable 
-            campaigns={filteredCampaigns} 
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-          />
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="w-12 h-12 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <CampaignTable 
+              campaigns={filteredCampaigns} 
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          )}
         </>
       )}
     </div>

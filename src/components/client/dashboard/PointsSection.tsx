@@ -10,6 +10,7 @@ import { useRealtimePoints } from "@/hooks/useRealtimePoints";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import { getMoneyValue } from "@/utils/formatCurrency";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PointsSectionProps {
   totalPoints?: number;
@@ -17,10 +18,12 @@ interface PointsSectionProps {
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
   const navigate = useNavigate();
-  const { points: dashboardPoints, credits } = useClientDashboard(navigate);
+  const { points: dashboardPoints, credits, loading: dashboardLoading } = useClientDashboard(navigate);
   const initialPoints = totalPoints || dashboardPoints;
   const { points: realtimePoints, loading: pointsLoading } = useRealtimePoints(initialPoints);
   const { levelInfo, loading: levelLoading } = useUserLevel(realtimePoints);
+  
+  const isLoading = pointsLoading || dashboardLoading;
   
   return (
     <motion.div
@@ -33,7 +36,14 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              <PointsCard points={realtimePoints} credits={credits} />
+              {isLoading ? (
+                <div className="p-6 rounded-lg border border-gray-800 bg-gray-900/60">
+                  <Skeleton className="h-8 w-32 mb-3 bg-gray-800" />
+                  <Skeleton className="h-12 w-40 bg-gray-800" />
+                </div>
+              ) : (
+                <PointsCard points={realtimePoints} credits={credits} />
+              )}
               <div className="absolute top-3 right-3">
                 <Info className="h-4 w-4 text-neon-cyan cursor-help" />
               </div>
@@ -53,7 +63,9 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         </Tooltip>
       </TooltipProvider>
       
-      {!levelLoading && levelInfo && (
+      {levelLoading ? (
+        <Skeleton className="h-32 w-full bg-gray-800" />
+      ) : levelInfo && (
         <UserLevel levelInfo={levelInfo} />
       )}
       

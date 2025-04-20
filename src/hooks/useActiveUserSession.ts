@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export type SessionStatus = 'active' | 'inactive' | 'unknown';
 
@@ -8,9 +9,10 @@ export const useActiveUserSession = () => {
   const [status, setStatus] = useState<SessionStatus>('unknown');
   const [lastActivity, setLastActivity] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAndUpdateSession = async () => {
+  const checkAndUpdateSession = useCallback(async () => {
+    try {
       // Check for current session
       const { data: { session }, error } = await supabase.auth.getSession();
       
@@ -34,8 +36,18 @@ export const useActiveUserSession = () => {
       const now = new Date();
       setLastActivity(now);
       localStorage.setItem('lastActivity', now.toISOString());
-    };
-    
+    } catch (error) {
+      console.error('Error in checkAndUpdateSession:', error);
+      toast({
+        title: "Erro de sessão",
+        description: "Problema ao verificar sua sessão. Tente entrar novamente.",
+        variant: "destructive"
+      });
+      setStatus('inactive');
+    }
+  }, [toast]);
+  
+  useEffect(() => {
     // Initial check
     checkAndUpdateSession();
     
@@ -63,14 +75,34 @@ export const useActiveUserSession = () => {
       window.addEventListener(event, updateActivity);
     });
     
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN') {
+        setUserId(session?.user.id || null);
+        setStatus('active');
+        const now = new Date();
+        setLastActivity(now);
+        localStorage.setItem('lastActivity', now.toISOString());
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        setUserId(null);
+        setStatus('inactive');
+        localStorage.removeItem('lastActivity');
+      }
+    });
+    
     // Clean up
     return () => {
       clearInterval(interval);
       activityEvents.forEach(event => {
         window.removeEventListener(event, updateActivity);
       });
+      subscription.unsubscribe();
     };
-  }, [status]);
+  }, [status, checkAndUpdateSession]);
   
   return { 
     status, 
@@ -80,6 +112,12 @@ export const useActiveUserSession = () => {
     refreshSession: async () => {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
+        console.error('Error refreshing session:', error);
+        toast({
+          title: "Erro de sessão",
+          description: "Não foi possível atualizar sua sessão. Tente entrar novamente.",
+          variant: "destructive"
+        });
         setStatus('inactive');
         return false;
       }

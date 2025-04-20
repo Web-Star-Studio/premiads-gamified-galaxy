@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const useRealtimePoints = (initialPoints: number = 0) => {
   const [points, setPoints] = useState(initialPoints);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Initialize with passed value
@@ -28,6 +30,13 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
           
         if (error) {
           console.error('Error fetching user points:', error);
+          if (error.code !== 'PGRST116') { // Not "no rows returned" error
+            toast({
+              title: "Erro ao carregar pontos",
+              description: "Não foi possível sincronizar seus pontos. Tente novamente.",
+              variant: "destructive"
+            });
+          }
         } else if (data) {
           setPoints(data.points || 0);
         }
@@ -65,7 +74,14 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
             }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Subscribed to profile points changes');
+          }
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Error subscribing to profile points changes');
+          }
+        });
         
       return channel;
     };
@@ -77,7 +93,7 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
         if (channel) supabase.removeChannel(channel);
       });
     };
-  }, [initialPoints]);
+  }, [initialPoints, toast]);
   
   return { points, loading };
 };
