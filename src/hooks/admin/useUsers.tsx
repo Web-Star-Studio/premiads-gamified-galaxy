@@ -39,8 +39,22 @@ export const useUsers = () => {
         
       if (usersError) throw usersError;
       
-      // Map the raw data to our User interface, ensuring proper type casting
-      const mappedUsers: User[] = (data as UserData[]).map(user => ({
+      // Properly parse the JSON data before mapping
+      const parsedData = Array.isArray(data) ? data.map(item => {
+        // Handle each item as a JSON object with expected properties
+        if (typeof item === 'object' && item !== null) {
+          return {
+            id: item.id as string,
+            email: item.email as string,
+            created_at: item.created_at as string,
+            last_sign_in_at: item.last_sign_in_at as string | null
+          } as UserData;
+        }
+        return null;
+      }).filter(Boolean) as UserData[] : [];
+      
+      // Map the parsed data to our User interface
+      const mappedUsers: User[] = parsedData.map(user => ({
         id: user.id,
         name: '', // We might want to fetch full names separately
         email: user.email,
