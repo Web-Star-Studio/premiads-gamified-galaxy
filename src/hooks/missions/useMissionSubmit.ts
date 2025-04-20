@@ -1,121 +1,126 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { Mission } from "./types";
 
-type SetMissionsFunction = React.Dispatch<React.SetStateAction<Mission[]>>;
-
-export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
+export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateAction<Mission[]>>) => {
   const [submissionLoading, setSubmissionLoading] = useState(false);
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  const validateSubmissionData = (missionType: string, submissionData: any) => {
-    if (!submissionData) return "Dados da submissão são obrigatórios";
-    
-    if (missionType === "survey" && (!submissionData.answer || submissionData.answer.trim() === "")) {
-      return "Resposta é obrigatória para este tipo de missão";
-    }
-    
-    if (missionType === "photo" && !submissionData.mediaUrl) {
-      return "Imagem é obrigatória para este tipo de missão";
-    }
-    
-    if (missionType === "video" && !submissionData.mediaUrl) {
-      return "Vídeo é obrigatório para este tipo de missão";
-    }
-    
-    if (missionType === "social_share" && (!submissionData.shareLink || submissionData.shareLink.trim() === "")) {
-      return "Link da postagem é obrigatório para este tipo de missão";
-    }
-    
-    return null;
-  };
-
-  const submitMission = async (missionId: string, missionType: string, submissionData: any) => {
+  // The submitMission function now properly accepts a status parameter
+  const submitMission = async (
+    missionId: string, 
+    submissionData: any,
+    status: "in_progress" | "pending_approval" = "pending_approval" // Default to pending_approval if not specified
+  ) => {
     setSubmissionLoading(true);
-    setSubmissionError(null);
-    
-    // Validate submission data
-    const validationError = validateSubmissionData(missionType, submissionData);
-    if (validationError) {
-      setSubmissionError(validationError);
-      toast({
-        title: "Erro na submissão",
-        description: validationError,
-        variant: "destructive"
-      });
-      setSubmissionLoading(false);
-      return false;
-    }
     
     try {
-      // Check if user is authenticated
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        console.log("No authenticated session for mission submission");
-        
-        // Demo mode: update the mission status in local state
-        setMissions(prevMissions => 
-          prevMissions.map(mission => 
-            mission.id === missionId 
-              ? { ...mission, status: "pending_approval" } 
-              : mission
-          )
-        );
-        
-        playSound("reward");
+      // Get current user
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData?.session?.user?.id) {
+        console.error("No authenticated user found");
         toast({
-          title: "Missão enviada (modo demo)",
-          description: "Em um ambiente real, sua submissão seria analisada pelo anunciante."
+          title: "Erro ao enviar missão",
+          description: "Você precisa estar logado para enviar uma missão",
+          variant: "destructive",
         });
-        
-        setSubmissionLoading(false);
-        return true;
+        return false;
       }
-
-      // Real mode: submit to database
-      const { error } = await supabase
+      
+      const userId = sessionData.session.user.id;
+      
+      console.log(`Submitting mission ${missionId} for user ${userId} with status ${status}`);
+      
+      // Check if a submission already exists for this mission and user
+      const { data: existingSubmission, error: checkError } = await supabase
         .from("mission_submissions")
-        .insert({
-          mission_id: missionId,
-          user_id: session.user.id,
-          submission_data: submissionData,
-          status: "pending"
+        .select("*")
+        .eq("mission_id", missionId)
+        .eq("user_id", userId)
+        .single();
+      
+      if (checkError && checkError.code !== "PGRST116") { // PGRST116 means no rows returned
+        console.error("Error checking existing submission:", checkError);
+        toast({
+          title: "Erro ao verificar missão",
+          description: "Não foi possível verificar se você já enviou esta missão",
+          variant: "destructive",
         });
-
-      if (error) {
-        console.error("Error submitting to database:", error);
-        throw error;
+        return false;
       }
-
-      // Update mission status in local state
-      setMissions(prevMissions => 
-        prevMissions.map(mission => 
-          mission.id === missionId 
-            ? { ...mission, status: "pending_approval" } 
-            : mission
-        )
-      );
-
-      playSound("reward");
+      
+      let result;
+      
+      // If a submission already exists, update it
+      if (existingSubmission) {
+        console.log("Updating existing submission:", existingSubmission.id);
+        
+        result = await supabase
+          .from("mission_submissions")
+          .update({
+            submission_data: submissionData,
+            status: status, // Use the provided status
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingSubmission.id);
+      } else {
+        // Otherwise, create a new submission
+        console.log("Creating new submission");
+        
+        result = await supabase
+          .from("mission_submissions")
+          .insert({
+            mission_id: missionId,
+            user_id: userId,
+            submission_data: submissionData,
+            status: status, // Use the provided status
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+      }
+      
+      if (result.error) {
+        console.error("Error submitting mission:", result.error);
+        toast({
+          title: "Erro ao enviar missão",
+          description: result.error.message || "Ocorreu um erro ao enviar sua missão",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      console.log("Mission submitted successfully");
+      
+      // Update missions in state
+      setMissions(prevMissions => prevMissions.map(mission => {
+        if (mission.id === missionId) {
+          return {
+            ...mission,
+            status: status === "in_progress" ? "in_progress" : "pending_approval",
+          };
+        }
+        return mission;
+      }));
+      
       toast({
-        title: "Missão enviada com sucesso!",
-        description: "Sua submissão será analisada pelo anunciante."
+        title: "Missão enviada com sucesso",
+        description: status === "in_progress" 
+          ? "A missão foi salva e está em progresso" 
+          : "Sua missão foi enviada e está aguardando aprovação",
       });
       
+      playSound("success");
       return true;
     } catch (error: any) {
-      console.error("Error submitting mission:", error);
-      setSubmissionError(error.message || "Erro ao enviar missão");
+      console.error("Unexpected error submitting mission:", error);
       toast({
         title: "Erro ao enviar missão",
-        description: error.message || "Ocorreu um erro ao enviar sua missão. Tente novamente mais tarde.",
-        variant: "destructive"
+        description: error.message || "Ocorreu um erro inesperado ao enviar sua missão",
+        variant: "destructive",
       });
       return false;
     } finally {
@@ -123,9 +128,5 @@ export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
     }
   };
 
-  return { 
-    submitMission, 
-    submissionLoading,
-    submissionError
-  };
+  return { submitMission, submissionLoading };
 };

@@ -31,7 +31,7 @@ const ClientMissions = () => {
     currentFilter, 
     setFilter,
     submitMission
-  } = useMissions({ initialFilter: "available", enableNotifications: false });
+  } = useMissions({ initialFilter: "available" });
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
@@ -73,8 +73,8 @@ const ClientMissions = () => {
   const handleSubmitMission = async (submissionData: any) => {
     if (!selectedMission) return;
     
-    // Submit the mission
-    const success = await submitMission(selectedMission.id, submissionData);
+    // Submit the mission - make sure we pass the correct parameters
+    const success = await submitMission(selectedMission.id, submissionData, "in_progress");
     
     if (success) {
       setSelectedMission(null);

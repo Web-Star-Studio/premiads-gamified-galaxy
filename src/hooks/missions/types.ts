@@ -21,4 +21,5 @@ export interface Mission {
 
 export interface UseMissionsOptions {
   initialFilter?: "available" | "in_progress" | "pending" | "completed";
+  // Note: We removed enableNotifications since it's not being used
 }
