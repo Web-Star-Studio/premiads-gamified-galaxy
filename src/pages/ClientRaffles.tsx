@@ -24,24 +24,13 @@ const ClientRaffles = () => {
   const [selectedRaffleId, setSelectedRaffleId] = useState<number | null>(null);
 
   useEffect(() => {
-    // TEMPORARILY DISABLED: Redirect if user is not a participant
-    // if (userType !== "participante") {
-    //   toast({
-    //     title: "Acesso restrito",
-    //     description: "Você não tem permissão para acessar esta página",
-    //     variant: "destructive",
-    //   });
-    //   navigate("/");
-    //   return;
-    // }
-
     // Simulate loading
     const loadTimer = setTimeout(() => {
       setLoading(false);
       // Play welcome sound when page loads
       playSound("chime");
       
-      // Auto-select the first raffle if there are any available
+      // Only auto-select the first raffle if there are any available
       if (RAFFLES.length > 0 && !selectedRaffleId) {
         console.log("Auto-selecting first raffle:", RAFFLES[0].id);
         setSelectedRaffleId(RAFFLES[0].id);
@@ -135,29 +124,41 @@ const ClientRaffles = () => {
                     <RaffleDetails raffleId={selectedRaffleId} />
                   ) : (
                     <div className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">
-                      <motion.div
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          repeat: Infinity,
-                          repeatType: "reverse",
-                          duration: 2
-                        }}
-                      >
+                      {RAFFLES.length > 0 ? (
+                        <motion.div
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            duration: 2
+                          }}
+                        >
+                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-galaxy-dark to-galaxy-deepPurple flex items-center justify-center border border-neon-cyan/30 shadow-lg shadow-neon-cyan/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neon-cyan">
+                              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                              <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                              <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                              <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                          </div>
+                        </motion.div>
+                      ) : (
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-galaxy-dark to-galaxy-deepPurple flex items-center justify-center border border-neon-cyan/30 shadow-lg shadow-neon-cyan/10">
                           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neon-cyan">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
-                            <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
-                            <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
-                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                           </svg>
                         </div>
-                      </motion.div>
-                      <h3 className="text-xl font-heading mt-6">Selecione um Sorteio</h3>
+                      )}
+                      <h3 className="text-xl font-heading mt-6">
+                        {RAFFLES.length > 0 ? 'Selecione um Sorteio' : 'Sem Sorteios Disponíveis'}
+                      </h3>
                       <p className="text-gray-400 mt-2 max-w-md">
-                        Escolha um dos sorteios disponíveis para ver detalhes e participar com seus tickets.
+                        {RAFFLES.length > 0 
+                          ? 'Escolha um dos sorteios disponíveis para ver detalhes e participar com seus tickets.'
+                          : 'No momento não há sorteios ativos. Novos sorteios serão anunciados em breve.'}
                       </p>
                     </div>
                   )}

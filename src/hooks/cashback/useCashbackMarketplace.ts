@@ -26,8 +26,8 @@ export const useCashbackMarketplace = () => {
           fetchUserCashbackBalance()
         ]);
         
-        setCampaigns(fetchedCampaigns);
-        setUserCashback(cashbackBalance);
+        setCampaigns(fetchedCampaigns || []);
+        setUserCashback(cashbackBalance || 0);
       } catch (error: any) {
         console.error("Error fetching cashback data:", error);
         toast({
@@ -36,7 +36,7 @@ export const useCashbackMarketplace = () => {
           variant: 'destructive'
         });
         
-        // Use empty array instead of mock data
+        // Use empty array and zero balance as fallback
         setCampaigns([]);
         setUserCashback(0);
       } finally {
