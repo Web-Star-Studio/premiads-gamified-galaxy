@@ -43,20 +43,20 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
     <AnimatePresence>
       {mobileMenuOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 top-[60px] bg-black/95 backdrop-blur-md z-30 md:hidden overflow-auto pt-6"
+          className="md:hidden w-full bg-galaxy-dark/95 backdrop-blur-lg overflow-hidden"
         >
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col space-y-4">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col space-y-2">
               {sections.map((section) => (
                 section.isLink && section.to ? (
                   <Link
                     key={section.id}
                     to={section.to}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors"
+                    className="py-3 text-gray-200 hover:text-white text-lg font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {section.label}
@@ -65,7 +65,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   <button
                     key={section.id}
                     onClick={() => handleNavigation(section)}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors text-left"
+                    className="py-3 text-gray-200 hover:text-white text-lg font-medium text-left"
                   >
                     {section.label}
                   </button>
@@ -73,14 +73,13 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
               ))}
 
               <Button
-                className="neon-button mt-6"
-                size="lg"
+                className="mt-4 w-full bg-neon-cyan hover:bg-neon-cyan/90 text-galaxy-dark"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   navigateToDashboard();
                 }}
               >
-                {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+                {userType === "participante" ? "Entrar" : "Painel"}
               </Button>
             </div>
           </div>

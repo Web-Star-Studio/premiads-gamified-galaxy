@@ -2,105 +2,108 @@
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import Particles from "./Particles";
+import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
   const { userType, userName } = useUser();
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
   return (
-    <section className="min-h-screen pt-20 sm:pt-24 md:pt-28 pb-10 relative flex items-center">
-      <Particles count={40} />
+    <section className="relative min-h-screen flex items-center">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-galaxy-dark to-galaxy-deepPurple z-0"></div>
+      <div className="absolute inset-0 opacity-20 z-0">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-galaxy-purple/20 filter blur-3xl"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 rounded-full bg-neon-cyan/20 filter blur-3xl"></div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-4xl mx-auto text-center"
-        >
-          <motion.h1 
-            variants={itemVariants}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
-          >
-            {userType === "participante" ? (
-              <>
-                Bem-vindo, <span className="neon-text-cyan">{userName || "Visitante"}!</span>
-                <br />Pronto para ganhar <span className="neon-text-lime">prêmios</span>?
-              </>
-            ) : (
-              <>
-                Olá, <span className="neon-text-cyan">{userName || "Empresa"}!</span>
-                <br />Pronto para <span className="neon-text-lime">engajar</span> seu público?
-              </>
-            )}
-          </motion.h1>
-          
-          <motion.p 
-            variants={itemVariants}
-            className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto"
-          >
-            {userType === "participante" ? (
-              "Complete missões, acumule pontos e concorra a prêmios incríveis em nossa plataforma gamificada."
-            ) : (
-              "Crie campanhas interativas que engajam e recompensam seus clientes de forma inovadora."
-            )}
-          </motion.p>
-          
-          <motion.div 
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row justify-center gap-4"
-          >
-            <Button 
-              className="neon-button text-base sm:text-lg py-2 sm:py-3 md:py-4" 
-              onClick={() => {
-                const section = document.getElementById("como-funciona");
-                section?.scrollIntoView({ behavior: "smooth" });
-              }}
+        <div className="flex flex-col md:flex-row items-center gap-12">
+          <div className="flex-1 text-left">
+            <motion.span 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="inline-block px-4 py-1.5 mb-6 text-sm font-medium rounded-full border border-galaxy-purple/50 bg-galaxy-deepPurple/50"
             >
-              {userType === "participante" ? "Descobrir Missões" : "Criar Campanha"}
-            </Button>
+              {userType === "participante" ? "Recompensas Exclusivas" : "Soluções para Empresas"}
+            </motion.span>
             
-            <Button 
-              variant="outline" 
-              className="bg-transparent border-neon-pink text-white hover:bg-neon-pink/10 text-base sm:text-lg py-2 sm:py-3 md:py-4"
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
             >
-              Fale com um Especialista
-            </Button>
-          </motion.div>
+              {userType === "participante" ? (
+                <>Ganhe <span className="text-neon-cyan">prêmios</span> de forma <span className="text-neon-pink">divertida</span></>
+              ) : (
+                <>Engaje seu <span className="text-neon-cyan">público</span> com <span className="text-neon-pink">gamificação</span></>
+              )}
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg md:text-xl text-gray-300 mb-8 max-w-xl"
+            >
+              {userType === "participante" ? (
+                "Participe de desafios divertidos, acumule pontos e troque por prêmios exclusivos das suas marcas favoritas."
+              ) : (
+                "Aumente o engajamento e a retenção de clientes com campanhas gamificadas que geram resultados mensuráveis."
+              )}
+            </motion.p>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-wrap gap-4"
+            >
+              <Button 
+                size="lg" 
+                className="bg-neon-cyan hover:bg-neon-cyan/90 text-galaxy-dark font-medium text-base"
+                onClick={() => {
+                  window.location.href = userType === "participante" ? "/cliente" : "/anunciante";
+                }}
+              >
+                {userType === "participante" ? "Começar Agora" : "Criar Campanha"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-white/20 hover:bg-white/5 text-base"
+                onClick={() => {
+                  const section = document.getElementById("como-funciona");
+                  section?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Saiba Mais
+              </Button>
+            </motion.div>
+          </div>
           
           <motion.div 
-            variants={itemVariants}
-            className="mt-8 sm:mt-10 md:mt-12 pt-8 sm:pt-10 md:pt-12 relative hidden sm:block"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="flex-1 mt-10 md:mt-0"
           >
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24">
-              <svg viewBox="0 0 24 24" className="animate-bounce text-neon-cyan w-8 h-8 mx-auto">
-                <path
-                  fill="currentColor"
-                  d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-neon-cyan/20 to-neon-pink/20 rounded-2xl blur-lg opacity-70"></div>
+              <div className="glass-panel rounded-2xl overflow-hidden p-2 relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" 
+                  alt="PremiAds Platform" 
+                  className="w-full h-auto rounded-xl"
                 />
-              </svg>
+              </div>
+              <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-neon-cyan/20 rounded-full blur-xl"></div>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,56 +1,46 @@
 
-import { FC } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 
 interface UserTypeSelectorProps {
   userType: "participante" | "anunciante";
   changeUserType: (type: "participante" | "anunciante") => void;
-  setIsOverlayOpen: (open: boolean) => void;
+  setIsOverlayOpen: (isOpen: boolean) => void;
 }
 
-const UserTypeSelector: FC<UserTypeSelectorProps> = ({ 
-  userType, 
-  changeUserType,
-  setIsOverlayOpen 
-}) => {
+const UserTypeSelector = ({ userType, changeUserType, setIsOverlayOpen }: UserTypeSelectorProps) => {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-galaxy-deepPurple/70 border-neon-cyan/30 flex items-center justify-center"
-        >
-          {userType === "participante" ? "Participante" : "Anunciante"} 
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">
-        <DropdownMenuItem 
-          onClick={() => changeUserType("participante")}
-          className={`cursor-pointer ${userType === "participante" ? "neon-text-cyan" : ""}`}
-        >
-          Participante
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => changeUserType("anunciante")}
-          className={`cursor-pointer ${userType === "anunciante" ? "neon-text-cyan" : ""}`}
-        >
-          Anunciante
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setIsOverlayOpen(true)}
-          className="cursor-pointer text-neon-pink"
-        >
-          Alterar Perfil
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-0.5 flex">
+      <button
+        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+          userType === "participante"
+            ? "bg-white/10 text-white"
+            : "text-gray-400 hover:text-white"
+        }`}
+        onClick={() => {
+          if (userType !== "participante") {
+            changeUserType("participante");
+            setIsOverlayOpen(true);
+          }
+        }}
+      >
+        Participante
+      </button>
+      <button
+        className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+          userType === "anunciante"
+            ? "bg-white/10 text-white"
+            : "text-gray-400 hover:text-white"
+        }`}
+        onClick={() => {
+          if (userType !== "anunciante") {
+            changeUserType("anunciante");
+            setIsOverlayOpen(true);
+          }
+        }}
+      >
+        Anunciante
+      </button>
+    </div>
   );
 };
 
