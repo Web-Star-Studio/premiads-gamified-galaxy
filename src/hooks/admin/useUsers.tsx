@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +13,6 @@ export interface User {
   avatar_url?: string;
 }
 
-// Interface for the JSON structure returned by get_all_users function
 interface UserData {
   id: string;
   email: string;
@@ -33,7 +31,6 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use the Postgres function to get all users
       const { data, error: usersError } = await supabase
         .rpc('get_all_users');
         
@@ -41,7 +38,6 @@ export const useUsers = () => {
       
       // Properly parse the JSON data before mapping
       const parsedData = Array.isArray(data) ? data.map(item => {
-        // Handle each item as a JSON object with expected properties
         if (typeof item === 'object' && item !== null) {
           const jsonItem = item as Record<string, unknown>;
           return {
@@ -72,7 +68,7 @@ export const useUsers = () => {
       console.error('Error fetching users:', err);
       setError(err.message);
       toast({
-        title: 'Erro ao buscar usuários',
+        title: 'Error fetching users',
         description: err.message,
         variant: 'destructive'
       });
@@ -153,7 +149,6 @@ export const useUsers = () => {
     }
   };
 
-  // Load users on component mount
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
