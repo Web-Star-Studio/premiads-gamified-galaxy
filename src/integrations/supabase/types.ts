@@ -494,6 +494,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json[]
+      }
       increment_points_with_multiplier: {
         Args: { points_to_add: number; user_id: string }
         Returns: undefined

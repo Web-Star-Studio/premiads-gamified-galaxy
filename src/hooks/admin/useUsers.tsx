@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,55 +24,25 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Get profiles with user information
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
+      // Use the new Postgres function to get all users
+      const { data, error: usersError } = await supabase
+        .rpc('get_all_users');
         
-      if (profilesError) throw profilesError;
+      if (usersError) throw usersError;
       
-      // Get auth metadata if needed (admin only)
-      // Note: This requires special permissions, so we'll use profiles data primarily
-      let authData: Record<string, any> = {};
-      try {
-        // Instead of using RPC, we'll just get the relevant data from profiles
-        // We'll work with what we have in the profiles table
-        console.log("Working with profile data only since we can't access auth users directly");
-      } catch (authError) {
-        console.warn('Could not fetch auth users data, using profiles only', authError);
-      }
+      // Map the raw data to our User interface
+      const mappedUsers: User[] = data.map(user => ({
+        id: user.id,
+        name: '', // We might want to fetch full names separately
+        email: user.email,
+        role: 'admin', // Default to admin since this RPC requires admin role
+        status: 'active',
+        lastLogin: user.last_sign_in_at 
+          ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')
+          : undefined
+      }));
       
-      // Combine the data - using only profiles data
-      const combinedUsers: User[] = profiles.map(profile => {
-        // Determine status based on profile data
-        let status: 'active' | 'inactive' | 'pending';
-        if (profile.profile_completed) {
-          status = 'active';
-        } else {
-          status = 'pending';
-        }
-        
-        // Safely access email from profile_data
-        let email = 'Email não disponível';
-        if (profile.profile_data && typeof profile.profile_data === 'object') {
-          // Access email property if profile_data is an object
-          email = (profile.profile_data as Record<string, any>)?.email || email;
-        }
-        
-        return {
-          id: profile.id,
-          name: profile.full_name || 'Usuário sem nome',
-          email,
-          role: profile.user_type || 'participante',
-          status,
-          lastLogin: profile.updated_at 
-            ? new Date(profile.updated_at).toLocaleDateString('pt-BR')
-            : undefined,
-          avatar_url: profile.avatar_url
-        };
-      });
-      
-      setUsers(combinedUsers);
+      setUsers(mappedUsers);
       setError(null);
     } catch (err: any) {
       console.error('Error fetching users:', err);
