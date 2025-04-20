@@ -98,7 +98,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         const { error } = await supabase
           .from('missions')
           .delete()
-          .eq('id', id);
+          .eq('id', id.toString());
           
         if (error) {
           console.error("Erro ao excluir campanha:", error);
@@ -151,11 +151,11 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         title: formData.title || (editingCampaign ? editingCampaign.title : "Nova Missão"),
         description: formData.description || "Descrição da missão",
         type: formData.type || "form",
-        points: parseInt(formData.reward) || 50,
-        is_active: formData.status === "ativa",
+        points: formData.pointsRange[0] || 50,
+        is_active: true, // Default to active
         advertiser_id: session.user.id,
         requirements: formData.requirements || null,
-        end_date: formData.endDate || null,
+        end_date: formData.endDate ? new Date(formData.endDate) : null,
         target_audience_gender: formData.audience || null
       };
       
@@ -166,7 +166,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         result = await supabase
           .from('missions')
           .update(missionData)
-          .eq('id', editingCampaign.id);
+          .eq('id', editingCampaign.id.toString());
       } else {
         // Inserir nova missão
         result = await supabase
@@ -270,3 +270,4 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
 };
 
 export default CampaignsList;
+

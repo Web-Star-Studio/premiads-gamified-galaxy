@@ -11,6 +11,7 @@ import { Campaign } from './campaignData';
 import { useSounds } from '@/hooks/use-sounds';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { FormData, initialFormData } from './campaign-form/types';
 
 interface CampaignFormProps {
   onClose: (formData?: any) => void;
@@ -22,16 +23,20 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
+    ...initialFormData,
     title: "",
     description: "",
     type: "form",
-    status: "pendente",
     audience: "todos",
     requirements: [] as string[],
-    reward: "50",
-    startDate: new Date(),
-    endDate: undefined as Date | undefined
+    pointsRange: [50, 50],
+    randomPoints: false,
+    hasBadges: false,
+    hasLootBox: false,
+    startDate: "",
+    endDate: "",
+    streakBonus: false
   });
   
   // Função para atualizar o formData
@@ -51,23 +56,28 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         const { data, error } = await supabase
           .from('missions')
           .select('*')
-          .eq('id', editCampaign.id)
+          .eq('id', editCampaign.id.toString())
           .single();
           
         if (error) throw error;
         
         if (data) {
+          const points = parseInt(data.points.toString());
           // Preencher o formulário com dados do banco
           setFormData({
+            ...initialFormData,
             title: data.title,
             description: data.description || "",
             type: data.type || "form",
-            status: data.is_active ? "ativa" : "pendente",
             audience: data.target_audience_gender || "todos",
-            requirements: data.requirements || [],
-            reward: data.points.toString(),
-            startDate: data.start_date ? new Date(data.start_date) : new Date(),
-            endDate: data.end_date ? new Date(data.end_date) : undefined
+            requirements: Array.isArray(data.requirements) ? data.requirements : [],
+            pointsRange: [points, points],
+            randomPoints: false,
+            hasBadges: false,
+            hasLootBox: false,
+            startDate: data.start_date ? new Date(data.start_date).toISOString().split('T')[0] : "",
+            endDate: data.end_date ? new Date(data.end_date).toISOString().split('T')[0] : "",
+            streakBonus: false
           });
         }
       } catch (error) {
@@ -156,12 +166,12 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         title: formData.title,
         description: formData.description || "Descrição da campanha",
         type: formData.type || "form",
-        points: parseInt(formData.reward) || 50,
-        is_active: formData.status === "ativa",
+        points: formData.pointsRange[0], // Use the first value from the range
+        is_active: true, // Default to active
         advertiser_id: session.user.id,
         requirements: formData.requirements || [],
-        start_date: formData.startDate,
-        end_date: formData.endDate
+        start_date: formData.startDate ? new Date(formData.startDate) : new Date(),
+        end_date: formData.endDate ? new Date(formData.endDate) : null
       };
       
       // Passar os dados do formulário para o callback onClose

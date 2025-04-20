@@ -35,8 +35,8 @@ describe('FormNavigation', () => {
         totalSteps={4} 
         handleNext={mockHandleNext} 
         handleBack={mockHandleBack} 
-        onClose={mockOnClose} 
-        isNextDisabled={false}
+        onClose={mockOnClose}
+        isNextDisabled={false} 
       />
     );
     
@@ -57,7 +57,7 @@ describe('FormNavigation', () => {
         totalSteps={4} 
         handleNext={mockHandleNext} 
         handleBack={mockHandleBack} 
-        onClose={mockOnClose} 
+        onClose={mockOnClose}
         isNextDisabled={false}
       />
     );
