@@ -107,7 +107,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         .update({
           full_name: userName,
           user_type: userType,
-          updated_at: new Date()
+          updated_at: new Date().toISOString() // Convert Date to ISO string
         })
         .eq("id", userId);
       

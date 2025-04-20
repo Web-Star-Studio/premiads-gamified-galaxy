@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { useCampaignForm } from '@/hooks/use-campaign-form';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { FormProgress } from './campaign-form/FormProgress';
 import { FormNavigation } from './campaign-form/FormNavigation';
@@ -22,22 +21,26 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
-  
-  const {
-    step,
-    formData,
-    updateFormData,
-    handleNext,
-    handleBack,
-    getStepTitle,
-    isCurrentStepValid
-  } = useCampaignForm({
-    editCampaign,
-    onClose: () => {
-      playSound('pop');
-      onClose();
-    }
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    type: "form",
+    status: "pendente",
+    audience: "todos",
+    requirements: [] as string[],
+    reward: "50",
+    startDate: new Date(),
+    endDate: undefined as Date | undefined
   });
+  
+  // Função para atualizar o formData
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   
   // Buscar detalhes da campanha do Supabase ao editar
   useEffect(() => {
@@ -55,10 +58,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         
         if (data) {
           // Preencher o formulário com dados do banco
-          updateFormData({
+          setFormData({
             title: data.title,
-            description: data.description,
-            type: data.type,
+            description: data.description || "",
+            type: data.type || "form",
             status: data.is_active ? "ativa" : "pendente",
             audience: data.target_audience_gender || "todos",
             requirements: data.requirements || [],
@@ -78,7 +81,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     };
     
     fetchCampaignDetails();
-  }, [editCampaign, updateFormData, toast]);
+  }, [editCampaign, toast]);
   
   // Títulos das etapas para o indicador de progresso
   const steps = [
@@ -87,6 +90,40 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     "Recompensas", 
     "Datas"
   ];
+  
+  // Verificar se a etapa atual é válida
+  const isCurrentStepValid = () => {
+    switch (step) {
+      case 1:
+        return formData.title.trim().length >= 3 && 
+               formData.type !== "" && 
+               formData.audience !== "";
+      case 2:
+        return formData.requirements.length > 0;
+      case 3:
+        return true; // Rewards are optional
+      case 4:
+        return true; // Dates have defaults
+      default:
+        return false;
+    }
+  };
+  
+  // Avançar para a próxima etapa
+  const handleNext = () => {
+    if (step < steps.length) {
+      setStep(step + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+  
+  // Voltar para a etapa anterior
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
   
   // Renderizar o conteúdo da etapa apropriada
   const renderStepContent = () => {

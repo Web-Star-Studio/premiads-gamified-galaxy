@@ -1,6 +1,6 @@
 
 export interface Campaign {
-  id: number;
+  id: string | number;
   title: string;
   status: string;
   audience: string;
@@ -10,4 +10,3 @@ export interface Campaign {
 }
 
 export const mockCampaigns: Campaign[] = [];
-

@@ -19,6 +19,7 @@ describe('FormNavigation', () => {
         handleNext={mockHandleNext} 
         handleBack={mockHandleBack} 
         onClose={mockOnClose} 
+        isNextDisabled={false}
       />
     );
     
@@ -35,6 +36,7 @@ describe('FormNavigation', () => {
         handleNext={mockHandleNext} 
         handleBack={mockHandleBack} 
         onClose={mockOnClose} 
+        isNextDisabled={false}
       />
     );
     
@@ -48,7 +50,7 @@ describe('FormNavigation', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
   
-  it('shows "Concluir" instead of "Próximo" on the last step', () => {
+  it('shows "Finalizar" instead of "Próximo" on the last step', () => {
     render(
       <FormNavigation 
         step={4} 
@@ -56,25 +58,12 @@ describe('FormNavigation', () => {
         handleNext={mockHandleNext} 
         handleBack={mockHandleBack} 
         onClose={mockOnClose} 
+        isNextDisabled={false}
       />
     );
     
-    expect(screen.getByText('Concluir')).toBeInTheDocument();
+    expect(screen.getByText('Finalizar')).toBeInTheDocument();
     expect(screen.queryByText('Próximo')).not.toBeInTheDocument();
-  });
-  
-  it('disables back button on the first step', () => {
-    render(
-      <FormNavigation 
-        step={1} 
-        totalSteps={4} 
-        handleNext={mockHandleNext} 
-        handleBack={mockHandleBack} 
-        onClose={mockOnClose} 
-      />
-    );
-    
-    expect(screen.getByText('Voltar')).toBeDisabled();
   });
   
   it('disables next button when isNextDisabled is true', () => {

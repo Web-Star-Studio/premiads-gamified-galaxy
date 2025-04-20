@@ -89,7 +89,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     try {
       // Verificar se o usuário está autenticado
       const { data: { session } } = await supabase.auth.getSession();
@@ -112,7 +112,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       playSound("error");
       toast({
         title: "Campanha removida",
-        description: `A campanha #${id} foi removida com sucesso`,
+        description: `A campanha foi removida com sucesso`,
       });
     } catch (error) {
       console.error("Erro ao excluir campanha:", error);
