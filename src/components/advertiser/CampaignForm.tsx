@@ -11,7 +11,7 @@ import { Campaign } from './campaignData';
 import { useSounds } from '@/hooks/use-sounds';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { FormData, initialFormData } from './campaign-form/types';
+import { FormData, initialFormData, MissionType } from './campaign-form/types';
 
 interface CampaignFormProps {
   onClose: (formData?: any) => void;
@@ -63,14 +63,24 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         
         if (data) {
           const points = parseInt(data.points.toString());
+          
+          // Convert any Json[] requirements to string[]
+          let stringRequirements: string[] = [];
+          if (Array.isArray(data.requirements)) {
+            stringRequirements = data.requirements.map(req => 
+              typeof req === 'string' ? req : JSON.stringify(req)
+            );
+          }
+          
           // Preencher o formulário com dados do banco
           setFormData({
             ...initialFormData,
             title: data.title,
             description: data.description || "",
-            type: data.type || "form",
+            // Ensure type is a valid MissionType or empty string
+            type: (data.type as MissionType) || "form",
             audience: data.target_audience_gender || "todos",
-            requirements: Array.isArray(data.requirements) ? data.requirements : [],
+            requirements: stringRequirements,
             pointsRange: [points, points],
             randomPoints: false,
             hasBadges: false,
@@ -170,8 +180,8 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         is_active: true, // Default to active
         advertiser_id: session.user.id,
         requirements: formData.requirements || [],
-        start_date: formData.startDate ? new Date(formData.startDate) : new Date(),
-        end_date: formData.endDate ? new Date(formData.endDate) : null
+        start_date: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
+        end_date: formData.endDate ? new Date(formData.endDate).toISOString() : null
       };
       
       // Passar os dados do formulário para o callback onClose

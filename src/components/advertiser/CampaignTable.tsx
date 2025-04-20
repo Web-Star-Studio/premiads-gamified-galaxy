@@ -5,7 +5,7 @@ import { Campaign } from "./campaignData";
 
 interface CampaignTableProps {
   campaigns: Campaign[];
-  onDelete: (id: number) => void;
+  onDelete: (id: string | number) => void;
   onEdit: (campaign: Campaign) => void;
 }
 

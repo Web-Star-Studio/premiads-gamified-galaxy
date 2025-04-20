@@ -154,8 +154,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         points: formData.pointsRange[0] || 50,
         is_active: true, // Default to active
         advertiser_id: session.user.id,
-        requirements: formData.requirements || null,
-        end_date: formData.endDate ? new Date(formData.endDate) : null,
+        requirements: formData.requirements || [],
+        end_date: formData.endDate ? new Date(formData.endDate).toISOString() : null,
         target_audience_gender: formData.audience || null
       };
       
@@ -270,4 +270,3 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
 };
 
 export default CampaignsList;
-
