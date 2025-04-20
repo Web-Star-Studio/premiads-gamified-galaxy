@@ -1,5 +1,6 @@
 
 import { useUser } from "@/context/UserContext";
+import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,25 +54,27 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="pt-16 pb-8 relative bg-galaxy-deepPurple/30">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+    <footer className="py-16 relative overflow-hidden">
+      <div className="absolute inset-0 bg-galaxy-dark/90"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div>
-            <h2 className="text-2xl font-bold mb-6">
+            <h2 className="text-2xl font-bold font-orbitron mb-6">
               <span className="text-white">Premi</span>
-              <span className="text-neon-cyan">Ads</span>
+              <span className="neon-text-cyan">Ads</span>
             </h2>
             
             <p className="text-gray-400 mb-6">
               Transformando engajamento em experiências gamificadas que conectam marcas e pessoas.
             </p>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-4">
               {socialLinks.map((link, index) => (
                 <a
                   key={index}
                   href={link.href}
-                  className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:text-neon-cyan hover:bg-white/10 transition-colors"
+                  className="w-10 h-10 rounded-full bg-galaxy-deepPurple/50 flex items-center justify-center text-gray-300 hover:text-neon-cyan hover:bg-galaxy-deepPurple/80 transition-colors"
                 >
                   {link.icon}
                 </a>
@@ -81,8 +84,8 @@ const Footer = () => {
           
           {footerLinks.map((category, index) => (
             <div key={index}>
-              <h3 className="text-lg font-semibold mb-5">{category.title}</h3>
-              <ul className="space-y-3">
+              <h3 className="text-lg font-bold mb-6">{category.title}</h3>
+              <ul className="space-y-4">
                 {category.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     {link.isRouterLink ? (
@@ -107,7 +110,7 @@ const Footer = () => {
           ))}
           
           <div>
-            <h3 className="text-lg font-semibold mb-5">Inscreva-se</h3>
+            <h3 className="text-lg font-bold mb-6">Inscreva-se</h3>
             <p className="text-gray-400 mb-4">
               Receba novidades sobre missões e promoções exclusivas.
             </p>
@@ -116,19 +119,27 @@ const Footer = () => {
               <Input
                 type="email"
                 placeholder="Seu email"
-                className="bg-white/5 border-white/10"
+                className="bg-galaxy-deepPurple/50 border-gray-700"
               />
-              <Button size="icon" className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/90">
+              <Button size="icon" className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80">
                 <Send size={18} />
               </Button>
             </div>
           </div>
         </div>
         
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-center md:text-left">
+        <div className="mt-12 pt-12 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+          <div className="text-center md:text-left mb-4 md:mb-0">
+            <p className="text-gray-500 text-sm mb-2">
+              &copy; {new Date().getFullYear()} PremiAds. Todos os direitos reservados. 
+              Desenvolvido por <a href="https://www.webstar.studio" target="_blank" rel="noopener noreferrer" className="hover:text-neon-cyan transition-colors">Web Star Studio</a>
+            </p>
             <p className="text-gray-500 text-sm">
-              &copy; {new Date().getFullYear()} PremiAds. Todos os direitos reservados.
+              PremiAds - Recife - PE - CEP: 51.160-330
+            </p>
+            <p className="text-gray-500 text-sm">
+              <a href="mailto:info@premiads.com" className="hover:text-neon-cyan transition-colors">info@premiads.com</a> | 
+              <a href="tel:+558198559-5912" className="ml-2 hover:text-neon-cyan transition-colors">+55 81 9 8559 5912</a>
             </p>
           </div>
           
