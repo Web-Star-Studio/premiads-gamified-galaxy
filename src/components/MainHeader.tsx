@@ -19,6 +19,12 @@ const MainHeader = () => {
   const { mobileMenuOpen, setMobileMenuOpen, toggleMobileMenu } = useMobileMenu();
   const { changeUserType, navigateToDashboard, scrollToSection } = useNavigation();
   
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+  
   const sections = [
     { id: "como-funciona", label: "Como Funciona" },
     { id: "beneficios", label: "Benefícios" },

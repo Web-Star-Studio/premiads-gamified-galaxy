@@ -19,6 +19,12 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
   changeUserType,
   setIsOverlayOpen 
 }) => {
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,6 +54,12 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
           className="cursor-pointer text-neon-pink"
         >
           Alterar Perfil
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={openWhatsApp}
+          className="cursor-pointer text-white hover:text-neon-cyan"
+        >
+          Fale Conosco
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

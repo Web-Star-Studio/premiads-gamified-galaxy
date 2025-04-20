@@ -1,4 +1,3 @@
-
 import { useUser } from "@/context/UserContext";
 import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
@@ -8,6 +7,12 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   const { userType } = useUser();
+  
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
   
   const footerLinks = [
     {
@@ -97,8 +102,9 @@ const Footer = () => {
                       </Link>
                     ) : (
                       <a
-                        href={link.href}
-                        className="text-gray-400 hover:text-neon-cyan transition-colors"
+                        href={link.href === "#" && link.name === "Contato" ? "#" : link.href}
+                        onClick={link.name === "Contato" ? openWhatsApp : undefined}
+                        className="text-gray-400 hover:text-neon-cyan transition-colors cursor-pointer"
                       >
                         {link.name}
                       </a>
@@ -139,7 +145,7 @@ const Footer = () => {
             </p>
             <p className="text-gray-500 text-sm">
               <a href="mailto:info@premiads.com" className="hover:text-neon-cyan transition-colors">info@premiads.com</a> | 
-              <a href="tel:+558198559-5912" className="ml-2 hover:text-neon-cyan transition-colors">+55 81 9 8559 5912</a>
+              <a onClick={openWhatsApp} className="ml-2 hover:text-neon-cyan transition-colors cursor-pointer">+55 81 9 8559 5912</a>
             </p>
           </div>
           

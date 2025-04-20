@@ -39,6 +39,12 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
     }
   };
 
+  const openWhatsApp = () => {
+    const phoneNumber = "5581985595912";
+    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+
   return (
     <AnimatePresence>
       {mobileMenuOpen && (
@@ -81,6 +87,18 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 }}
               >
                 {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="bg-transparent border-white/20 hover:bg-white/5 mt-2"
+                size="lg"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openWhatsApp();
+                }}
+              >
+                Fale com um Especialista
               </Button>
             </div>
           </div>
