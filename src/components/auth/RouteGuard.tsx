@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,17 +14,37 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { isAuthenticated, isLoading, currentUser } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
+  const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
     // Add a timeout to detect if authentication is taking too long
     const timeoutId = setTimeout(() => {
       if (isLoading) {
         console.log("Authentication check is taking longer than expected");
+        setAuthTimeout(true);
       }
     }, 5000);
 
     return () => clearTimeout(timeoutId);
   }, [isLoading]);
+
+  // Show error message if auth check takes too long
+  if (authTimeout && isLoading) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-galaxy-dark p-4" data-testid="auth-timeout">
+        <div className="text-center max-w-md space-y-4">
+          <h2 className="text-2xl font-bold text-neon-cyan">Verificação de autenticação está demorando muito</h2>
+          <p className="text-gray-300">Estamos tendo problemas para verificar sua conta. Isso pode ser devido a problemas de conexão ou serviço.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-neon-cyan text-galaxy-dark rounded-md hover:bg-neon-cyan/80 transition-colors"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading spinner while checking authentication
   if (isLoading) {

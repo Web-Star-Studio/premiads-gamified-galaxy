@@ -34,42 +34,42 @@ const ClientRoutes = () => {
           </Suspense>
         } />
         <Route path="perfil" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientProfile />
           </Suspense>
         } />
         <Route path="sorteios" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientRaffles />
           </Suspense>
         } />
         <Route path="indicacoes" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientReferrals />
           </Suspense>
         } />
         <Route path="cashback" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <CashbackMarketplace />
           </Suspense>
         } />
         <Route path="suporte" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <Support />
           </Suspense>
         } />
         <Route path="tour" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <Tour />
           </Suspense>
         } />
         <Route path="como-funciona" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <HowItWorks />
           </Suspense>
         } />
         <Route path="faq" element={
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<RouteLoadingSpinner />}>
             <Faq />
           </Suspense>
         } />
