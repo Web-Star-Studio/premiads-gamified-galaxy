@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +12,7 @@ export interface User {
   status: 'active' | 'inactive' | 'pending';
   lastLogin?: string;
   avatar_url?: string;
+  points?: number;
 }
 
 interface UserData {
@@ -31,6 +33,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Fetch users through the RPC function
       const { data, error: usersError } = await supabase
         .rpc('get_all_users');
         
@@ -50,25 +53,54 @@ export const useUsers = () => {
         return null;
       }).filter(Boolean) as UserData[] : [];
       
-      // Map the parsed data to our User interface
-      const mappedUsers: User[] = parsedData.map(user => ({
-        id: user.id,
-        name: '', // We might want to fetch full names separately
-        email: user.email,
-        role: 'admin', // Default to admin since this RPC requires admin role
-        status: 'active',
-        lastLogin: user.last_sign_in_at 
-          ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')
-          : undefined
-      }));
+      // Fetch additional profile data for each user
+      const userPromises = parsedData.map(async (user) => {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('full_name, user_type, profile_completed, avatar_url, points')
+            .eq('id', user.id)
+            .single();
+            
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error(`Error fetching profile for user ${user.id}:`, profileError);
+          }
+          
+          return {
+            id: user.id,
+            name: profileData?.full_name || user.email.split('@')[0],
+            email: user.email,
+            role: profileData?.user_type || 'participante',
+            status: profileData?.profile_completed ? 'active' : 'inactive',
+            lastLogin: user.last_sign_in_at 
+              ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')
+              : undefined,
+            avatar_url: profileData?.avatar_url,
+            points: profileData?.points || 0
+          } as User;
+        } catch (err) {
+          console.error(`Error processing user ${user.id}:`, err);
+          return {
+            id: user.id,
+            name: user.email.split('@')[0],
+            email: user.email,
+            role: 'participante',
+            status: 'pending',
+            lastLogin: user.last_sign_in_at 
+              ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')
+              : undefined
+          } as User;
+        }
+      });
       
-      setUsers(mappedUsers);
+      const usersWithProfiles = await Promise.all(userPromises);
+      setUsers(usersWithProfiles);
       setError(null);
     } catch (err: any) {
       console.error('Error fetching users:', err);
       setError(err.message);
       toast({
-        title: 'Error fetching users',
+        title: 'Erro ao buscar usuários',
         description: err.message,
         variant: 'destructive'
       });
@@ -107,6 +139,45 @@ export const useUsers = () => {
       console.error('Error updating user status:', err);
       toast({
         title: 'Erro ao atualizar status',
+        description: err.message,
+        variant: 'destructive'
+      });
+      playSound('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to update user role
+  const updateUserRole = async (userId: string, newRole: string) => {
+    try {
+      setLoading(true);
+      playSound('pop');
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ user_type: newRole })
+        .eq('id', userId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, role: newRole } 
+            : user
+        )
+      );
+      
+      toast({
+        title: `Papel alterado para ${newRole}`,
+        description: `O usuário agora tem papel de ${newRole}.`,
+      });
+    } catch (err: any) {
+      console.error('Error updating user role:', err);
+      toast({
+        title: 'Erro ao atualizar papel',
         description: err.message,
         variant: 'destructive'
       });
@@ -159,6 +230,7 @@ export const useUsers = () => {
     error,
     fetchUsers,
     updateUserStatus,
+    updateUserRole,
     deleteUser
   };
 };

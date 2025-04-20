@@ -9,6 +9,7 @@ export const useActiveUserSession = () => {
   const [status, setStatus] = useState<SessionStatus>('unknown');
   const [lastActivity, setLastActivity] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userType, setUserType] = useState<string | null>(null);
   const { toast } = useToast();
 
   const checkAndUpdateSession = useCallback(async () => {
@@ -31,6 +32,21 @@ export const useActiveUserSession = () => {
       // Set userId and status
       setUserId(session.user.id);
       setStatus('active');
+      
+      // Fetch user type from profiles
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profileData) {
+          setUserType(profileData.user_type);
+        }
+      } catch (profileError) {
+        console.error('Error fetching user type:', profileError);
+      }
       
       // Update last activity timestamp
       const now = new Date();
@@ -85,10 +101,25 @@ export const useActiveUserSession = () => {
         const now = new Date();
         setLastActivity(now);
         localStorage.setItem('lastActivity', now.toISOString());
+        
+        // Fetch user type
+        if (session?.user.id) {
+          supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data }) => {
+              if (data) {
+                setUserType(data.user_type);
+              }
+            });
+        }
       }
       
       if (event === 'SIGNED_OUT') {
         setUserId(null);
+        setUserType(null);
         setStatus('inactive');
         localStorage.removeItem('lastActivity');
       }
@@ -107,7 +138,9 @@ export const useActiveUserSession = () => {
   return { 
     status, 
     lastActivity, 
-    userId, 
+    userId,
+    userType,
+    isAdmin: userType === 'admin',
     isActive: status === 'active',
     refreshSession: async () => {
       const { data, error } = await supabase.auth.refreshSession();

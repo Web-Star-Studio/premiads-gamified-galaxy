@@ -14,13 +14,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface PointsSectionProps {
   totalPoints?: number;
+  userId?: string;
+  isAdminView?: boolean;
 }
 
-const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
+const PointsSection = ({ totalPoints = 0, userId, isAdminView = false }: PointsSectionProps) => {
   const navigate = useNavigate();
   const { points: dashboardPoints, credits, loading: dashboardLoading } = useClientDashboard(navigate);
   const initialPoints = totalPoints || dashboardPoints;
-  const { points: realtimePoints, loading: pointsLoading } = useRealtimePoints(initialPoints);
+  const { points: realtimePoints, loading: pointsLoading } = useRealtimePoints(initialPoints, userId);
   const { levelInfo, loading: levelLoading } = useUserLevel(realtimePoints);
   
   const isLoading = pointsLoading || dashboardLoading;
@@ -69,7 +71,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         <UserLevel levelInfo={levelInfo} />
       )}
       
-      <TicketsButton />
+      {!isAdminView && <TicketsButton />}
     </motion.div>
   );
 };

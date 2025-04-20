@@ -1,19 +1,19 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export const useRealtimePoints = (initialPoints: number = 0) => {
+export const useRealtimePoints = (initialPoints: number = 0, userId?: string) => {
   const [points, setPoints] = useState(initialPoints);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Initialize with passed value
-    setPoints(initialPoints);
-    
-    const fetchUserPoints = async () => {
-      try {
+  const fetchUserPoints = useCallback(async () => {
+    try {
+      // If no userId is provided, get the current user's id
+      let targetUserId = userId;
+      
+      if (!targetUserId) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -22,40 +22,49 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
           return;
         }
         
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('points')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching user points:', error);
-          if (error.code !== 'PGRST116') { // Not "no rows returned" error
-            toast({
-              title: "Erro ao carregar pontos",
-              description: "Não foi possível sincronizar seus pontos. Tente novamente.",
-              variant: "destructive"
-            });
-          }
-        } else if (data) {
-          setPoints(data.points || 0);
-        }
-      } catch (error) {
-        console.error('Error in fetchUserPoints:', error);
-      } finally {
-        setLoading(false);
+        targetUserId = session.user.id;
       }
-    };
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('points')
+        .eq('id', targetUserId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching user points:', error);
+        if (error.code !== 'PGRST116') { // Not "no rows returned" error
+          toast({
+            title: "Erro ao carregar pontos",
+            description: "Não foi possível sincronizar os pontos. Tente novamente.",
+            variant: "destructive"
+          });
+        }
+      } else if (data) {
+        setPoints(data.points || 0);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserPoints:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, toast]);
+  
+  useEffect(() => {
+    // Initialize with passed value
+    setPoints(initialPoints);
     
     fetchUserPoints();
     
     // Set up realtime subscription
     const setupRealtimeSubscription = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      let targetUserId = userId;
       
-      if (!session) return null;
-      
-      const userId = session.user.id;
+      if (!targetUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        targetUserId = session.user.id;
+      }
       
       const channel = supabase
         .channel('profile-points-changes')
@@ -65,7 +74,7 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
             event: 'UPDATE',
             schema: 'public',
             table: 'profiles',
-            filter: `id=eq.${userId}`
+            filter: `id=eq.${targetUserId}`
           },
           (payload) => {
             console.log('Profile points changed:', payload);
@@ -93,7 +102,11 @@ export const useRealtimePoints = (initialPoints: number = 0) => {
         if (channel) supabase.removeChannel(channel);
       });
     };
-  }, [initialPoints, toast]);
+  }, [initialPoints, userId, fetchUserPoints, toast]);
   
-  return { points, loading };
+  return { 
+    points, 
+    loading,
+    refreshPoints: fetchUserPoints 
+  };
 };

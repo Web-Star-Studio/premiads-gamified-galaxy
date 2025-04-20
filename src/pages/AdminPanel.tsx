@@ -10,11 +10,20 @@ import AdminOverview from "@/components/admin/AdminOverview";
 import LoadingParticles from "@/components/admin/LoadingParticles";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import DashboardHeader from "@/components/admin/DashboardHeader";
+import { useActiveUserSession } from "@/hooks/useActiveUserSession";
 
 const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { isAdmin, isActive, refreshSession } = useActiveUserSession();
+  
+  useEffect(() => {
+    // Check if user has admin privileges
+    if (!isAdmin && isActive) {
+      refreshSession();
+    }
+  }, [isAdmin, isActive, refreshSession]);
   
   useEffect(() => {
     const loadTimer = setTimeout(() => {

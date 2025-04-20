@@ -27,8 +27,43 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         
       if (error) throw error;
       
-      // Update user points - will trigger the database function award_mission_points
-      // This is handled by the trigger automatically, no need to update points manually
+      // Get mission points
+      const { data: missionData, error: missionError } = await supabase
+        .from("missions")
+        .select("points")
+        .eq("id", submission.mission_id)
+        .single();
+        
+      if (missionError) {
+        console.error("Error fetching mission points:", missionError);
+        // Continue with approval even if points lookup fails
+      }
+      
+      const pointsToAward = missionData?.points || 0;
+      
+      // Award points manually in case the DB trigger fails
+      if (pointsToAward > 0) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("points")
+            .eq("id", submission.user_id)
+            .single();
+            
+          if (!profileError && profileData) {
+            const currentPoints = profileData.points || 0;
+            const newPoints = currentPoints + pointsToAward;
+            
+            await supabase
+              .from("profiles")
+              .update({ points: newPoints })
+              .eq("id", submission.user_id);
+          }
+        } catch (profileUpdateError) {
+          console.error("Error updating user points:", profileUpdateError);
+          // Continue with approval even if points update fails
+        }
+      }
       
       playSound("reward");
       toast({

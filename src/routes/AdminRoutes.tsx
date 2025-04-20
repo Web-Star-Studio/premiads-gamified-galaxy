@@ -4,6 +4,7 @@ import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
 import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
+import { useToast } from "@/hooks/use-toast";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -16,13 +17,15 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
+const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
   const location = useLocation();
-  const { isAdmin, loading } = useAdminAuth();
+  const { isAdmin, loading, userId } = useAdminAuth();
+  const { toast } = useToast();
   
   useEffect(() => {
     console.log("AdminRoutes rendered, current path:", location.pathname);
@@ -35,6 +38,13 @@ const AdminRoutes = () => {
   
   // If not admin, don't render routes (the hook will handle redirection)
   if (!isAdmin) {
+    if (userId) {
+      toast({
+        title: "Acesso restrito",
+        description: "Esta área é restrita para administradores.",
+        variant: "destructive"
+      });
+    }
     return null;
   }
 
@@ -88,6 +98,11 @@ const AdminRoutes = () => {
       <Route path="documentacao" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
           <DocumentationPage />
+        </Suspense>
+      } />
+      <Route path="moderacao" element={
+        <Suspense fallback={<RouteLoadingSpinner />}>
+          <ModerationPage />
         </Suspense>
       } />
       
