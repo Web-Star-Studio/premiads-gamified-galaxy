@@ -1,8 +1,9 @@
 
 import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
+import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -21,10 +22,21 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
   const location = useLocation();
+  const { isAdmin, loading } = useAdminAuth();
   
   useEffect(() => {
     console.log("AdminRoutes rendered, current path:", location.pathname);
   }, [location]);
+
+  // Show loading spinner while checking admin status
+  if (loading) {
+    return <RouteLoadingSpinner />;
+  }
+  
+  // If not admin, don't render routes (the hook will handle redirection)
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <Routes>

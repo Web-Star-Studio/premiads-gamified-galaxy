@@ -10,108 +10,59 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { 
-  UserPlus, Search, Filter, Trash2, Edit, CheckCircle, XCircle, RefreshCw 
+  UserPlus, Search, Filter, Trash2, Edit, RefreshCw 
 } from 'lucide-react';
 import { useSounds } from '@/hooks/use-sounds';
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import LoadingParticles from '@/components/admin/LoadingParticles';
-
-// Mock user data
-const mockUsers = [
-  { id: 1, name: 'João Silva', email: 'joao@example.com', role: 'admin', status: 'active', lastLogin: '2025-04-14' },
-  { id: 2, name: 'Maria Souza', email: 'maria@example.com', role: 'anunciante', status: 'active', lastLogin: '2025-04-13' },
-  { id: 3, name: 'Pedro Santos', email: 'pedro@example.com', role: 'participante', status: 'inactive', lastLogin: '2025-04-10' },
-  { id: 4, name: 'Ana Costa', email: 'ana@example.com', role: 'moderator', status: 'active', lastLogin: '2025-04-14' },
-  { id: 5, name: 'Carlos Lima', email: 'carlos@example.com', role: 'anunciante', status: 'pending', lastLogin: '2025-04-11' },
-];
+import { useUsers, User } from '@/hooks/admin/useUsers';
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState(mockUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [loading, setLoading] = useState(true);
   const { playSound } = useSounds();
+  const { toast } = useToast();
 
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  const { 
+    users, 
+    loading, 
+    fetchUsers, 
+    updateUserStatus, 
+    deleteUser 
+  } = useUsers();
 
   // Filter users based on search query and filters
-  useEffect(() => {
-    let result = users;
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = searchQuery.trim() === '' || 
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
     
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(user => 
-        user.name.toLowerCase().includes(query) || 
-        user.email.toLowerCase().includes(query)
-      );
-    }
+    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
+    const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
     
-    if (selectedRole !== 'all') {
-      result = result.filter(user => user.role === selectedRole);
-    }
-    
-    if (selectedStatus !== 'all') {
-      result = result.filter(user => user.status === selectedStatus);
-    }
-    
-    setFilteredUsers(result);
-  }, [searchQuery, selectedRole, selectedStatus, users]);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
-  const handleToggleStatus = (userId: number) => {
-    setLoading(true);
-    
-    setTimeout(() => {
-      setUsers(users.map(user => {
-        if (user.id === userId) {
-          const newStatus = user.status === 'active' ? 'inactive' : 'active';
-          
-          // Show toast notification
-          toast({
-            title: `Status alterado para ${newStatus === 'active' ? 'Ativo' : 'Inativo'}`,
-            description: `O usuário ${user.name} foi ${newStatus === 'active' ? 'ativado' : 'desativado'}.`,
-          });
-          
-          // Play sound effect
-          playSound('pop');
-          
-          return { ...user, status: newStatus };
-        }
-        return user;
-      }));
-      
-      setLoading(false);
-    }, 800);
+  const handleToggleStatus = async (userId: string, currentStatus: string) => {
+    // Toggle to opposite of current status
+    const newStatus = currentStatus === 'active' ? false : true;
+    await updateUserStatus(userId, newStatus);
   };
 
-  const handleDeleteUser = (userId: number) => {
-    setLoading(true);
-    
-    setTimeout(() => {
-      const userToDelete = users.find(user => user.id === userId);
-      setUsers(users.filter(user => user.id !== userId));
-      
-      // Show toast notification
-      if (userToDelete) {
-        toast({
-          title: "Usuário excluído",
-          description: `O usuário ${userToDelete.name} foi removido do sistema.`,
-          variant: "destructive",
-        });
-        
-        // Play sound effect
-        playSound('error');
-      }
-      
-      setLoading(false);
-    }, 800);
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
+      await deleteUser(userId);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchUsers();
+    playSound('pop');
+    toast({
+      title: "Atualizando dados",
+      description: "Buscando informações atualizadas de usuários."
+    });
   };
 
   return (
@@ -135,7 +86,7 @@ const UserManagement = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder="Buscar usuários..."
-                    className="pl-10 bg-galaxy-dark border-galaxy-purple/30"
+                    className="pl-10 bg-galaxy-dark/50 border-galaxy-purple/30"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -143,7 +94,7 @@ const UserManagement = () => {
                 
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
                   <select
-                    className="bg-galaxy-dark border border-galaxy-purple/30 rounded-md px-3 py-2 text-sm"
+                    className="bg-galaxy-dark/50 border border-galaxy-purple/30 rounded-md px-3 py-2 text-sm"
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
                   >
@@ -155,7 +106,7 @@ const UserManagement = () => {
                   </select>
                   
                   <select
-                    className="bg-galaxy-dark border border-galaxy-purple/30 rounded-md px-3 py-2 text-sm"
+                    className="bg-galaxy-dark/50 border border-galaxy-purple/30 rounded-md px-3 py-2 text-sm"
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                   >
@@ -165,9 +116,13 @@ const UserManagement = () => {
                     <option value="pending">Pendentes</option>
                   </select>
                   
-                  <Button variant="outline" size="sm" className="border-galaxy-purple/30">
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filtrar
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    className="h-10 w-10 border-galaxy-purple/30"
+                    onClick={handleRefresh}
+                  >
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                 </div>
                 
@@ -219,7 +174,7 @@ const UserManagement = () => {
                               <div className="flex items-center gap-2">
                                 <Switch 
                                   checked={user.status === 'active'} 
-                                  onCheckedChange={() => handleToggleStatus(user.id)}
+                                  onCheckedChange={() => handleToggleStatus(user.id, user.status)}
                                   className="data-[state=checked]:bg-neon-lime"
                                 />
                                 <span className={
@@ -238,7 +193,7 @@ const UserManagement = () => {
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>{user.lastLogin}</TableCell>
+                            <TableCell>{user.lastLogin || 'Nunca'}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
                                 <Button variant="outline" size="sm" className="h-8 w-8 p-0">
