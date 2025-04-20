@@ -39,32 +39,36 @@ export function useProfileForm() {
     const fetchProfileData = async () => {
       setLoading(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (session) {
-          const userId = session.user.id;
-          
-          // Fetch profile data
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('profile_data, profile_completed')
-            .eq('id', userId)
-            .single();
-          
-          if (error) throw error;
-          
-          if (profileData) {
-            // If user has profile data, populate the form
-            if (profileData.profile_data) {
-              form.reset(profileData.profile_data as ProfileFormValues);
-            }
-            
-            // Check if user has already completed the profile before
-            setHasCompletedBefore(profileData.profile_completed || false);
-          }
-        } else {
-          // Handle test mode - simulate profile data
+        if (sessionError || !session) {
           console.log("No authenticated session - using test mode");
+          setLoading(false);
+          return;
+        }
+        
+        const userId = session.user.id;
+        
+        // Fetch profile data
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('profile_data, profile_completed')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile data:", error);
+          throw error;
+        }
+        
+        if (profileData) {
+          // If user has profile data, populate the form
+          if (profileData.profile_data) {
+            form.reset(profileData.profile_data as ProfileFormValues);
+          }
+          
+          // Check if user has already completed the profile before
+          setHasCompletedBefore(profileData.profile_completed || false);
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -84,71 +88,73 @@ export function useProfileForm() {
   const onSubmit = async (data: ProfileFormValues) => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (session) {
-        const userId = session.user.id;
+      if (sessionError || !session) {
+        toast({
+          title: "Autenticação necessária",
+          description: "Você precisa estar logado para atualizar seu perfil.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      const userId = session.user.id;
+      
+      // Update profile data
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          profile_data: data,
+          profile_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      
+      // Award points if user hasn't completed the profile before
+      if (!hasCompletedBefore) {
+        // First, fetch current points
+        const { data: currentProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', userId)
+          .single();
         
-        // Update profile data
-        const { error } = await supabase
+        if (fetchError) throw fetchError;
+        
+        // Then update with incremented value
+        const newPoints = (currentProfile?.points || 0) + POINTS_PER_PROFILE_COMPLETION;
+        
+        const { error: pointsError } = await supabase
           .from('profiles')
           .update({
-            profile_data: data,
-            profile_completed: true,
+            points: newPoints
           })
           .eq('id', userId);
         
-        if (error) throw error;
+        if (pointsError) throw pointsError;
         
-        // Award points if user hasn't completed the profile before
-        if (!hasCompletedBefore) {
-          // First, fetch current points
-          const { data: currentProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('points')
-            .eq('id', userId)
-            .single();
-          
-          if (fetchError) throw fetchError;
-          
-          // Then update with incremented value
-          const newPoints = (currentProfile?.points || 0) + POINTS_PER_PROFILE_COMPLETION;
-          
-          const { error: pointsError } = await supabase
-            .from('profiles')
-            .update({
-              points: newPoints
-            })
-            .eq('id', userId);
-          
-          if (pointsError) throw pointsError;
-          
-          setPointsAwarded(true);
-          playSound("chime");
-        }
-        
-        toast({
-          title: "Perfil atualizado",
-          description: !hasCompletedBefore 
-            ? `Seu perfil foi atualizado e você ganhou ${POINTS_PER_PROFILE_COMPLETION} pontos!` 
-            : "Seu perfil foi atualizado com sucesso!",
-        });
-        
-        // Update state to reflect that profile has been completed
-        setHasCompletedBefore(true);
-      } else {
-        // Handle test mode
-        console.log("Form submitted in test mode:", data);
-        toast({
-          title: "Perfil atualizado (modo de teste)",
-          description: "Seu perfil foi atualizado com sucesso!",
-        });
+        setPointsAwarded(true);
+        playSound("chime");
       }
-    } catch (error) {
+      
+      toast({
+        title: "Perfil atualizado",
+        description: !hasCompletedBefore 
+          ? `Seu perfil foi atualizado e você ganhou ${POINTS_PER_PROFILE_COMPLETION} pontos!` 
+          : "Seu perfil foi atualizado com sucesso!",
+      });
+      
+      // Update state to reflect that profile has been completed
+      setHasCompletedBefore(true);
+    } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
         title: "Erro ao atualizar perfil",
-        description: "Não foi possível salvar os dados do seu perfil. Tente novamente mais tarde.",
+        description: error.message || "Não foi possível salvar os dados do seu perfil. Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {

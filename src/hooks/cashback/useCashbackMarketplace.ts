@@ -8,7 +8,7 @@ import {
   fetchUserCashbackBalance, 
   redeemCashback as apiRedeemCashback 
 } from './cashbackApi';
-import { MOCK_CASHBACK_CAMPAIGNS } from './cashbackMockData';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
@@ -20,6 +20,17 @@ export const useCashbackMarketplace = () => {
   useEffect(() => {
     const fetchCashbackData = async () => {
       try {
+        // First check if the user is authenticated
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          console.log("No authenticated session found - using empty data");
+          setCampaigns([]);
+          setUserCashback(0);
+          setLoading(false);
+          return;
+        }
+        
         // Fetch both campaigns and user cashback in parallel
         const [fetchedCampaigns, cashbackBalance] = await Promise.all([
           fetchCashbackCampaigns(),
@@ -32,7 +43,7 @@ export const useCashbackMarketplace = () => {
         console.error("Error fetching cashback data:", error);
         toast({
           title: 'Erro ao carregar cashback',
-          description: error.message,
+          description: error.message || 'Falha ao carregar dados de cashback',
           variant: 'destructive'
         });
         
@@ -49,6 +60,18 @@ export const useCashbackMarketplace = () => {
 
   const redeemCashback = async (campaignId: string, amount: number) => {
     try {
+      // Check if user is authenticated before attempting redemption
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast({
+          title: 'Autenticação necessária',
+          description: 'Você precisa estar logado para resgatar cashback.',
+          variant: 'destructive'
+        });
+        return null;
+      }
+      
       const redemption = await apiRedeemCashback(campaignId, amount);
       
       if (redemption) {
@@ -67,19 +90,27 @@ export const useCashbackMarketplace = () => {
       }
       return null;
     } catch (error: any) {
-      // Handle demo mode
-      if (error.message.includes('logado')) {
+      // Better error handling with more specific messages
+      if (error.message.includes('logado') || error.message.includes('auth')) {
         toast({
-          title: 'Modo Demo',
-          description: 'No modo de demonstração, você pode visualizar mas não resgatar cashback. Faça login para utilizar esta função.',
+          title: 'Autenticação necessária',
+          description: 'Você precisa estar logado para resgatar cashback.',
+          variant: 'destructive'
+        });
+      } else if (error.message.includes('saldo') || error.message.includes('balance')) {
+        toast({
+          title: 'Saldo insuficiente',
+          description: 'Você não possui saldo suficiente para este resgate.',
+          variant: 'destructive'
         });
       } else {
         toast({
           title: 'Erro no resgate',
-          description: error.message,
+          description: error.message || 'Ocorreu um erro ao processar seu resgate.',
           variant: 'destructive'
         });
       }
+      console.error("Cashback redemption error:", error);
       return null;
     }
   };

@@ -78,7 +78,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
             user_id: userId,
             submission_data: submissionData,
             status: status, // Use the provided status
-            created_at: new Date().toISOString(),
+            submitted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
       }
