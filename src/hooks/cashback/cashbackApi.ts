@@ -1,9 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
-import { advertisers, conditions, MOCK_CASHBACK_CAMPAIGNS } from './cashbackMockData';
 
-// Constants for Supabase URL and API key - using the values from the client
+// Constants for Supabase URL and API key
 const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
 
@@ -20,8 +18,8 @@ export const fetchCashbackCampaigns = async (): Promise<CashbackCampaign[]> => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.log("No authenticated user found - using mock cashback data");
-      return MOCK_CASHBACK_CAMPAIGNS;
+      console.log("No authenticated user found - returning empty cashback data");
+      return [];
     }
     
     // Fetch active campaigns from Supabase
@@ -36,11 +34,15 @@ export const fetchCashbackCampaigns = async (): Promise<CashbackCampaign[]> => {
     
     const campaignsData = await campaignsResponse.json();
     
-    // Enhance campaigns with advertiser data if needed
-    return enhanceCampaigns(campaignsData);
+    // Only enhance campaigns if we have any
+    if (Array.isArray(campaignsData) && campaignsData.length > 0) {
+      return enhanceCampaigns(campaignsData);
+    }
+    
+    return [];
   } catch (error) {
     console.error("Error fetching cashback campaigns:", error);
-    return MOCK_CASHBACK_CAMPAIGNS;
+    return [];
   }
 };
 
@@ -49,18 +51,7 @@ export const fetchCashbackCampaigns = async (): Promise<CashbackCampaign[]> => {
  */
 export const enhanceCampaigns = (campaigns: CashbackCampaign[]): CashbackCampaign[] => {
   return (campaigns || []).map((campaign: CashbackCampaign) => {
-    // Only add advertiser info if it's missing
-    if (!campaign.advertiser_logo || !campaign.advertiser_name) {
-      const index = parseInt(campaign.id.substring(0, 2), 16) % advertisers.length;
-      const conditionIndex = parseInt(campaign.id.substring(2, 4), 16) % conditions.length;
-      
-      return {
-        ...campaign,
-        advertiser_logo: campaign.advertiser_logo || advertisers[index].logo,
-        advertiser_name: campaign.advertiser_name || advertisers[index].name,
-        conditions: campaign.conditions || conditions[conditionIndex]
-      };
-    }
+    // Return campaign as is, since we don't want to add any mock data
     return campaign;
   });
 };
@@ -73,7 +64,7 @@ export const fetchUserCashbackBalance = async (): Promise<number> => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      return 57.25; // Default demo balance
+      return 0; // Return 0 instead of mock balance
     }
     
     const { data: profileData, error: profileError } = await supabase
@@ -84,14 +75,14 @@ export const fetchUserCashbackBalance = async (): Promise<number> => {
     
     if (profileError || !profileData) {
       console.log("Error fetching profile or profile not found:", profileError);
-      return 57.25; // Default value for demo
+      return 0; // Return 0 instead of mock value
     }
     
     // For demonstration, we'll use a portion of points as cashback (10%)
     return Math.round((profileData.points * 0.1) * 100) / 100;
   } catch (error) {
     console.error("Error fetching user cashback balance:", error);
-    return 57.25; // Default demo balance
+    return 0; // Return 0 instead of mock balance
   }
 };
 

@@ -36,11 +36,11 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          console.log("Session error or no session - using test data");
-          // Use test data for demo mode
-          setPoints(1500);
-          setCredits(1500); // Set credits equal to points for the 1:1 conversion
-          setStreak(3);
+          console.log("Session error or no session - using empty data");
+          // Use empty data for demo mode
+          setPoints(0);
+          setCredits(0);
+          setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
@@ -50,11 +50,11 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         const userId = session.user.id;
         
         if (!userId) {
-          console.log("No authenticated user found - using test data");
-          // Use test data for non-authenticated users
-          setPoints(1500);
-          setCredits(1500); // Set credits equal to points for the 1:1 conversion
-          setStreak(3);
+          console.log("No authenticated user found - using empty data");
+          // Use empty data for non-authenticated users
+          setPoints(0);
+          setCredits(0);
+          setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
@@ -72,10 +72,10 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         
         if (profileError) {
           console.error("Profile error:", profileError);
-          // Still use test data instead of throwing error
-          setPoints(1500);
-          setCredits(1500); // Set credits equal to points for the 1:1 conversion
-          setStreak(3);
+          // Still use empty data instead of throwing error
+          setPoints(0);
+          setCredits(0);
+          setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
           playSound("chime");
@@ -100,17 +100,17 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         }
         
         // For streak, we would ideally have a user_activity table
-        // For now, let's use a placeholder value
-        setStreak(3);
+        // For now, let's set a default value of 0
+        setStreak(0);
         
         // Update last activity
         localStorage.setItem("lastActivity", Date.now().toString());
       } catch (error: any) {
         console.error("Error fetching user data:", error);
-        // For testing, don't redirect on error and still show data
-        setPoints(1500);
-        setCredits(1500); // Set credits equal to points for the 1:1 conversion
-        setStreak(3);
+        // For testing, don't redirect on error and still show empty data
+        setPoints(0);
+        setCredits(0);
+        setStreak(0);
         setIsProfileCompleted(false);
       } finally {
         setLoading(false);

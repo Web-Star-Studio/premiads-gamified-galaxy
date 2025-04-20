@@ -36,9 +36,9 @@ export const useCashbackMarketplace = () => {
           variant: 'destructive'
         });
         
-        // Fallback to mock data in case of any error
-        setCampaigns(MOCK_CASHBACK_CAMPAIGNS);
-        setUserCashback(57.25);
+        // Use empty array instead of mock data
+        setCampaigns([]);
+        setUserCashback(0);
       } finally {
         setLoading(false);
       }

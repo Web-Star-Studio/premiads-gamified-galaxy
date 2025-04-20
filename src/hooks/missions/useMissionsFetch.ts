@@ -6,70 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Mission, MissionStatus } from "./types";
 import { MissionType } from "@/hooks/useMissionsTypes";
 
-// Mock data for when no auth session is available
-const MOCK_MISSIONS = [
-  {
-    id: "1",
-    title: "Fotografe sua compra na Ciao",
-    description: "Compartilhe uma foto sua usando uma peça de roupa da Ciao e ganhe pontos!",
-    brand: "Ciao",
-    type: "photo" as MissionType,
-    points: 50,
-    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    status: "available" as MissionStatus,
-    requirements: [
-      "Compre um produto na Ciao",
-      "Tire uma foto usando o produto",
-      "Publique nas redes sociais com a hashtag #CiaoStyle"
-    ],
-    business_type: "Moda Masculina",
-    target_audience_gender: "male",
-    target_audience_age_min: 18,
-    target_audience_age_max: 45,
-    target_audience_region: "Recife"
-  },
-  {
-    id: "2",
-    title: "Compartilhe sua experiência no Black Muu BBQ",
-    description: "Visite o Black Muu BBQ, faça um check-in e compartilhe sua experiência para ganhar pontos!",
-    brand: "Black Muu BBQ",
-    type: "social_share" as MissionType,
-    points: 30,
-    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    status: "available" as MissionStatus,
-    requirements: [
-      "Visite o Black Muu BBQ",
-      "Faça um check-in",
-      "Compartilhe sua experiência nas redes sociais"
-    ],
-    business_type: "Restaurante",
-    target_audience_gender: "all",
-    target_audience_age_min: 25,
-    target_audience_age_max: 55,
-    target_audience_region: "Recife"
-  },
-  {
-    id: "3",
-    title: "Avalie os Produtos da Vitabrasil",
-    description: "Compre um produto da Vitabrasil, experimente e deixe uma avaliação honesta para ganhar pontos!",
-    brand: "Vitabrasil",
-    type: "survey" as MissionType,
-    points: 40,
-    deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    status: "available" as MissionStatus,
-    requirements: [
-      "Compre um produto da Vitabrasil",
-      "Experimente o produto por pelo menos 7 dias",
-      "Deixe uma avaliação honesta"
-    ],
-    business_type: "Suplementos",
-    target_audience_gender: "all",
-    target_audience_age_min: 18,
-    target_audience_age_max: 45,
-    target_audience_region: "Recife"
-  }
-];
-
 export const useMissionsFetch = () => {
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -88,8 +24,8 @@ export const useMissionsFetch = () => {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !sessionData?.session?.user?.id) {
-          console.log("No authenticated user found - using mock mission data");
-          setMissions(MOCK_MISSIONS);
+          console.log("No authenticated user found - using empty mission data");
+          setMissions([]);
           setLoading(false);
           playSound("chime");
           return;
@@ -178,8 +114,8 @@ export const useMissionsFetch = () => {
           description: error.message || "Ocorreu um erro ao buscar as missões",
           variant: "destructive",
         });
-        // Fallback to mock data in case of error
-        setMissions(MOCK_MISSIONS);
+        // Return empty array instead of mock data
+        setMissions([]);
       } finally {
         setLoading(false);
       }

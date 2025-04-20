@@ -14,7 +14,7 @@ interface CampaignsListProps {
 
 const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
