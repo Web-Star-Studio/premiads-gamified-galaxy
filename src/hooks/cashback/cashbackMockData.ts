@@ -12,3 +12,4 @@ export const conditions = [];
 
 // Default mock cashback balance - set to 0
 export const DEFAULT_CASHBACK_BALANCE = 0;
+

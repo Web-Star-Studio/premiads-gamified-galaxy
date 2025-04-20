@@ -10,3 +10,4 @@ export interface Campaign {
 }
 
 export const mockCampaigns: Campaign[] = [];
+
