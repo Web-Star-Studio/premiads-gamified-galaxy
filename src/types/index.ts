@@ -1,4 +1,3 @@
-
 export * from './auth';
 export * from './missions';
 
@@ -22,6 +21,7 @@ export interface Profile {
   website?: string;
   description?: string;
   phone?: string;
+  profile_completed?: boolean;
   user_type: 'participante' | 'anunciante' | 'admin';
 }
 
@@ -66,3 +66,4 @@ export interface Referral {
   created_at: string;
   completed_at?: string;
 }
+
