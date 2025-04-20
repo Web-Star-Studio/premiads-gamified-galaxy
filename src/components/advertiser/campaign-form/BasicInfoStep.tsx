@@ -10,8 +10,26 @@ import {
   BarChart3, 
   Star 
 } from "lucide-react";
-import { FormData, MissionType, missionTypeLabels, missionTypeDescriptions } from "./types";
+import { FormData } from "./types";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription
+} from "@/components/ui/card";
+import { 
+  MissionType, 
+  missionTypeLabels, 
+  missionTypeDescriptions 
+} from "@/hooks/useMissionsTypes";
 
 interface BasicInfoStepProps {
   /** Current form data */
@@ -20,128 +38,135 @@ interface BasicInfoStepProps {
   updateFormData: (field: string, value: any) => void;
 }
 
+// Map to get the appropriate icon for each mission type
+const getMissionTypeIcon = (type: MissionType) => {
+  const icons = {
+    form: <FileText className="h-5 w-5" />,
+    photo: <Camera className="h-5 w-5" />,
+    video: <Video className="h-5 w-5" />,
+    checkin: <MapPin className="h-5 w-5" />,
+    social: <Share className="h-5 w-5" />,
+    coupon: <Tag className="h-5 w-5" />,
+    survey: <BarChart3 className="h-5 w-5" />,
+    review: <Star className="h-5 w-5" />
+  };
+  
+  return icons[type] || <FileText className="h-5 w-5" />;
+};
+
 /**
  * Mission basic information form step
  * Collects title, description, mission type and target audience
  */
 const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
-  // Map mission types to their corresponding icons
-  const missionTypeIcons: Record<MissionType, React.ReactNode> = {
-    form: <FileText className="w-4 h-4 mr-2" aria-hidden="true" />,
-    photo: <Camera className="w-4 h-4 mr-2" aria-hidden="true" />,
-    video: <Video className="w-4 h-4 mr-2" aria-hidden="true" />,
-    checkin: <MapPin className="w-4 h-4 mr-2" aria-hidden="true" />,
-    social: <Share className="w-4 h-4 mr-2" aria-hidden="true" />,
-    coupon: <Tag className="w-4 h-4 mr-2" aria-hidden="true" />,
-    survey: <BarChart3 className="w-4 h-4 mr-2" aria-hidden="true" />,
-    review: <Star className="w-4 h-4 mr-2" aria-hidden="true" />
-  };
-
-  // Audience options
-  const audienceOptions = [
-    { id: "todos", label: "Todos" },
-    { id: "novos", label: "Novos" },
-    { id: "nivel3", label: "Nível 3+" },
+  // All available mission types
+  const missionTypes: MissionType[] = [
+    "form", "photo", "video", "checkin", "social", "coupon", "survey", "review"
   ];
-
+  
+  // All target audience options
+  const targetAudiences = [
+    { value: "todos", label: "Todos os usuários" },
+    { value: "novos", label: "Novos usuários" },
+    { value: "nivel3", label: "Usuários nível 3 ou superior" }
+  ];
+  
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <label htmlFor="mission-title" className="text-sm font-medium">Nome da Missão</label>
-        <input
-          id="mission-title"
-          type="text"
+      <div className="space-y-3">
+        <label htmlFor="title" className="text-sm font-medium">Título da Missão</label>
+        <Input
+          id="title"
+          placeholder="Ex: Compartilhe nossa marca nas redes sociais"
           value={formData.title}
           onChange={(e) => updateFormData("title", e.target.value)}
-          placeholder="Ex: Desafio Verão 2025"
-          className="w-full px-3 py-2 bg-gray-800 rounded-md border border-gray-700 focus:border-neon-cyan focus:outline-none"
-          maxLength={50}
-          aria-required="true"
+          className="bg-gray-800 border-gray-700 focus:border-neon-cyan w-full"
         />
-        {formData.title && formData.title.length > 40 && (
-          <p className="text-xs text-amber-400">
-            Nome próximo do limite máximo ({formData.title.length}/50)
-          </p>
-        )}
       </div>
-
-      <div className="space-y-2">
-        <label htmlFor="mission-description" className="text-sm font-medium">Descrição da Missão</label>
+      
+      <div className="space-y-3">
+        <label htmlFor="description" className="text-sm font-medium">Descrição</label>
         <Textarea
-          id="mission-description"
+          id="description"
+          placeholder="Descreva o que os usuários precisam fazer para completar esta missão"
           value={formData.description}
           onChange={(e) => updateFormData("description", e.target.value)}
-          placeholder="Descreva o objetivo desta missão..."
-          className="w-full px-3 py-2 bg-gray-800 rounded-md border border-gray-700 focus:border-neon-cyan focus:outline-none resize-none min-h-[80px]"
-          maxLength={200}
+          className="bg-gray-800 border-gray-700 focus:border-neon-cyan min-h-[100px] w-full"
         />
-        <p className="text-xs text-gray-400">
-          {formData.description.length}/200 caracteres
-        </p>
       </div>
-
+      
       <div className="space-y-3">
         <label className="text-sm font-medium">Tipo de Missão</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {Object.entries(missionTypeLabels).map(([type, label]) => (
-            <div
-              key={type}
-              className={`flex flex-col p-3 border rounded-md cursor-pointer transition-all ${
-                formData.type === type
-                  ? "border-neon-cyan bg-neon-cyan/10 text-white"
-                  : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"
-              }`}
-              onClick={() => updateFormData("type", type)}
-              role="radio"
-              aria-checked={formData.type === type}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  updateFormData("type", type);
-                }
-              }}
+        
+        {formData.type ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card 
+              className="bg-galaxy-purple/10 border border-galaxy-purple/40 cursor-pointer"
+              onClick={() => updateFormData("type", "")}
             >
-              <div className="flex items-center">
-                {missionTypeIcons[type as MissionType]}
-                <span className="font-medium">{label}</span>
-              </div>
-              {formData.type === type && (
-                <p className="mt-2 text-xs text-gray-300">
-                  {missionTypeDescriptions[type as MissionType]}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+              <CardContent className="flex items-center p-4">
+                <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
+                  {getMissionTypeIcon(formData.type as MissionType)}
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium">{missionTypeLabels[formData.type as MissionType]}</h4>
+                  <CardDescription className="text-xs line-clamp-2">
+                    {missionTypeDescriptions[formData.type as MissionType]}
+                  </CardDescription>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <button
+              type="button"
+              onClick={() => updateFormData("type", "")}
+              className="text-sm text-galaxy-blue hover:text-neon-cyan transition-colors"
+            >
+              Mudar tipo
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {missionTypes.map((type) => (
+              <Card 
+                key={type}
+                className="bg-galaxy-darkPurple border border-galaxy-purple/20 hover:border-galaxy-purple/40 cursor-pointer"
+                onClick={() => updateFormData("type", type)}
+              >
+                <CardContent className="flex items-center p-4">
+                  <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
+                    {getMissionTypeIcon(type)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">{missionTypeLabels[type]}</h4>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {missionTypeDescriptions[type]}
+                    </CardDescription>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
-
+      
       <div className="space-y-3">
-        <label className="text-sm font-medium">Público Alvo</label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {audienceOptions.map((audience) => (
-            <div
-              key={audience.id}
-              className={`flex items-center justify-center p-2 border rounded-md cursor-pointer transition-all ${
-                formData.audience === audience.id
-                  ? "border-neon-cyan bg-neon-cyan/10 text-white"
-                  : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"
-              }`}
-              onClick={() => updateFormData("audience", audience.id)}
-              role="radio"
-              aria-checked={formData.audience === audience.id}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  updateFormData("audience", audience.id);
-                }
-              }}
-            >
-              <span>{audience.label}</span>
-            </div>
-          ))}
-        </div>
+        <label htmlFor="audience" className="text-sm font-medium">Público Alvo</label>
+        <Select
+          value={formData.audience}
+          onValueChange={(value) => updateFormData("audience", value)}
+        >
+          <SelectTrigger className="bg-gray-800 border-gray-700 focus:border-neon-cyan w-full">
+            <SelectValue placeholder="Selecione o público alvo" />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-gray-700">
+            {targetAudiences.map((audience) => (
+              <SelectItem key={audience.value} value={audience.value}>
+                {audience.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
