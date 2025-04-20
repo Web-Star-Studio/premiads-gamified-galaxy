@@ -50,7 +50,7 @@ export const useLottery = () => {
           *,
           winner:winner_user_id (
             id,
-            profiles:profiles!winner_user_id (
+            profiles (
               id,
               full_name,
               avatar_url
@@ -73,13 +73,25 @@ export const useLottery = () => {
         
         // Get winner info if exists
         let winner = null;
-        if (raffle.winner) {
-          const profile = raffle.winner.profiles;
-          winner = {
-            id: profile.id,
-            name: profile.full_name || 'Unknown',
-            avatar: profile.avatar_url || 'https://i.pravatar.cc/150?img=1'
-          };
+        if (raffle.winner && raffle.winner.profiles) {
+          // Safe access to nested properties
+          const winnerProfile = Array.isArray(raffle.winner.profiles) 
+            ? raffle.winner.profiles[0] 
+            : raffle.winner.profiles;
+            
+          if (winnerProfile) {
+            winner = {
+              id: winnerProfile.id || '',
+              name: winnerProfile.full_name || 'Unknown',
+              avatar: winnerProfile.avatar_url || 'https://i.pravatar.cc/150?img=1'
+            };
+          }
+        }
+        
+        // Ensure status is one of the allowed enum values
+        let status: Lottery['status'] = 'draft';
+        if (['active', 'pending', 'completed', 'canceled', 'draft', 'finished'].includes(raffle.status)) {
+          status = raffle.status as Lottery['status'];
         }
         
         return {
@@ -93,7 +105,7 @@ export const useLottery = () => {
           startDate: raffle.start_date,
           endDate: raffle.end_date,
           drawDate: raffle.draw_date,
-          status: raffle.status,
+          status,
           winner,
           numbersTotal: raffle.numbers_total,
           pointsPerNumber: raffle.points_per_number,

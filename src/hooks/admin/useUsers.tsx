@@ -25,30 +25,51 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Get users from auth.users and join with profiles
-      const { data: authUsers, error: authError } = await supabase
-        .from('auth.users')
-        .select('*');
-        
-      if (authError) throw authError;
-      
-      // Get profiles with more details
+      // Get profiles with user information
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
         
       if (profilesError) throw profilesError;
       
+      // Get auth metadata if needed (admin only)
+      // Note: This requires special permissions, so we'll use profiles data primarily
+      let authData: Record<string, any> = {};
+      try {
+        // Attempt to get user auth data (may fail if not admin)
+        const { data: authUsers } = await supabase
+          .rpc('get_all_users');
+          
+        if (authUsers && Array.isArray(authUsers)) {
+          // Create a map of user ids to their auth data
+          authData = authUsers.reduce((acc, user) => {
+            acc[user.id] = user;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      } catch (authError) {
+        console.warn('Could not fetch auth users data, using profiles only', authError);
+      }
+      
       // Combine the data
-      const combinedUsers = profiles.map(profile => {
-        const authUser = authUsers.find(user => user.id === profile.id);
+      const combinedUsers: User[] = profiles.map(profile => {
+        // Get auth data for this user if available
+        const authUser = authData[profile.id];
+        
+        // Determine status based on profile data
+        let status: 'active' | 'inactive' | 'pending';
+        if (profile.profile_completed) {
+          status = 'active';
+        } else {
+          status = 'pending';
+        }
         
         return {
           id: profile.id,
           name: profile.full_name || 'Usuário sem nome',
-          email: authUser?.email || 'Email não disponível',
+          email: authUser?.email || profile.email || 'Email não disponível',
           role: profile.user_type || 'participante',
-          status: profile.profile_completed ? 'active' : 'pending',
+          status,
           lastLogin: authUser?.last_sign_in_at 
             ? new Date(authUser.last_sign_in_at).toLocaleDateString('pt-BR')
             : undefined,
@@ -116,8 +137,11 @@ export const useUsers = () => {
       setLoading(true);
       playSound('error');
       
-      // Delete from auth will cascade to profiles due to foreign key
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Only remove from profiles for now, as auth deletion requires admin API access
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
       
       if (error) throw error;
       
