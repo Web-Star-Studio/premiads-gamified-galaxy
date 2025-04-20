@@ -41,7 +41,8 @@ const UserManagement = () => {
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {
     // Convert string status to boolean for the updateUserStatus function
-    const newActiveState = currentStatus !== 'active';
+    // Make sure we're explicitly converting the string to a boolean value
+    const newActiveState = currentStatus === 'active' ? false : true;
     await updateUserStatus(userId, newActiveState);
   };
 
