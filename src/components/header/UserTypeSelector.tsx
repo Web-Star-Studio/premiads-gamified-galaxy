@@ -7,9 +7,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { UserType } from "@/types/auth";
 
 interface UserTypeSelectorProps {
-  userType: "participante" | "anunciante";
+  userType: UserType;
   changeUserType: (type: "participante" | "anunciante") => void;
   setIsOverlayOpen: (open: boolean) => void;
 }
@@ -33,7 +34,7 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
           size="sm" 
           className="bg-galaxy-deepPurple/70 border-neon-cyan/30 flex items-center justify-center"
         >
-          {userType === "participante" ? "Participante" : "Anunciante"} 
+          {userType === "participante" ? "Participante" : userType === "anunciante" ? "Anunciante" : "Admin"} 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">

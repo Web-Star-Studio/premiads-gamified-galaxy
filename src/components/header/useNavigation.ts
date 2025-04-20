@@ -1,6 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
+import { UserType } from "@/types/auth";
 
 export const useNavigation = () => {
   const { userType, setUserType } = useUser();
@@ -15,8 +16,10 @@ export const useNavigation = () => {
   const navigateToDashboard = () => {
     if (userType === "participante") {
       navigate("/cliente");
-    } else {
+    } else if (userType === "anunciante") {
       navigate("/anunciante");
+    } else if (userType === "admin") {
+      navigate("/admin");
     }
   };
 

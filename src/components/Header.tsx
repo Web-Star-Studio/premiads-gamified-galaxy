@@ -32,6 +32,13 @@ const Header = () => {
     { id: "blog", label: "Blog", isLink: true, to: "/blog" },
   ];
 
+  // Get the button text based on user type
+  const getButtonText = () => {
+    if (userType === "participante") return "Ver Missões";
+    if (userType === "anunciante") return "Criar Campanha";
+    return "Acessar Painel";
+  };
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -60,7 +67,7 @@ const Header = () => {
             size="sm"
             onClick={navigateToDashboard}
           >
-            {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+            {getButtonText()}
           </Button>
 
           {/* Mobile menu button */}
