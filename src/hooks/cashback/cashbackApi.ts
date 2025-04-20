@@ -2,10 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
 
-// Constants for Supabase URL and API key
-const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
-
 export interface FetchCashbackResult {
   campaigns: CashbackCampaign[];
   userCashback: number;

@@ -14,6 +14,8 @@ import {
   defaultLogo
 } from './campaign-card';
 import CampaignCardSkeleton from './campaign-card/CampaignCardSkeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface CashbackCampaignCardProps {
   campaign: CashbackCampaign;
@@ -30,6 +32,23 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const { toast } = useToast();
+  
+  const handleOpenDialog = async () => {
+    // Verify user is authenticated before showing redemption dialog
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+      toast({
+        title: "Autenticação necessária",
+        description: "Você precisa estar logado para resgatar cashback.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsOpen(true);
+  };
   
   const handleRedeem = async () => {
     setIsRedeeming(true);
@@ -83,7 +102,7 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
             formatDate={formatDate}
           />
           
-          <CampaignFooter onClick={() => setIsOpen(true)} />
+          <CampaignFooter onClick={handleOpenDialog} />
         </Card>
       </motion.div>
 

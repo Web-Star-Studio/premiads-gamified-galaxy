@@ -6,6 +6,7 @@ import TicketsButton from "@/components/client/dashboard/TicketsButton";
 import { useNavigate } from "react-router-dom";
 import { useClientDashboard } from "@/hooks/useClientDashboard";
 import { useUserLevel } from "@/hooks/useUserLevel";
+import { useRealtimePoints } from "@/hooks/useRealtimePoints";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import { getMoneyValue } from "@/utils/formatCurrency";
@@ -16,9 +17,10 @@ interface PointsSectionProps {
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
   const navigate = useNavigate();
-  const { points, credits } = useClientDashboard(navigate);
-  const effectivePoints = totalPoints || points;
-  const { levelInfo, loading } = useUserLevel(effectivePoints);
+  const { points: dashboardPoints, credits } = useClientDashboard(navigate);
+  const initialPoints = totalPoints || dashboardPoints;
+  const { points: realtimePoints, loading: pointsLoading } = useRealtimePoints(initialPoints);
+  const { levelInfo, loading: levelLoading } = useUserLevel(realtimePoints);
   
   return (
     <motion.div
@@ -31,7 +33,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              <PointsCard points={effectivePoints} credits={credits} />
+              <PointsCard points={realtimePoints} credits={credits} />
               <div className="absolute top-3 right-3">
                 <Info className="h-4 w-4 text-neon-cyan cursor-help" />
               </div>
@@ -41,7 +43,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
             <div className="space-y-2">
               <p className="text-sm font-medium">Conversão de Pontos e Créditos</p>
               <div className="text-xs space-y-1">
-                <p><span className="text-neon-cyan">{effectivePoints}</span> pontos = <span className="text-neon-pink">{effectivePoints}</span> créditos = {getMoneyValue(effectivePoints)}</p>
+                <p><span className="text-neon-cyan">{realtimePoints}</span> pontos = <span className="text-neon-pink">{realtimePoints}</span> créditos = {getMoneyValue(realtimePoints)}</p>
                 <p>• Cada 10 pontos equivalem a R$1,00</p>
                 <p>• Pontos são ganhos completando missões</p>
                 <p>• Créditos podem ser usados para sorteios e recursos premium</p>
@@ -51,7 +53,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         </Tooltip>
       </TooltipProvider>
       
-      {!loading && levelInfo && (
+      {!levelLoading && levelInfo && (
         <UserLevel levelInfo={levelInfo} />
       )}
       
