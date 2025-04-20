@@ -39,6 +39,12 @@ const UserManagement = () => {
     setSelectedUsers(newSelected);
   };
 
+  const handleToggleStatus = async (userId: string, currentStatus: string) => {
+    // Convert string status to boolean for the updateUserStatus function
+    const newActiveState = currentStatus !== 'active';
+    await updateUserStatus(userId, newActiveState);
+  };
+
   const handleBulkDelete = async () => {
     if (window.confirm(`Delete ${selectedUsers.size} selected users?`)) {
       for (const userId of selectedUsers) {
