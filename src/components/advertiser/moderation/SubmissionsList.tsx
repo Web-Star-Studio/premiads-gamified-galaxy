@@ -9,9 +9,10 @@ interface SubmissionsListProps {
   filterStatus: string;
   searchQuery: string;
   tabValue: 'pending' | 'approved' | 'rejected';
+  isAdminView?: boolean;
 }
 
-const SubmissionsList = ({ filterStatus, searchQuery, tabValue }: SubmissionsListProps) => {
+const SubmissionsList = ({ filterStatus, searchQuery, tabValue, isAdminView = false }: SubmissionsListProps) => {
   const { submissions, loading, handleRemoveSubmission } = useSubmissions({
     filterStatus,
     searchQuery,
@@ -47,6 +48,7 @@ const SubmissionsList = ({ filterStatus, searchQuery, tabValue }: SubmissionsLis
               submission={submission}
               mode={tabValue}
               onRemove={handleRemoveSubmission}
+              isAdminView={isAdminView}
             />
           ))}
         </div>
