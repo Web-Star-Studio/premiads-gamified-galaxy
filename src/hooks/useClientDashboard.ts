@@ -7,16 +7,17 @@ import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useClientDashboard = (navigate?: NavigateFunction) => {
-  const { userName, userType } = useUser();
+  const { userName, userType, setUserName } = useUser();
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [points, setPoints] = useState(0);
-  const [credits, setCredits] = useState(0); // New state for credits
+  const [credits, setCredits] = useState(0);
   const [streak, setStreak] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isProfileCompleted, setIsProfileCompleted] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
 
   useEffect(() => {
     // Check if onboarding has been completed
@@ -32,9 +33,9 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     const fetchUserData = async () => {
       try {
         // Check if user is authenticated
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (sessionError || !sessionData.session) {
+        if (sessionError || !session) {
           console.log("Session error or no session - using test data");
           // Use test data for demo mode
           setPoints(1500);
@@ -46,7 +47,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
           return;
         }
         
-        const userId = sessionData.session.user.id;
+        const userId = session.user.id;
         
         if (!userId) {
           console.log("No authenticated user found - using test data");
@@ -65,7 +66,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         // Get user profile with points
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("points, credits, profile_completed")
+          .select("*")
           .eq("id", userId)
           .single();
         
@@ -82,12 +83,20 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         }
         
         if (profileData) {
+          setProfileData(profileData);
           setPoints(profileData.points || 0);
           // If credits exist in the database, use them, otherwise use points (1:1 conversion)
           setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
           setIsProfileCompleted(profileData.profile_completed || false);
+          
+          // Update username if available in the profile
+          if (profileData.full_name && !userName) {
+            setUserName(profileData.full_name);
+          }
+          
           console.log("User points:", profileData.points);
           console.log("User credits:", profileData.credits);
+          console.log("Profile completed:", profileData.profile_completed);
         }
         
         // For streak, we would ideally have a user_activity table
@@ -122,7 +131,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     setTimeout(() => {
       fetchUserData();
     }, 1500);
-  }, [userType, navigate, toast, playSound]);
+  }, [userType, navigate, toast, playSound, userName, setUserName]);
 
   const handleExtendSession = () => {
     toast({
@@ -147,7 +156,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
   return {
     userName,
     points,
-    credits, // Add credits to the returned values
+    credits,
     streak,
     loading,
     showOnboarding,
@@ -155,6 +164,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     handleExtendSession,
     handleSessionTimeout,
     authError,
-    isProfileCompleted
+    isProfileCompleted,
+    profileData
   };
 };

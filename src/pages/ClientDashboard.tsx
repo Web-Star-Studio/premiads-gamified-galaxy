@@ -16,10 +16,14 @@ import BrandsPreview from "@/components/client/brand/BrandsPreview";
 import CashbackPreview from "@/components/client/cashback/CashbackPreview";
 import ProfileCompletionBanner from "@/components/client/dashboard/ProfileCompletionBanner";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { toast } = useToast();
+  
   const {
     userName,
     points,
@@ -29,8 +33,21 @@ const ClientDashboard = () => {
     setShowOnboarding,
     handleExtendSession,
     handleSessionTimeout,
-    authError
+    authError,
+    isProfileCompleted,
+    profileData
   } = useClientDashboard(navigate);
+
+  useEffect(() => {
+    // Check for authentication errors
+    if (authError) {
+      toast({
+        title: "Erro de autenticação",
+        description: authError,
+        variant: "destructive",
+      });
+    }
+  }, [authError, toast]);
 
   if (loading) {
     return <LoadingState />;
@@ -39,13 +56,13 @@ const ClientDashboard = () => {
   return (
     <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
-        <ClientSidebar />
+        <ClientSidebar userName={userName} />
         <SidebarInset className="overflow-y-auto pb-20">
           <ClientHeader />
           
           <div className="container px-4 py-8 mx-auto">
-            {/* Profile Completion Banner */}
-            <ProfileCompletionBanner />
+            {/* Profile Completion Banner - Only show if profile is not completed */}
+            {!isProfileCompleted && <ProfileCompletionBanner />}
             
             <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
               {/* Points & Tickets Section */}
@@ -60,7 +77,7 @@ const ClientDashboard = () => {
             
             <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-3">
               {/* Profile Preview */}
-              <ProfilePreview />
+              <ProfilePreview profileData={profileData} />
               
               {/* Cashback Preview */}
               <CashbackPreview />

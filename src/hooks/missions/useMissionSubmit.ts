@@ -9,11 +9,49 @@ type SetMissionsFunction = React.Dispatch<React.SetStateAction<Mission[]>>;
 
 export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
   const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  const submitMission = async (missionId: string, submissionData: any) => {
+  const validateSubmissionData = (missionType: string, submissionData: any) => {
+    if (!submissionData) return "Dados da submissão são obrigatórios";
+    
+    if (missionType === "survey" && (!submissionData.answer || submissionData.answer.trim() === "")) {
+      return "Resposta é obrigatória para este tipo de missão";
+    }
+    
+    if (missionType === "photo" && !submissionData.mediaUrl) {
+      return "Imagem é obrigatória para este tipo de missão";
+    }
+    
+    if (missionType === "video" && !submissionData.mediaUrl) {
+      return "Vídeo é obrigatório para este tipo de missão";
+    }
+    
+    if (missionType === "social_share" && (!submissionData.shareLink || submissionData.shareLink.trim() === "")) {
+      return "Link da postagem é obrigatório para este tipo de missão";
+    }
+    
+    return null;
+  };
+
+  const submitMission = async (missionId: string, missionType: string, submissionData: any) => {
     setSubmissionLoading(true);
+    setSubmissionError(null);
+    
+    // Validate submission data
+    const validationError = validateSubmissionData(missionType, submissionData);
+    if (validationError) {
+      setSubmissionError(validationError);
+      toast({
+        title: "Erro na submissão",
+        description: validationError,
+        variant: "destructive"
+      });
+      setSubmissionLoading(false);
+      return false;
+    }
+    
     try {
       // Check if user is authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -50,7 +88,10 @@ export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
           status: "pending"
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error submitting to database:", error);
+        throw error;
+      }
 
       // Update mission status in local state
       setMissions(prevMissions => 
@@ -70,6 +111,7 @@ export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
       return true;
     } catch (error: any) {
       console.error("Error submitting mission:", error);
+      setSubmissionError(error.message || "Erro ao enviar missão");
       toast({
         title: "Erro ao enviar missão",
         description: error.message || "Ocorreu um erro ao enviar sua missão. Tente novamente mais tarde.",
@@ -81,5 +123,9 @@ export const useMissionSubmit = (setMissions: SetMissionsFunction) => {
     }
   };
 
-  return { submitMission, submissionLoading };
+  return { 
+    submitMission, 
+    submissionLoading,
+    submissionError
+  };
 };
