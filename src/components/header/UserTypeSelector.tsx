@@ -8,10 +8,12 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { UserType } from "@/types/auth";
+import { useToast } from "@/hooks/use-toast";
+import { useSounds } from "@/hooks/use-sounds";
 
 interface UserTypeSelectorProps {
   userType: UserType;
-  changeUserType: (type: "participante" | "anunciante") => void;
+  changeUserType: (type: UserType) => void;
   setIsOverlayOpen: (open: boolean) => void;
 }
 
@@ -20,10 +22,31 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
   changeUserType,
   setIsOverlayOpen 
 }) => {
+  const { toast } = useToast();
+  const { playSound } = useSounds();
+  
   const openWhatsApp = () => {
     const phoneNumber = "5581985595912";
     const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+
+  const handleChangeUserType = async (type: UserType) => {
+    try {
+      playSound("pop");
+      changeUserType(type);
+      toast({
+        title: "Tipo de usuário alterado",
+        description: `Seu perfil foi alterado para ${type === "participante" ? "Participante" : type === "anunciante" ? "Anunciante" : "Admin"}`,
+      });
+    } catch (error) {
+      console.error("Erro ao alterar tipo de usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível alterar o tipo de usuário",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -39,13 +62,13 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">
         <DropdownMenuItem 
-          onClick={() => changeUserType("participante")}
+          onClick={() => handleChangeUserType("participante")}
           className={`cursor-pointer ${userType === "participante" ? "neon-text-cyan" : ""}`}
         >
           Participante
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => changeUserType("anunciante")}
+          onClick={() => handleChangeUserType("anunciante")}
           className={`cursor-pointer ${userType === "anunciante" ? "neon-text-cyan" : ""}`}
         >
           Anunciante

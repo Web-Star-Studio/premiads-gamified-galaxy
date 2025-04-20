@@ -23,7 +23,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   
-  // Fetch real campaigns when component mounts
+  // Buscar campanhas quando o componente é montado
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
@@ -32,21 +32,42 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setCampaigns(mockCampaigns);
+          setLoading(false);
           return;
         }
         
-        // Ideally, this would fetch actual campaigns from the database
-        // For now, let's use mock data but log to show this would be a real fetch
-        console.log("Would fetch campaigns for user:", session.user.id);
+        // Buscar campanhas do usuário atual
+        const { data, error } = await supabase
+          .from('missions')
+          .select('*')
+          .eq('advertiser_id', session.user.id);
         
-        // Set mock campaigns after a delay to simulate API call
-        setTimeout(() => {
+        if (error) {
+          console.error("Erro ao buscar campanhas:", error);
           setCampaigns(mockCampaigns);
           setLoading(false);
-        }, 1000);
+          return;
+        }
         
+        if (data && data.length > 0) {
+          // Converter dados do banco para o formato usado pelo componente
+          const formattedCampaigns: Campaign[] = data.map(mission => ({
+            id: mission.id,
+            title: mission.title,
+            status: mission.is_active ? "ativa" : "pendente",
+            audience: mission.target_audience_gender || "todos",
+            completions: 0, // Poderia buscar o número de submissões
+            reward: `${mission.points}`,
+            expires: mission.end_date ? new Date(mission.end_date).toLocaleDateString('pt-BR') : 'N/A',
+          }));
+          
+          setCampaigns(formattedCampaigns);
+        } else {
+          // Se não houver dados, usar mock para demonstração
+          setCampaigns(mockCampaigns);
+        }
       } catch (error) {
-        console.error("Error fetching campaigns:", error);
+        console.error("Erro ao buscar campanhas:", error);
         setCampaigns(mockCampaigns);
       } finally {
         setLoading(false);
@@ -56,25 +77,51 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     fetchCampaigns();
   }, []);
   
-  // Set initial filter when prop changes
+  // Definir filtro inicial quando a prop muda
   useEffect(() => {
     setFilterStatus(initialFilter);
   }, [initialFilter]);
   
-  // Filter campaigns based on search term and status filter
+  // Filtrar campanhas com base no termo de busca e filtro de status
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus ? campaign.status === filterStatus : true;
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = (id: number) => {
-    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
-    playSound("error");
-    toast({
-      title: "Campanha removida",
-      description: `A campanha #${id} foi removida com sucesso`,
-    });
+  const handleDelete = async (id: number) => {
+    try {
+      // Verificar se o usuário está autenticado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Excluir a missão/campanha do banco de dados
+        const { error } = await supabase
+          .from('missions')
+          .delete()
+          .eq('id', id);
+          
+        if (error) {
+          console.error("Erro ao excluir campanha:", error);
+          throw error;
+        }
+      }
+      
+      // Atualizar o estado removendo a campanha excluída
+      setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
+      
+      playSound("error");
+      toast({
+        title: "Campanha removida",
+        description: `A campanha #${id} foi removida com sucesso`,
+      });
+    } catch (error) {
+      console.error("Erro ao excluir campanha:", error);
+      toast({
+        title: "Erro ao remover campanha",
+        description: "Não foi possível remover a campanha. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleCreateNew = () => {
@@ -83,32 +130,92 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     playSound("pop");
   };
   
-  const handleFormClose = () => {
+  const handleFormClose = async (formData?: any) => {
     setShowCreateForm(false);
-    setEditingCampaign(null);
-    playSound("pop");
-    toast({
-      title: "Missão gerenciada",
-      description: editingCampaign ? "Missão atualizada com sucesso!" : "Nova missão criada com sucesso!",
-    });
     
-    // Add logic here to add the campaign data to the campaigns list
-    if (editingCampaign) {
-      // Update existing campaign logic would go here
-    } else {
-      // Add new campaign logic would go here
-      // For now we'll just add a mock campaign with a new ID
-      const newId = Math.max(...campaigns.map(c => c.id)) + 1;
-      const newCampaign: Campaign = {
-        id: newId,
-        title: `Nova Missão #${newId}`,
-        status: "pendente",
-        audience: "todos",
-        completions: 0,
-        reward: "50-100",
-        expires: "30/08/2025",
+    // Se não houver dados do formulário, apenas fechar o formulário
+    if (!formData) {
+      setEditingCampaign(null);
+      return;
+    }
+    
+    try {
+      // Verificar se o usuário está autenticado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Preparar dados para inserir/atualizar no banco
+      const missionData = {
+        title: formData.title || (editingCampaign ? editingCampaign.title : "Nova Missão"),
+        description: formData.description || "Descrição da missão",
+        type: formData.type || "form",
+        points: parseInt(formData.reward) || 50,
+        is_active: formData.status === "ativa",
+        advertiser_id: session.user.id,
+        requirements: formData.requirements || null,
+        end_date: formData.endDate || null,
+        target_audience_gender: formData.audience || null
       };
-      setCampaigns(prev => [...prev, newCampaign]);
+      
+      let result;
+      
+      if (editingCampaign) {
+        // Atualizar missão existente
+        result = await supabase
+          .from('missions')
+          .update(missionData)
+          .eq('id', editingCampaign.id);
+      } else {
+        // Inserir nova missão
+        result = await supabase
+          .from('missions')
+          .insert(missionData)
+          .select();
+      }
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      // Exibir toast de sucesso
+      playSound("pop");
+      toast({
+        title: "Missão gerenciada",
+        description: editingCampaign ? "Missão atualizada com sucesso!" : "Nova missão criada com sucesso!",
+      });
+      
+      // Recarregar a lista de campanhas
+      const { data, error } = await supabase
+        .from('missions')
+        .select('*')
+        .eq('advertiser_id', session.user.id);
+      
+      if (error) throw error;
+      
+      if (data) {
+        const formattedCampaigns: Campaign[] = data.map(mission => ({
+          id: mission.id,
+          title: mission.title,
+          status: mission.is_active ? "ativa" : "pendente",
+          audience: mission.target_audience_gender || "todos",
+          completions: 0,
+          reward: `${mission.points}`,
+          expires: mission.end_date ? new Date(mission.end_date).toLocaleDateString('pt-BR') : 'N/A',
+        }));
+        
+        setCampaigns(formattedCampaigns);
+      }
+    } catch (error) {
+      console.error("Erro ao gerenciar campanha:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar a campanha",
+        variant: "destructive"
+      });
+    } finally {
+      setEditingCampaign(null);
     }
   };
   

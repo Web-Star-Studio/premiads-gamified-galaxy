@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { UserType } from "@/types/auth";
@@ -57,6 +57,7 @@ const MobileNavigation = ({
   const getButtonText = () => {
     if (userType === "participante") return "Ver Missões";
     if (userType === "anunciante") return "Criar Campanha";
+    if (userType === "admin") return "Painel Admin";
     return "Acessar Painel";
   };
   
