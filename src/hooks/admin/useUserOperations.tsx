@@ -7,20 +7,18 @@ import { User } from './useUsers';
 export const useUserOperations = () => {
   const { toast } = useToast();
 
-  const updateUserStatus = useCallback(async (userId: string, active: boolean) => {
+  const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
-      const updateData = { active };
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId);
+      const { error } = await supabase.rpc('update_user_status', {
+        user_id: userId,
+        is_active: isActive
+      });
         
       if (error) throw error;
       
       toast({
         title: 'User updated',
-        description: `User status updated to ${active ? 'active' : 'inactive'}`
+        description: `User status updated to ${isActive ? 'active' : 'inactive'}`
       });
 
       return true;
@@ -37,8 +35,8 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { error } = await supabase.rpc('delete_user', {
-        user_id: userId
+      const { error } = await supabase.rpc('delete_user_account', {
+        target_user_id: userId
       });
         
       if (error) throw error;

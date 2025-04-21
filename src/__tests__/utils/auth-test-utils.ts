@@ -1,6 +1,6 @@
 
 import { User } from "@supabase/supabase-js";
-import { vi } from "vitest";
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock user factories for different roles
 export const createMockUser = (role: 'participante' | 'anunciante' | 'admin' = 'participante'): User => ({

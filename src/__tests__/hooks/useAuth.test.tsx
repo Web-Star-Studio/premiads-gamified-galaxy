@@ -1,8 +1,7 @@
-
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from 'vitest';
 import { useAuth } from "@/hooks/useAuth";
 import { createMockUser, mockAuthState } from "../utils/auth-test-utils";
-import { vi } from "vitest";
 
 // Mock the Supabase client
 vi.mock("@/integrations/supabase/client", () => ({

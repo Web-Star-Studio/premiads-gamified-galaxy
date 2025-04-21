@@ -1,9 +1,8 @@
-
 import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import RouteGuard from "@/components/auth/RouteGuard";
 import { createMockUser, mockAuthState } from "../../utils/auth-test-utils";
-import { vi } from "vitest";
 
 // Mock LoadingSpinner component
 vi.mock("@/components/LoadingSpinner", () => ({
