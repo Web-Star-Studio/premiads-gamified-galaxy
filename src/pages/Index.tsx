@@ -32,19 +32,20 @@ const Index = () => {
     };
   }, [isOverlayOpen, showAuth]);
 
-  // Show temporary loading screen while checking auth
+  // Show loading screen while checking auth, but with a simplified approach
   if (isLoading) {
-    return <LoadingScreen message="Verificando sessão..." />;
+    return <LoadingScreen message="Carregando..." />;
   }
 
   // Redirect authenticated users to their dashboard
-  if (isAuthenticated) {
-    if (userType === "anunciante") {
-      return <Navigate to="/anunciante" replace />;
-    } else if (userType === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/cliente" replace />;
+  if (isAuthenticated && userType) {
+    switch(userType) {
+      case "anunciante":
+        return <Navigate to="/anunciante" replace />;
+      case "admin":
+        return <Navigate to="/admin" replace />;
+      default:
+        return <Navigate to="/cliente" replace />;
     }
   }
 

@@ -13,62 +13,30 @@ interface RouteGuardProps {
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { isAuthenticated, userType: contextUserType, isLoading, currentUser } = useAuth();
-  const [isChecking, setIsChecking] = useState(true);
-  const [checkAttempts, setCheckAttempts] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
   const location = useLocation();
   const { toast } = useToast();
   const [authTimeout, setAuthTimeout] = useState(false);
-
+  
+  // Set up a single timeout for auth check
   useEffect(() => {
-    let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout | null = null;
     
-    // Check authentication status
-    const verifyAuth = async () => {
-      // Set a timeout for auth checking
+    // Only set timeout if we're still loading
+    if (isLoading) {
       timeoutId = setTimeout(() => {
-        if (isMounted && isChecking) {
-          setIsChecking(false);
-          
-          // If still loading after timeout, increment attempt counter
-          if (isLoading) {
-            setCheckAttempts(prev => prev + 1);
-          }
-        }
-      }, checkAttempts > 1 ? 2000 : 1000); // Shorter timeout for subsequent attempts
-      
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
-    };
-    
-    verifyAuth();
-    
-    // Add a timeout to detect if authentication is taking too long
-    const authTimeoutId = setTimeout(() => {
-      if (isMounted && (isChecking || isLoading)) {
-        console.log("Authentication check is taking longer than expected");
+        console.log("Authentication check timeout reached");
         setAuthTimeout(true);
-        setIsChecking(false);
-      }
-    }, 5000);
-
-    return () => {
-      isMounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (authTimeoutId) clearTimeout(authTimeoutId);
-    };
-  }, [isChecking, isLoading, checkAttempts]);
-
-  // When loading is complete, update the checking state
-  useEffect(() => {
-    if (!isLoading && isChecking) {
-      setIsChecking(false);
+      }, 5000); // 5 second timeout
     }
-  }, [isLoading, isChecking]);
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
 
   // Show error message if auth check takes too long
-  if (authTimeout && (isChecking || isLoading)) {
+  if (authTimeout && isLoading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-galaxy-dark p-4" data-testid="auth-timeout">
         <div className="text-center max-w-md space-y-4">
@@ -86,7 +54,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // Show loading screen while checking authentication
-  if (isLoading || isChecking) {
+  if (isLoading) {
     return <LoadingScreen message="Verificando autenticação..." />;
   }
 

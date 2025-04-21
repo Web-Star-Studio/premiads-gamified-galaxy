@@ -1,6 +1,6 @@
 
 import { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,18 +17,7 @@ const Support = lazy(() => import("@/pages/Support"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const PublicRoutes = () => {
-  const { isAuthenticated, currentUser, userType } = useAuth();
-  
-  // If user is authenticated, redirect to appropriate dashboard
-  if (isAuthenticated && currentUser) {
-    if (userType === "anunciante") {
-      return <Navigate to="/anunciante" replace />;
-    } else if (userType === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/cliente" replace />;
-    }
-  }
+  // Removed auth check here - now handled by the Index component
   
   return (
     <Routes>
@@ -79,10 +68,18 @@ const PublicRoutes = () => {
       } />
       
       {/* Redirect /auth to / as we now use an overlay */}
-      <Route path="auth" element={<Navigate to="/" replace />} />
+      <Route path="auth" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Index />
+        </Suspense>
+      } />
       
       {/* Redirect /documentacao to /admin/documentacao */}
-      <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
+      <Route path="documentacao" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <NotFound />
+        </Suspense>
+      } />
       
       {/* Catch-all for missing routes */}
       <Route path="*" element={

@@ -11,9 +11,9 @@ interface AuthContextType {
   currentUser: any;
   userType: UserType | null;
   loading: boolean; // Alias for isLoading
-  signIn: (credentials: SignInCredentials) => Promise<void>;
+  signIn: (credentials: SignInCredentials) => Promise<boolean>;
   signOut: () => Promise<void>;
-  signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
+  signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,39 +23,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
-  const [authCheckTimeout, setAuthCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const checkAuthTimeout = useCallback(() => {
-    // Clear any existing timeout
-    if (authCheckTimeout) {
-      clearTimeout(authCheckTimeout);
-    }
-    
-    // Set a new timeout
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.warn("Authentication check is taking longer than expected");
-        setIsLoading(false);
-      }
-    }, 8000);
-    
-    setAuthCheckTimeout(timeoutId);
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [authCheckTimeout, isLoading]);
-
+  // Initialize auth state and set up auth state change listener
   useEffect(() => {
+    // Flag to track component mount status
     let isMounted = true;
     
-    const checkUser = async () => {
-      try {
-        setIsLoading(true);
-        checkAuthTimeout();
+    // Set up auth state listener first
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
+      if (!isMounted) return;
+      
+      if (event === "SIGNED_IN" && session) {
+        setIsAuthenticated(true);
+        setCurrentUser(session.user);
         
+        // Fetch user type in a separate, non-blocking operation
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("user_type")
+              .eq("id", session.user.id)
+              .single();
+              
+            if (profileError) {
+              console.warn("Error fetching user profile on sign in:", profileError);
+              return;
+            }
+            
+            if (profileData && isMounted) {
+              setUserType(profileData.user_type as UserType);
+            }
+          } catch (error) {
+            console.error("Error fetching profile on sign in:", error);
+          }
+        }, 0);
+      } else if (event === "SIGNED_OUT") {
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setUserType(null);
+        }
+      }
+    });
+    
+    // Check for existing session
+    const checkSession = async () => {
+      try {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -64,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAuthenticated(false);
             setCurrentUser(null);
             setIsLoading(false);
+            setSessionChecked(true);
           }
           return;
         }
@@ -74,26 +96,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setCurrentUser(data.session.user);
             
             // Fetch user type in a separate, non-blocking operation
-            setTimeout(async () => {
-              try {
-                const { data: profileData, error: profileError } = await supabase
-                  .from("profiles")
-                  .select("user_type")
-                  .eq("id", data.session.user.id)
-                  .single();
-                
-                if (profileError) {
-                  console.warn("Error fetching user profile:", profileError);
-                  return;
-                }
-                
-                if (profileData && isMounted) {
-                  setUserType(profileData.user_type as UserType);
-                }
-              } catch (profileError) {
-                console.error("Error in profile fetch:", profileError);
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from("profiles")
+                .select("user_type")
+                .eq("id", data.session.user.id)
+                .single();
+              
+              if (profileError) {
+                console.warn("Error fetching user profile:", profileError);
+              } else if (profileData && isMounted) {
+                setUserType(profileData.user_type as UserType);
               }
-            }, 0);
+            } catch (profileError) {
+              console.error("Error in profile fetch:", profileError);
+            }
           }
         } else {
           if (isMounted) {
@@ -106,77 +123,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } finally {
         if (isMounted) {
           setIsLoading(false);
-          if (authCheckTimeout) clearTimeout(authCheckTimeout);
+          setSessionChecked(true);
         }
       }
     };
-
-    checkUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        if (isMounted) {
-          setIsAuthenticated(true);
-          setCurrentUser(session.user);
-          
-          // Fetch user type in a separate, non-blocking operation
-          setTimeout(async () => {
-            try {
-              const { data: profileData, error: profileError } = await supabase
-                .from("profiles")
-                .select("user_type")
-                .eq("id", session.user.id)
-                .single();
-                
-              if (profileError) {
-                console.warn("Error fetching user profile on sign in:", profileError);
-                return;
-              }
-              
-              if (profileData && isMounted) {
-                setUserType(profileData.user_type as UserType);
-              }
-            } catch (error) {
-              console.error("Error fetching profile on sign in:", error);
-            }
-          }, 0);
-        }
-      } else if (event === "SIGNED_OUT") {
-        if (isMounted) {
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-          setUserType(null);
-        }
+    
+    // Run session check
+    checkSession();
+    
+    // Set a timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn("Session check timeout reached");
+        setIsLoading(false);
+        setSessionChecked(true);
       }
-    });
-
+    }, 8000);
+    
+    // Cleanup function
     return () => {
       isMounted = false;
-      if (authCheckTimeout) clearTimeout(authCheckTimeout);
+      clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
-  }, [checkAuthTimeout, authCheckTimeout]);
+  }, [isLoading]);
 
-  const signIn = async (credentials: SignInCredentials) => {
+  const signIn = async (credentials: SignInCredentials): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erro na autenticação",
+          description: error.message || "Não foi possível realizar o login.",
+          variant: "destructive",
+        });
+        return false;
+      }
       
-      toast({
-        title: "Login realizado com sucesso",
-        description: "Você foi autenticado com sucesso.",
-      });
+      if (data.user) {
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Você foi autenticado com sucesso.",
+        });
+        return true;
+      }
+      
+      return false;
     } catch (error: any) {
       toast({
         title: "Erro na autenticação",
         description: error.message || "Não foi possível realizar o login.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -185,7 +189,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -202,10 +209,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (credentials: SignUpCredentials, metadata?: any) => {
+  const signUp = async (credentials: SignUpCredentials, metadata?: any): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
@@ -217,18 +224,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message || "Não foi possível criar a conta.",
+          variant: "destructive",
+        });
+        return false;
+      }
       
       toast({
         title: "Conta criada com sucesso",
         description: "Verifique seu email para confirmar o cadastro.",
       });
+      
+      return !!data.user;
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
         description: error.message || "Não foi possível criar a conta.",
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
