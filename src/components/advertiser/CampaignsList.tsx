@@ -14,7 +14,7 @@ interface CampaignsListProps {
 
 const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(() => mockCampaigns); // Initialize once with mock data
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
@@ -63,7 +63,10 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     } else {
       // Add new campaign logic would go here
       // For now we'll just add a mock campaign with a new ID
-      const newId = Math.max(...campaigns.map(c => c.id)) + 1;
+      const newId = campaigns.length > 0 
+        ? Math.max(...campaigns.map(c => c.id)) + 1 
+        : 1;
+        
       const newCampaign: Campaign = {
         id: newId,
         title: `Nova Missão #${newId}`,
