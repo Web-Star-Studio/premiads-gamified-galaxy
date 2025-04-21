@@ -9,7 +9,95 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      missions: {
+        Row: {
+          advertiser_id: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          points: number
+          requirements: Json | null
+          start_date: string | null
+          target_audience_gender: string | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          requirements?: Json | null
+          start_date?: string | null
+          target_audience_gender?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          requirements?: Json | null
+          start_date?: string | null
+          target_audience_gender?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          id: string
+          mission_id: string
+          points_awarded: number | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          mission_id: string
+          points_awarded?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          mission_id?: string
+          points_awarded?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -62,7 +62,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
         if (error) throw error;
         
         if (data) {
-          const points = parseInt(data.points.toString());
+          const points = data.points;
           
           // Convert any Json[] requirements to string[]
           let stringRequirements: string[] = [];

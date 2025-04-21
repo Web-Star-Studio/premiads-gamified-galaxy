@@ -37,7 +37,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       
       // Check if a submission already exists for this mission and user
       const { data: existingSubmission, error: checkError } = await supabase
-        .from("mission_submissions")
+        .from("submissions")
         .select("*")
         .eq("mission_id", missionId)
         .eq("user_id", userId)
@@ -60,9 +60,9 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
         console.log("Updating existing submission:", existingSubmission.id);
         
         result = await supabase
-          .from("mission_submissions")
+          .from("submissions")
           .update({
-            submission_data: submissionData,
+            content: submissionData,
             status: status, // Use the provided status
             updated_at: new Date().toISOString()
           })
@@ -72,13 +72,13 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
         console.log("Creating new submission");
         
         result = await supabase
-          .from("mission_submissions")
+          .from("submissions")
           .insert({
             mission_id: missionId,
             user_id: userId,
-            submission_data: submissionData,
+            content: submissionData,
             status: status, // Use the provided status
-            submitted_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
       }
