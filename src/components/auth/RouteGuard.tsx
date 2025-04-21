@@ -4,10 +4,11 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { UserType } from "@/types/auth";
 
 interface RouteGuardProps {
   children: ReactNode;
-  userType?: "participante" | "anunciante" | "admin" | "admin-master";
+  userType?: UserType;
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
