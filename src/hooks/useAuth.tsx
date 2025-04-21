@@ -1,7 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
@@ -9,8 +8,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: any;
-  user: any; // Add user property
-  loading: boolean; // Add loading property alias for isLoading
+  user: any;
+  loading: boolean;
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
@@ -18,21 +17,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Mock data for development
+const mockUser = {
+  id: "mock-user-id",
+  email: "user@example.com",
+  user_metadata: {
+    user_type: "participante",
+    full_name: "Mock User"
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); // Development mode: authenticated by default
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<any>(mockUser); // Use mock user data
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // In a real implementation, this would check for a Supabase session
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        setIsLoading(true);
         
-        if (data.session) {
+        // For development, we're using mock data
+        // This will be replaced with an actual Supabase session check
+        const mockAuthStorage = localStorage.getItem("mockAuth");
+        
+        if (mockAuthStorage === "false") {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        } else {
           setIsAuthenticated(true);
-          setCurrentUser(data.session.user);
+          setCurrentUser(mockUser);
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
@@ -42,38 +59,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        setIsAuthenticated(true);
-        setCurrentUser(session.user);
-      } else if (event === "SIGNED_OUT") {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const signIn = async (credentials: SignInCredentials) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (error) throw error;
+      
+      // For development, we're just setting local state
+      // This will be replaced with real Supabase auth
+      console.log("Mock sign in with:", credentials);
+      
+      setIsAuthenticated(true);
+      setCurrentUser(mockUser);
+      
+      localStorage.setItem("mockAuth", "true");
       
       toast({
         title: "Login realizado com sucesso",
         description: "Você foi autenticado com sucesso.",
       });
       
-      navigate("/");
+      navigate("/cliente");
     } catch (error: any) {
       toast({
         title: "Erro na autenticação",
@@ -88,11 +94,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      
+      // For development, we're just updating local state
+      // This will be replaced with real Supabase auth
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      
+      localStorage.setItem("mockAuth", "false");
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      
       navigate("/");
     } catch (error: any) {
       toast({
@@ -108,19 +122,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (credentials: SignUpCredentials, metadata?: any) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email: credentials.email,
-        password: credentials.password,
-        options: {
-          data: {
-            full_name: credentials.name,
-            user_type: credentials.userType || "participante",
-            ...metadata
-          },
-        },
-      });
-
-      if (error) throw error;
+      
+      // For development, we're just showing a success message
+      // This will be replaced with real Supabase auth
+      console.log("Mock sign up with:", credentials, metadata);
       
       toast({
         title: "Conta criada com sucesso",
