@@ -3,6 +3,7 @@ import { createContext, useContext, useState, ReactNode, useEffect, useCallback 
 import { UserType } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 type UserContextType = {
   userName: string;
@@ -47,36 +48,59 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
+  const [authCheckInProgress, setAuthCheckInProgress] = useState<boolean>(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Centralized session checking function with caching
+  // Centralized session checking function with caching and timeouts
   const checkSession = useCallback(async (): Promise<boolean> => {
-    // Skip duplicate checks in short time periods unless forced
-    const now = Date.now();
-    const force = false; // Default to not forcing a check
-    
-    if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {
+    // Prevent multiple concurrent checks
+    if (authCheckInProgress) {
+      console.log("Auth check already in progress, skipping duplicate call");
       return isAuthenticated;
     }
     
+    // Skip duplicate checks in short time periods
+    const now = Date.now();
+    if (lastAuthCheck && now - lastAuthCheck < 5000) {
+      console.log("Recent auth check exists, using cached result");
+      return isAuthenticated;
+    }
+    
+    setAuthCheckInProgress(true);
     setLastAuthCheck(now);
+    
+    // Setup a timeout to prevent hanging
+    const authTimeout = setTimeout(() => {
+      if (authCheckInProgress) {
+        console.warn("Auth check timed out after 8 seconds");
+        setAuthCheckInProgress(false);
+        setAuthError("Verificação de autenticação demorou muito. Tente novamente.");
+      }
+    }, 8000);
     
     try {
       setAuthError(null);
       const { data, error } = await supabase.auth.getSession();
+      
+      // Clear the timeout as we got a response
+      clearTimeout(authTimeout);
       
       if (error) {
         console.error("Session error:", error);
         setAuthError("Erro ao verificar sua sessão.");
         setIsAuthenticated(false);
         setUserId(null);
+        setAuthCheckInProgress(false);
         return false;
       }
       
       if (!data.session) {
         // No active session
+        console.log("No active session found");
         setIsAuthenticated(false);
         setUserId(null);
+        setAuthCheckInProgress(false);
         return false;
       }
       
@@ -84,8 +108,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(true);
       setUserId(data.session.user.id);
       
-      // Only fetch profile data if we haven't already or if forced
-      if (force || !userName) {
+      // Only fetch profile data if we haven't already
+      if (!userName || !userId) {
         try {
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
@@ -107,25 +131,55 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
+      setAuthCheckInProgress(false);
       return true;
     } catch (error) {
       console.error("Error in checkSession:", error);
       setAuthError("Erro ao verificar sessão. Tente novamente.");
+      clearTimeout(authTimeout);
+      setAuthCheckInProgress(false);
       return false;
     }
-  }, [isAuthenticated, lastAuthCheck, userName]);
+  }, [isAuthenticated, lastAuthCheck, userName, userId, authCheckInProgress]);
 
   // Load user data when component mounts
   useEffect(() => {
+    let isMounted = true;
+    let authTimeoutId: NodeJS.Timeout;
+    
     const loadUserData = async () => {
       try {
         setIsAuthLoading(true);
-        await checkSession();
+        
+        // Set a timeout for the initial auth check
+        authTimeoutId = setTimeout(() => {
+          if (isMounted && isAuthLoading) {
+            console.log("Initial auth check taking too long, setting timeout");
+            setIsAuthLoading(false);
+            setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
+          }
+        }, 10000);
+        
+        const authenticated = await checkSession();
+        
+        if (isMounted) {
+          setIsAuthLoading(false);
+          
+          // If not authenticated and on a protected route, redirect to home
+          if (!authenticated && window.location.pathname.includes('/cliente')) {
+            navigate('/');
+          }
+        }
       } catch (error) {
         console.error("Error loading user data:", error);
-        setAuthError("Erro ao carregar dados do usuário.");
+        if (isMounted) {
+          setIsAuthLoading(false);
+          setAuthError("Erro ao carregar dados do usuário.");
+        }
       } finally {
-        setIsAuthLoading(false);
+        if (isMounted) {
+          setIsAuthLoading(false);
+        }
       }
     };
     
@@ -140,47 +194,47 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           setIsAuthenticated(true);
           setUserId(session.user.id);
           
-          try {
-            // Set user name and type from profile
-            const { data: profileData, error: profileError } = await supabase
-              .from("profiles")
-              .select("full_name, user_type")
-              .eq("id", session.user.id)
-              .single();
-            
-            if (profileError) throw profileError;
-            
-            if (profileData) {
-              setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
-              setUserType(profileData.user_type as UserType || "participante");
-            } else {
-              setUserName(session.user.email?.split('@')[0] || "");
+          // Load user profile in a non-blocking way
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from("profiles")
+                .select("full_name, user_type")
+                .eq("id", session.user.id)
+                .single();
+              
+              if (profileError) throw profileError;
+              
+              if (profileData && isMounted) {
+                setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
+                setUserType(profileData.user_type as UserType || "participante");
+              }
+            } catch (error) {
+              console.warn("Error loading profile after sign in:", error);
+              if (isMounted) {
+                setUserName(session.user.email?.split('@')[0] || "");
+              }
             }
-          } catch (error) {
-            console.warn("Error loading profile after sign in:", error);
-            setUserName(session.user.email?.split('@')[0] || "");
-          }
+          }, 0);
         } else if (event === "SIGNED_OUT") {
           resetUserInfo();
           setUserId(null);
           setIsAuthenticated(false);
+          
+          // Redirect to home page if on a protected route
+          if (window.location.pathname.includes('/cliente')) {
+            navigate('/');
+          }
         }
       }
     );
     
-    // Set a timeout for auth loading
-    const loadingTimeout = setTimeout(() => {
-      if (isAuthLoading) {
-        setIsAuthLoading(false);
-        setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
-      }
-    }, 10000);
-    
     return () => {
+      isMounted = false;
+      clearTimeout(authTimeoutId);
       authListener.subscription.unsubscribe();
-      clearTimeout(loadingTimeout);
     };
-  }, [checkSession]);
+  }, [checkSession, navigate]);
 
   const resetUserInfo = useCallback(() => {
     setUserName("");

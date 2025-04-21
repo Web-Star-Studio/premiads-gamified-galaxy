@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,33 +23,91 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
+  const [authCheckTimeout, setAuthCheckTimeout] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const checkAuthTimeout = useCallback(() => {
+    // Clear any existing timeout
+    if (authCheckTimeout) {
+      clearTimeout(authCheckTimeout);
+    }
+    
+    // Set a new timeout
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Authentication check is taking longer than expected");
+        setIsLoading(false);
+      }
+    }, 8000);
+    
+    setAuthCheckTimeout(timeoutId);
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [authCheckTimeout, isLoading]);
+
   useEffect(() => {
+    let isMounted = true;
+    
     const checkUser = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        setIsLoading(true);
+        checkAuthTimeout();
+        
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking auth session:", error);
+          if (isMounted) {
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setIsLoading(false);
+          }
+          return;
+        }
         
         if (data.session) {
-          setIsAuthenticated(true);
-          setCurrentUser(data.session.user);
-          
-          // Fetch user type from profile
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("user_type")
-            .eq("id", data.session.user.id)
-            .single();
+          if (isMounted) {
+            setIsAuthenticated(true);
+            setCurrentUser(data.session.user);
             
-          if (profileData) {
-            setUserType(profileData.user_type as UserType);
+            // Fetch user type in a separate, non-blocking operation
+            setTimeout(async () => {
+              try {
+                const { data: profileData, error: profileError } = await supabase
+                  .from("profiles")
+                  .select("user_type")
+                  .eq("id", data.session.user.id)
+                  .single();
+                
+                if (profileError) {
+                  console.warn("Error fetching user profile:", profileError);
+                  return;
+                }
+                
+                if (profileData && isMounted) {
+                  setUserType(profileData.user_type as UserType);
+                }
+              } catch (profileError) {
+                console.error("Error in profile fetch:", profileError);
+              }
+            }, 0);
+          }
+        } else {
+          if (isMounted) {
+            setIsAuthenticated(false);
+            setCurrentUser(null);
           }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          if (authCheckTimeout) clearTimeout(authCheckTimeout);
+        }
       }
     };
 
@@ -57,30 +115,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        setIsAuthenticated(true);
-        setCurrentUser(session.user);
-        
-        // Fetch user type from profile
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", session.user.id)
-          .single();
+        if (isMounted) {
+          setIsAuthenticated(true);
+          setCurrentUser(session.user);
           
-        if (profileData) {
-          setUserType(profileData.user_type as UserType);
+          // Fetch user type in a separate, non-blocking operation
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from("profiles")
+                .select("user_type")
+                .eq("id", session.user.id)
+                .single();
+                
+              if (profileError) {
+                console.warn("Error fetching user profile on sign in:", profileError);
+                return;
+              }
+              
+              if (profileData && isMounted) {
+                setUserType(profileData.user_type as UserType);
+              }
+            } catch (error) {
+              console.error("Error fetching profile on sign in:", error);
+            }
+          }, 0);
         }
       } else if (event === "SIGNED_OUT") {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        setUserType(null);
+        if (isMounted) {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setUserType(null);
+        }
       }
     });
 
     return () => {
+      isMounted = false;
+      if (authCheckTimeout) clearTimeout(authCheckTimeout);
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [checkAuthTimeout, authCheckTimeout]);
 
   const signIn = async (credentials: SignInCredentials) => {
     try {

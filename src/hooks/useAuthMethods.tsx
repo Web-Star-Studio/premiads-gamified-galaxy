@@ -83,7 +83,7 @@ export const useAuthMethods = () => {
           }
         }
         
-        // Force a session check - remove the argument to fix the TypeScript error
+        // Force a session check
         await checkSession();
         
         // Redirect based on user type
@@ -125,7 +125,7 @@ export const useAuthMethods = () => {
       if (data.user) {
         setIsAuthenticated(true);
         
-        // Force a session check which will get the profile data - remove the argument to fix the TypeScript error
+        // Force a session check which will get the profile data
         await checkSession();
         
         toast({

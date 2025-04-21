@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import LoadingScreen from "@/components/LoadingScreen";
 import { UserType } from "@/types/auth";
 
 interface RouteGuardProps {
@@ -14,36 +14,61 @@ interface RouteGuardProps {
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { isAuthenticated, userType: contextUserType, isLoading, currentUser } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
+  const [checkAttempts, setCheckAttempts] = useState(0);
   const location = useLocation();
   const { toast } = useToast();
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
+    
     // Check authentication status
     const verifyAuth = async () => {
-      // Small timeout to allow auth check to complete
-      const timeoutId = setTimeout(() => {
-        setIsChecking(false);
-      }, 500);
+      // Set a timeout for auth checking
+      timeoutId = setTimeout(() => {
+        if (isMounted && isChecking) {
+          setIsChecking(false);
+          
+          // If still loading after timeout, increment attempt counter
+          if (isLoading) {
+            setCheckAttempts(prev => prev + 1);
+          }
+        }
+      }, checkAttempts > 1 ? 2000 : 1000); // Shorter timeout for subsequent attempts
       
-      return () => clearTimeout(timeoutId);
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     };
     
     verifyAuth();
     
     // Add a timeout to detect if authentication is taking too long
-    const timeoutId = setTimeout(() => {
-      if (isChecking) {
+    const authTimeoutId = setTimeout(() => {
+      if (isMounted && (isChecking || isLoading)) {
         console.log("Authentication check is taking longer than expected");
         setAuthTimeout(true);
+        setIsChecking(false);
       }
     }, 5000);
 
-    return () => clearTimeout(timeoutId);
-  }, []);
+    return () => {
+      isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (authTimeoutId) clearTimeout(authTimeoutId);
+    };
+  }, [isChecking, isLoading, checkAttempts]);
+
+  // When loading is complete, update the checking state
+  useEffect(() => {
+    if (!isLoading && isChecking) {
+      setIsChecking(false);
+    }
+  }, [isLoading, isChecking]);
 
   // Show error message if auth check takes too long
-  if (authTimeout && isChecking) {
+  if (authTimeout && (isChecking || isLoading)) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-galaxy-dark p-4" data-testid="auth-timeout">
         <div className="text-center max-w-md space-y-4">
@@ -60,17 +85,19 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     );
   }
 
-  // Show loading spinner while checking authentication
+  // Show loading screen while checking authentication
   if (isLoading || isChecking) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-galaxy-dark" data-testid="route-loading-spinner">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingScreen message="Verificando autenticação..." />;
   }
 
   // If not authenticated, redirect to login with return path
   if (!isAuthenticated) {
+    toast({
+      title: "Acesso restrito",
+      description: "Você precisa fazer login para acessar esta área.",
+      variant: "destructive"
+    });
+    
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
