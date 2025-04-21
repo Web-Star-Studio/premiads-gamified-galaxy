@@ -9,6 +9,7 @@ import LoginFormView from "./LoginFormView";
 import EmailNotConfirmedBox from "./EmailNotConfirmedBox";
 import LoginTimeout from "./LoginTimeout";
 import ForgotPasswordPrompt from "./ForgotPasswordPrompt";
+import { useNavigation } from "@/components/header/useNavigation";
 
 type Props = {
   onSuccess: () => void;
@@ -24,6 +25,7 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const { signIn, loading } = useAuthMethods();
   const { toast } = useToast();
+  const { navigateToDashboard } = useNavigation();
 
   function triggerTimeout() {
     setLoadingTimeout(false);
@@ -69,6 +71,8 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
         setLoginAttempt(0);
         setEmailNotConfirmed(false);
         setLoadingTimeout(false);
+        // IMPORTANT: Immediately redirect after login
+        navigateToDashboard();
         onSuccess();
         return;
       }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -29,48 +28,24 @@ const MainContent = () => {
   const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
 
-  // AUTOMATIC REDIRECT FOR AUTHENTICATED USERS
-  useEffect(() => {
-    // Check if auth status is loaded and user is authenticated
-    if (initialCheckDone && isAuthenticated) {
-      console.log("User is authenticated, redirecting to dashboard", { userType, path: window.location.pathname });
-      
-      // Only redirect if user is on "/" route
-      if (window.location.pathname === "/") {
-        let dashboardRoute = "/cliente"; // Default
-        
-        if (userType === "admin") {
-          dashboardRoute = "/admin";
-        } else if (userType === "anunciante") {
-          dashboardRoute = "/anunciante";
-        }
-        
-        console.log(`Redirecting to ${dashboardRoute}`);
-        
-        // Use a short timeout to ensure context is fully updated
-        setTimeout(() => {
-          navigate(dashboardRoute, { replace: true });
-        }, 100);
-      }
-    }
-  }, [isAuthenticated, userType, initialCheckDone, navigate]);
+  // UPDATED: DO NOT automatically redirect here. We'll rely on post-login and header logic.
+  // The dashboard navigation is always controlled after login through the useNavigation hook.
+  // This avoids race conditions and duplicate redirects.
 
   // Handle overlay state and loading timeouts
   useEffect(() => {
-    // Prevent scrolling when overlay is open
     if (isOverlayOpen || showAuth) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
 
-    // Add a timeout to show a message if loading takes too long
     const timeoutId = setTimeout(() => {
       if (isAuthLoading) {
         setLoadingTimeout(true);
         console.log("Loading timeout triggered");
       }
-    }, 10000); // Increased to 10s
+    }, 10000);
 
     return () => {
       document.body.style.overflow = "";
@@ -78,19 +53,16 @@ const MainContent = () => {
     };
   }, [isOverlayOpen, showAuth, isAuthLoading]);
 
-  // Handle retry logic
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     setLoadingTimeout(false);
     window.location.reload();
   };
 
-  // Show temporary loading screen while checking auth with timeout option
   if (isAuthLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // Show loading timeout screen with retry option
   if (isAuthLoading && loadingTimeout) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-galaxy-dark p-4">

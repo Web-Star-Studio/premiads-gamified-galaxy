@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
@@ -22,7 +21,6 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
   const scrolled = useHeaderScroll();
   const { mobileMenuOpen, setMobileMenuOpen, toggleMobileMenu } = useMobileMenu();
   const { changeUserType, navigateToDashboard, scrollToSection } = useNavigation();
-  const navigate = useNavigate();
   
   const openWhatsApp = () => {
     const phoneNumber = "5581985595912";
@@ -37,28 +35,17 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
     { id: "faq", label: "FAQ" },
   ];
 
-  // Handle the action when the main button is clicked
+  // Always use the centralized dashboard navigation
   const handleMainButtonClick = () => {
     if (isAuthenticated) {
-      console.log("User is authenticated, navigating to dashboard");
-      // If authenticated, directly navigate to appropriate dashboard
-      if (userType === "participante") {
-        navigate("/cliente");
-      } else if (userType === "anunciante") {
-        navigate("/anunciante");
-      } else if (userType === "admin") {
-        navigate("/admin");
-      }
+      navigateToDashboard();
     } else {
-      console.log("User is not authenticated, opening login overlay");
-      // If not authenticated, trigger login overlay
       if (onLoginClick) {
         onLoginClick();
       }
     }
   };
 
-  // Get the button text based on user type and authentication state
   const getButtonText = () => {
     if (isAuthenticated) {
       if (userType === "participante") return "Ver Missões";
