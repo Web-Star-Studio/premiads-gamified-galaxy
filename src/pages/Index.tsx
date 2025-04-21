@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import MainHeader from "@/components/MainHeader";
@@ -39,13 +40,12 @@ const Index = () => {
   if (isAuthenticated && userType) {
     console.log("Redirecting authenticated user:", { userType });
     
-    switch(userType) {
-      case "admin":
-        return <Navigate to="/admin" replace />;
-      case "anunciante":
-        return <Navigate to="/anunciante" replace />;
-      default:
-        return <Navigate to="/cliente" replace />;
+    if (userType === "admin" || userType === "admin-master") {
+      return <Navigate to="/admin" replace />;
+    } else if (userType === "anunciante") {
+      return <Navigate to="/anunciante" replace />;
+    } else {
+      return <Navigate to="/cliente" replace />;
     }
   }
 

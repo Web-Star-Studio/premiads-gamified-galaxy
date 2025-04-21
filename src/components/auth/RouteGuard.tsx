@@ -15,6 +15,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { isAuthenticated, userType: contextUserType, isLoading } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
   // Show loading screen while checking authentication
   if (isLoading) {
@@ -35,8 +36,22 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
+  // Function to check if user has access to the route
+  const hasAccess = () => {
+    if (!userType) return true;
+    if (!contextUserType) return false;
+    
+    // Admin-master has access to admin routes
+    if (userType === "admin" && contextUserType === "admin-master") {
+      return true;
+    }
+    
+    // Direct match
+    return contextUserType === userType;
+  };
+
   // If userType is specified, check if user has correct type
-  if (userType && contextUserType !== userType) {
+  if (userType && !hasAccess()) {
     console.log(`User type mismatch. Expected: ${userType}, Got: ${contextUserType}`);
     toast({
       title: "Acesso negado",
@@ -45,14 +60,17 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     });
 
     // Redirect to appropriate dashboard based on user type
-    switch (contextUserType) {
-      case "admin":
-        return <Navigate to="/admin" replace />;
-      case "anunciante":
-        return <Navigate to="/anunciante" replace />;
-      default:
-        return <Navigate to="/cliente" replace />;
+    let redirectTo = "/";
+    
+    if (contextUserType === "admin" || contextUserType === "admin-master") {
+      redirectTo = "/admin";
+    } else if (contextUserType === "anunciante") {
+      redirectTo = "/anunciante";
+    } else if (contextUserType === "participante") {
+      redirectTo = "/cliente";
     }
+    
+    return <Navigate to={redirectTo} replace />;
   }
 
   // If all checks pass, render the protected route
