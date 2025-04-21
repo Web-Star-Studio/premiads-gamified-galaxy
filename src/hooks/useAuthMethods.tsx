@@ -20,17 +20,20 @@ export const useAuthMethods = () => {
   const redirectToDashboard = (userType: UserType) => {
     console.log(`Auth: Redirecting to dashboard for user type: ${userType}`);
     
-    switch (userType) {
-      case "admin":
-        navigate("/admin", { replace: true });
-        break;
-      case "anunciante":
-        navigate("/anunciante", { replace: true });
-        break;
-      default:
-        navigate("/cliente", { replace: true });
-        break;
-    }
+    // Use timeout to ensure state updates have propagated
+    setTimeout(() => {
+      switch (userType) {
+        case "admin":
+          navigate("/admin", { replace: true });
+          break;
+        case "anunciante":
+          navigate("/anunciante", { replace: true });
+          break;
+        default:
+          navigate("/cliente", { replace: true });
+          break;
+      }
+    }, 100);
   };
 
   // Helper function to handle errors
@@ -120,7 +123,7 @@ export const useAuthMethods = () => {
         }
         
         // Force a session check
-        await checkSession();
+        await checkSession(true);
 
         console.log("Redirecting new user to dashboard");
         // Redirect based on user type
@@ -184,10 +187,11 @@ export const useAuthMethods = () => {
           });
 
           // Redirect based on user type (centralized here)
+          // Use a timeout to ensure state is updated before redirect
           setTimeout(() => {
             console.log("Redirecting to dashboard after login");
             redirectToDashboard(userType);
-          }, 100);
+          }, 300);
           
           return true;
         } else {
@@ -210,7 +214,7 @@ export const useAuthMethods = () => {
           // Redirect to client dashboard
           setTimeout(() => {
             redirectToDashboard("participante");
-          }, 100);
+          }, 300);
           
           return true;
         }
@@ -225,6 +229,7 @@ export const useAuthMethods = () => {
     }
   };
 
+  // --- SIGN OUT LOGIC ---
   const signOut = useCallback(async () => {
     setLoading(true);
     try {

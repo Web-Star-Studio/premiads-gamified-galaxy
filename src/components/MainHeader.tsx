@@ -22,6 +22,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
   const scrolled = useHeaderScroll();
   const { mobileMenuOpen, setMobileMenuOpen, toggleMobileMenu } = useMobileMenu();
   const { changeUserType, navigateToDashboard, scrollToSection } = useNavigation();
+  const navigate = useNavigate();
   
   const openWhatsApp = () => {
     const phoneNumber = "5581985595912";
@@ -35,6 +36,27 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
     { id: "depoimentos", label: "Depoimentos" },
     { id: "faq", label: "FAQ" },
   ];
+
+  // Handle the action when the main button is clicked
+  const handleMainButtonClick = () => {
+    if (isAuthenticated) {
+      console.log("User is authenticated, navigating to dashboard");
+      // If authenticated, directly navigate to appropriate dashboard
+      if (userType === "participante") {
+        navigate("/cliente");
+      } else if (userType === "anunciante") {
+        navigate("/anunciante");
+      } else if (userType === "admin") {
+        navigate("/admin");
+      }
+    } else {
+      console.log("User is not authenticated, opening login overlay");
+      // If not authenticated, trigger login overlay
+      if (onLoginClick) {
+        onLoginClick();
+      }
+    }
+  };
 
   // Get the button text based on user type and authentication state
   const getButtonText = () => {
@@ -74,7 +96,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
           <Button 
             className="hidden md:flex neon-button items-center justify-center" 
             size="sm"
-            onClick={isAuthenticated ? navigateToDashboard : onLoginClick}
+            onClick={handleMainButtonClick}
           >
             {getButtonText()}
           </Button>
@@ -97,7 +119,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
         sections={sections}
         mobileMenuOpen={mobileMenuOpen}
         scrollToSection={scrollToSection}
-        navigateToDashboard={isAuthenticated ? navigateToDashboard : onLoginClick}
+        navigateToDashboard={handleMainButtonClick}
         userType={userType}
         setMobileMenuOpen={setMobileMenuOpen}
       />

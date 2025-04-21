@@ -55,17 +55,36 @@ export const useNavigation = () => {
     return true;
   };
 
-  // Centralized dashboard navigation. Ready for both visitor and logged-in
+  // Centralized dashboard navigation with improved logging and user feedback
   const navigateToDashboard = () => {
-    console.log(`Navigating to dashboard for ${userType}`);
+    console.log(`Navigating to dashboard for ${userType} (authenticated: ${isAuthenticated})`);
     
+    if (!isAuthenticated) {
+      // Not authenticated, should open login dialog instead
+      console.log("User not authenticated, opening auth overlay");
+      return false;
+    }
+    
+    // User is authenticated, navigate to the appropriate dashboard
     if (userType === "participante") {
       navigate("/cliente");
+      return true;
     } else if (userType === "anunciante") {
       navigate("/anunciante");
+      return true;
     } else if (userType === "admin") {
       navigate("/admin");
+      return true;
     }
+    
+    // Fallback for unknown user types
+    console.error(`Unknown user type: ${userType}`);
+    toast({
+      title: "Erro de navegação",
+      description: "Tipo de usuário desconhecido ou não suportado",
+      variant: "destructive",
+    });
+    return false;
   };
 
   // For smooth scrolling to section
