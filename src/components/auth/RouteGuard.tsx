@@ -11,16 +11,19 @@ interface RouteGuardProps {
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
-  const { isAuthenticated, userType: contextUserType, isAuthLoading, authError, checkSession } = useUser();
+  const { isAuthenticated, userType: contextUserType, isAuthLoading, authError, checkSession, initialCheckDone } = useUser();
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
   const { toast } = useToast();
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
+    console.log("RouteGuard: Initializing", { isAuthLoading, isAuthenticated, userType: contextUserType });
+    
     // Use the centralized checkSession function
     const verifyAuth = async () => {
       try {
+        console.log("RouteGuard: Verifying auth");
         await checkSession();
         setIsChecking(false);
       } catch (error) {
@@ -29,7 +32,11 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
       }
     };
     
-    verifyAuth();
+    if (!initialCheckDone) {
+      verifyAuth();
+    } else {
+      setIsChecking(false);
+    }
     
     // Add a timeout to detect if authentication is taking too long
     const timeoutId = setTimeout(() => {
@@ -40,7 +47,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     }, 5000);
 
     return () => clearTimeout(timeoutId);
-  }, [checkSession]);
+  }, [checkSession, initialCheckDone, isAuthLoading, isAuthenticated, contextUserType]);
 
   // Show error message if auth check takes too long
   if (authTimeout && isChecking) {
@@ -61,7 +68,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // Show loading spinner while checking authentication
-  if (isAuthLoading || isChecking) {
+  if ((isAuthLoading || isChecking) && !authTimeout) {
     return (
       <div className="flex h-screen items-center justify-center bg-galaxy-dark" data-testid="route-loading-spinner">
         <LoadingSpinner />
@@ -70,17 +77,21 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // If not authenticated, redirect to login with return path
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isAuthLoading && !isChecking) {
+    console.log("RouteGuard: Not authenticated, redirecting to login");
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
-  // Se o usuário for admin-master, permitir acesso a todas as rotas de admin
+  // If the user is admin-master, they can access everything
   if (contextUserType === "admin-master") {
+    console.log("RouteGuard: Admin-master access granted");
     return <>{children}</>;
   }
 
   // If userType is specified, check if user has correct type
-  if (userType && contextUserType !== userType) {
+  if (userType && contextUserType !== userType && contextUserType !== "admin-master") {
+    console.log("RouteGuard: Access denied, wrong user type", { required: userType, actual: contextUserType });
+    
     // Show access denied toast
     toast({
       title: "Acesso negado",
@@ -91,7 +102,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     // Redirect to appropriate dashboard based on user type
     if (contextUserType === "anunciante") {
       return <Navigate to="/anunciante" replace />;
-    } else if (contextUserType === "admin" || contextUserType === "admin-master") {
+    } else if (contextUserType === "admin") {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/cliente" replace />;
@@ -99,6 +110,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // If all checks pass, render the protected route
+  console.log("RouteGuard: Access granted");
   return <>{children}</>;
 };
 

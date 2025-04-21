@@ -9,6 +9,7 @@ export const useActiveUserSession = () => {
   const [isActive, setIsActive] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminMaster, setIsAdminMaster] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
   const navigate = useNavigate();
 
   const refreshSession = useCallback(async () => {
@@ -16,25 +17,45 @@ export const useActiveUserSession = () => {
   }, [checkSession]);
 
   useEffect(() => {
+    console.log("useActiveUserSession: Checking auth status", { isAuthenticated, userType });
+    
     const checkAuthStatus = async () => {
+      setCheckingStatus(true);
+      
       if (!isAuthenticated) {
+        console.log("useActiveUserSession: Not authenticated, redirecting to login");
         // Redirect to login if not authenticated
         navigate("/", { replace: true });
+        setCheckingStatus(false);
         return;
       }
 
       // Check user type for admin access
-      setIsAdmin(userType === "admin" || userType === "admin-master");
+      const hasAdminAccess = userType === "admin" || userType === "admin-master";
+      setIsAdmin(hasAdminAccess);
       
       // Check if user is admin-master
       setIsAdminMaster(userType === "admin-master");
       
       // All checks passed, user is active
       setIsActive(true);
+      setCheckingStatus(false);
+      
+      console.log("useActiveUserSession: Auth status checked", { 
+        isActive: true, 
+        isAdmin: hasAdminAccess, 
+        isAdminMaster: userType === "admin-master" 
+      });
     };
 
     checkAuthStatus();
   }, [isAuthenticated, userType, navigate]);
 
-  return { isActive, isAdmin, isAdminMaster, refreshSession };
+  return { 
+    isActive, 
+    isAdmin, 
+    isAdminMaster, 
+    refreshSession,
+    isChecking: checkingStatus
+  };
 };

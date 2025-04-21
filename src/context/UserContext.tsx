@@ -26,6 +26,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [initialCheckDone, setInitialCheckDone] = useState<boolean>(false);
 
   // Session manager (handles session checking)
   const { checkSession, authError: sessionAuthError } = useUserSessionManager({
@@ -50,9 +51,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthLoading(true);
         await checkSession(true);
       } catch (error) {
+        console.error("Error loading user data:", error);
         setAuthError("Erro ao carregar dados do usuário.");
       } finally {
         setIsAuthLoading(false);
+        setInitialCheckDone(true);
       }
     };
 
@@ -60,6 +63,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event);
+        
         if (event === "SIGNED_IN" && session) {
           setIsAuthenticated(true);
           setUserId(session.user.id);
@@ -78,6 +83,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
               setUserName(session.user.email?.split('@')[0] || "");
             }
           } catch (error) {
+            console.error("Error fetching profile after sign in:", error);
             setUserName(session.user.email?.split('@')[0] || "");
           }
         } else if (event === "SIGNED_OUT") {
@@ -88,12 +94,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // Add timeout to prevent infinite loading
     const loadingTimeout = setTimeout(() => {
-      if (isAuthLoading) {
+      if (isAuthLoading && !initialCheckDone) {
+        console.log("Auth check timed out");
         setIsAuthLoading(false);
+        setInitialCheckDone(true);
         setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
       }
-    }, 10000);
+    }, 5000);
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -106,6 +115,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUserName,
     setUserType,
     isAuthLoading,
+    initialCheckDone,
   ]);
 
   // Return value merges all context and features
@@ -125,6 +135,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         isAuthLoading,
         authError: authError || sessionAuthError,
         checkSession,
+        initialCheckDone,
       }}
     >
       {children}
