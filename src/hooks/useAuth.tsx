@@ -2,14 +2,15 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { signOutAndCleanup } from "@/utils/auth"; // <--- Add import
 import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: any;
-  user: any; // Add user property
-  loading: boolean; // Add loading property alias for isLoading
+  user: any;
+  loading: boolean;
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
@@ -86,31 +87,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      console.log("useAuth: Signing out...");
       setIsLoading(true);
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("useAuth: Error during signOut:", error);
-        throw error;
-      }
-      
+      await signOutAndCleanup(); // <--- Use robust universal handler
       setIsAuthenticated(false);
       setCurrentUser(null);
-      
-      // Clear any user data from localStorage
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userCredits");
-      localStorage.removeItem("userType");
-      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      
-      // Force navigation to home page
-      navigate("/", { replace: true });
     } catch (error: any) {
       toast({
         title: "Erro ao sair",
@@ -160,8 +144,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         currentUser,
-        user: currentUser, // Alias for currentUser
-        loading: isLoading, // Alias for isLoading
+        user: currentUser,
+        loading: isLoading,
         signIn,
         signOut,
         signUp,

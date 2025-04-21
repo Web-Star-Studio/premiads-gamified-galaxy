@@ -6,16 +6,11 @@ import { useAuthMethods } from "@/hooks/useAuthMethods";
 
 export const SidebarFooter = () => {
   const { signOut } = useAuthMethods();
-  
+
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      console.log("Signed out successfully from SidebarFooter");
-    } catch (error) {
-      console.error("Error signing out from SidebarFooter:", error);
-    }
+    await signOut();
   };
-  
+
   return (
     <Footer className="p-4">
       <Button 

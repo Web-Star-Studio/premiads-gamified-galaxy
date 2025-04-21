@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Sidebar, 
+import {
+  Sidebar,
   SidebarTrigger,
   SidebarContent,
   SidebarHeader,
@@ -14,13 +13,13 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent
 } from "@/components/ui/sidebar";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  FileText,
+  BarChart3,
   Wallet,
-  User, 
-  Settings, 
+  User,
+  Settings,
   LogOut,
   BellRing,
   BadgePlus,
@@ -32,6 +31,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { signOutAndCleanup } from "@/utils/auth"; // <--- Import robust logout
 
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
@@ -40,72 +40,36 @@ export const AdvertiserSidebar = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { setOpen, state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  
-  // Close sidebar on mobile by default
+
   useEffect(() => {
     if (isMobile) {
       setOpen(false);
     }
   }, [isMobile, setOpen]);
-  
-  // Get user info from context or props
+
   const userName = localStorage.getItem("userName") || "Anunciante";
   const userCredits = parseInt(localStorage.getItem("userCredits") || "0");
-  
-  // Get the first letter of the user name for the avatar fallback
   const userInitial = userName?.charAt(0) || "A";
-  
-  // Create navigation items with routes matching the AdvertiserRoutes.tsx paths
+
   const navigationItems = [
-    {
-      title: "Dashboard",
-      url: "/anunciante",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Campanhas",
-      url: "/anunciante/campanhas",
-      icon: FileText,
-    },
-    {
-      title: "Nova Campanha",
-      url: "/anunciante/nova-campanha",
-      icon: BadgePlus,
-    },
-    {
-      title: "Moderação",
-      url: "/anunciante/moderacao",
-      icon: Shield,
-    },
-    {
-      title: "Análises",
-      url: "/anunciante/analises",
-      icon: BarChart3,
-    },
-    {
-      title: "Créditos",
-      url: "/anunciante/creditos",
-      icon: Wallet,
-    },
-    {
-      title: "Notificações",
-      url: "/anunciante/notificacoes",
-      icon: BellRing,
-    },
-    {
-      title: "Perfil",
-      url: "/anunciante/perfil",
-      icon: User,
-    },
-    {
-      title: "Configurações",
-      url: "/anunciante/configuracoes",
-      icon: Settings,
-    },
+    { title: "Dashboard", url: "/anunciante", icon: LayoutDashboard },
+    { title: "Campanhas", url: "/anunciante/campanhas", icon: FileText },
+    { title: "Nova Campanha", url: "/anunciante/nova-campanha", icon: BadgePlus },
+    { title: "Moderação", url: "/anunciante/moderacao", icon: Shield },
+    { title: "Análises", url: "/anunciante/analises", icon: BarChart3 },
+    { title: "Créditos", url: "/anunciante/creditos", icon: Wallet },
+    { title: "Notificações", url: "/anunciante/notificacoes", icon: BellRing },
+    { title: "Perfil", url: "/anunciante/perfil", icon: User },
+    { title: "Configurações", url: "/anunciante/configuracoes", icon: Settings },
   ];
 
+  // Use global handler for logout
+  const handleLogout = async () => {
+    await signOutAndCleanup();
+  };
+
   return (
-    <Sidebar 
+    <Sidebar
       className="border-r border-galaxy-purple/30 bg-galaxy-dark"
       variant="sidebar"
       collapsible="icon"
@@ -205,7 +169,7 @@ export const AdvertiserSidebar = () => {
             "w-full text-gray-400 hover:text-white", 
             isCollapsed ? "justify-center px-0" : "justify-start gap-2"
           )}
-          onClick={signOut}
+          onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
           <span className={cn("transition-opacity duration-200", 

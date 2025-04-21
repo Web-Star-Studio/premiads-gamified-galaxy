@@ -1,10 +1,10 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutAndCleanup } from "@/utils/auth"; // <--- Import utility
 import { SignUpCredentials, SignInCredentials } from "@/types/auth";
 
 export const useAuthMethods = () => {
@@ -147,39 +147,27 @@ export const useAuthMethods = () => {
 
   const signOut = useCallback(async () => {
     setLoading(true);
-    
     try {
       console.log("Attempting to sign out...");
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Error during signOut:", error);
-        throw error;
-      }
-      
-      console.log("Sign out successful, resetting user info");
+      await signOutAndCleanup(); // Use robust global handler
       resetUserInfo();
-      
-      // Clear any user data from localStorage
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userCredits");
-      localStorage.removeItem("userType");
-      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      
-      // Force navigation to home page
-      navigate("/", { replace: true });
-      
       return true;
     } catch (error: any) {
-      return handleAuthError(error, "Ocorreu um erro durante o logout");
+      playSound("error");
+      toast({
+        title: "Erro ao sair",
+        description: error?.message || "Não foi possível realizar o logout.",
+        variant: "destructive",
+      });
+      return false;
     } finally {
       setLoading(false);
     }
-  }, [navigate, resetUserInfo, toast]);
+  }, [resetUserInfo, toast, playSound]);
 
   return {
     loading,

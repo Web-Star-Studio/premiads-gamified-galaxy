@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut } from 'lucide-react';
@@ -23,16 +22,15 @@ interface ClientSidebarProps {
 const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' }) => {
   const location = useLocation();
   const { signOut } = useAuth();
-  
+
   const isActive = (path: string) => {
-    // Account for both exact matches and nested routes
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   const handleLogout = async () => {
     await signOut();
   };
-  
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -144,7 +142,6 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
           </SidebarGroup>
         </SidebarMenu>
       </SidebarContent>
-      
       <SidebarFooter>
         <button 
           onClick={handleLogout}
