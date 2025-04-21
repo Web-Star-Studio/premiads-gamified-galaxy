@@ -100,9 +100,9 @@ const UserManagement = () => {
                   >
                     <option value="all">Todos Papéis</option>
                     <option value="admin">Admin</option>
+                    <option value="moderator">Moderador</option>
                     <option value="anunciante">Anunciante</option>
                     <option value="participante">Participante</option>
-                    <option value="admin-master">Admin Master</option>
                   </select>
                   
                   <select
@@ -162,7 +162,7 @@ const UserManagement = () => {
                                 className={
                                   user.role === 'admin' 
                                     ? 'bg-neon-pink text-white' 
-                                    : user.role === 'admin-master'
+                                    : user.role === 'moderator'
                                       ? 'bg-neon-cyan text-galaxy-dark'
                                       : 'bg-neon-lime/80 text-galaxy-dark'
                                 }

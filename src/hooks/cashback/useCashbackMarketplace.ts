@@ -56,30 +56,6 @@ export const useCashbackMarketplace = () => {
     };
 
     fetchCashbackData();
-
-    // Set up real-time subscription for profile updates to refresh cashback balance
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles'
-        },
-        (payload) => {
-          // When profile is updated (e.g., points changed), refresh cashback balance
-          fetchUserCashbackBalance().then(balance => {
-            setUserCashback(balance);
-          });
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [toast]);
 
   const redeemCashback = async (campaignId: string, amount: number) => {
@@ -108,8 +84,7 @@ export const useCashbackMarketplace = () => {
         });
         
         // Update user cashback balance
-        const newBalance = await fetchUserCashbackBalance();
-        setUserCashback(newBalance);
+        setUserCashback(prevCashback => prevCashback - amount);
         
         return redemption;
       }

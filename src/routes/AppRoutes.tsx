@@ -2,7 +2,6 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner"; 
 
 // Lazy load route components
 const PublicRoutes = lazy(() => import("./PublicRoutes"));
@@ -16,28 +15,28 @@ const AppRoutes = () => {
     <Routes>
       {/* Public routes with suspense loading */}
       <Route path="/*" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <PublicRoutes />
         </Suspense>
       } />
       
       {/* Client routes with suspense loading */}
       <Route path="/cliente/*" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <ClientRoutes />
         </Suspense>
       } />
       
       {/* Advertiser routes with suspense loading */}
       <Route path="/anunciante/*" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <AdvertiserRoutes />
         </Suspense>
       } />
       
       {/* Admin routes with suspense loading */}
       <Route path="/admin/*" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <AdminRoutes />
         </Suspense>
       } />
@@ -47,7 +46,7 @@ const AppRoutes = () => {
       
       {/* Global catch-all route */}
       <Route path="*" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <NotFound />
         </Suspense>
       } />

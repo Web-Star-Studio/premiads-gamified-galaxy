@@ -1,14 +1,10 @@
-
-import { useState } from "react";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Particles from "./Particles";
-import AuthOverlay from "./auth/AuthOverlay";
 
 const Hero = () => {
   const { userType, userName } = useUser();
-  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
 
   const openWhatsApp = () => {
     const phoneNumber = "5581985595912";
@@ -78,24 +74,15 @@ const Hero = () => {
             variants={itemVariants}
             className="flex flex-col sm:flex-row justify-center gap-4"
           >
-            {userName ? (
-              <Button 
-                className="neon-button text-base sm:text-lg py-2 sm:py-3 md:py-4" 
-                onClick={() => {
-                  const dashboard = userType === "participante" ? "/cliente" : "/anunciante";
-                  window.location.href = dashboard;
-                }}
-              >
-                {userType === "participante" ? "Acessar Missões" : "Acessar Painel"}
-              </Button>
-            ) : (
-              <Button 
-                className="neon-button text-base sm:text-lg py-2 sm:py-3 md:py-4" 
-                onClick={() => setShowAuthOverlay(true)}
-              >
-                {userType === "participante" ? "Entrar / Cadastrar" : "Área do Anunciante"}
-              </Button>
-            )}
+            <Button 
+              className="neon-button text-base sm:text-lg py-2 sm:py-3 md:py-4" 
+              onClick={() => {
+                const section = document.getElementById("como-funciona");
+                section?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              {userType === "participante" ? "Descobrir Missões" : "Criar Campanha"}
+            </Button>
             
             <Button 
               variant="outline" 
@@ -121,9 +108,6 @@ const Hero = () => {
           </motion.div>
         </motion.div>
       </div>
-      
-      {/* Auth Overlay */}
-      <AuthOverlay isOpen={showAuthOverlay} onClose={() => setShowAuthOverlay(false)} />
     </section>
   );
 };

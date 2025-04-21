@@ -1,8 +1,7 @@
 
 import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useAuth } from "@/hooks/useAuth";
 
 // Lazy load public pages
 const Index = lazy(() => import("@/pages/Index"));
@@ -11,14 +10,13 @@ const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Faq = lazy(() => import("@/pages/Faq"));
 const Feedback = lazy(() => import("@/pages/Feedback"));
 const Tutorials = lazy(() => import("@/pages/Tutorials"));
+const Authentication = lazy(() => import("@/pages/Authentication"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const PublicRoutes = () => {
-  // Removed auth check here - now handled by the Index component
-  
   return (
     <Routes>
       <Route index element={
@@ -51,6 +49,11 @@ const PublicRoutes = () => {
           <Tutorials />
         </Suspense>
       } />
+      <Route path="auth" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Authentication />
+        </Suspense>
+      } />
       <Route path="blog" element={
         <Suspense fallback={<LoadingSpinner />}>
           <Blog />
@@ -67,19 +70,8 @@ const PublicRoutes = () => {
         </Suspense>
       } />
       
-      {/* Redirect /auth to / as we now use an overlay */}
-      <Route path="auth" element={
-        <Suspense fallback={<LoadingSpinner />}>
-          <Index />
-        </Suspense>
-      } />
-      
       {/* Redirect /documentacao to /admin/documentacao */}
-      <Route path="documentacao" element={
-        <Suspense fallback={<LoadingSpinner />}>
-          <NotFound />
-        </Suspense>
-      } />
+      <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
       
       {/* Catch-all for missing routes */}
       <Route path="*" element={

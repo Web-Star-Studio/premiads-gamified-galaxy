@@ -2,6 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
 
+// Constants for Supabase URL and API key
+const SUPABASE_URL = "https://lidnkfffqkpfwwdrifyt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os";
+
 export interface FetchCashbackResult {
   campaigns: CashbackCampaign[];
   userCashback: number;
@@ -111,26 +115,11 @@ export const redeemCashback = async (
     
     // Deduct points from user profile (10x because cashback is 10% of points)
     const pointsToDeduct = amount * 10;
-    
-    // Fix: Get the current points and calculate the new value
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('points')
-      .eq('id', session.user.id)
-      .single();
-    
-    if (profileError) {
-      console.error("Error getting user profile:", profileError);
-      throw profileError;
-    }
-    
-    const currentPoints = profileData?.points || 0;
-    const newPoints = currentPoints - pointsToDeduct;
-    
-    // Update with the calculated value
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ points: newPoints })
+      .update({ 
+        points: supabase.rpc('decrement_points', { points_to_subtract: pointsToDeduct }) 
+      })
       .eq('id', session.user.id);
     
     if (updateError) {

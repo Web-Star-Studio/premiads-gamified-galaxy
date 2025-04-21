@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -5,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { profileFormSchema, ProfileFormValues } from "../types/profileTypes";
-import { useProfile } from "@/hooks/user/useProfile";
 import { POINTS_PER_PROFILE_COMPLETION } from "../constants/formOptions";
 
 export function useProfileForm() {
@@ -13,7 +13,7 @@ export function useProfileForm() {
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(false);
   const [pointsAwarded, setPointsAwarded] = useState(false);
-  const { profile, loading: profileLoading } = useProfile();
+  const [hasCompletedBefore, setHasCompletedBefore] = useState(false);
   
   // Create form
   const form = useForm<ProfileFormValues>({
@@ -34,42 +34,106 @@ export function useProfileForm() {
     },
   });
 
-  // Load profile data
+  // Fetch existing profile data when component mounts
   useEffect(() => {
-    if (profile && !profileLoading) {
-      const formData = profile.profile_data as ProfileFormValues;
-      if (formData) {
-        form.reset(formData);
+    const fetchProfileData = async () => {
+      setLoading(true);
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+          console.log("No authenticated session - using test mode");
+          setLoading(false);
+          return;
+        }
+        
+        const userId = session.user.id;
+        
+        // Fetch profile data
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('profile_data, profile_completed')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile data:", error);
+          throw error;
+        }
+        
+        if (profileData) {
+          // If user has profile data, populate the form
+          if (profileData.profile_data) {
+            form.reset(profileData.profile_data as ProfileFormValues);
+          }
+          
+          // Check if user has already completed the profile before
+          setHasCompletedBefore(profileData.profile_completed || false);
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        toast({
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível carregar os dados do seu perfil. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [profile, profileLoading, form]);
+    };
+    
+    fetchProfileData();
+  }, [form, toast]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     setLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!sessionData.session) {
-        throw new Error("Usuário não autenticado");
+      if (sessionError || !session) {
+        toast({
+          title: "Autenticação necessária",
+          description: "Você precisa estar logado para atualizar seu perfil.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
       
-      const userId = sessionData.session.user.id;
+      const userId = session.user.id;
       
-      // Update user type and profile completion status
-      const { error } = await supabase.rpc('update_user_type', {
-        user_id: userId,
-        new_type: 'participante',
-        mark_completed: true
-      });
+      // Update profile data
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          profile_data: data,
+          profile_completed: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
       
       if (error) throw error;
       
-      // Award points if profile wasn't completed before
-      if (!profile?.profile_completed) {
-        const { error: pointsError } = await supabase.rpc('update_user_credits', {
-          user_id: userId,
-          new_credits: POINTS_PER_PROFILE_COMPLETION
-        });
+      // Award points if user hasn't completed the profile before
+      if (!hasCompletedBefore) {
+        // First, fetch current points
+        const { data: currentProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', userId)
+          .single();
+        
+        if (fetchError) throw fetchError;
+        
+        // Then update with incremented value
+        const newPoints = (currentProfile?.points || 0) + POINTS_PER_PROFILE_COMPLETION;
+        
+        const { error: pointsError } = await supabase
+          .from('profiles')
+          .update({
+            points: newPoints
+          })
+          .eq('id', userId);
         
         if (pointsError) throw pointsError;
         
@@ -79,11 +143,13 @@ export function useProfileForm() {
       
       toast({
         title: "Perfil atualizado",
-        description: !profile?.profile_completed 
+        description: !hasCompletedBefore 
           ? `Seu perfil foi atualizado e você ganhou ${POINTS_PER_PROFILE_COMPLETION} pontos!` 
           : "Seu perfil foi atualizado com sucesso!",
       });
       
+      // Update state to reflect that profile has been completed
+      setHasCompletedBefore(true);
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast({
@@ -98,9 +164,9 @@ export function useProfileForm() {
 
   return {
     form,
-    loading: loading || profileLoading,
+    loading,
     pointsAwarded,
-    hasCompletedBefore: profile?.profile_completed || false,
+    hasCompletedBefore,
     onSubmit,
     setPointsAwarded
   };

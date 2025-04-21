@@ -1,12 +1,12 @@
 
 import { render, screen, fireEvent, waitFor } from "@/utils/test-utils";
-import AuthOverlay from "@/components/auth/AuthOverlay";
-import { useAuthMethods } from "@/hooks/useAuthMethods";
+import Authentication from "@/pages/Authentication";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 // Mock hooks
-jest.mock("@/hooks/useAuthMethods", () => ({
-  useAuthMethods: jest.fn(),
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: jest.fn(),
 }));
 
 jest.mock("@/hooks/use-toast", () => ({
@@ -16,16 +16,15 @@ jest.mock("@/hooks/use-toast", () => ({
 // Mock Particles component
 jest.mock("@/components/Particles", () => () => <div data-testid="particles" />);
 
-describe("AuthOverlay", () => {
+describe("Authentication", () => {
   const signIn = jest.fn();
   const signUp = jest.fn();
   const toast = jest.fn();
-  const onClose = jest.fn();
   
   beforeEach(() => {
     jest.clearAllMocks();
     
-    (useAuthMethods as jest.Mock).mockReturnValue({
+    (useAuth as jest.Mock).mockReturnValue({
       signIn,
       signUp,
       loading: false,
@@ -36,21 +35,15 @@ describe("AuthOverlay", () => {
     });
   });
   
-  it("renders when isOpen is true", () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+  it("renders login and signup tabs", () => {
+    render(<Authentication />);
     
-    expect(screen.getByText("PremiAds")).toBeInTheDocument();
-    expect(screen.getByText("Entrar ou criar sua conta")).toBeInTheDocument();
-  });
-  
-  it("doesn't render when isOpen is false", () => {
-    render(<AuthOverlay isOpen={false} onClose={onClose} />);
-    
-    expect(screen.queryByText("PremiAds")).not.toBeInTheDocument();
+    expect(screen.getByText("Login")).toBeInTheDocument();
+    expect(screen.getByText("Cadastro")).toBeInTheDocument();
   });
   
   it("switches between login and signup forms", () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // By default, login form should be shown
     expect(screen.getByPlaceholderText("seu@email.com")).toBeInTheDocument();
@@ -68,7 +61,7 @@ describe("AuthOverlay", () => {
   });
   
   it("validates login form before submission", async () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // Try to submit empty form
     fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
@@ -85,7 +78,7 @@ describe("AuthOverlay", () => {
   });
   
   it("validates signup form before submission", async () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // Switch to signup
     fireEvent.click(screen.getByRole("tab", { name: "Cadastro" }));
@@ -105,7 +98,7 @@ describe("AuthOverlay", () => {
   });
   
   it("submits login form with valid data", async () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // Fill in form
     fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
@@ -127,7 +120,7 @@ describe("AuthOverlay", () => {
   });
   
   it("submits signup form with valid data", async () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // Switch to signup
     fireEvent.click(screen.getByRole("tab", { name: "Cadastro" }));
@@ -162,13 +155,13 @@ describe("AuthOverlay", () => {
   
   it("shows loading state during authentication", async () => {
     // Mock loading state
-    (useAuthMethods as jest.Mock).mockReturnValue({
+    (useAuth as jest.Mock).mockReturnValue({
       signIn,
       signUp,
       loading: true,
     });
     
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
+    render(<Authentication />);
     
     // Should show loading text on button
     expect(screen.getByRole("button", { name: "Entrando..." })).toBeInTheDocument();
@@ -180,13 +173,5 @@ describe("AuthOverlay", () => {
     // Should show loading text on signup button
     expect(screen.getByRole("button", { name: "Cadastrando..." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cadastrando..." })).toBeDisabled();
-  });
-  
-  it("calls onClose when close button is clicked", () => {
-    render(<AuthOverlay isOpen={true} onClose={onClose} />);
-    
-    fireEvent.click(screen.getByText("Voltar para a página inicial"));
-    
-    expect(onClose).toHaveBeenCalled();
   });
 });

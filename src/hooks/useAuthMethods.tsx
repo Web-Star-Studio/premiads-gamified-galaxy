@@ -9,29 +9,15 @@ import { SignUpCredentials, SignInCredentials } from "@/types/auth";
 
 export const useAuthMethods = () => {
   const [loading, setLoading] = useState(false);
-  const { setUserName, setUserType, setIsAuthenticated, resetUserInfo, checkSession } = useUser();
+  const { setUserName, setUserType, resetUserInfo } = useUser();
   const { toast } = useToast();
   const { playSound } = useSounds();
   const navigate = useNavigate();
-  
-  // Helper function to handle errors
-  const handleAuthError = (error: any, defaultMessage: string) => {
-    const errorMessage = error.message || defaultMessage;
-    console.error(errorMessage, error);
-    playSound("error");
-    toast({
-      title: "Erro",
-      description: errorMessage,
-      variant: "destructive",
-    });
-    return false;
-  };
 
   const signUp = async (credentials: SignUpCredentials) => {
     setLoading(true);
     
     try {
-      // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
@@ -54,37 +40,6 @@ export const useAuthMethods = () => {
       if (data.user) {
         setUserName(credentials.name);
         setUserType(credentials.userType || "participante");
-        setIsAuthenticated(true);
-        
-        // Check if profile exists, if not create one
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-        
-        if (profileError && profileError.code === "PGRST116") {
-          // Profile doesn't exist, create one
-          const { error: insertError } = await supabase
-            .from("profiles")
-            .insert([
-              {
-                id: data.user.id,
-                full_name: credentials.name,
-                user_type: credentials.userType || "participante",
-                points: 0,
-                credits: 0,
-                profile_completed: true
-              }
-            ]);
-          
-          if (insertError) {
-            console.error("Error creating profile:", insertError);
-          }
-        }
-        
-        // Force a session check
-        await checkSession();
         
         // Redirect based on user type
         if (credentials.userType === "anunciante") {
@@ -96,7 +51,13 @@ export const useAuthMethods = () => {
       
       return true;
     } catch (error: any) {
-      return handleAuthError(error, "Ocorreu um erro durante o cadastro");
+      playSound("error");
+      toast({
+        title: "Erro no cadastro",
+        description: error.message || "Ocorreu um erro durante o cadastro",
+        variant: "destructive",
+      });
+      return false;
     } finally {
       setLoading(false);
     }
@@ -106,40 +67,62 @@ export const useAuthMethods = () => {
     setLoading(true);
     
     try {
-      // Add a short delay to prevent UI flashing if auth is quick
-      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Sign in the user
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
       
-      // Wait for minimum loading time to complete
-      await minLoadingTime;
-      
       if (error) throw error;
       
       playSound("chime");
+      toast({
+        title: "Login bem-sucedido",
+        description: "Bem-vindo de volta à plataforma!",
+      });
       
       if (data.user) {
-        setIsAuthenticated(true);
-        
-        // Force a session check which will get the profile data
-        await checkSession();
-        
-        toast({
-          title: "Login bem-sucedido",
-          description: "Você foi autenticado com sucesso!",
-        });
-        
-        // Let the session check handle the redirection to prevent race conditions
-        return true;
+        try {
+          // Set user name from metadata
+          const { data: profileData, error } = await supabase
+            .from("profiles")
+            .select("full_name, user_type")
+            .eq("id", data.user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          if (profileData) {
+            setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
+            setUserType((profileData.user_type || "participante") as "participante" | "anunciante");
+            
+            // Redirect based on user type
+            if (profileData.user_type === "anunciante") {
+              navigate("/anunciante");
+            } else {
+              navigate("/cliente");
+            }
+          } else {
+            setUserName(data.user.email?.split('@')[0] || 'Usuário');
+            setUserType("participante");
+            navigate("/cliente");
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          setUserName(data.user.email?.split('@')[0] || 'Usuário');
+          setUserType("participante");
+          navigate("/cliente");
+        }
       }
       
-      return false;
+      return true;
     } catch (error: any) {
-      return handleAuthError(error, "Ocorreu um erro durante o login");
+      playSound("error");
+      toast({
+        title: "Erro no login",
+        description: error.message || "Ocorreu um erro durante o login",
+        variant: "destructive",
+      });
+      return false;
     } finally {
       setLoading(false);
     }
@@ -160,10 +143,12 @@ export const useAuthMethods = () => {
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      
-      return true;
     } catch (error: any) {
-      return handleAuthError(error, "Ocorreu um erro durante o logout");
+      toast({
+        title: "Erro ao desconectar",
+        description: error.message || "Ocorreu um erro durante o logout",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

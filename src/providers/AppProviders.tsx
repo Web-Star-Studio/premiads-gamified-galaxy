@@ -5,23 +5,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { UserProvider } from "@/context/UserContext";
 import { AuthProvider } from "@/hooks/useAuth";
 
-// Create a client with more robust error handling
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
+// Create a client
+const queryClient = new QueryClient();
 
 export const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          {/* UserProvider is now inside AuthProvider to avoid auth context conflicts */}
           <UserProvider>
             {children}
             <Toaster />

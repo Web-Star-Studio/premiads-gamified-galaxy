@@ -16,17 +16,17 @@ export type Database = {
           advertiser_logo: string | null
           advertiser_name: string | null
           conditions: string | null
-          created_at: string
+          created_at: string | null
           description: string | null
           discount_percentage: number
-          end_date: string
+          end_date: string | null
           id: string
-          is_active: boolean
+          is_active: boolean | null
           maximum_discount: number | null
           minimum_purchase: number | null
           start_date: string
           title: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           advertiser_id?: string | null
@@ -34,17 +34,17 @@ export type Database = {
           advertiser_logo?: string | null
           advertiser_name?: string | null
           conditions?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           discount_percentage: number
-          end_date: string
+          end_date?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           maximum_discount?: number | null
           minimum_purchase?: number | null
-          start_date: string
+          start_date?: string
           title: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           advertiser_id?: string | null
@@ -52,53 +52,53 @@ export type Database = {
           advertiser_logo?: string | null
           advertiser_name?: string | null
           conditions?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           discount_percentage?: number
-          end_date?: string
+          end_date?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           maximum_discount?: number | null
           minimum_purchase?: number | null
           start_date?: string
           title?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       cashback_redemptions: {
         Row: {
           amount: number
-          campaign_id: string | null
+          campaign_id: string
           code: string
-          created_at: string
+          created_at: string | null
           id: string
           redeemed_at: string | null
           status: string
-          updated_at: string
-          user_id: string | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
           amount: number
-          campaign_id?: string | null
+          campaign_id: string
           code: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           redeemed_at?: string | null
           status?: string
-          updated_at?: string
-          user_id?: string | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
           amount?: number
-          campaign_id?: string | null
+          campaign_id?: string
           code?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           redeemed_at?: string | null
           status?: string
-          updated_at?: string
-          user_id?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -108,143 +108,202 @@ export type Database = {
             referencedRelation: "cashback_campaigns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cashback_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_submissions: {
+        Row: {
+          feedback: string | null
+          id: string
+          mission_id: string
+          status: string
+          submission_data: Json | null
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          feedback?: string | null
+          id?: string
+          mission_id: string
+          status?: string
+          submission_data?: Json | null
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          feedback?: string | null
+          id?: string
+          mission_id?: string
+          status?: string
+          submission_data?: Json | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_submissions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       missions: {
         Row: {
-          advertiser_id: string
+          advertiser_id: string | null
           business_type: string | null
-          created_at: string | null
-          description: string | null
+          created_at: string
+          description: string
           end_date: string | null
           id: string
-          is_active: boolean
+          is_active: boolean | null
           points: number
           requirements: Json | null
-          start_date: string | null
+          start_date: string
           target_audience_age_max: number | null
           target_audience_age_min: number | null
           target_audience_gender: string | null
           target_audience_region: string | null
           title: string
-          type: string | null
-          updated_at: string | null
+          type: string
         }
         Insert: {
-          advertiser_id: string
+          advertiser_id?: string | null
           business_type?: string | null
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
+          description: string
           end_date?: string | null
           id?: string
-          is_active?: boolean
-          points?: number
+          is_active?: boolean | null
+          points: number
           requirements?: Json | null
-          start_date?: string | null
+          start_date?: string
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
           target_audience_region?: string | null
           title: string
-          type?: string | null
-          updated_at?: string | null
+          type: string
         }
         Update: {
-          advertiser_id?: string
+          advertiser_id?: string | null
           business_type?: string | null
-          created_at?: string | null
-          description?: string | null
+          created_at?: string
+          description?: string
           end_date?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
           points?: number
           requirements?: Json | null
-          start_date?: string | null
+          start_date?: string
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
           target_audience_region?: string | null
           title?: string
-          type?: string | null
-          updated_at?: string | null
+          type?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
-          created_at: string | null
+          created_at: string
           credits: number | null
+          current_level_id: number | null
           description: string | null
           email_notifications: boolean | null
           full_name: string | null
           id: string
+          next_points_threshold: number | null
           phone: string | null
-          points: number | null
+          points: number
           profile_completed: boolean | null
           profile_data: Json | null
           push_notifications: boolean | null
-          updated_at: string | null
+          updated_at: string
           user_type: string | null
           website: string | null
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string | null
+          created_at?: string
           credits?: number | null
+          current_level_id?: number | null
           description?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          next_points_threshold?: number | null
           phone?: string | null
-          points?: number | null
+          points?: number
           profile_completed?: boolean | null
           profile_data?: Json | null
           push_notifications?: boolean | null
-          updated_at?: string | null
+          updated_at?: string
           user_type?: string | null
           website?: string | null
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string | null
+          created_at?: string
           credits?: number | null
+          current_level_id?: number | null
           description?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          next_points_threshold?: number | null
           phone?: string | null
-          points?: number | null
+          points?: number
           profile_completed?: boolean | null
           profile_data?: Json | null
           push_notifications?: boolean | null
-          updated_at?: string | null
+          updated_at?: string
           user_type?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_level_id_fkey"
+            columns: ["current_level_id"]
+            isOneToOne: false
+            referencedRelation: "user_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       raffle_numbers: {
         Row: {
-          created_at: string
           id: string
-          number: number
-          raffle_id: string | null
-          user_id: string | null
+          number_value: number
+          purchased_at: string
+          raffle_id: string
+          user_id: string
         }
         Insert: {
-          created_at?: string
           id?: string
-          number: number
-          raffle_id?: string | null
-          user_id?: string | null
+          number_value: number
+          purchased_at?: string
+          raffle_id: string
+          user_id: string
         }
         Update: {
-          created_at?: string
           id?: string
-          number?: number
-          raffle_id?: string | null
-          user_id?: string | null
+          number_value?: number
+          purchased_at?: string
+          raffle_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -254,23 +313,30 @@ export type Database = {
             referencedRelation: "raffles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "raffle_numbers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       raffles: {
         Row: {
           created_at: string
           description: string
-          detailed_description: string | null
+          detailed_description: string
           draw_date: string | null
-          end_date: string
+          end_date: string | null
           id: string
-          image_url: string | null
+          image_url: string
           min_points: number
           numbers_total: number
           points_per_number: number
           prize_type: string
           prize_value: number
-          start_date: string
+          start_date: string | null
           status: string
           title: string
           updated_at: string
@@ -279,17 +345,17 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
-          detailed_description?: string | null
+          detailed_description: string
           draw_date?: string | null
-          end_date: string
+          end_date?: string | null
           id?: string
-          image_url?: string | null
+          image_url: string
           min_points?: number
-          numbers_total?: number
-          points_per_number?: number
+          numbers_total: number
+          points_per_number: number
           prize_type: string
           prize_value: number
-          start_date: string
+          start_date?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -298,94 +364,130 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
-          detailed_description?: string | null
+          detailed_description?: string
           draw_date?: string | null
-          end_date?: string
+          end_date?: string | null
           id?: string
-          image_url?: string | null
+          image_url?: string
           min_points?: number
           numbers_total?: number
           points_per_number?: number
           prize_type?: string
           prize_value?: number
-          start_date?: string
+          start_date?: string | null
           status?: string
           title?: string
           updated_at?: string
           winner_user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "raffles_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referrals: {
         Row: {
           completed_at: string | null
           created_at: string
           id: string
+          points_awarded: boolean | null
           referral_code: string
           referred_id: string | null
-          referrer_id: string | null
-          status: string | null
+          referrer_id: string
+          status: string
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
           id?: string
+          points_awarded?: boolean | null
           referral_code: string
           referred_id?: string | null
-          referrer_id?: string | null
-          status?: string | null
+          referrer_id: string
+          status?: string
         }
         Update: {
           completed_at?: string | null
           created_at?: string
           id?: string
+          points_awarded?: boolean | null
           referral_code?: string
           referred_id?: string | null
-          referrer_id?: string | null
-          status?: string | null
+          referrer_id?: string
+          status?: string
         }
         Relationships: []
       }
-      submissions: {
+      tickets: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          mission_id: string
-          points_awarded: number | null
-          status: string
-          submission_data: Json | null
-          updated_at: string | null
+          quantity: number
+          raffle_id: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          mission_id: string
-          points_awarded?: number | null
-          status?: string
-          submission_data?: Json | null
-          updated_at?: string | null
+          quantity?: number
+          raffle_id: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          mission_id?: string
-          points_awarded?: number | null
-          status?: string
-          submission_data?: Json | null
-          updated_at?: string | null
+          quantity?: number
+          raffle_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "submissions_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "missions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      user_levels: {
+        Row: {
+          benefits: Json | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: number
+          max_points: number | null
+          min_points: number
+          name: string
+          points_multiplier: number
+          updated_at: string
+        }
+        Insert: {
+          benefits?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: number
+          max_points?: number | null
+          min_points: number
+          name: string
+          points_multiplier: number
+          updated_at?: string
+        }
+        Update: {
+          benefits?: Json | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: number
+          max_points?: number | null
+          min_points?: number
+          name?: string
+          points_multiplier?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -394,38 +496,19 @@ export type Database = {
     Functions: {
       get_all_users: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          full_name: string
-          user_type: Database["public"]["Enums"]["user_role"]
-          last_sign_in_at: string
-          created_at: string
-        }[]
-      }
-      get_mission_submissions: {
-        Args: { mission_ids: string[]; status_filter: string }
         Returns: Json[]
+      }
+      increment_points_with_multiplier: {
+        Args: { points_to_add: number; user_id: string }
+        Returns: undefined
       }
       select_raffle_winner: {
         Args: { raffle_id: string }
         Returns: string
       }
-      update_submission_status: {
-        Args: { submission_id: string; new_status: string }
-        Returns: undefined
-      }
-      update_user_credits: {
-        Args: { user_id: string; new_credits: number }
-        Returns: undefined
-      }
-      update_user_type: {
-        Args: { user_id: string; new_type: string; mark_completed: boolean }
-        Returns: undefined
-      }
     }
     Enums: {
-      user_role: "admin" | "participante" | "anunciante" | "admin-master"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -540,8 +623,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      user_role: ["admin", "participante", "anunciante", "admin-master"],
-    },
+    Enums: {},
   },
 } as const

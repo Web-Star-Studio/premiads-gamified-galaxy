@@ -1,16 +1,23 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UserType } from '@/types/auth';
+import { useSounds } from '@/hooks/use-sounds';
 
 export interface User {
   id: string;
-  email: string;
   name: string;
-  role: UserType;
+  email: string;
+  role: string;
   status: 'active' | 'inactive' | 'pending';
-  lastLogin: string | null;
+  lastLogin?: string;
+  avatar_url?: string;
+}
+
+interface UserData {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
 }
 
 export const useUsers = () => {
@@ -18,61 +25,83 @@ export const useUsers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { playSound } = useSounds();
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      // Use the get_all_users() function instead of direct table access
-      const { data, error } = await supabase.rpc('get_all_users');
       
-      if (error) throw error;
+      const { data, error: usersError } = await supabase
+        .rpc('get_all_users');
+        
+      if (usersError) throw usersError;
       
-      // Transform the data to match our User interface
-      const transformedUsers: User[] = data.map((user: any) => ({
+      // Properly parse the JSON data before mapping
+      const parsedData = Array.isArray(data) ? data.map(item => {
+        if (typeof item === 'object' && item !== null) {
+          const jsonItem = item as Record<string, unknown>;
+          return {
+            id: jsonItem.id as string,
+            email: jsonItem.email as string,
+            created_at: jsonItem.created_at as string,
+            last_sign_in_at: jsonItem.last_sign_in_at as string | null
+          } as UserData;
+        }
+        return null;
+      }).filter(Boolean) as UserData[] : [];
+      
+      // Map the parsed data to our User interface
+      const mappedUsers: User[] = parsedData.map(user => ({
         id: user.id,
+        name: '', // We might want to fetch full names separately
         email: user.email,
-        name: user.full_name || user.email.split('@')[0],
-        role: user.user_type || 'participante',
-        status: 'active', // Default status, adjust as needed
-        lastLogin: user.last_sign_in_at
+        role: 'admin', // Default to admin since this RPC requires admin role
+        status: 'active',
+        lastLogin: user.last_sign_in_at 
+          ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')
+          : undefined
       }));
       
-      setUsers(transformedUsers);
+      setUsers(mappedUsers);
+      setError(null);
     } catch (err: any) {
       console.error('Error fetching users:', err);
       setError(err.message);
       toast({
-        title: 'Erro ao buscar usuários',
+        title: 'Error fetching users',
         description: err.message,
         variant: 'destructive'
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
+  // Function to update user status
   const updateUserStatus = async (userId: string, isActive: boolean) => {
     try {
-      // Implement user status update logic
+      setLoading(true);
+      playSound('pop');
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          user_type: isActive ? 'participante' : 'participante' 
-        })
+        .update({ profile_completed: isActive })
         .eq('id', userId);
-      
+        
       if (error) throw error;
       
-      // Optimistically update local state
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { ...user, status: isActive ? 'active' : 'inactive' } 
-          : user
-      ));
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: isActive ? 'active' : 'inactive' } 
+            : user
+        )
+      );
       
       toast({
-        title: 'Status do usuário atualizado',
-        description: `Usuário ${isActive ? 'ativado' : 'desativado'} com sucesso.`
+        title: `Status alterado para ${isActive ? 'Ativo' : 'Inativo'}`,
+        description: `O usuário foi ${isActive ? 'ativado' : 'desativado'}.`,
       });
     } catch (err: any) {
       console.error('Error updating user status:', err);
@@ -81,22 +110,32 @@ export const useUsers = () => {
         description: err.message,
         variant: 'destructive'
       });
+      playSound('error');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Function to delete a user
   const deleteUser = async (userId: string) => {
     try {
-      // Implement user deletion logic
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      setLoading(true);
+      playSound('error');
+      
+      // Only remove from profiles for now, as auth deletion requires admin API access
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
       
       if (error) throw error;
       
-      // Remove user from local state
-      setUsers(prev => prev.filter(user => user.id !== userId));
+      // Update local state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       
       toast({
         title: 'Usuário excluído',
-        description: 'Usuário removido com sucesso.'
+        description: 'O usuário foi removido do sistema.',
       });
     } catch (err: any) {
       console.error('Error deleting user:', err);
@@ -105,19 +144,21 @@ export const useUsers = () => {
         description: err.message,
         variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
-  return { 
-    users, 
-    loading, 
-    error, 
+  return {
+    users,
+    loading,
+    error,
     fetchUsers,
     updateUserStatus,
-    deleteUser 
+    deleteUser
   };
 };

@@ -43,60 +43,54 @@ export const useLottery = () => {
     try {
       setLoading(true);
       
-      // Get raffles from database with a more flexible query
+      // Get raffles from database
       const { data, error } = await supabase
         .from('raffles')
-        .select(`*`);
+        .select(`
+          *,
+          winner:winner_user_id (
+            id,
+            profiles (
+              id,
+              full_name,
+              avatar_url
+            )
+          ),
+          numbers:raffle_numbers!raffle_id (
+            id
+          )
+        `);
         
       if (error) throw error;
-      
-      // Instead of using groupBy which may not be available, we'll fetch all raffle numbers
-      // and then perform the grouping on the client side
-      const { data: raffleNumbers, error: countError } = await supabase
-        .from('raffle_numbers')
-        .select('raffle_id, id');
-        
-      if (countError) console.error("Error fetching raffle counts:", countError);
-      
-      // Create a map of raffle_id to count
-      const numbersSoldMap: Record<string, number> = {};
-      
-      // Group manually
-      if (raffleNumbers) {
-        raffleNumbers.forEach(item => {
-          if (item.raffle_id) {
-            if (!numbersSoldMap[item.raffle_id]) {
-              numbersSoldMap[item.raffle_id] = 0;
-            }
-            numbersSoldMap[item.raffle_id]++;
-          }
-        });
-      }
       
       // Transform data to match our interface
       const transformedData: Lottery[] = data.map(raffle => {
         // Calculate progress
-        const numbersSold = numbersSoldMap[raffle.id] || 0;
+        const numbersSold = raffle.numbers?.length || 0;
         const progress = raffle.numbers_total > 0 
           ? Math.round((numbersSold / raffle.numbers_total) * 100) 
           : 0;
         
         // Get winner info if exists
         let winner = null;
-        if (raffle.winner_user_id) {
-          // Placeholder - we'll update this with real data if needed
-          winner = {
-            id: raffle.winner_user_id,
-            name: 'Winner', // Placeholder
-            avatar: 'https://i.pravatar.cc/150?img=1' // Placeholder
-          };
+        if (raffle.winner && raffle.winner.profiles) {
+          // Safe access to nested properties
+          const winnerProfile = Array.isArray(raffle.winner.profiles) 
+            ? raffle.winner.profiles[0] 
+            : raffle.winner.profiles;
+            
+          if (winnerProfile) {
+            winner = {
+              id: winnerProfile.id || '',
+              name: winnerProfile.full_name || 'Unknown',
+              avatar: winnerProfile.avatar_url || 'https://i.pravatar.cc/150?img=1'
+            };
+          }
         }
         
         // Ensure status is one of the allowed enum values
-        const validStatuses: Lottery['status'][] = ['active', 'pending', 'completed', 'canceled', 'draft', 'finished'];
         let status: Lottery['status'] = 'draft';
-        
-        if (validStatuses.includes(raffle.status as Lottery['status'])) {
+        if (['active', 'pending', 'completed', 'canceled', 'draft', 'finished'].includes(raffle.status)) {
           status = raffle.status as Lottery['status'];
         }
         
@@ -107,7 +101,7 @@ export const useLottery = () => {
           detailedDescription: raffle.detailed_description,
           prizeType: raffle.prize_type,
           prizeValue: raffle.prize_value,
-          imageUrl: raffle.image_url || '',
+          imageUrl: raffle.image_url,
           startDate: raffle.start_date,
           endDate: raffle.end_date,
           drawDate: raffle.draw_date,
@@ -116,7 +110,7 @@ export const useLottery = () => {
           numbersTotal: raffle.numbers_total,
           pointsPerNumber: raffle.points_per_number,
           minPoints: raffle.min_points,
-          numbersSold: numbersSold,
+          numbersSold,
           progress,
           isAutoScheduled: true
         };
@@ -136,44 +130,6 @@ export const useLottery = () => {
       setLoading(false);
     }
   }, [toast]);
-
-  const transformRaffleData = (raffle: any): Lottery => {
-    const numbersSold = raffle.numbers_sold || 0;
-    const progress = raffle.numbers_total > 0 
-      ? Math.round((numbersSold / raffle.numbers_total) * 100) 
-      : 0;
-    
-    let winner = null;
-    if (raffle.winner_profile && typeof raffle.winner_profile === 'object') {
-      winner = {
-        id: raffle.winner_profile.id || '',
-        name: raffle.winner_profile.full_name || 'Unknown',
-        avatar: raffle.winner_profile.avatar_url || 'https://i.pravatar.cc/150?img=1'
-      };
-    }
-    
-    return {
-      id: raffle.id,
-      name: raffle.title,
-      description: raffle.description,
-      detailedDescription: raffle.detailed_description,
-      prizeType: raffle.prize_type,
-      prizeValue: raffle.prize_value,
-      imageUrl: raffle.image_url,
-      startDate: raffle.start_date,
-      endDate: raffle.end_date,
-      drawDate: raffle.draw_date,
-      status: raffle.status as Lottery['status'],
-      winner,
-      numbersTotal: raffle.numbers_total,
-      pointsPerNumber: raffle.points_per_number,
-      minPoints: raffle.min_points,
-      numbersSold,
-      progress,
-      isAutoScheduled: true,
-      prizes: []
-    };
-  };
 
   // Create a new lottery
   const createLottery = async (lotteryData: Omit<Lottery, 'id' | 'progress' | 'numbersSold'>) => {

@@ -1,27 +1,101 @@
 
-import React from "react";
-import NavigationItem from "./NavigationItem";
 import { 
-  Home, Users, Ticket, FileText, Shield, BarChart, Settings, Bell, 
-  Eye, Book, Scale, Database
+  LayoutDashboard, 
+  Users, 
+  Settings, 
+  Shield,
+  DatabaseZap,
+  Bell,
+  BarChart4,
+  Ticket,
+  FileText,
+  BookOpen
 } from "lucide-react";
+import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
+import NavigationItem, { NavigationItemProps } from "./NavigationItem";
 
 export const NavigationItems = () => {
+  // Navigation items with descriptive properties
+  const navigationItems: NavigationItemProps[] = [
+    {
+      title: "Dashboard",
+      url: "/admin",
+      icon: LayoutDashboard,
+      description: "Visão geral do sistema"
+    },
+    {
+      title: "Usuários",
+      url: "/admin/usuarios",
+      icon: Users,
+      description: "Gerenciamento de usuários"
+    },
+    {
+      title: "Acesso",
+      url: "/admin/acesso",
+      icon: Shield,
+      description: "Controle de permissões"
+    },
+    {
+      title: "Regras",
+      url: "/admin/regras",
+      icon: FileText,
+      description: "Configurações de regras"
+    },
+    {
+      title: "Monitoramento",
+      url: "/admin/monitoramento",
+      icon: DatabaseZap,
+      description: "Status do sistema"
+    },
+    {
+      title: "Relatórios",
+      url: "/admin/relatorios",
+      icon: BarChart4,
+      description: "Análise de dados"
+    },
+    {
+      title: "Sorteios",
+      url: "/admin/sorteios",
+      icon: Ticket,
+      description: "Gestão de sorteios"
+    },
+    {
+      title: "Notificações",
+      url: "/admin/notificacoes",
+      icon: Bell,
+      description: "Gerenciar notificações"
+    },
+    {
+      title: "Documentação",
+      url: "/admin/documentacao",
+      icon: BookOpen,
+      description: "Manual técnico do sistema"
+    },
+    {
+      title: "Configurações",
+      url: "/admin/configuracoes",
+      icon: Settings,
+      description: "Configurações do sistema"
+    },
+  ];
+
   return (
-    <div className="space-y-1">
-      <NavigationItem title="Dashboard" url="/admin" icon={Home} description="Visão geral do sistema" />
-      <NavigationItem title="Usuários" url="/admin/users" icon={Users} description="Gerenciamento de usuários" />
-      <NavigationItem title="Sorteios" url="/admin/lottery" icon={Ticket} description="Gerenciamento de sorteios" />
-      <NavigationItem title="Moderação" url="/admin/moderation" icon={Eye} description="Moderação de conteúdo" />
-      <NavigationItem title="Regras" url="/admin/rules" icon={Scale} description="Configuração de regras" />
-      <NavigationItem title="Relatórios" url="/admin/reports" icon={BarChart} description="Relatórios e estatísticas" />
-      <NavigationItem title="Monitoramento" url="/admin/monitoring" icon={Shield} description="Monitoramento do sistema" />
-      <NavigationItem title="Notificações" url="/admin/notifications" icon={Bell} description="Gerenciamento de notificações" />
-      <NavigationItem title="Controle de Acesso" url="/admin/access" icon={Shield} description="Controle de acesso ao sistema" />
-      <NavigationItem title="Documentação" url="/admin/documentation" icon={Book} description="Documentação do sistema" />
-      <NavigationItem title="Configurações" url="/admin/settings" icon={Settings} description="Configurações do sistema" />
-      <NavigationItem title="Limpeza" url="/admin/cleanup" icon={Database} description="Limpeza e manutenção do banco de dados" />
-    </div>
+    <SidebarGroup>
+      <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {navigationItems.map((item) => (
+            <NavigationItem 
+              key={item.title} 
+              title={item.title} 
+              url={item.url} 
+              icon={item.icon} 
+              description={item.description} 
+            />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 };
 

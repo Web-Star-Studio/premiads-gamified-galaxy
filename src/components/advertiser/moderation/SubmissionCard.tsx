@@ -1,69 +1,75 @@
 
 import { useState } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
+import { MessageSquare } from "lucide-react";
 import { MissionSubmission } from "@/types/missions";
-import SubmissionContent from "./components/SubmissionContent";
 import SubmissionMetadata from "./components/SubmissionMetadata";
-import SubmissionStatusBadge from "./components/SubmissionStatusBadge";
+import SubmissionContent from "./components/SubmissionContent";
 import SubmissionActionButtons from "./components/SubmissionActionButtons";
 import SubmissionPreviewDialog from "./components/SubmissionPreviewDialog";
 import { useSubmissionActions } from "./hooks/useSubmissionActions";
-import { getUserInitials } from "./utils/submissionUtils";
 
 interface SubmissionCardProps {
   submission: MissionSubmission;
   mode: 'pending' | 'approved' | 'rejected';
   onRemove: (id: string) => void;
-  isAdminView?: boolean;
 }
 
-const SubmissionCard = ({ submission, mode, onRemove, isAdminView = false }: SubmissionCardProps) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
+const SubmissionCard = ({ submission, mode, onRemove }: SubmissionCardProps) => {
+  const [previewOpen, setPreviewOpen] = useState(false);
   const { processing, handleApprove, handleReject } = useSubmissionActions({ onRemove });
   
   return (
-    <div className="border border-gray-700 rounded-lg p-4 transition-all duration-300 hover:border-gray-600 bg-gray-900/60">
-      <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10 border-2 border-neon-cyan/30">
-          <AvatarFallback>{getUserInitials(submission.user_name)}</AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-medium truncate">{submission.user_name}</h3>
-              <p className="text-xs text-gray-400 truncate mb-2">{submission.mission_title}</p>
-            </div>
-            <SubmissionStatusBadge submission={submission} />
-          </div>
-          
-          <SubmissionContent 
-            submission={submission} 
-            onClick={() => setDialogOpen(true)} 
-          />
-          
+    <>
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="p-4 border border-gray-700 rounded-lg bg-gray-800/20 hover:bg-gray-800/30 transition-colors"
+      >
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* User info and submission metadata */}
           <SubmissionMetadata submission={submission} />
           
-          {mode === 'pending' && (
-            <SubmissionActionButtons 
-              processing={processing}
-              onApprove={() => handleApprove(submission)}
-              onReject={() => handleReject(submission)}
+          {/* Submission content preview */}
+          <div className="flex-1 min-w-0">
+            <SubmissionContent 
+              submission={submission} 
+              onClick={() => setPreviewOpen(true)} 
             />
-          )}
+            
+            {submission.feedback && (
+              <div className="mt-3 flex items-start gap-2">
+                <MessageSquare className="w-4 h-4 text-gray-400 mt-0.5" />
+                <p className="text-xs text-gray-300 line-clamp-2">
+                  {submission.feedback}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+        
+        {/* Action buttons - only show for pending submissions */}
+        {mode === 'pending' && (
+          <SubmissionActionButtons
+            processing={processing}
+            onApprove={() => handleApprove(submission)}
+            onReject={() => handleReject(submission)}
+          />
+        )}
+      </motion.div>
       
-      <SubmissionPreviewDialog 
+      {/* Full content preview dialog */}
+      <SubmissionPreviewDialog
         submission={submission}
         mode={mode}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
         processing={processing}
         onApprove={() => handleApprove(submission)}
         onReject={() => handleReject(submission)}
       />
-    </div>
+    </>
   );
 };
 

@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const supabaseUrl = "https://wvhgfxeqrjavxlzvxqqh.supabase.co";
+const supabaseUrl = "https://lidnkfffqkpfwwdrifyt.supabase.co";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -69,6 +69,8 @@ serve(async (req) => {
         }
         
         console.log(`Raffle ${raffle.id} has reached min points. Draw scheduled for ${drawDate.toISOString()}`);
+        
+        // TODO: Send notifications to admin and users (future implementation)
       }
     }
     

@@ -37,7 +37,7 @@ export const useMissionsFetch = () => {
         
         // Get user's submissions first to determine mission status
         const { data: userSubmissions, error: submissionsError } = await supabase
-          .from("submissions")
+          .from("mission_submissions")
           .select("mission_id, status")
           .eq("user_id", userId);
         
@@ -88,7 +88,7 @@ export const useMissionsFetch = () => {
           return {
             id: mission.id,
             title: mission.title,
-            description: mission.description || "",
+            description: mission.description,
             brand: mission.advertiser_id,
             type: mission.type as MissionType,
             points: mission.points,

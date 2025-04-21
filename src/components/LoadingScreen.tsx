@@ -29,7 +29,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark/90 backdrop-blur-sm">
-      <Particles className="absolute inset-0" count={5} />
+      <Particles count={15} />
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -41,6 +41,16 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             className="absolute inset-0 rounded-full border-4 border-t-neon-cyan border-galaxy-purple/30" 
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div 
+            className="absolute inset-3 rounded-full border-4 border-t-neon-pink border-galaxy-purple/20"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div 
+            className="absolute inset-6 rounded-full border-4 border-t-neon-lime border-galaxy-purple/10"
+            animate={{ rotate: 180 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           />
         </div>
         

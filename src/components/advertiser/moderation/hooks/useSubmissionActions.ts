@@ -13,25 +13,27 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
-
+  
+  // Handle approve submission
   const handleApprove = async (submission: MissionSubmission) => {
     setProcessing(true);
     
     try {
+      // Update submission status in database
       const { error } = await supabase
-        .rpc('update_submission_status', {
-          submission_id: submission.id,
-          new_status: 'approved'
-        });
+        .from("mission_submissions")
+        .update({ status: "approved" })
+        .eq("id", submission.id);
         
       if (error) throw error;
-
+      
       playSound("reward");
       toast({
         title: "Submissão aprovada",
         description: `Submissão de ${submission.user_name} foi aprovada com sucesso!`,
       });
       
+      // Remove from list
       onRemove(submission.id);
     } catch (error: any) {
       console.error("Error approving submission:", error);
@@ -44,19 +46,20 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       setProcessing(false);
     }
   };
-
+  
+  // Handle reject submission
   const handleReject = async (submission: MissionSubmission) => {
     setProcessing(true);
     
     try {
+      // Update submission status in database
       const { error } = await supabase
-        .rpc('update_submission_status', {
-          submission_id: submission.id,  
-          new_status: 'rejected'
-        });
+        .from("mission_submissions")
+        .update({ status: "rejected" })
+        .eq("id", submission.id);
         
       if (error) throw error;
-
+      
       playSound("error");
       toast({
         title: "Submissão rejeitada",
@@ -64,6 +67,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         variant: "destructive",
       });
       
+      // Remove from list
       onRemove(submission.id);
     } catch (error: any) {
       console.error("Error rejecting submission:", error);

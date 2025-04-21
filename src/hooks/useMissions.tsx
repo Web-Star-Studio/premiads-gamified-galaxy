@@ -11,7 +11,6 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   const [missions, setMissions] = useState<Mission[]>([]);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [currentFilter, setFilter] = useState<"available" | "in_progress" | "pending" | "completed">(initialFilter);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { playSound } = useSounds();
   const { submitMission, submissionLoading } = useMissionSubmit(setMissions);
@@ -24,35 +23,16 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     completed: "completed"
   };
 
-  // Helper function to get mission type label
-  const getMissionTypeLabel = (type: string) => {
-    const typeLabels: Record<string, string> = {
-      photo: "Foto",
-      video: "Vídeo",
-      survey: "Pesquisa",
-      visit: "Visita",
-      purchase: "Compra",
-      review: "Avaliação",
-      social: "Mídia Social",
-      quiz: "Quiz"
-    };
-    
-    return typeLabels[type] || type;
-  };
-
   // Fetch missions based on current filter
   const fetchMissions = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       
       // Get current user
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session?.user?.id) {
         console.error("No authenticated user found");
-        setError("Você precisa estar logado para ver missões");
-        setLoading(false);
         return;
       }
       
@@ -110,9 +90,8 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         }
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching missions:", error);
-      setError(error.message || "Erro ao carregar missões");
       toast({
         title: "Erro ao carregar missões",
         description: "Não foi possível carregar as missões. Tente novamente mais tarde.",
@@ -128,46 +107,6 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     fetchMissions();
   }, [fetchMissions, currentFilter]);
 
-  // Set up real-time updates for mission submissions
-  useEffect(() => {
-    // Only set up realtime if we have a valid session
-    const checkForSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) return;
-      
-      const channel = supabase
-        .channel('mission-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'mission_submissions',
-            filter: `user_id=eq.${session.user.id}`
-          },
-          (payload) => {
-            console.log('Mission submission changed:', payload);
-            // Refresh missions when any mission submission changes
-            fetchMissions();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-    
-    const cleanup = checkForSession();
-    
-    return () => {
-      cleanup.then(unsub => {
-        if (unsub) unsub();
-      });
-    };
-  }, [fetchMissions]);
-
   // Get missions filtered by current filter
   const getFilteredMissions = useCallback(() => {
     const statusFilter = filterToStatus[currentFilter];
@@ -177,7 +116,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
       // For other filters, match the corresponding status
       return mission.status === statusFilter;
     });
-  }, [missions, currentFilter, filterToStatus]);
+  }, [missions, currentFilter]);
 
   // Submit a mission with specific status
   const handleSubmitMission = async (
@@ -199,7 +138,6 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
 
   return {
     loading,
-    error,
     missions: getFilteredMissions(),
     allMissions: missions,
     selectedMission,
@@ -208,7 +146,6 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     setFilter,
     submitMission: handleSubmitMission,
     submissionLoading,
-    refreshMissions: fetchMissions,
-    getMissionTypeLabel
+    refreshMissions: fetchMissions
   };
 };

@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { UserProvider, useUser } from "@/context/UserContext";
+import ProfileOverlay from "@/components/ProfileOverlay";
 import MainHeader from "@/components/MainHeader";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
@@ -10,19 +11,13 @@ import Faq from "@/components/Faq";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
-import AuthOverlay from "@/components/auth/AuthOverlay";
-import LoadingScreen from "@/components/LoadingScreen";
-import { useAuth } from "@/hooks/useAuth";
 
-const Index = () => {
-  const { isAuthenticated, userType, isLoading } = useAuth();
-  const [showAuth, setShowAuth] = useState(false);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+const MainContent = () => {
+  const { isOverlayOpen } = useUser();
 
-  // Control overflow for body when overlay is open
   useEffect(() => {
-    if (isOverlayOpen || showAuth) {
+    // Prevent scrolling when overlay is open
+    if (isOverlayOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -31,57 +26,31 @@ const Index = () => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOverlayOpen, showAuth]);
-
-  // Handle authentication redirects in a separate effect
-  useEffect(() => {
-    // Only calculate the redirect destination after authentication is checked
-    if (!isLoading && isAuthenticated && userType) {
-      console.log("Index preparing to redirect authenticated user:", { userType });
-      
-      let destination = "/";
-      
-      if (userType === "admin" || userType === "admin-master") {
-        destination = "/admin";
-      } else if (userType === "anunciante") {
-        destination = "/anunciante";
-      } else if (userType === "participante") {
-        destination = "/cliente";
-      }
-      
-      // Only set redirect if a valid destination was determined
-      if (destination !== "/") {
-        setRedirectTo(destination);
-      }
-    }
-  }, [isAuthenticated, userType, isLoading]);
-
-  if (isLoading) {
-    return <LoadingScreen message="Carregando..." />;
-  }
-
-  // Redirect authenticated users to their dashboard
-  if (redirectTo) {
-    return <Navigate to={redirectTo} replace />;
-  }
+  }, [isOverlayOpen]);
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <MainHeader onLoginClick={() => setShowAuth(true)} />
+      {isOverlayOpen && <ProfileOverlay />}
+      <MainHeader />
       <main className="flex-grow">
         <Hero />
         <HowItWorks />
         <Benefits />
         <Testimonials />
         <Faq />
-        <CallToAction onGetStartedClick={() => setShowAuth(true)} />
+        <CallToAction />
       </main>
       <Footer />
       <SupportTools />
-      
-      {/* Auth overlay */}
-      <AuthOverlay isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <UserProvider>
+      <MainContent />
+    </UserProvider>
   );
 };
 

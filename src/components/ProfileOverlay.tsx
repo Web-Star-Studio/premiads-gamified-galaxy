@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Particles from "./Particles";
 import { motion } from "framer-motion";
-import { UserType } from "@/types/auth";
 
 const ProfileOverlay = () => {
   const { userType, setUserType, setUserName, setIsOverlayOpen } = useUser();
@@ -36,13 +35,11 @@ const ProfileOverlay = () => {
     setTimeout(() => {
       setIsOverlayOpen(false);
       
-      // Navigate to dashboard based on user type
+      // Navigate to dashboard if user is a participant
       if (userType === "participante") {
         navigate("/cliente");
-      } else if (userType === "anunciante") {
+      } else {
         navigate("/anunciante");
-      } else if (userType === "admin") {
-        navigate("/admin");
       }
     }, 800);
   };
