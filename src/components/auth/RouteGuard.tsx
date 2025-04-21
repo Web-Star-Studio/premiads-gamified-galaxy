@@ -83,14 +83,14 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
-  // If the user is admin-master, they can access everything
-  if (contextUserType === "admin-master") {
-    console.log("RouteGuard: Admin-master access granted");
+  // If the user is admin, they can access everything
+  if (contextUserType === "admin") {
+    console.log("RouteGuard: Admin access granted");
     return <>{children}</>;
   }
 
   // If userType is specified, check if user has correct type
-  if (userType && contextUserType !== userType && contextUserType !== "admin-master") {
+  if (userType && contextUserType !== userType) {
     console.log("RouteGuard: Access denied, wrong user type", { required: userType, actual: contextUserType });
     
     // Show access denied toast

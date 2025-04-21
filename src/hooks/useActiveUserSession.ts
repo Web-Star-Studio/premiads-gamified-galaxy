@@ -8,7 +8,6 @@ export const useActiveUserSession = () => {
   const { isAuthenticated, userType, checkSession } = useUser();
   const [isActive, setIsActive] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isAdminMaster, setIsAdminMaster] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const navigate = useNavigate();
 
@@ -31,11 +30,8 @@ export const useActiveUserSession = () => {
       }
 
       // Check user type for admin access
-      const hasAdminAccess = userType === "admin" || userType === "admin-master";
+      const hasAdminAccess = userType === "admin";
       setIsAdmin(hasAdminAccess);
-      
-      // Check if user is admin-master
-      setIsAdminMaster(userType === "admin-master");
       
       // All checks passed, user is active
       setIsActive(true);
@@ -43,8 +39,7 @@ export const useActiveUserSession = () => {
       
       console.log("useActiveUserSession: Auth status checked", { 
         isActive: true, 
-        isAdmin: hasAdminAccess, 
-        isAdminMaster: userType === "admin-master" 
+        isAdmin: hasAdminAccess
       });
     };
 
@@ -54,7 +49,6 @@ export const useActiveUserSession = () => {
   return { 
     isActive, 
     isAdmin, 
-    isAdminMaster, 
     refreshSession,
     isChecking: checkingStatus
   };
