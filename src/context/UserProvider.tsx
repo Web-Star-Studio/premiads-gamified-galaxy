@@ -7,6 +7,7 @@ import { useUserSessionManager } from "./UserSessionManager";
 import { useUserProfileOperations } from "./UserProfileOperations";
 import { UserContext } from "./UserContext";
 import { useDemoCleanupEffect } from "./UserDemoCleanup";
+import { UserType } from "@/types/auth";
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const {
@@ -94,7 +95,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
             if (profileData) {
               setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
-              setUserType(profileData.user_type || "participante");
+              setUserType((profileData.user_type || "participante") as UserType);
             } else {
               setUserName(session.user.email?.split('@')[0] || "");
             }
