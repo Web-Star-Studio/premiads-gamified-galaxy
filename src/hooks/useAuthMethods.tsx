@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -143,10 +144,12 @@ export const useAuthMethods = () => {
 
         if (profile) {
           setUserName(profile.full_name);
-          setUserType(profile.user_type);
+          // Fix: Cast the user_type string to UserType
+          const userType = profile.user_type as UserType;
+          setUserType(userType);
 
           // Redirect based on user type
-          switch (profile.user_type) {
+          switch (userType) {
             case 'admin':
               navigate('/admin');
               break;

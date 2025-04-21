@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useBlogPosts } from "@/hooks/blog";
 import { useToast } from "@/hooks/use-toast";
 import FeaturedPostSection from "@/components/blog/content/FeaturedPostSection";
@@ -11,51 +11,38 @@ import { BlogPost } from "@/types/blog";
 
 const Blog = () => {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const {
-    posts,
+    paginatedPosts: posts,
     featuredPost,
     isLoading,
     loadingPage,
-    error,
+    categories,
+    tags,
+    activeCategory,
     activeTags,
-    allTags,
     currentPage,
     totalPages,
-    setCurrentPage,
+    setActiveCategory,
     handleTagToggle,
-    clearTags
+    handlePageChange,
+    handleSearchSubmit,
+    clearFilters
   } = useBlogPosts();
 
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Erro ao carregar blog",
-        description: "Não foi possível carregar os posts. Tente novamente mais tarde.",
-        variant: "destructive"
-      });
-    }
-  }, [error, toast]);
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-galaxy-dark flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Erro ao carregar conteúdo</h2>
-          <p className="text-gray-400 mb-4">Ocorreu um erro ao carregar os posts do blog.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-neon-cyan text-galaxy-dark rounded hover:bg-neon-cyan/80"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearchSubmit(e);
+  };
 
   return (
     <div className="min-h-screen bg-galaxy-dark">
-      <BlogHero />
+      <BlogHero 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearchSubmit={handleSearch}
+      />
       
       <main className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -64,9 +51,9 @@ const Blog = () => {
               featuredPost={featuredPost}
               isLoading={isLoading}
               activeTags={activeTags}
-              allTags={allTags}
+              allTags={tags}
               onTagToggle={handleTagToggle}
-              onClearTags={clearTags}
+              onClearTags={clearFilters}
             />
             
             <RecentPostsSection
@@ -75,13 +62,17 @@ const Blog = () => {
               paginatedPosts={posts}
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              onClearFilters={clearTags}
+              onPageChange={handlePageChange}
+              onClearFilters={clearFilters}
             />
           </div>
           
           <aside className="space-y-8">
-            <BlogCategories />
+            <BlogCategories 
+              categories={categories}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+            />
             <BlogNewsletter />
           </aside>
         </div>
