@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/Icons";
-import { validateSignup } from "./authValidation";
+import { validateFormFields, isValidEmail, isValidPassword, isRequired } from "@/utils/formValidation";
 
 type Props = {
   onSuccess: () => void;
@@ -19,36 +19,111 @@ const SignupForm = ({ onSuccess }: Props) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [userType, setUserType] = useState<"participante" | "anunciante">("participante");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const { signUp, loading } = useAuthMethods();
   const { toast } = useToast();
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { valid, errors: newErrors } = validateSignup({
+  const handleBlur = (field: string) => {
+    setTouched({ ...touched, [field]: true });
+    validateField(field);
+  };
+
+  const validateField = (field: string) => {
+    const newErrors = { ...errors };
+    
+    switch (field) {
+      case 'name':
+        if (!isRequired(name)) {
+          newErrors.name = "Nome é obrigatório";
+        } else {
+          delete newErrors.name;
+        }
+        break;
+      case 'email':
+        if (!isRequired(email)) {
+          newErrors.email = "Email é obrigatório";
+        } else if (!isValidEmail(email)) {
+          newErrors.email = "Email inválido";
+        } else {
+          delete newErrors.email;
+        }
+        break;
+      case 'password':
+        if (!isRequired(password)) {
+          newErrors.password = "Senha é obrigatória";
+        } else if (!isValidPassword(password)) {
+          newErrors.password = "Senha deve ter pelo menos 6 caracteres";
+        } else {
+          delete newErrors.password;
+        }
+        break;
+      case 'confirmPassword':
+        if (password !== confirmPassword) {
+          newErrors.confirmPassword = "As senhas não coincidem";
+        } else {
+          delete newErrors.confirmPassword;
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateForm = () => {
+    let formErrors = validateFormFields({
       name,
       email,
-      password,
-      confirmPassword,
+      password
     });
-    setErrors(newErrors);
-    if (!valid) {
+    
+    if (password !== confirmPassword) {
+      formErrors = { ...formErrors, confirmPassword: "As senhas não coincidem" };
+    }
+    
+    setErrors(formErrors);
+    return Object.keys(formErrors).length === 0;
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Mark all fields as touched
+    setTouched({
+      name: true,
+      email: true,
+      password: true,
+      confirmPassword: true
+    });
+    
+    if (!validateForm()) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
+        description: "Por favor, preencha todos os campos corretamente.",
         variant: "destructive",
       });
       return;
     }
+    
     try {
       const validUserType = userType === "participante" || userType === "anunciante"
         ? userType
         : "participante";
+      
       const success = await signUp({ name, email, password, userType: validUserType });
-      if (success) onSuccess();
-    } catch {
+      
+      if (success) {
+        toast({
+          title: "Cadastro realizado com sucesso",
+          description: "Verifique seu email para confirmar seu cadastro.",
+        });
+        onSuccess();
+      }
+    } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível completar o cadastro. Tente novamente.",
+        description: error?.message || "Não foi possível completar o cadastro. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -64,9 +139,11 @@ const SignupForm = ({ onSuccess }: Props) => {
           placeholder="Seu nome"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onBlur={() => handleBlur('name')}
           disabled={loading}
+          className={errors.name && touched.name ? "border-red-500" : ""}
         />
-        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+        {errors.name && touched.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
       </div>
       <div>
         <Label htmlFor="email">Email</Label>
@@ -76,9 +153,11 @@ const SignupForm = ({ onSuccess }: Props) => {
           placeholder="seu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => handleBlur('email')}
           disabled={loading}
+          className={errors.email && touched.email ? "border-red-500" : ""}
         />
-        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+        {errors.email && touched.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
       </div>
       <div>
         <Label htmlFor="password">Senha</Label>
@@ -88,9 +167,11 @@ const SignupForm = ({ onSuccess }: Props) => {
           placeholder="********"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onBlur={() => handleBlur('password')}
           disabled={loading}
+          className={errors.password && touched.password ? "border-red-500" : ""}
         />
-        {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+        {errors.password && touched.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
       </div>
       <div>
         <Label htmlFor="confirmPassword">Confirmar Senha</Label>
@@ -100,9 +181,11 @@ const SignupForm = ({ onSuccess }: Props) => {
           placeholder="Confirmar Senha"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          onBlur={() => handleBlur('confirmPassword')}
           disabled={loading}
+          className={errors.confirmPassword && touched.confirmPassword ? "border-red-500" : ""}
         />
-        {errors.confirmPassword && (
+        {errors.confirmPassword && touched.confirmPassword && (
           <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
         )}
       </div>

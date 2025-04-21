@@ -10,5 +10,48 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'implicit'
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json'
+    }
   }
 });
+
+// Helper function to handle file uploads to Supabase Storage
+export const uploadFile = async (
+  bucketName: string, 
+  filePath: string, 
+  file: File
+): Promise<{ path: string | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, { upsert: true });
+      
+    if (error) throw error;
+    
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+      
+    return { path: urlData.publicUrl, error: null };
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    return { path: null, error: error as Error };
+  }
+};
+
+// Helper function to get file public URL
+export const getPublicUrl = (
+  bucketName: string,
+  filePath: string
+): string => {
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
+    
+  return data.publicUrl;
+};

@@ -30,6 +30,7 @@ export const useUserSessionManager = ({
       
       // Throttle checks unless forced
       if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {
+        console.log("Session check throttled, last check was", now - lastAuthCheck, "ms ago");
         return false;
       }
       
@@ -38,12 +39,12 @@ export const useUserSessionManager = ({
         setLastAuthCheck(now);
         setAuthError(null);
         
-        // Use getSession() with a direct try/catch instead of Promise.race
+        // Use getSession() to check for a valid session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error checking session:", error);
-          setAuthError("Erro ao verificar sua sessão: " + error.message);
+          setAuthError("Error checking your session: " + error.message);
           setIsAuthenticated(false);
           setUserId(null);
           checkInProgress.current = false;
@@ -59,6 +60,7 @@ export const useUserSessionManager = ({
         }
         
         // Session found and valid
+        console.log("Valid session found for user:", data.session.user.id);
         setIsAuthenticated(true);
         setUserId(data.session.user.id);
 
@@ -77,10 +79,13 @@ export const useUserSessionManager = ({
             }
 
             if (profileData) {
+              console.log("Profile data retrieved:", profileData);
               setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || "");
               setUserType(profileData.user_type as UserType || "participante");
             } else {
+              console.log("No profile found for user, using email as name");
               setUserName(data.session.user.email?.split('@')[0] || "");
+              setUserType("participante");
             }
           } catch (err) {
             console.error("Error in profile fetch:", err);
@@ -92,7 +97,7 @@ export const useUserSessionManager = ({
         return true;
       } catch (error: any) {
         console.error("Session check failed:", error);
-        setAuthError("Erro ao verificar sessão: " + (error.message || "Tente novamente."));
+        setAuthError("Session check error: " + (error.message || "Please try again."));
         checkInProgress.current = false;
         return false;
       }
