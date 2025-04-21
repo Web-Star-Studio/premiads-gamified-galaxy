@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useCallback, ReactNode } from "react";
-import { UserType } from "@/types/auth";
+
+import React, { useState, useEffect, useCallback, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserStateProvider, useUserState } from "./UserStateContext";
+import { useUserState } from "./UserStateContext";
 import { useUserSessionManager } from "./UserSessionManager";
 import { useUserProfileOperations } from "./UserProfileOperations";
-
-// Combines state, session logic, and profile save in one provider
-const UserContext = React.createContext<any>(null);
+import { UserContext } from "./UserContext";
+import { useDemoCleanupEffect } from "./UserDemoCleanup";
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const {
@@ -27,7 +26,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [initialCheckDone, setInitialCheckDone] = useState<boolean>(false);
 
-  // Session manager (handles session checking)
   const { checkSession, authError: sessionAuthError } = useUserSessionManager({
     setUserName,
     setUserType,
@@ -35,7 +33,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUserId,
   });
 
-  // Handles profile saving
   const { saveUserPreferences } = useUserProfileOperations(
     userId,
     userName,
@@ -43,21 +40,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
   const { toast } = useToast();
 
-  // Add an explicit method to clear user session
+  // Demo user cleanup is now a reusable hook
+  useDemoCleanupEffect();
+
   const clearUserSession = useCallback(() => {
-    console.log("UserContext: Clearing user session [forced]");
     resetUserInfo();
     setUserId(null);
     setIsAuthenticated(false);
     setAuthError(null);
 
-    // Clear any user data from localStorage
     localStorage.removeItem("userName");
     localStorage.removeItem("userCredits");
     localStorage.removeItem("userType");
     localStorage.removeItem("lastActivity");
 
-    // Remove any Supabase session/storage keys
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith("sb-") || key.includes("supabase")) {
         localStorage.removeItem(key);
@@ -65,49 +61,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
     sessionStorage.clear();
 
-    // Hard reload to fully reset (as last resort)
     window.location.replace("/");
-  }, [resetUserInfo]);
+  }, [resetUserInfo, setIsAuthenticated]);
 
-  // Universal session cleanup if demo detected **on context mount**
-  useEffect(() => {
-    // Run once on mount
-    const userName = localStorage.getItem("userName");
-    const demoUserEmails = [
-      "demo@premiads.com",
-      "demo@premiads.app",
-      "demo@demo.com"
-    ];
-
-    // If user is auto-logged as demo or demo credentials, force cleanup!
-    if (
-      userName &&
-      (userName.toLowerCase().includes("demo") ||
-        demoUserEmails.some(email => userName.toLowerCase() === email))
-    ) {
-      // Clear all relevant storage/session and reload immediately
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userCredits");
-      localStorage.removeItem("userType");
-      localStorage.removeItem("lastActivity");
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith("sb-") || key.includes("supabase")) {
-          localStorage.removeItem(key);
-        }
-      });
-      sessionStorage.clear();
-      window.location.replace("/");
-    }
-  }, []);
-
-  // Load user data and subscribe to auth changes
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setIsAuthLoading(true);
         await checkSession(true);
       } catch (error) {
-        console.error("Error loading user data:", error);
         setAuthError("Erro ao carregar dados do usuário.");
       } finally {
         setIsAuthLoading(false);
@@ -119,8 +81,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event);
-        
         if (event === "SIGNED_IN" && session) {
           setIsAuthenticated(true);
           setUserId(session.user.id);
@@ -134,12 +94,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
             if (profileData) {
               setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
-              setUserType(profileData.user_type as UserType || "participante");
+              setUserType(profileData.user_type || "participante");
             } else {
               setUserName(session.user.email?.split('@')[0] || "");
             }
-          } catch (error) {
-            console.error("Error fetching profile after sign in:", error);
+          } catch {
             setUserName(session.user.email?.split('@')[0] || "");
           }
         } else if (event === "SIGNED_OUT") {
@@ -150,10 +109,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Add timeout to prevent infinite loading
     const loadingTimeout = setTimeout(() => {
       if (isAuthLoading && !initialCheckDone) {
-        console.log("Auth check timed out");
         setIsAuthLoading(false);
         setInitialCheckDone(true);
         setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
@@ -174,7 +131,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     initialCheckDone,
   ]);
 
-  // Return value merges all context and features
   return (
     <UserContext.Provider
       value={{
@@ -199,12 +155,3 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     </UserContext.Provider>
   );
 };
-
-export const useUser = () => React.useContext(UserContext);
-
-// Wrap UserProvider with state provider (for clean separation)
-export const UserRootProvider = ({ children }: { children: ReactNode }) => (
-  <UserStateProvider>
-    <UserProvider>{children}</UserProvider>
-  </UserStateProvider>
-);
