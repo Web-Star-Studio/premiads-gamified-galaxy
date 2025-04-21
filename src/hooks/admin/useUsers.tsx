@@ -35,7 +35,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc<GetAllUsersResponse>('get_all_users');
+      const { data, error } = await supabase.rpc<GetAllUsersResponse, any>('get_all_users');
         
       if (error) throw error;
       

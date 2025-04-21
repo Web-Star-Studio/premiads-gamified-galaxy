@@ -9,7 +9,7 @@ export const useUserOperations = () => {
 
   const updateUserStatus = useCallback(async (userId: string, active: boolean) => {
     try {
-      const updateData: Record<string, any> = { active };
+      const updateData: Record<string, boolean> = { active };
       
       const { error } = await supabase
         .from('profiles')
