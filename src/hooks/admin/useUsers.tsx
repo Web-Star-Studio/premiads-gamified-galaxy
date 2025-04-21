@@ -69,12 +69,13 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Define the update data using a type that matches what Supabase expects
+      const updateData = { active };
+      
       // Custom update to ensure we're setting the active field
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          active: active // Using key without quotes for proper TypeScript handling
-        })
+        .update(updateData)
         .eq('id', userId);
         
       if (error) throw error;

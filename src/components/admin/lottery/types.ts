@@ -24,6 +24,8 @@ export interface Lottery {
   pointsPerNumber?: number; // Points cost per number
   imageUrl?: string; // Add imageUrl property
   minPoints?: number; // Add minPoints property
+  isAutoScheduled?: boolean; // Add isAutoScheduled property
+  minPointsReachedAt?: string | null; // Add minPointsReachedAt property
   winner: {
     id: string;
     name: string;
