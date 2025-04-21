@@ -111,4 +111,3 @@ const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
 };
 
 export default CashbackTabsContent;
-

@@ -23,7 +23,7 @@ const ClientHeader = () => {
     { label: "Missões", href: "/cliente/missoes" },
     { label: "Indicações", href: "/cliente/indicacoes" },
     { label: "Sorteios", href: "/cliente/sorteios" },
-    { label: "Cashback", href: "/cashback" },
+    { label: "Cashback", href: "/cliente/cashback" },
     { label: "Perfil", href: "/cliente/perfil" },
   ];
   
