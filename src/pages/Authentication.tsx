@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth, SignUpCredentials, SignInCredentials } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Particles from "@/components/Particles";
+import { UserType } from "@/types/auth";
 
 const Authentication = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");

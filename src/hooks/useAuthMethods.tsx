@@ -1,10 +1,11 @@
+
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
-import { SignUpCredentials, SignInCredentials } from "@/types/auth";
+import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 export const useAuthMethods = () => {
   const [loading, setLoading] = useState(false);
