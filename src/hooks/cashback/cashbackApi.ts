@@ -115,11 +115,27 @@ export const redeemCashback = async (
     
     // Deduct points from user profile (10x because cashback is 10% of points)
     const pointsToDeduct = amount * 10;
+    
+    // Get current points
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('points')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (profileError) {
+      console.error("Error fetching user points:", profileError);
+      throw profileError;
+    }
+    
+    // Calculate new points value
+    const currentPoints = profileData?.points || 0;
+    const newPointsValue = Math.max(0, currentPoints - pointsToDeduct);
+    
+    // Update points directly
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ 
-        points: supabase.rpc('decrement_points', { points_to_subtract: pointsToDeduct }) 
-      })
+      .update({ points: newPointsValue })
       .eq('id', session.user.id);
     
     if (updateError) {
