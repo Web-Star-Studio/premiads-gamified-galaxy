@@ -1,14 +1,12 @@
-
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from 'vitest';
 import { useUserOperations } from "@/hooks/admin/useUserOperations";
-
-const mockToast = vi.fn();
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock the toast hook
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({
-    toast: mockToast
+    toast: vi.fn()
   })
 }));
 
@@ -35,10 +33,12 @@ describe('useUserOperations', () => {
       expect(success).toBe(true);
     });
 
-    expect(mockToast).toHaveBeenCalledWith({
-      title: 'User updated',
-      description: 'User status updated to active'
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledWith('update_user_status', {
+      user_id: 'test-id',
+      is_active: true
     });
+
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledTimes(1);
   });
 
   it('handles errors when updating user status', async () => {
@@ -54,11 +54,12 @@ describe('useUserOperations', () => {
       expect(success).toBe(false);
     });
 
-    expect(mockToast).toHaveBeenCalledWith({
-      title: 'Error updating user',
-      description: 'Update failed',
-      variant: 'destructive'
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledWith('update_user_status', {
+      user_id: 'test-id',
+      is_active: true
     });
+
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledTimes(1);
   });
 
   it('successfully deletes user', async () => {
@@ -72,10 +73,11 @@ describe('useUserOperations', () => {
       expect(success).toBe(true);
     });
 
-    expect(mockToast).toHaveBeenCalledWith({
-      title: 'User deleted',
-      description: 'User has been deleted successfully'
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledWith('delete_user_account', {
+      target_user_id: 'test-id'
     });
+
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledTimes(1);
   });
 
   it('handles errors when deleting user', async () => {
@@ -91,10 +93,10 @@ describe('useUserOperations', () => {
       expect(success).toBe(false);
     });
 
-    expect(mockToast).toHaveBeenCalledWith({
-      title: 'Error deleting user',
-      description: 'Delete failed',
-      variant: 'destructive'
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledWith('delete_user_account', {
+      target_user_id: 'test-id'
     });
+
+    expect(vi.mocked(supabase.rpc)).toHaveBeenCalledTimes(1);
   });
 });

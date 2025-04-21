@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUsers } from '@/hooks/admin/useUsers';
+import { useUserOperations } from '@/hooks/admin/useUserOperations';
 import { useUserSelection } from './hooks/useUserSelection';
 import UserTable from './components/UserTable';
 import UserToolbar from './components/UserToolbar';
@@ -11,7 +11,8 @@ import UserActivityLogs from './UserActivityLogs';
 
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { users, loading, fetchUsers, updateUserStatus, deleteUser } = useUsers();
+  const { users, loading, fetchUsers } = useUsers();
+  const { updateUserStatus, deleteUser } = useUserOperations();
   const { selectedUsers, handleSelectAll, handleSelectUser, setSelectedUsers } = useUserSelection(users);
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {

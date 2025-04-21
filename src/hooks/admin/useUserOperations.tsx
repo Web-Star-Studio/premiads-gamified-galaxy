@@ -2,14 +2,22 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User } from './useUsers';
+
+interface UpdateUserStatusParams {
+  user_id: string;
+  is_active: boolean;
+}
+
+interface DeleteUserParams {
+  target_user_id: string;
+}
 
 export const useUserOperations = () => {
   const { toast } = useToast();
 
   const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase.rpc('update_user_status', {
+      const { error } = await supabase.rpc<null, UpdateUserStatusParams>('update_user_status', {
         user_id: userId,
         is_active: isActive
       });
@@ -35,7 +43,7 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { error } = await supabase.rpc('delete_user_account', {
+      const { error } = await supabase.rpc<null, DeleteUserParams>('delete_user_account', {
         target_user_id: userId
       });
         

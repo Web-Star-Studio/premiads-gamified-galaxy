@@ -14,6 +14,16 @@ export interface User {
   lastLogin?: string;
 }
 
+interface UserRPCResponse {
+  id: string;
+  email: string;
+  full_name: string | null;
+  user_type: string;
+  active: boolean;
+  avatar_url: string | null;
+  last_sign_in_at: string | null;
+}
+
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +34,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('get_all_users');
+      const { data, error } = await supabase.rpc<UserRPCResponse[]>('get_all_users');
         
       if (error) throw error;
       
@@ -34,13 +44,13 @@ export const useUsers = () => {
       }
       
       // Map the response to our User interface
-      const mappedUsers: User[] = data.map((user: any) => ({
+      const mappedUsers: User[] = data.map((user: UserRPCResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
         role: (user.user_type || 'participante') as User['role'],
         status: user.active ? 'active' : 'inactive',
-        avatar_url: user.avatar_url,
+        avatar_url: user.avatar_url || undefined,
         lastLogin: user.last_sign_in_at || 'Never'
       }));
       
