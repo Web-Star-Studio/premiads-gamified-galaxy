@@ -20,8 +20,8 @@ const Index = () => {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
+  // Control overflow for body when overlay is open
   useEffect(() => {
-    // Prevent scrolling when overlay is open
     if (isOverlayOpen || showAuth) {
       document.body.style.overflow = "hidden";
     } else {
@@ -33,22 +33,25 @@ const Index = () => {
     };
   }, [isOverlayOpen, showAuth]);
 
-  // Handle redirection in a separate effect
+  // Handle authentication redirects in a separate effect
   useEffect(() => {
-    // Only attempt redirection after authentication is checked and user is authenticated
+    // Only calculate the redirect destination after authentication is checked
     if (!isLoading && isAuthenticated && userType) {
       console.log("Index preparing to redirect authenticated user:", { userType });
       
+      let destination = "/";
+      
       if (userType === "admin" || userType === "admin-master") {
-        setRedirectTo("/admin");
+        destination = "/admin";
       } else if (userType === "anunciante") {
-        setRedirectTo("/anunciante");
+        destination = "/anunciante";
       } else if (userType === "participante") {
-        setRedirectTo("/cliente");
-      } else {
-        // Default case if userType is not one of the expected values
-        console.warn("Unknown user type:", userType);
-        setRedirectTo("/");
+        destination = "/cliente";
+      }
+      
+      // Only set redirect if a valid destination was determined
+      if (destination !== "/") {
+        setRedirectTo(destination);
       }
     }
   }, [isAuthenticated, userType, isLoading]);
