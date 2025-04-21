@@ -215,6 +215,7 @@ export type Database = {
           phone: string | null
           points: number | null
           profile_completed: boolean | null
+          profile_data: Json | null
           push_notifications: boolean | null
           updated_at: string | null
           user_type: string | null
@@ -232,6 +233,7 @@ export type Database = {
           phone?: string | null
           points?: number | null
           profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string | null
           user_type?: string | null
@@ -249,6 +251,7 @@ export type Database = {
           phone?: string | null
           points?: number | null
           profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string | null
           user_type?: string | null

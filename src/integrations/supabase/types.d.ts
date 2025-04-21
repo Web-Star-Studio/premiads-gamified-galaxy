@@ -66,177 +66,64 @@ export interface Database {
           updated_at?: string | null
         }
       }
-      missions: {
+      // Add other table definitions if needed
+      raffles: {
         Row: {
           id: string
           title: string
-          description: string | null
+          description: string
           type: string
           points: number
-          requirements: Json | null
-          advertiser_id: string | null
-          start_date: string | null
-          end_date: string | null
-          is_active: boolean | null
-          business_type: string | null
-          target_audience_gender: string | null
-          target_audience_age_min: number | null
-          target_audience_age_max: number | null
-          target_audience_region: string | null
-          created_at: string | null
-          updated_at: string | null
+          numbers_total: number
+          status: 'active' | 'pending' | 'completed' | 'canceled' | 'draft' | 'finished'
+          start_date: string
+          end_date: string
+          draw_date: string
+          prize_type: string
+          prize_value: number
+          detailed_description?: string
+          numbers: {
+            id: string
+          }[]
+          winner_user_id?: string
         }
         Insert: {
           id?: string
           title: string
-          description?: string | null
+          description: string
           type: string
-          points?: number
-          requirements?: Json | null
-          advertiser_id?: string | null
-          start_date?: string | null
-          end_date?: string | null
-          is_active?: boolean | null
-          business_type?: string | null
-          target_audience_gender?: string | null
-          target_audience_age_min?: number | null
-          target_audience_age_max?: number | null
-          target_audience_region?: string | null
-          created_at?: string | null
-          updated_at?: string | null
+          points: number
+          numbers_total: number
+          status?: 'active' | 'pending' | 'completed' | 'canceled' | 'draft' | 'finished'
+          start_date: string
+          end_date: string
+          draw_date: string
+          prize_type: string
+          prize_value: number
+          detailed_description?: string
+          numbers?: {
+            id: string
+          }[]
+          winner_user_id?: string
         }
         Update: {
           id?: string
           title?: string
-          description?: string | null
+          description?: string
           type?: string
           points?: number
-          requirements?: Json | null
-          advertiser_id?: string | null
-          start_date?: string | null
-          end_date?: string | null
-          is_active?: boolean | null
-          business_type?: string | null
-          target_audience_gender?: string | null
-          target_audience_age_min?: number | null
-          target_audience_age_max?: number | null
-          target_audience_region?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      mission_submissions: {
-        Row: {
-          id: string
-          mission_id: string | null
-          user_id: string | null
-          submission_data: Json | null
-          status: string | null
-          feedback: string | null
-          submitted_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          mission_id?: string | null
-          user_id?: string | null
-          submission_data?: Json | null
-          status?: string | null
-          feedback?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          mission_id?: string | null
-          user_id?: string | null
-          submission_data?: Json | null
-          status?: string | null
-          feedback?: string | null
-          submitted_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      cashback_campaigns: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          advertiser_id: string | null
-          advertiser_name: string | null
-          advertiser_logo: string | null
-          advertiser_image: string | null
-          discount_percentage: number
-          min_purchase: number | null
-          conditions: string | null
-          is_active: boolean | null
-          created_at: string | null
-          updated_at: string | null
-          expires_at: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          advertiser_id?: string | null
-          advertiser_name?: string | null
-          advertiser_logo?: string | null
-          advertiser_image?: string | null
-          discount_percentage: number
-          min_purchase?: number | null
-          conditions?: string | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-          expires_at?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          advertiser_id?: string | null
-          advertiser_name?: string | null
-          advertiser_logo?: string | null
-          advertiser_image?: string | null
-          discount_percentage?: number
-          min_purchase?: number | null
-          conditions?: string | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-          expires_at?: string | null
-        }
-      }
-      cashback_redemptions: {
-        Row: {
-          id: string
-          campaign_id: string | null
-          user_id: string | null
-          amount: number
-          status: string | null
-          code: string | null
-          created_at: string | null
-          redeemed_at: string | null
-        }
-        Insert: {
-          id?: string
-          campaign_id?: string | null
-          user_id?: string | null
-          amount: number
-          status?: string | null
-          code?: string | null
-          created_at?: string | null
-          redeemed_at?: string | null
-        }
-        Update: {
-          id?: string
-          campaign_id?: string | null
-          user_id?: string | null
-          amount?: number
-          status?: string | null
-          code?: string | null
-          created_at?: string | null
-          redeemed_at?: string | null
+          numbers_total?: number
+          status?: 'active' | 'pending' | 'completed' | 'canceled' | 'draft' | 'finished'
+          start_date?: string
+          end_date?: string
+          draw_date?: string
+          prize_type?: string
+          prize_value?: number
+          detailed_description?: string
+          numbers?: {
+            id: string
+          }[]
+          winner_user_id?: string
         }
       }
     }
