@@ -64,13 +64,12 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
         <DesktopNavigation sections={sections} scrollToSection={scrollToSection} />
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {!isAuthenticated && (
-            <UserTypeSelector 
-              userType={userType} 
-              changeUserType={changeUserType} 
-              setIsOverlayOpen={setIsOverlayOpen} 
-            />
-          )}
+          {/* Always show the user type selector */}
+          <UserTypeSelector 
+            userType={userType} 
+            changeUserType={changeUserType} 
+            setIsOverlayOpen={setIsOverlayOpen} 
+          />
 
           <Button 
             className="hidden md:flex neon-button items-center justify-center" 

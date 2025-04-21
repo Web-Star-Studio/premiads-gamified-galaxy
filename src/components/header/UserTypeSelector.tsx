@@ -34,7 +34,7 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
   const handleChangeUserType = async (type: UserType) => {
     try {
       playSound("pop");
-      changeUserType(type);
+      await changeUserType(type);
       toast({
         title: "Tipo de usuário alterado",
         description: `Seu perfil foi alterado para ${type === "participante" ? "Participante" : type === "anunciante" ? "Anunciante" : "Admin"}`,

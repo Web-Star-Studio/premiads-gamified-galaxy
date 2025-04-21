@@ -4,6 +4,7 @@ import { useUser } from "@/context/UserContext";
 import { UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthMethods } from "@/hooks/useAuthMethods";
+import { useSounds } from "@/hooks/use-sounds";
 
 /**
  * useNavigation hook
@@ -16,29 +17,48 @@ export const useNavigation = () => {
   const { signOut } = useAuthMethods();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playSound } = useSounds();
 
   // Allow userType selection for unauthenticated users
   const changeUserType = async (newType: UserType) => {
     if (newType !== userType) {
+      console.log(`Changing user type from ${userType} to ${newType}`);
+      
+      // First update the context immediately for UI responsiveness
       setUserType(newType);
+      playSound("pop");
 
       // Save it for logged in users, just update context for visitors
       if (isAuthenticated) {
         try {
+          console.log("User is authenticated, saving preferences to profile");
           await saveUserPreferences();
+          toast({
+            title: "Perfil atualizado",
+            description: `Tipo de usuário alterado para ${newType}`,
+          });
         } catch (error) {
+          console.error("Error saving user preferences:", error);
           toast({
             title: "Erro ao salvar preferências",
             description: "Não foi possível salvar suas preferências",
             variant: "destructive",
           });
         }
+      } else {
+        console.log("User is visitor, only updating context state");
+        // For visitors, we just save to localStorage to remember their choice
+        localStorage.setItem("userType", newType);
       }
     }
+
+    return true;
   };
 
   // Centralized dashboard navigation. Ready for both visitor and logged-in
   const navigateToDashboard = () => {
+    console.log(`Navigating to dashboard for ${userType}`);
+    
     if (userType === "participante") {
       navigate("/cliente");
     } else if (userType === "anunciante") {
@@ -67,6 +87,7 @@ export const useNavigation = () => {
     try {
       console.log("Navigation: Handling logout");
       await signOut();
+      navigate("/");
     } catch (error) {
       console.error("Navigation: Error during logout:", error);
       toast({

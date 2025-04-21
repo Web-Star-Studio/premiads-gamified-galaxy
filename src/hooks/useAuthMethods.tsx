@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -17,6 +18,8 @@ export const useAuthMethods = () => {
   
   // Helper function to redirect to the correct dashboard based on user type
   const redirectToDashboard = (userType: UserType) => {
+    console.log(`Auth: Redirecting to dashboard for user type: ${userType}`);
+    
     switch (userType) {
       case "admin":
         navigate("/admin", { replace: true });
@@ -48,6 +51,8 @@ export const useAuthMethods = () => {
     setLoading(true);
     
     try {
+      console.log("Starting signup process for user:", credentials.email);
+      
       // Only allow 'participante' and 'anunciante' registration
       if (credentials.userType === "admin") {
         toast({
@@ -80,6 +85,8 @@ export const useAuthMethods = () => {
       });
       
       if (data.user) {
+        console.log("User created successfully:", data.user.id);
+        
         setUserName(credentials.name);
         setUserType(credentials.userType || "participante");
         setIsAuthenticated(true);
@@ -93,6 +100,8 @@ export const useAuthMethods = () => {
         
         if (profileError && profileError.code === "PGRST116") {
           // Profile doesn't exist, create one
+          console.log("Creating new profile for user:", data.user.id);
+          
           const { error: insertError } = await supabase
             .from("profiles")
             .insert([
@@ -113,6 +122,7 @@ export const useAuthMethods = () => {
         // Force a session check
         await checkSession();
 
+        console.log("Redirecting new user to dashboard");
         // Redirect based on user type
         redirectToDashboard(credentials.userType || "participante");
       }
@@ -136,6 +146,8 @@ export const useAuthMethods = () => {
     setSessionCheckInProgress(true);
     
     try {
+      console.log("Starting signin process for user:", credentials.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
@@ -144,6 +156,8 @@ export const useAuthMethods = () => {
       if (error) throw error;
       
       if (data.user) {
+        console.log("User signed in successfully:", data.user.id);
+        
         setIsAuthenticated(true);
         
         // Get user profile to determine type
@@ -154,18 +168,50 @@ export const useAuthMethods = () => {
           .single();
 
         if (profile) {
+          console.log("User profile found:", profile);
+          
           setUserName(profile.full_name);
           // Fix: Cast the user_type string to UserType
           const userType = profile.user_type as UserType;
           setUserType(userType);
 
-          // Redirect based on user type (centralized here)
-          redirectToDashboard(userType);
-
+          console.log("User authenticated as:", userType);
+          
+          // Show toast first, then redirect
           toast({
             title: "Login realizado com sucesso",
             description: "Bem-vindo de volta!",
           });
+
+          // Redirect based on user type (centralized here)
+          setTimeout(() => {
+            console.log("Redirecting to dashboard after login");
+            redirectToDashboard(userType);
+          }, 100);
+          
+          return true;
+        } else {
+          console.log("No profile found for user, creating default profile");
+          
+          // Default to participante if no profile exists
+          setUserType("participante");
+          setUserName(data.user.email?.split('@')[0] || "User");
+          
+          // Create a profile
+          await supabase.from('profiles').insert({
+            id: data.user.id,
+            user_type: "participante",
+            full_name: data.user.email?.split('@')[0] || "User",
+            points: 0,
+            credits: 0,
+            profile_completed: false
+          });
+          
+          // Redirect to client dashboard
+          setTimeout(() => {
+            redirectToDashboard("participante");
+          }, 100);
+          
           return true;
         }
       }
@@ -189,6 +235,12 @@ export const useAuthMethods = () => {
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      
+      // Ensure navigation to home page
+      setTimeout(() => {
+        navigate("/", { replace: true });
+      }, 100);
+      
       return true;
     } catch (error: any) {
       playSound("error");
@@ -201,7 +253,7 @@ export const useAuthMethods = () => {
     } finally {
       setLoading(false);
     }
-  }, [resetUserInfo, toast, playSound]);
+  }, [resetUserInfo, toast, playSound, navigate]);
 
   return {
     loading,

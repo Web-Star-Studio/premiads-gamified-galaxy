@@ -33,14 +33,19 @@ const MainContent = () => {
   useEffect(() => {
     // Wait until auth status is loaded
     if (initialCheckDone && isAuthenticated && !isAuthLoading) {
+      console.log("User is authenticated, redirecting to dashboard", { userType, path: window.location.pathname });
+      
       // Only redirect if user is on "/" route
       if (window.location.pathname === "/") {
         if (userType === "admin") {
+          console.log("Redirecting admin to /admin");
           navigate("/admin", { replace: true });
         } else if (userType === "anunciante") {
+          console.log("Redirecting advertiser to /anunciante");
           navigate("/anunciante", { replace: true });
         } else {
           // Default to participante
+          console.log("Redirecting participant to /cliente");
           navigate("/cliente", { replace: true });
         }
       }
@@ -152,4 +157,3 @@ const Index = () => {
 };
 
 export default Index;
-
