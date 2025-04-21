@@ -68,3 +68,23 @@ export const getUserRole = async (): Promise<string | null> => {
   }
 };
 
+/**
+ * Function to resend confirmation email
+ * Used in login process when user has not confirmed their email yet
+ */
+export const resendConfirmationEmail = async (email: string): Promise<void> => {
+  try {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth-callback`,
+      }
+    });
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error resending confirmation email:', error);
+    throw error;
+  }
+};
