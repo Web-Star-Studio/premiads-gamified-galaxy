@@ -2,33 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSounds } from '@/hooks/use-sounds';
-import { format, parseISO } from 'date-fns';
-
-export interface Lottery {
-  id: string;
-  title: string;
-  description: string;
-  detailed_description?: string;
-  type: string;
-  points: number;
-  numbers_total: number;
-  status: 'active' | 'pending' | 'completed' | 'canceled' | 'draft' | 'finished';
-  start_date: string;
-  end_date: string;
-  draw_date: string;
-  prize_type: string;
-  prize_value: number;
-  winner?: {
-    id: string;
-    name: string;
-    avatar: string;
-  } | null;
-  created_at?: string;
-  updated_at?: string;
-  numbers?: { id: string }[];
-  progress?: number;
-  numbersSold?: number;
-}
+import { Lottery } from '@/components/admin/lottery/types';
 
 export const useLottery = () => {
   const [lotteries, setLotteries] = useState<Lottery[]>([]);
@@ -41,7 +15,6 @@ export const useLottery = () => {
     try {
       setLoading(true);
       
-      // Get raffles from database
       const { data, error } = await supabase
         .from('raffles')
         .select(`
@@ -56,21 +29,15 @@ export const useLottery = () => {
         
       if (error) throw error;
       
-      // Transform data to match our interface
-      const transformedData: Lottery[] = data.map(raffle => {
-        // Calculate progress
+      const transformedData: Lottery[] = (data || []).map(raffle => {
         const numbersSold = raffle.numbers?.length || 0;
         const progress = Math.round((numbersSold / raffle.numbers_total) * 100);
         
-        // Get winner info if exists
-        let winner = null;
-        if (raffle.winner) {
-          winner = {
-            id: raffle.winner.id,
-            name: raffle.winner.full_name || 'Unknown',
-            avatar: raffle.winner.avatar_url || 'https://i.pravatar.cc/150?img=1'
-          };
-        }
+        let winner = raffle.winner ? {
+          id: raffle.winner.id,
+          name: raffle.winner.full_name || 'Unknown',
+          avatar: raffle.winner.avatar_url || 'https://i.pravatar.cc/150?img=1'
+        } : null;
         
         return {
           id: raffle.id,
@@ -80,7 +47,7 @@ export const useLottery = () => {
           type: raffle.type,
           points: raffle.points,
           numbers_total: raffle.numbers_total,
-          status: raffle.status as Lottery['status'],
+          status: raffle.status as Lottery['status'], // Type assertion
           start_date: raffle.start_date,
           end_date: raffle.end_date,
           draw_date: raffle.draw_date,
@@ -89,7 +56,7 @@ export const useLottery = () => {
           winner,
           created_at: raffle.created_at,
           updated_at: raffle.updated_at,
-          numbers: raffle.numbers,
+          numbers: raffle.numbers || [],
           progress,
           numbersSold
         };

@@ -389,6 +389,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_levels: {
+        Row: {
+          benefits: Json
+          color: string
+          description: string
+          icon: string
+          id: number
+          max_points: number | null
+          min_points: number
+          name: string
+          points_multiplier: number
+        }
+        Insert: {
+          benefits?: Json
+          color?: string
+          description?: string
+          icon?: string
+          id?: number
+          max_points?: number | null
+          min_points: number
+          name: string
+          points_multiplier?: number
+        }
+        Update: {
+          benefits?: Json
+          color?: string
+          description?: string
+          icon?: string
+          id?: number
+          max_points?: number | null
+          min_points?: number
+          name?: string
+          points_multiplier?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

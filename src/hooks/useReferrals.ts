@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface Referral {
   id: string;
@@ -11,15 +11,6 @@ export interface Referral {
   date: string;
   completedMissions?: number;
   pointsEarned?: number;
-}
-
-export interface ReferralReward {
-  id: number;
-  description: string;
-  type: "points" | "tickets" | "special";
-  value: number;
-  status: "available" | "claimed";
-  expiresAt?: string;
 }
 
 export const useReferrals = () => {
@@ -43,47 +34,27 @@ export const useReferrals = () => {
         // Get user's referral code
         const { data: referralData, error: referralError } = await supabase
           .from('referrals')
-          .select('referral_code')
+          .select('referral_code, referred:profiles(full_name, email)')
           .eq('referrer_id', userId)
-          .maybeSingle();
+          .single();
         
         if (referralError) throw referralError;
         
-        let userReferralCode = "";
-        
-        if (referralData?.referral_code) {
-          userReferralCode = referralData.referral_code;
-        } else {
-          // Generate new referral code
-          userReferralCode = `${userId.substring(0, 8).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
-          
-          const { error: insertError } = await supabase
-            .from("referrals")
-            .insert({
-              referrer_id: userId,
-              referral_code: userReferralCode,
-            });
-          
-          if (insertError) throw insertError;
-        }
+        let userReferralCode = referralData?.referral_code || 
+          `${userId.substring(0, 8).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
         
         setReferralCode(userReferralCode);
         setReferralLink(`https://premiads.com/r/${userReferralCode}`);
         
-        // Get user's referrals
+        // Get user's referrals with joined profile data
         const { data: allReferrals, error: allReferralsError } = await supabase
           .from('referrals')
           .select(`
-            id,
-            referred_id,
-            status,
-            created_at,
-            completed_at,
+            id, 
+            status, 
+            created_at, 
             points_awarded,
-            referred:profiles!referrals_referred_id_fkey(
-              full_name,
-              email
-            )
+            referred:profiles(full_name, email)
           `)
           .eq('referrer_id', userId);
         
