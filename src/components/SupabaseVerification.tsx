@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,9 @@ interface TestResult {
   status: 'success' | 'error' | 'warning' | 'pending';
   message?: string;
 }
+
+// Define valid table names to match Supabase types
+type TableName = 'profiles' | 'missions' | 'raffles' | 'submissions' | 'raffle_numbers' | 'referrals' | 'cashback_campaigns' | 'cashback_redemptions';
 
 export function SupabaseVerification() {
   const { isAuthenticated, userType } = useAuth();
@@ -94,10 +98,13 @@ export function SupabaseVerification() {
     setResults(prev => [...prev, { name: 'Database Tables', status: 'pending' }]);
     
     try {
-      const knownTables = ['profiles', 'missions', 'raffles', 'submissions', 'raffle_numbers'];
+      // Define known tables with proper typing
+      const knownTables: TableName[] = ['profiles', 'missions', 'raffles', 'submissions', 'raffle_numbers'];
+      
       const tableResults = await Promise.all(
         knownTables.map(async (table) => {
           try {
+            // Now TypeScript knows that table is a valid table name
             const { data, error, count } = await supabase
               .from(table)
               .select('*', { count: 'exact', head: true });
