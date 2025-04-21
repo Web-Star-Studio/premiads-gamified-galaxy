@@ -40,9 +40,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Fixed: Use proper generic type parameters for RPC call
+      // Fix: Use proper generic type for RPC call without typed parameters
       const { data: rawData, error } = await supabase
-        .rpc<GetAllUsersResponse[], null>('get_all_users', null);
+        .rpc('get_all_users');
         
       if (error) throw error;
       
@@ -51,8 +51,11 @@ export const useUsers = () => {
         return;
       }
       
+      // Type assertion to handle unknown data type from RPC
+      const typedData = rawData as GetAllUsersResponse[];
+      
       // Map the data to match our User interface
-      const mappedUsers: User[] = rawData.map((user: GetAllUsersResponse) => ({
+      const mappedUsers: User[] = typedData.map((user: GetAllUsersResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -127,9 +130,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Fixed: Use proper generic type parameters for RPC call
+      // Fix: Use proper RPC call without explicit generic types
       const { error } = await supabase
-        .rpc<null, DeleteUserParams>('delete_user', { user_id: userId });
+        .rpc('delete_user', { user_id: userId });
         
       if (error) throw error;
       
