@@ -25,6 +25,11 @@ interface GetAllUsersResponse {
   last_sign_in_at?: string;
 }
 
+// Define RPC function param types
+interface DeleteUserParams {
+  user_id: string;
+}
+
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,12 +40,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Properly type the response from the RPC function
+      // Use a more explicit type assertion with generic parameters
       const { data: rawData, error } = await supabase
-        .rpc('get_all_users') as unknown as { 
-          data: GetAllUsersResponse[]; 
-          error: any 
-        };
+        .rpc<GetAllUsersResponse[]>('get_all_users');
         
       if (error) throw error;
       
@@ -125,10 +127,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // This will delete the auth.user and cascade to the profile via RLS
-      // Properly type the response from the RPC function
+      // Use a more explicit type assertion with generic parameters and params interface
       const { error } = await supabase
-        .rpc('delete_user', { user_id: userId }) as unknown as { error: any };
+        .rpc('delete_user', { user_id: userId } as DeleteUserParams);
         
       if (error) throw error;
       
