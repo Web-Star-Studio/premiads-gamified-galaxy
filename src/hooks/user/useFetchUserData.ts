@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSounds } from "@/hooks/use-sounds";
-import { useUser } from "@/context/UserContext";
-import { Profile } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { UserProfile } from "@/types/auth";
 
 export const useFetchUserData = () => {
   const { playSound } = useSounds();
-  const { setUserName } = useUser();
+  const { refreshProfile } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchAttempts, setFetchAttempts] = useState(0);
@@ -20,7 +20,7 @@ export const useFetchUserData = () => {
       
       if (sessionError) {
         console.error("Session error:", sessionError);
-        setAuthError("Erro ao verificar sua sessão. Por favor, faça login novamente.");
+        setAuthError("Error checking your session. Please log in again.");
         setLoading(false);
         return false;
       }
@@ -28,7 +28,7 @@ export const useFetchUserData = () => {
       if (!session) {
         console.log("No active session found");
         if (fetchAttempts >= 2) {
-          setAuthError("Sessão não encontrada. Por favor, faça login novamente.");
+          setAuthError("No session found. Please log in again.");
         }
         setLoading(false);
         return false;
@@ -45,22 +45,33 @@ export const useFetchUserData = () => {
       if (profileError) {
         console.error("Profile error:", profileError);
         if (fetchAttempts >= 2) {
-          setAuthError("Problema ao carregar seu perfil. Por favor, recarregue a página.");
+          setAuthError("Problem loading your profile. Please reload the page.");
         }
         setLoading(false);
         return false;
       }
       
       if (profileData) {
-        // Convert string user_type to the proper enum type for Profile
-        const typedProfile: Profile = {
-          ...profileData,
-          user_type: (profileData.user_type || "participante") as "participante" | "anunciante" | "admin"
-        };
+        // Make sure to update the auth context
+        await refreshProfile();
         
-        if (typedProfile.full_name) {
-          setUserName(typedProfile.full_name);
-        }
+        const typedProfile: UserProfile = {
+          id: profileData.id,
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
+          website: profileData.website,
+          user_type: profileData.user_type || "client",
+          points: profileData.points || 0,
+          credits: profileData.credits || 0,
+          profile_completed: profileData.profile_completed || false,
+          email_notifications: profileData.email_notifications || false,
+          push_notifications: profileData.push_notifications || false,
+          description: profileData.description,
+          phone: profileData.phone,
+          profile_data: typeof profileData.profile_data === 'object' ? profileData.profile_data : {},
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
+        };
         
         localStorage.setItem("lastActivity", Date.now().toString());
         setLoading(false);
@@ -74,7 +85,7 @@ export const useFetchUserData = () => {
     } catch (error) {
       console.error("Error fetching user data:", error);
       if (fetchAttempts >= 2) {
-        setAuthError("Erro ao buscar seus dados. Por favor, tente novamente.");
+        setAuthError("Error fetching your data. Please try again.");
       }
       setLoading(false);
       return false;

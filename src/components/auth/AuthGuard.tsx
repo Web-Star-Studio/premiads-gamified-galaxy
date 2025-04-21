@@ -26,19 +26,15 @@ const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     }
   }, [isLoading, isAuthenticated, userType, allowedRoles, toast]);
 
-  // Show loading screen while checking auth
   if (isLoading) {
     return <LoadingScreen message="Checking authentication..." />;
   }
 
-  // If not authenticated, redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  // If role check is enabled and user doesn't have required role
   if (allowedRoles && !allowedRoles.includes(userType)) {
-    // Redirect based on user role
     if (userType === "admin") {
       return <Navigate to="/admin" replace />;
     } else if (userType === "employee") {
@@ -48,7 +44,6 @@ const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
     }
   }
 
-  // User is authenticated and authorized
   return <>{children}</>;
 };
 
