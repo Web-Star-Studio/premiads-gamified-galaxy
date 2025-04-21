@@ -17,6 +17,20 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { toast } = useToast();
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
+  // Prevent infinite redirection loops by checking current path
+  const isAdminPath = location.pathname.startsWith('/admin');
+  const isClientPath = location.pathname.startsWith('/cliente');
+  const isAdvertiserPath = location.pathname.startsWith('/anunciante');
+  
+  console.log("RouteGuard check -", { 
+    userType, 
+    contextUserType, 
+    isAuthenticated, 
+    path: location.pathname,
+    isAdminPath,
+    isClientPath
+  });
+  
   // Show loading screen while checking authentication
   if (isLoading) {
     return <LoadingScreen message="Verificando autenticação..." />;
@@ -50,27 +64,52 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     return contextUserType === userType;
   };
 
-  // If userType is specified, check if user has correct type
-  if (userType && !hasAccess()) {
-    console.log(`User type mismatch. Expected: ${userType}, Got: ${contextUserType}`);
-    toast({
-      title: "Acesso negado",
-      description: "Você não tem permissão para acessar esta área.",
-      variant: "destructive"
-    });
-
-    // Redirect to appropriate dashboard based on user type
-    let redirectTo = "/";
+  // Determine where to redirect if access is denied
+  const getRedirectPath = () => {
+    if (!contextUserType) return "/";
     
     if (contextUserType === "admin" || contextUserType === "admin-master") {
-      redirectTo = "/admin";
+      return "/admin";
     } else if (contextUserType === "anunciante") {
-      redirectTo = "/anunciante";
+      return "/anunciante";
     } else if (contextUserType === "participante") {
-      redirectTo = "/cliente";
+      return "/cliente";
     }
     
-    return <Navigate to={redirectTo} replace />;
+    return "/";
+  };
+
+  // If userType is specified, check if user has correct type
+  if (userType && !hasAccess()) {
+    const redirectTo = getRedirectPath();
+    
+    // Prevent endless redirect loops
+    if ((contextUserType === "admin" || contextUserType === "admin-master") && isAdminPath) {
+      console.log("Admin user already on admin path, allowing access to prevent loop");
+      return <>{children}</>;
+    }
+    
+    if (contextUserType === "participante" && isClientPath) {
+      console.log("Client user already on client path, allowing access to prevent loop");
+      return <>{children}</>;
+    }
+    
+    if (contextUserType === "anunciante" && isAdvertiserPath) {
+      console.log("Advertiser user already on advertiser path, allowing access to prevent loop");
+      return <>{children}</>;
+    }
+    
+    // Only redirect and show toast if we're not already at the correct path
+    if (location.pathname !== redirectTo) {
+      console.log(`User type mismatch. Expected: ${userType}, Got: ${contextUserType}. Redirecting to ${redirectTo}`);
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para acessar esta área.",
+        variant: "destructive"
+      });
+      
+      return <Navigate to={redirectTo} replace />;
+    }
   }
 
   // If all checks pass, render the protected route

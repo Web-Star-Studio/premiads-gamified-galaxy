@@ -40,35 +40,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (event === "SIGNED_IN" && session) {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
+        setIsLoading(true); // Set loading true until we fetch the profile
         
-        // Fetch user type in a separate, non-blocking operation
-        setTimeout(async () => {
-          if (!isMounted) return;
-          
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from("profiles")
-              .select("user_type")
-              .eq("id", session.user.id)
-              .single();
-              
-            if (profileError) {
-              console.warn("Error fetching user profile on sign in:", profileError);
-              return;
-            }
+        try {
+          console.log("Fetching user profile after sign in...");
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", session.user.id)
+            .single();
             
-            if (profileData && isMounted) {
-              setUserType(profileData.user_type as UserType);
-            }
-          } catch (error) {
-            console.error("Error fetching profile on sign in:", error);
+          if (profileError) {
+            console.warn("Error fetching user profile on sign in:", profileError);
+            setIsLoading(false);
+            return;
           }
-        }, 0);
+          
+          if (profileData && isMounted) {
+            console.log("User profile loaded successfully:", profileData);
+            setUserType(profileData.user_type as UserType);
+          }
+        } catch (error) {
+          console.error("Error fetching profile on sign in:", error);
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
       } else if (event === "SIGNED_OUT") {
         if (isMounted) {
           setIsAuthenticated(false);
           setCurrentUser(null);
           setUserType(null);
+          setIsLoading(false);
         }
       }
     });
@@ -76,6 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     const checkSession = async () => {
       try {
+        console.log("Checking for existing auth session...");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -90,12 +95,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (data.session) {
+          console.log("Existing session found:", data.session.user.id);
           if (isMounted) {
             setIsAuthenticated(true);
             setCurrentUser(data.session.user);
             
-            // Fetch user type in a separate, non-blocking operation
             try {
+              console.log("Fetching user profile data...");
               const { data: profileData, error: profileError } = await supabase
                 .from("profiles")
                 .select("user_type")
@@ -105,21 +111,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (profileError) {
                 console.warn("Error fetching user profile:", profileError);
               } else if (profileData && isMounted) {
+                console.log("User profile found:", profileData);
                 setUserType(profileData.user_type as UserType);
               }
             } catch (profileError) {
               console.error("Error in profile fetch:", profileError);
+            } finally {
+              if (isMounted) {
+                setIsLoading(false);
+                setSessionChecked(true);
+              }
             }
           }
         } else {
+          console.log("No existing session found");
           if (isMounted) {
             setIsAuthenticated(false);
             setCurrentUser(null);
+            setIsLoading(false);
+            setSessionChecked(true);
           }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
-      } finally {
         if (isMounted) {
           setIsLoading(false);
           setSessionChecked(true);
@@ -145,7 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
-  }, [isLoading]);
+  }, []);
 
   const signIn = async (credentials: SignInCredentials): Promise<boolean> => {
     try {

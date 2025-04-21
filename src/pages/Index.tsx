@@ -38,13 +38,17 @@ const Index = () => {
 
   // Redirect authenticated users to their dashboard
   if (isAuthenticated && userType) {
-    console.log("Redirecting authenticated user:", { userType });
+    console.log("Index redirecting authenticated user:", { userType });
     
     if (userType === "admin" || userType === "admin-master") {
       return <Navigate to="/admin" replace />;
     } else if (userType === "anunciante") {
       return <Navigate to="/anunciante" replace />;
+    } else if (userType === "participante") {
+      return <Navigate to="/cliente" replace />;
     } else {
+      // Default case if userType is not one of the expected values
+      console.warn("Unknown user type:", userType);
       return <Navigate to="/cliente" replace />;
     }
   }
