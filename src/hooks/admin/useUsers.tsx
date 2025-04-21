@@ -35,8 +35,8 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Type the RPC call correctly
-      const { data, error } = await supabase.rpc<GetAllUsersResponse>('get_all_users');
+      // Use correct generic type for RPC function
+      const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;
       
@@ -113,10 +113,10 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Properly type the RPC call with unknown
+      // Use type assertion with a Record<string, string> to fix type error
       const { error } = await supabase.rpc('delete_user', {
         user_id: userId
-      } as unknown as Record<string, never>);
+      } as Record<string, string>);
         
       if (error) throw error;
       

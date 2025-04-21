@@ -3,6 +3,7 @@ import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import NotFound from "@/pages/NotFound";
+import RouteGuard from "@/components/auth/RouteGuard";
 
 // Lazy load client pages
 const ClientDashboard = lazy(() => import("@/pages/ClientDashboard"));
@@ -21,59 +22,81 @@ const ClientRoutes = () => {
   return (
     <Routes>
       <Route index element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientDashboard />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientDashboard />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="missoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientMissions />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientMissions />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="perfil" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientProfile />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientProfile />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="sorteios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientRaffles />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientRaffles />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="indicacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientReferrals />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientReferrals />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="cashback" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <CashbackMarketplace />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <CashbackMarketplace />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="suporte" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <Support />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <Support />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="tour" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <Tour />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <Tour />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="como-funciona" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <HowItWorks />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <HowItWorks />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="faq" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <Faq />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <Faq />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ClientNotifications />
-        </Suspense>
+        <RouteGuard userType="participante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ClientNotifications />
+          </Suspense>
+        </RouteGuard>
       } />
       
       {/* Catch-all route for 404 handling within client routes */}

@@ -1,8 +1,9 @@
 
 import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
+import RouteGuard from "@/components/auth/RouteGuard";
 
 // Lazy load advertiser pages
 const AdvertiserDashboard = lazy(() => import("@/pages/AdvertiserDashboard"));
@@ -22,49 +23,67 @@ const AdvertiserRoutes = () => {
   return (
     <Routes>
       <Route index element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserDashboard />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserDashboard />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="campanhas" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserCampaigns />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserCampaigns />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="nova-campanha" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserNewCampaign />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserNewCampaign />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="analises" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserAnalytics />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserAnalytics />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="creditos" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserCredits />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserCredits />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserNotifications />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserNotifications />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="perfil" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserProfilePage />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserProfilePage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="configuracoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdvertiserSettings />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserSettings />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="moderacao" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ModerationPage />
-        </Suspense>
+        <RouteGuard userType="anunciante">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ModerationPage />
+          </Suspense>
+        </RouteGuard>
       } />
       
       {/* Catch-all route for 404 handling within advertiser routes */}

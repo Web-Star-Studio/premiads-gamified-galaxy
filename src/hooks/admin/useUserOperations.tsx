@@ -37,10 +37,10 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      // Cast to unknown then to Record<string, never> to avoid TypeScript error
+      // Use type assertion with a Record<string, string> to fix type error
       const { error } = await supabase.rpc('delete_user', {
         user_id: userId
-      } as unknown as Record<string, never>);
+      } as Record<string, string>);
         
       if (error) throw error;
       

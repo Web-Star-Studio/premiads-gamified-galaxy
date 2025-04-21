@@ -1,8 +1,10 @@
 
 import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
+import RouteGuard from "@/components/auth/RouteGuard";
+import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -21,72 +23,93 @@ const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
   const location = useLocation();
-  
-  // For development/testing purposes - authentication is temporarily disabled
-  // This should be re-enabled when integrating with Supabase
-  const isAdmin = true; // Mock admin status for testing
-  const loading = false; // Mock loading state
+  const { isAdmin, loading } = useAdminAuth();
   
   useEffect(() => {
     console.log("AdminRoutes rendered, current path:", location.pathname);
   }, [location]);
 
-  // In a production environment, this would check actual authentication
+  // Show loading state while checking admin status
   if (loading) {
     return <RouteLoadingSpinner />;
+  }
+
+  // If not admin, redirect to appropriate page
+  if (!isAdmin) {
+    return <Navigate to="/auth" />;
   }
 
   return (
     <Routes>
       <Route index element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AdminPanel />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdminPanel />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="usuarios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <UserManagementPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <UserManagementPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="sorteios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <LotteryManagementPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <LotteryManagementPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="relatorios" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <ReportsPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ReportsPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="monitoramento" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <MonitoringPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <MonitoringPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <NotificationsPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <NotificationsPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="regras" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <RulesPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <RulesPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="acessos" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <AccessControlPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AccessControlPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="configuracoes" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <SettingsPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <SettingsPage />
+          </Suspense>
+        </RouteGuard>
       } />
       <Route path="documentacao" element={
-        <Suspense fallback={<RouteLoadingSpinner />}>
-          <DocumentationPage />
-        </Suspense>
+        <RouteGuard userType="admin">
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <DocumentationPage />
+          </Suspense>
+        </RouteGuard>
       } />
       
       {/* Catch-all route for 404 handling within admin routes */}
