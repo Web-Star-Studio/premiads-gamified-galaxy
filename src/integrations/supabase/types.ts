@@ -57,34 +57,85 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          credits: number | null
+          description: string | null
+          email_notifications: boolean | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          points: number | null
+          profile_completed: boolean | null
+          push_notifications: boolean | null
+          updated_at: string | null
+          user_type: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          points?: number | null
+          profile_completed?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          points?: number | null
+          profile_completed?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
-          content: Json | null
           created_at: string | null
           id: string
           mission_id: string
           points_awarded: number | null
           status: string
+          submission_data: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          content?: Json | null
           created_at?: string | null
           id?: string
           mission_id: string
           points_awarded?: number | null
           status?: string
+          submission_data?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          content?: Json | null
           created_at?: string | null
           id?: string
           mission_id?: string
           points_awarded?: number | null
           status?: string
+          submission_data?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -103,7 +154,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_mission_submissions: {
+        Args: { mission_ids: string[]; status_filter: string }
+        Returns: Json[]
+      }
+      update_submission_status: {
+        Args: { submission_id: string; new_status: string }
+        Returns: undefined
+      }
+      update_user_credits: {
+        Args: { user_id: string; new_credits: number }
+        Returns: undefined
+      }
+      update_user_type: {
+        Args: { user_id: string; new_type: string; mark_completed: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

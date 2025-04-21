@@ -13,65 +13,25 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  
-  // Handle approve submission
+
   const handleApprove = async (submission: MissionSubmission) => {
     setProcessing(true);
     
     try {
-      // Update submission status in database
       const { error } = await supabase
-        .from("mission_submissions")
-        .update({ status: "approved" })
-        .eq("id", submission.id);
+        .rpc('update_submission_status', {
+          submission_id: submission.id,
+          new_status: 'approved'
+        });
         
       if (error) throw error;
-      
-      // Get mission points
-      const { data: missionData, error: missionError } = await supabase
-        .from("missions")
-        .select("points")
-        .eq("id", submission.mission_id)
-        .single();
-        
-      if (missionError) {
-        console.error("Error fetching mission points:", missionError);
-        // Continue with approval even if points lookup fails
-      }
-      
-      const pointsToAward = missionData?.points || 0;
-      
-      // Award points manually in case the DB trigger fails
-      if (pointsToAward > 0) {
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from("profiles")
-            .select("points")
-            .eq("id", submission.user_id)
-            .single();
-            
-          if (!profileError && profileData) {
-            const currentPoints = profileData.points || 0;
-            const newPoints = currentPoints + pointsToAward;
-            
-            await supabase
-              .from("profiles")
-              .update({ points: newPoints })
-              .eq("id", submission.user_id);
-          }
-        } catch (profileUpdateError) {
-          console.error("Error updating user points:", profileUpdateError);
-          // Continue with approval even if points update fails
-        }
-      }
-      
+
       playSound("reward");
       toast({
         title: "Submissão aprovada",
         description: `Submissão de ${submission.user_name} foi aprovada com sucesso!`,
       });
       
-      // Remove from list
       onRemove(submission.id);
     } catch (error: any) {
       console.error("Error approving submission:", error);
@@ -84,23 +44,19 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       setProcessing(false);
     }
   };
-  
-  // Handle reject submission
+
   const handleReject = async (submission: MissionSubmission) => {
     setProcessing(true);
     
     try {
-      // Update submission status in database
       const { error } = await supabase
-        .from("mission_submissions")
-        .update({ 
-          status: "rejected",
-          feedback: submission.feedback || "Submissão não atende aos requisitos." 
-        })
-        .eq("id", submission.id);
+        .rpc('update_submission_status', {
+          submission_id: submission.id,  
+          new_status: 'rejected'
+        });
         
       if (error) throw error;
-      
+
       playSound("error");
       toast({
         title: "Submissão rejeitada",
@@ -108,7 +64,6 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         variant: "destructive",
       });
       
-      // Remove from list
       onRemove(submission.id);
     } catch (error: any) {
       console.error("Error rejecting submission:", error);
