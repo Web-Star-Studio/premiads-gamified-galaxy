@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,7 +8,6 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
 import ClientDashboard from "@/pages/client/ClientDashboard";
-import VerificationPage from "@/pages/VerificationPage"; 
 import AuthGuard from "@/components/auth/AuthGuard";
 import CreateAdminUser from "@/pages/CreateAdminUser";
 import "./App.css";
@@ -20,7 +20,6 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/verify" element={<VerificationPage />} />
             
             {/* Admin routes */}
             <Route path="/admin" element={
@@ -48,8 +47,8 @@ function App() {
               </AuthGuard>
             } />
             
-            {/* Redirect root to appropriate dashboard or auth */}
-            <Route path="/" element={<Navigate to="/verify" replace />} />
+            {/* Redirect root to auth */}
+            <Route path="/" element={<Navigate to="/auth" replace />} />
             
             {/* Add the create admin user route */}
             <Route path="/create-admin" element={<CreateAdminUser />} />
