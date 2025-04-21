@@ -12,7 +12,7 @@ const CreateAdminUser = () => {
       setLoading(true);
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: JSON.stringify({
-          email: 'felipe@webstar.studio',
+          email: 'felipe@clienthall.com',
           password: 'Client@123',
           fullName: 'Felipe Antunes'
         })
@@ -50,3 +50,4 @@ const CreateAdminUser = () => {
 };
 
 export default CreateAdminUser;
+
