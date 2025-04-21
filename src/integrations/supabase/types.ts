@@ -498,9 +498,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json[]
       }
+      get_user_type: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       increment_points_with_multiplier: {
         Args: { points_to_add: number; user_id: string }
         Returns: undefined
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_advertiser: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_participant: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       select_raffle_winner: {
         Args: { raffle_id: string }

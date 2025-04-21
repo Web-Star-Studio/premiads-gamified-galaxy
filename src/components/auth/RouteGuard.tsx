@@ -1,32 +1,32 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { UserType } from "@/types/auth";
 
 interface RouteGuardProps {
   children: ReactNode;
-  userType?: "participante" | "anunciante" | "admin";
+  userType?: UserType;
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
-  const { isAuthenticated, userType: contextUserType, isAuthLoading, authError, checkSession } = useUser();
+  const { isAuthenticated, userType: contextUserType, isLoading, currentUser } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
   const { toast } = useToast();
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
-    // Use the centralized checkSession function
+    // Check authentication status
     const verifyAuth = async () => {
-      try {
-        await checkSession(true);
+      // Small timeout to allow auth check to complete
+      const timeoutId = setTimeout(() => {
         setIsChecking(false);
-      } catch (error) {
-        console.error("Error in RouteGuard:", error);
-        setIsChecking(false);
-      }
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     };
     
     verifyAuth();
@@ -40,7 +40,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     }, 5000);
 
     return () => clearTimeout(timeoutId);
-  }, [checkSession]);
+  }, []);
 
   // Show error message if auth check takes too long
   if (authTimeout && isChecking) {
@@ -61,7 +61,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // Show loading spinner while checking authentication
-  if (isAuthLoading || isChecking) {
+  if (isLoading || isChecking) {
     return (
       <div className="flex h-screen items-center justify-center bg-galaxy-dark" data-testid="route-loading-spinner">
         <LoadingSpinner />

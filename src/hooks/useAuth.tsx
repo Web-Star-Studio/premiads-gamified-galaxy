@@ -9,8 +9,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: any;
-  user: any; // Add user property
-  loading: boolean; // Add loading property alias for isLoading
+  userType: UserType | null;
+  loading: boolean; // Alias for isLoading
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userType, setUserType] = useState<UserType | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -33,6 +34,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data.session) {
           setIsAuthenticated(true);
           setCurrentUser(data.session.user);
+          
+          // Fetch user type from profile
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", data.session.user.id)
+            .single();
+            
+          if (profileData) {
+            setUserType(profileData.user_type as UserType);
+          }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
@@ -43,13 +55,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
+        
+        // Fetch user type from profile
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", session.user.id)
+          .single();
+          
+        if (profileData) {
+          setUserType(profileData.user_type as UserType);
+        }
       } else if (event === "SIGNED_OUT") {
         setIsAuthenticated(false);
         setCurrentUser(null);
+        setUserType(null);
       }
     });
 
@@ -72,8 +96,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login realizado com sucesso",
         description: "Você foi autenticado com sucesso.",
       });
-      
-      navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro na autenticação",
@@ -143,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         currentUser,
-        user: currentUser, // Alias for currentUser
+        userType,
         loading: isLoading, // Alias for isLoading
         signIn,
         signOut,

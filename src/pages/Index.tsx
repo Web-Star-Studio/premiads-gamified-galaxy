@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { UserProvider, useUser } from "@/context/UserContext";
+import { Navigate } from "react-router-dom";
 import MainHeader from "@/components/MainHeader";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
@@ -12,10 +12,12 @@ import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
 import AuthOverlay from "@/components/auth/AuthOverlay";
 import LoadingScreen from "@/components/LoadingScreen";
+import { useAuth } from "@/hooks/useAuth";
 
-const MainContent = () => {
-  const { isOverlayOpen, setIsOverlayOpen, isAuthLoading, authError } = useUser();
+const Index = () => {
+  const { isAuthenticated, userType, isLoading } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   useEffect(() => {
     // Prevent scrolling when overlay is open
@@ -31,11 +33,20 @@ const MainContent = () => {
   }, [isOverlayOpen, showAuth]);
 
   // Show temporary loading screen while checking auth
-  if (isAuthLoading) {
+  if (isLoading) {
     return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // If there's an auth error, the app continues normally - errors will be handled by specific components
+  // Redirect authenticated users to their dashboard
+  if (isAuthenticated) {
+    if (userType === "anunciante") {
+      return <Navigate to="/anunciante" replace />;
+    } else if (userType === "admin") {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/cliente" replace />;
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -54,14 +65,6 @@ const MainContent = () => {
       {/* Auth overlay */}
       <AuthOverlay isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
-  );
-};
-
-const Index = () => {
-  return (
-    <UserProvider>
-      <MainContent />
-    </UserProvider>
   );
 };
 

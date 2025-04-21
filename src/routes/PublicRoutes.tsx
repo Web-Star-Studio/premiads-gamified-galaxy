@@ -2,6 +2,7 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 
 // Lazy load public pages
 const Index = lazy(() => import("@/pages/Index"));
@@ -16,6 +17,19 @@ const Support = lazy(() => import("@/pages/Support"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const PublicRoutes = () => {
+  const { isAuthenticated, currentUser, userType } = useAuth();
+  
+  // If user is authenticated, redirect to appropriate dashboard
+  if (isAuthenticated && currentUser) {
+    if (userType === "anunciante") {
+      return <Navigate to="/anunciante" replace />;
+    } else if (userType === "admin") {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/cliente" replace />;
+    }
+  }
+  
   return (
     <Routes>
       <Route index element={
