@@ -2,13 +2,11 @@
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarFooter as Footer } from "@/components/ui/sidebar";
-import { useAuthMethods } from "@/hooks/useAuthMethods";
+import { signOutAndCleanup } from "@/utils/auth"; // Use a função robusta diretamente
 
 export const SidebarFooter = () => {
-  const { signOut } = useAuthMethods();
-
   const handleSignOut = async () => {
-    await signOut();
+    await signOutAndCleanup(); // Use nossa função robusta de logout
   };
 
   return (

@@ -27,7 +27,7 @@ export const signOutAndCleanup = async () => {
       }
     });
 
-    // Also, if somehow the demo user is present, nuke and reload
+    // Also, if somehow the demo user is present, nuke everything and reload
     const userName = localStorage.getItem("userName");
     if (userName && userName.toLowerCase().includes("demo")) {
       localStorage.clear();

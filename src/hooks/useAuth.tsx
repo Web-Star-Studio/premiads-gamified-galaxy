@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { signOutAndCleanup } from "@/utils/auth"; // <--- Add import
+import { signOutAndCleanup } from "@/utils/auth"; 
 import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 interface AuthContextType {
@@ -24,6 +24,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Check for demo account on mount and clean up if needed
+  useEffect(() => {
+    const checkAndCleanDemoUser = () => {
+      const userName = localStorage.getItem("userName");
+      const demoUserEmails = [
+        "demo@premiads.com",
+        "demo@premiads.app", 
+        "demo@demo.com"
+      ];
+      
+      // Se o usuário está autologado como demo, força limpeza!
+      if (userName && (
+        userName.toLowerCase().includes("demo") || 
+        demoUserEmails.some(email => userName.toLowerCase() === email)
+      )) {
+        console.log("🔥 Demo user detected on auth mount, cleaning up...");
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace("/");
+      }
+    };
+    
+    checkAndCleanDemoUser();
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {

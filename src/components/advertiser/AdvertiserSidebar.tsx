@@ -26,7 +26,6 @@ import {
   Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
@@ -36,7 +35,6 @@ import { signOutAndCleanup } from "@/utils/auth"; // <--- Import robust logout
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { setOpen, state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -68,6 +66,7 @@ export const AdvertiserSidebar = () => {
     await signOutAndCleanup();
   };
 
+  
   return (
     <Sidebar
       className="border-r border-galaxy-purple/30 bg-galaxy-dark"
