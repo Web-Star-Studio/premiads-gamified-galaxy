@@ -9,9 +9,111 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cashback_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          advertiser_image: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          conditions: string | null
+          created_at: string
+          description: string | null
+          discount_percentage: number
+          end_date: string
+          id: string
+          is_active: boolean
+          maximum_discount: number | null
+          minimum_purchase: number | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage: number
+          end_date: string
+          id?: string
+          is_active?: boolean
+          maximum_discount?: number | null
+          minimum_purchase?: number | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          maximum_discount?: number | null
+          minimum_purchase?: number | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cashback_redemptions: {
+        Row: {
+          amount: number
+          campaign_id: string | null
+          code: string
+          created_at: string
+          id: string
+          redeemed_at: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          campaign_id?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          redeemed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashback_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "cashback_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missions: {
         Row: {
           advertiser_id: string
+          business_type: string | null
           created_at: string | null
           description: string | null
           end_date: string | null
@@ -20,13 +122,17 @@ export type Database = {
           points: number
           requirements: Json | null
           start_date: string | null
+          target_audience_age_max: number | null
+          target_audience_age_min: number | null
           target_audience_gender: string | null
+          target_audience_region: string | null
           title: string
           type: string | null
           updated_at: string | null
         }
         Insert: {
           advertiser_id: string
+          business_type?: string | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
@@ -35,13 +141,17 @@ export type Database = {
           points?: number
           requirements?: Json | null
           start_date?: string | null
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
           target_audience_gender?: string | null
+          target_audience_region?: string | null
           title: string
           type?: string | null
           updated_at?: string | null
         }
         Update: {
           advertiser_id?: string
+          business_type?: string | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
@@ -50,7 +160,10 @@ export type Database = {
           points?: number
           requirements?: Json | null
           start_date?: string | null
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
           target_audience_gender?: string | null
+          target_audience_region?: string | null
           title?: string
           type?: string | null
           updated_at?: string | null
@@ -203,6 +316,36 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id?: string | null
+          referrer_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           created_at: string | null
@@ -249,6 +392,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json[]
+      }
       get_mission_submissions: {
         Args: { mission_ids: string[]; status_filter: string }
         Returns: Json[]

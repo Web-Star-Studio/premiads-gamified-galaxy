@@ -42,21 +42,15 @@ export const useLottery = () => {
     try {
       setLoading(true);
       
-      // Get raffles from database
+      // Get raffles from database with a more flexible query
       const { data, error } = await supabase
         .from('raffles')
         .select(`
           *,
-          winner:winner_user_id (
+          winner_profile:winner_user_id (
             id,
-            profiles (
-              id,
-              full_name,
-              avatar_url
-            )
-          ),
-          numbers:raffle_numbers!raffle_id (
-            id
+            full_name,
+            avatar_url
           )
         `);
         
@@ -65,32 +59,26 @@ export const useLottery = () => {
       // Transform data to match our interface
       const transformedData: Lottery[] = data.map(raffle => {
         // Calculate progress
-        const numbersSold = raffle.numbers?.length || 0;
+        const numbersSold = raffle.numbers_sold || 0;
         const progress = raffle.numbers_total > 0 
           ? Math.round((numbersSold / raffle.numbers_total) * 100) 
           : 0;
         
         // Get winner info if exists
         let winner = null;
-        if (raffle.winner && raffle.winner.profiles) {
-          // Safe access to nested properties
-          const winnerProfile = Array.isArray(raffle.winner.profiles) 
-            ? raffle.winner.profiles[0] 
-            : raffle.winner.profiles;
-            
-          if (winnerProfile) {
-            winner = {
-              id: winnerProfile.id || '',
-              name: winnerProfile.full_name || 'Unknown',
-              avatar: winnerProfile.avatar_url || 'https://i.pravatar.cc/150?img=1'
-            };
-          }
+        if (raffle.winner_profile) {
+          winner = {
+            id: raffle.winner_profile.id || '',
+            name: raffle.winner_profile.full_name || 'Unknown',
+            avatar: raffle.winner_profile.avatar_url || 'https://i.pravatar.cc/150?img=1'
+          };
         }
         
         // Ensure status is one of the allowed enum values
         let status: Lottery['status'] = 'draft';
-        if (['active', 'pending', 'completed', 'canceled', 'draft', 'finished'].includes(raffle.status)) {
-          status = raffle.status as Lottery['status'];
+        const validStatuses: Lottery['status'][] = ['active', 'pending', 'completed', 'canceled', 'draft', 'finished'];
+        if (validStatuses.includes(raffle.status)) {
+          status = raffle.status;
         }
         
         return {
@@ -109,7 +97,7 @@ export const useLottery = () => {
           numbersTotal: raffle.numbers_total,
           pointsPerNumber: raffle.points_per_number,
           minPoints: raffle.min_points,
-          numbersSold,
+          numbersSold: numbersSold,
           progress,
           isAutoScheduled: true
         };

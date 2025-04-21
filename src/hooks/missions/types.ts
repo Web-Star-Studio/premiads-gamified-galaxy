@@ -1,4 +1,3 @@
-
 // Mission types and status definitions
 export type MissionStatus = "available" | "in_progress" | "completed" | "pending_approval";
 
@@ -23,3 +22,4 @@ export interface UseMissionsOptions {
   initialFilter?: "available" | "in_progress" | "pending" | "completed";
   // Note: We removed enableNotifications since it's not being used
 }
+
