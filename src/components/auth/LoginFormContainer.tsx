@@ -4,7 +4,6 @@ import { useAuthMethods } from "@/hooks/useAuthMethods";
 import { useToast } from "@/hooks/use-toast";
 import { validateLogin } from "./authValidation";
 import { resendConfirmationEmail } from "@/utils/auth";
-import { supabase } from "@/integrations/supabase/client";
 import LoginFormView from "./LoginFormView";
 import EmailNotConfirmedBox from "./EmailNotConfirmedBox";
 import LoginTimeout from "./LoginTimeout";
@@ -55,36 +54,20 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
     setLoginAttempt(prev => prev + 1);
 
     try {
+      // signIn now returns boolean on success
+      // We'll just check for success, and trust session/user will be correctly set in the provider
       const success = await signIn({ email, password });
+
       await new Promise((resolve) => setTimeout(resolve, 400));
-      const {
-        data: { user },
-        error: userLookupError,
-      } = await supabase.auth.getUser(email);
 
-      if (userLookupError) {
-        console.error("Erro ao buscar usuário pelo email:", userLookupError);
-      }
-
-      if (success && user && user.email_confirmed_at) {
+      if (success) {
+        // User should now be authenticated
         setErrors({});
         setLoginAttempt(0);
         setEmailNotConfirmed(false);
         setLoadingTimeout(false);
-        // IMPORTANT: Immediately redirect after login
         navigateToDashboard();
         onSuccess();
-        return;
-      }
-
-      if (success && user && !user.email_confirmed_at) {
-        setEmailNotConfirmed(true);
-        setLoadingTimeout(false);
-        toast({
-          title: "Confirmação de email necessária",
-          description: "Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou reenvie o email de confirmação abaixo.",
-          variant: "destructive",
-        });
         return;
       }
 
