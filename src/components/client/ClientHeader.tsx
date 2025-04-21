@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -9,8 +8,13 @@ import { useMediaQuery } from "@/hooks/use-mobile";
 import { DrawerMenu } from "@/components/ui/drawer-menu";
 import { motion } from "framer-motion";
 import { Menu, User, Home, Bell } from "lucide-react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
-const ClientHeader = () => {
+// Helper para garantir contexto
+import { useContext } from "react";
+import { SidebarContext } from "@/components/ui/sidebar/sidebar-context";
+
+const ClientHeaderContent = () => {
   const { userName } = useUser();
   const navigate = useNavigate();
   const { toggleSidebar } = useSidebar();
@@ -105,6 +109,22 @@ const ClientHeader = () => {
       </div>
     </motion.header>
   );
+};
+
+const ClientHeader = () => {
+  // Verifica se já está em um contexto de sidebar
+  const sidebarContext = useContext(SidebarContext);
+
+  if (!sidebarContext) {
+    // Não está em um contexto, então forneça!
+    return (
+      <SidebarProvider>
+        <ClientHeaderContent />
+      </SidebarProvider>
+    );
+  }
+  // Já está, só renderize interno
+  return <ClientHeaderContent />;
 };
 
 export default ClientHeader;
