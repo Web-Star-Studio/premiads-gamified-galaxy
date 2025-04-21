@@ -1,42 +1,73 @@
 
-import React from "react";
-import { Route, Routes } from "react-router-dom";
-import { useAdminAuth } from "@/hooks/admin";
-import AdminPanel from "@/pages/AdminPanel";
-import UserManagementPage from "@/pages/admin/UserManagementPage";
-import LotteryManagementPage from "@/pages/admin/LotteryManagementPage"; 
-import DocumentationPage from "@/pages/admin/DocumentationPage";
-import ModerationPage from "@/pages/admin/ModerationPage";
-import MonitoringPage from "@/pages/admin/MonitoringPage";
-import SettingsPage from "@/pages/admin/SettingsPage";
-import ReportsPage from "@/pages/admin/ReportsPage";
-import NotificationsPage from "@/pages/admin/NotificationsPage";
-import AccessControlPage from "@/pages/admin/AccessControlPage";
-import RulesPage from "@/pages/admin/RulesPage";
-import SystemCleanupPage from "@/pages/admin/SystemCleanupPage";
-import { RouteLoadingSpinner } from "@/components/routing/RouteLoadingSpinner";
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
+import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
+
+// Lazy load admin pages
+const AdminDashboardPage = lazy(() => import("@/pages/admin/AdminDashboardPage"));
+const UserManagementPage = lazy(() => import("@/pages/admin/UserManagementPage"));
+const LotteryManagementPage = lazy(() => import("@/pages/admin/LotteryManagementPage"));
+const SystemCleanupPage = lazy(() => import("@/pages/admin/SystemCleanupPage"));
+const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
 
 const AdminRoutes = () => {
-  const { loading, isAdmin } = useAdminAuth();
+  const { isAdmin, loading } = useAdminAuth();
 
   if (loading) {
     return <RouteLoadingSpinner />;
   }
 
+  if (!isAdmin) {
+    return <Navigate to="/auth" replace />;
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<AdminPanel />} />
-      <Route path="/users" element={<UserManagementPage />} />
-      <Route path="/lottery" element={<LotteryManagementPage />} />
-      <Route path="/documentation" element={<DocumentationPage />} />
-      <Route path="/moderation" element={<ModerationPage />} />
-      <Route path="/monitoring" element={<MonitoringPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/reports" element={<ReportsPage />} />
-      <Route path="/notifications" element={<NotificationsPage />} />
-      <Route path="/access" element={<AccessControlPage />} />
-      <Route path="/rules" element={<RulesPage />} />
-      <Route path="/cleanup" element={<SystemCleanupPage />} />
+      {/* Admin routes */}
+      <Route 
+        path="/" 
+        element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdminDashboardPage />
+          </Suspense>
+        } 
+      />
+      <Route 
+        path="/users" 
+        element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <UserManagementPage />
+          </Suspense>
+        } 
+      />
+      <Route 
+        path="/lottery" 
+        element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <LotteryManagementPage />
+          </Suspense>
+        } 
+      />
+      <Route 
+        path="/cleanup" 
+        element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <SystemCleanupPage />
+          </Suspense>
+        } 
+      />
+      <Route 
+        path="/docs/*" 
+        element={
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <DocumentationPage />
+          </Suspense>
+        } 
+      />
+      
+      {/* Redirect all other routes to dashboard */}
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 };
