@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -47,4 +46,22 @@ export const signOutAndCleanup = async () => {
     window.location.replace("/");
     return false;
   }
+};
+
+/**
+ * Utilitário: Reenvia email de confirmação para o Supabase.
+ */
+export const resendConfirmationEmail = async (email: string) => {
+  // Verifica sempre se o email existe antes
+  if (!email) throw new Error("Email não informado.");
+
+  // Utiliza a API do Supabase para reenviar (magic link)
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: window.location.origin },
+  });
+
+  if (error) throw error;
+  return true;
 };
