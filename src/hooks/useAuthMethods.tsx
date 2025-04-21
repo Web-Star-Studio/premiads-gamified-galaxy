@@ -15,6 +15,21 @@ export const useAuthMethods = () => {
   const { playSound } = useSounds();
   const navigate = useNavigate();
   
+  // Helper function to redirect to the correct dashboard based on user type
+  const redirectToDashboard = (userType: UserType) => {
+    switch (userType) {
+      case "admin":
+        navigate("/admin", { replace: true });
+        break;
+      case "anunciante":
+        navigate("/anunciante", { replace: true });
+        break;
+      default:
+        navigate("/cliente", { replace: true });
+        break;
+    }
+  };
+
   // Helper function to handle errors
   const handleAuthError = (error: any, defaultMessage: string) => {
     const errorMessage = error.message || defaultMessage;
@@ -28,11 +43,12 @@ export const useAuthMethods = () => {
     return false;
   };
 
+  // --- SIGN UP LOGIC ---
   const signUp = async (credentials: SignUpCredentials) => {
     setLoading(true);
     
     try {
-      // --- Restrição: só permite 'participante' e 'anunciante' no registro ---
+      // Only allow 'participante' and 'anunciante' registration
       if (credentials.userType === "admin") {
         toast({
           title: "Cadastro não permitido",
@@ -89,7 +105,6 @@ export const useAuthMethods = () => {
                 profile_completed: true
               }
             ]);
-          
           if (insertError) {
             console.error("Error creating profile:", insertError);
           }
@@ -97,13 +112,9 @@ export const useAuthMethods = () => {
         
         // Force a session check
         await checkSession();
-        
+
         // Redirect based on user type
-        if (credentials.userType === "anunciante") {
-          navigate("/anunciante");
-        } else {
-          navigate("/cliente");
-        }
+        redirectToDashboard(credentials.userType || "participante");
       }
       
       return true;
@@ -114,6 +125,7 @@ export const useAuthMethods = () => {
     }
   };
 
+  // --- SIGN IN LOGIC ---
   const signIn = async (credentials: SignInCredentials) => {
     if (sessionCheckInProgress) {
       console.log("Session check in progress, waiting...");
@@ -147,23 +159,13 @@ export const useAuthMethods = () => {
           const userType = profile.user_type as UserType;
           setUserType(userType);
 
-          // Redirect based on user type
-          switch (userType) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'anunciante':
-              navigate('/anunciante');
-              break;
-            default:
-              navigate('/cliente');
-          }
+          // Redirect based on user type (centralized here)
+          redirectToDashboard(userType);
 
           toast({
             title: "Login realizado com sucesso",
             description: "Bem-vindo de volta!",
           });
-          
           return true;
         }
       }
