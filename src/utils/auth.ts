@@ -20,12 +20,21 @@ export const signOutAndCleanup = async () => {
     localStorage.removeItem("supabase.auth.token"); // Smaller possibility
     sessionStorage.clear();
 
-    // Extra: Safeguard, clear all localStorage keys related to Supabase
+    // Defensive: Always remove all demo-related keys!
     Object.keys(localStorage).forEach(key => {
-      if (key.startsWith("sb-") || key.includes("supabase")) {
+      if (key.startsWith("sb-") || key.includes("supabase") || key.toLowerCase().includes("demo")) {
         localStorage.removeItem(key);
       }
     });
+
+    // Also, if somehow the demo user is present, nuke and reload
+    const userName = localStorage.getItem("userName");
+    if (userName && userName.toLowerCase().includes("demo")) {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace("/");
+      return true;
+    }
 
     // Force reload (bypass cache) to reset React state and prevent auto-login
     window.location.replace("/");

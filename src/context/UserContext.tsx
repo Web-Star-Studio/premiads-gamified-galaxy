@@ -69,6 +69,37 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     window.location.replace("/");
   }, [resetUserInfo]);
 
+  // Universal session cleanup if demo detected **on context mount**
+  useEffect(() => {
+    // Run once on mount
+    const userName = localStorage.getItem("userName");
+    const demoUserEmails = [
+      "demo@premiads.com",
+      "demo@premiads.app",
+      "demo@demo.com"
+    ];
+
+    // If user is auto-logged as demo or demo credentials, force cleanup!
+    if (
+      userName &&
+      (userName.toLowerCase().includes("demo") ||
+        demoUserEmails.some(email => userName.toLowerCase() === email))
+    ) {
+      // Clear all relevant storage/session and reload immediately
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCredits");
+      localStorage.removeItem("userType");
+      localStorage.removeItem("lastActivity");
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("sb-") || key.includes("supabase")) {
+          localStorage.removeItem(key);
+        }
+      });
+      sessionStorage.clear();
+      window.location.replace("/");
+    }
+  }, []);
+
   // Load user data and subscribe to auth changes
   useEffect(() => {
     const loadUserData = async () => {
