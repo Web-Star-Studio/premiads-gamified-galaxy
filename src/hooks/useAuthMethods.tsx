@@ -31,6 +31,17 @@ export const useAuthMethods = () => {
     setLoading(true);
     
     try {
+      // --- Restrição: só permite 'participante' e 'anunciante' no registro ---
+      if (credentials.userType === "admin") {
+        toast({
+          title: "Cadastro não permitido",
+          description: "Não é possível registrar administradores pelo painel padrão.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return false;
+      }
+
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,

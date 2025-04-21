@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuthMethods } from "@/hooks/useAuthMethods";
 import { useToast } from "@/hooks/use-toast";
