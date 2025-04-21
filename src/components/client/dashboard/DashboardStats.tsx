@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -109,39 +108,53 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   pointsTrend,
   referralsTrend
 }) => {
+  const statCards = [
+    {
+      title: "Tickets",
+      value: tickets,
+      icon: <Ticket className="w-5 h-5 text-white" />,
+      trend: ticketsTrend,
+      variant: "blue" as const,
+      delay: 0.1,
+    },
+    {
+      title: "Pontos",
+      value: points.toLocaleString('pt-BR'),
+      icon: <Award className="w-5 h-5 text-white" />,
+      trend: pointsTrend,
+      variant: "purple" as const,
+      delay: 0.2,
+    },
+    {
+      title: "Convites",
+      value: referrals,
+      icon: <Users className="w-5 h-5 text-white" />,
+      trend: referralsTrend,
+      variant: "pink" as const,
+      delay: 0.3,
+    },
+    {
+      title: "Nível",
+      value: level,
+      icon: <TrendingUp className="w-5 h-5 text-white" />,
+      variant: "green" as const,
+      delay: 0.4,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard
-        title="Tickets"
-        value={tickets}
-        icon={<Ticket className="w-5 h-5 text-white" />}
-        trend={ticketsTrend}
-        variant="blue"
-        delay={0.1}
-      />
-      <StatCard
-        title="Pontos"
-        value={points.toLocaleString('pt-BR')}
-        icon={<Award className="w-5 h-5 text-white" />}
-        trend={pointsTrend}
-        variant="purple"
-        delay={0.2}
-      />
-      <StatCard
-        title="Convites"
-        value={referrals}
-        icon={<Users className="w-5 h-5 text-white" />}
-        trend={referralsTrend}
-        variant="pink"
-        delay={0.3}
-      />
-      <StatCard
-        title="Nível"
-        value={level}
-        icon={<TrendingUp className="w-5 h-5 text-white" />}
-        variant="green"
-        delay={0.4}
-      />
+      {statCards.map((stat) => (
+        <StatCard
+          key={stat.title}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          trend={stat.trend}
+          variant={stat.variant}
+          delay={stat.delay}
+        />
+      ))}
     </div>
   );
 };

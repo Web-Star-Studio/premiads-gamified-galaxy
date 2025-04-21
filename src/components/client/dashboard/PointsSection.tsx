@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import PointsCard from "@/components/dashboard/PointsCard";
 import UserLevel from "@/components/client/dashboard/UserLevel";
 import TicketsButton from "@/components/client/dashboard/TicketsButton";
-import { useNavigate } from "react-router-dom";
-import { useClientDashboard } from "@/hooks/useClientDashboard";
+import { useClientStats } from "@/hooks/useClientStats";
 import { useUserLevel } from "@/hooks/useUserLevel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
@@ -15,10 +14,9 @@ interface PointsSectionProps {
 }
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
-  const navigate = useNavigate();
-  const { points, credits } = useClientDashboard(navigate);
-  const effectivePoints = totalPoints || points;
-  const { levelInfo, loading } = useUserLevel(effectivePoints);
+  const { data: stats, isLoading } = useClientStats();
+  const effectivePoints = totalPoints || stats?.points || 0;
+  const { levelInfo, loading: levelLoading } = useUserLevel(effectivePoints);
   
   return (
     <motion.div
@@ -31,7 +29,11 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              <PointsCard points={effectivePoints} credits={credits} />
+              <PointsCard 
+                points={effectivePoints} 
+                isLoading={isLoading}
+                tickets={stats?.tickets || 0} 
+              />
               <div className="absolute top-3 right-3">
                 <Info className="h-4 w-4 text-neon-cyan cursor-help" />
               </div>
@@ -41,17 +43,19 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
             <div className="space-y-2">
               <p className="text-sm font-medium">Conversão de Pontos e Créditos</p>
               <div className="text-xs space-y-1">
-                <p><span className="text-neon-cyan">{effectivePoints}</span> pontos = <span className="text-neon-pink">{effectivePoints}</span> créditos = {getMoneyValue(effectivePoints)}</p>
+                <p>
+                  <span className="text-neon-cyan">{effectivePoints}</span> pontos = <span className="text-neon-pink">{effectivePoints}</span> créditos = {getMoneyValue(effectivePoints)}
+                </p>
                 <p>• Cada 10 pontos equivalem a R$1,00</p>
                 <p>• Pontos são ganhos completando missões</p>
-                <p>• Créditos podem ser usados para sorteios e recursos premium</p>
+                <p>• Créditos podem ser usados para sorteios</p>
               </div>
             </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       
-      {!loading && levelInfo && (
+      {!levelLoading && levelInfo && (
         <UserLevel levelInfo={levelInfo} />
       )}
       

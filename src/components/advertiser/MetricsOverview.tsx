@@ -1,51 +1,101 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { PieChart, BarChart2, Users, TrendingUp, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MetricsOverview = () => {
-  const [showNumbers, setShowNumbers] = useState(false);
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ["advertiser-metrics"],
+    queryFn: async () => {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      
+      if (!userId) throw new Error("User not authenticated");
+      
+      const [
+        { count: completedMissions },
+        { count: activeUsers },
+        averageCompletionTime,
+      ] = await Promise.all([
+        // Get completed missions count
+        supabase
+          .from("mission_submissions")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "approved"),
+          
+        // Get unique users count
+        supabase
+          .from("mission_submissions")
+          .select("user_id", { count: "exact", head: true })
+          .eq("status", "approved"),
+          
+        // Get average completion time (mock for now, needs complex query)
+        Promise.resolve({ data: { average: 12 } }),
+      ]);
+
+      return {
+        missionsCompleted: completedMissions || 0,
+        uniqueUsers: activeUsers || 0,
+        averageTime: averageCompletionTime.data.average,
+      };
+    },
+    refetchInterval: 30000,
+  });
   
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowNumbers(true);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  const metrics = [
+  const metricsData = [
     {
       title: "Missões Completadas",
-      value: 847,
-      change: "+12.5%",
-      trend: "up",
-      icon: <BarChart2 className="w-6 h-6 text-neon-cyan" />,
+      value: metrics?.missionsCompleted || 0,
+      icon: BarChart2,
+      colorClass: "text-neon-cyan",
     },
     {
       title: "Usuários Ativos",
-      value: 324,
-      change: "+8.2%",
-      trend: "up",
-      icon: <Users className="w-6 h-6 text-neon-pink" />,
+      value: metrics?.uniqueUsers || 0,
+      icon: Users,
+      colorClass: "text-neon-pink",
     },
     {
       title: "ROI Médio",
       value: "3.7x",
-      change: "+0.3x",
-      trend: "up",
-      icon: <TrendingUp className="w-6 h-6 text-neon-cyan" />,
+      icon: TrendingUp,
+      colorClass: "text-neon-cyan",
     },
     {
       title: "Tempo Médio",
-      value: "12min",
-      change: "-2min",
-      trend: "down",
-      icon: <Clock className="w-6 h-6 text-neon-pink" />,
+      value: `${metrics?.averageTime || 0}min`,
+      icon: Clock,
+      colorClass: "text-neon-pink",
     },
   ];
-  
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between mb-3">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="p-4 pb-0">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -61,32 +111,25 @@ const MetricsOverview = () => {
       </div>
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((metric, index) => (
+        {metricsData.map((metric, index) => (
           <Card 
             key={metric.title}
             className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(155,135,245,0.3)]"
           >
             <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-              {metric.icon}
+              <metric.icon className={`w-4 h-4 ${metric.colorClass}`} />
             </CardHeader>
             <CardContent className="p-4 pt-2">
               <div className="text-2xl font-bold">
-                {showNumbers ? (
-                  <motion.span
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                  >
-                    {metric.value}
-                  </motion.span>
-                ) : (
-                  <span className="opacity-0">0</span>
-                )}
+                <motion.span
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  {metric.value}
+                </motion.span>
               </div>
-              <p className={`text-xs ${metric.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                {metric.change} desde mês passado
-              </p>
             </CardContent>
           </Card>
         ))}
