@@ -1,13 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { UserType } from "@/types/auth";
-import { useUserState } from "./UserStateContext";
-import { useUserSessionManager } from "./UserSessionManager";
-import { useUserProfileOperations } from "./UserProfileOperations";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// The main UserContext type that combines all relevant context values 
 type UserContextType = {
   userName: string;
   userType: UserType;
@@ -18,16 +14,13 @@ type UserContextType = {
   setIsOverlayOpen: (isOpen: boolean) => void;
   setIsAuthenticated: (isAuth: boolean) => void;
   resetUserInfo: () => void;
-  clearUserSession: () => void;
   saveUserPreferences: () => Promise<void>;
   isAuthLoading: boolean;
   authError: string | null;
-  checkSession: (force?: boolean) => Promise<boolean>;
-  initialCheckDone: boolean;
+  checkSession: () => Promise<boolean>;
 };
 
-// Export the context for useContext usage
-export const UserContext = createContext<UserContextType>({
+const defaultContext: UserContextType = {
   userName: "",
   userType: "participante",
   isOverlayOpen: false,
@@ -37,169 +30,200 @@ export const UserContext = createContext<UserContextType>({
   setIsOverlayOpen: () => {},
   setIsAuthenticated: () => {},
   resetUserInfo: () => {},
-  clearUserSession: () => {},
   saveUserPreferences: async () => {},
-  isAuthLoading: false,
+  isAuthLoading: true,
   authError: null,
   checkSession: async () => false,
-  initialCheckDone: false,
-});
+};
 
-// Hook to use the context
-export const useUser = () => useContext(UserContext);
+const UserContext = createContext<UserContextType>(defaultContext);
 
-// Provider component that wraps the app and provides the context values
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const {
-    userName,
-    userType,
-    isOverlayOpen,
-    isAuthenticated,
-    setUserName,
-    setUserType,
-    setIsOverlayOpen,
-    setIsAuthenticated,
-    resetUserInfo,
-  } = useUserState();
-
+  const [userName, setUserName] = useState<string>("");
+  const [userType, setUserType] = useState<UserType>("participante");
+  const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [initialCheckDone, setInitialCheckDone] = useState<boolean>(false);
-  const [sessionCheckFailed, setSessionCheckFailed] = useState<boolean>(false);
-
-  const { checkSession, authError: sessionAuthError } = useUserSessionManager({
-    setUserName,
-    setUserType,
-    setIsAuthenticated,
-    setUserId,
-  });
-
-  const { saveUserPreferences } = useUserProfileOperations(
-    userId,
-    userName,
-    userType
-  );
+  const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  // Demo user cleanup 
-  useEffect(() => {
-    const checkAndCleanDemoUser = () => {
-      const userName = localStorage.getItem("userName");
-      const demoUserEmails = [
-        "demo@premiads.com",
-        "demo@premiads.app", 
-        "demo@demo.com"
-      ];
-      
-      // If the user is auto-logged in as demo, force cleanup!
-      if (userName && (
-        userName.toLowerCase().includes("demo") || 
-        demoUserEmails.some(email => userName.toLowerCase() === email)
-      )) {
-        console.log("🔥 Demo user detected, cleaning up...");
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.replace("/");
-      }
-    };
-    
-    checkAndCleanDemoUser();
-  }, []);
-
-  const clearUserSession = useCallback(() => {
-    resetUserInfo();
-    setUserId(null);
-    setIsAuthenticated(false);
-    setAuthError(null);
-
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userCredits");
-    localStorage.removeItem("userType");
-    localStorage.removeItem("lastActivity");
-
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith("sb-") || key.includes("supabase")) {
-        localStorage.removeItem(key);
-      }
-    });
-    sessionStorage.clear();
-
-    navigate("/", { replace: true });
-  }, [resetUserInfo, setIsAuthenticated, navigate]);
-
-  // Handle session timeout detection
-  useEffect(() => {
-    if (sessionAuthError && sessionAuthError.includes("expirou")) {
-      toast({
-        title: "Sessão expirada",
-        description: "Sua sessão expirou. Você será redirecionado para fazer login novamente.",
-        variant: "destructive",
-      });
-      
-      // Add a small delay before logout to ensure toast is visible
-      const logoutTimer = setTimeout(() => {
-        clearUserSession();
-      }, 2000);
-      
-      return () => clearTimeout(logoutTimer);
+  // Centralized session checking function with caching
+  const checkSession = useCallback(async (force = false): Promise<boolean> => {
+    // Skip duplicate checks in short time periods unless forced
+    const now = Date.now();
+    if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {
+      return isAuthenticated;
     }
-  }, [sessionAuthError, clearUserSession, toast]);
+    
+    setLastAuthCheck(now);
+    
+    try {
+      setAuthError(null);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session error:", error);
+        setAuthError("Erro ao verificar sua sessão.");
+        setIsAuthenticated(false);
+        setUserId(null);
+        return false;
+      }
+      
+      if (!data.session) {
+        // No active session
+        setIsAuthenticated(false);
+        setUserId(null);
+        return false;
+      }
+      
+      // We have a valid session
+      setIsAuthenticated(true);
+      setUserId(data.session.user.id);
+      
+      // Only fetch profile data if we haven't already or if forced
+      if (force || !userName) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name, user_type")
+            .eq("id", data.session.user.id)
+            .single();
+          
+          if (profileError) throw profileError;
+          
+          if (profileData) {
+            setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || "");
+            setUserType(profileData.user_type as UserType || "participante");
+          } else {
+            setUserName(data.session.user.email?.split('@')[0] || "");
+          }
+        } catch (profileError) {
+          console.warn("Could not fetch profile, using defaults:", profileError);
+          setUserName(data.session.user.email?.split('@')[0] || "");
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error in checkSession:", error);
+      setAuthError("Erro ao verificar sessão. Tente novamente.");
+      return false;
+    }
+  }, [isAuthenticated, lastAuthCheck, userName]);
 
-  // Handle session checks and authentication state
+  // Load user data when component mounts
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setIsAuthLoading(true);
-        const success = await checkSession(true);
-        
-        if (!success) {
-          setSessionCheckFailed(true);
-        }
+        await checkSession(true);
       } catch (error) {
         console.error("Error loading user data:", error);
         setAuthError("Erro ao carregar dados do usuário.");
-        setSessionCheckFailed(true);
       } finally {
         setIsAuthLoading(false);
-        setInitialCheckDone(true);
       }
     };
-
+    
     loadUserData();
-
-    // Better timeout handling with fallback
-    const loadingTimeoutId = setTimeout(() => {
-      if (isAuthLoading && !initialCheckDone) {
-        console.log("Auth verification taking longer than expected");
-        setIsAuthLoading(false);
-        setInitialCheckDone(true);
-        setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
+    
+    // Set up auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event);
         
-        // Make one final attempt to get the session
-        setTimeout(async () => {
+        if (event === "SIGNED_IN" && session) {
+          setIsAuthenticated(true);
+          setUserId(session.user.id);
+          
           try {
-            await checkSession(true);
+            // Set user name and type from profile
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("full_name, user_type")
+              .eq("id", session.user.id)
+              .single();
+            
+            if (profileError) throw profileError;
+            
+            if (profileData) {
+              setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
+              setUserType(profileData.user_type as UserType || "participante");
+            } else {
+              setUserName(session.user.email?.split('@')[0] || "");
+            }
           } catch (error) {
-            console.error("Final session check attempt failed:", error);
+            console.warn("Error loading profile after sign in:", error);
+            setUserName(session.user.email?.split('@')[0] || "");
           }
-        }, 1000);
+        } else if (event === "SIGNED_OUT") {
+          resetUserInfo();
+          setUserId(null);
+          setIsAuthenticated(false);
+        }
       }
-    }, 10000); // 10 seconds timeout
-
+    );
+    
+    // Set a timeout for auth loading
+    const loadingTimeout = setTimeout(() => {
+      if (isAuthLoading) {
+        setIsAuthLoading(false);
+        setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
+      }
+    }, 10000);
+    
     return () => {
-      clearTimeout(loadingTimeoutId);
+      authListener.subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
     };
-  }, [
-    checkSession,
-    resetUserInfo,
-    setIsAuthenticated,
-    setUserName,
-    setUserType,
-    isAuthLoading,
-    initialCheckDone,
-  ]);
+  }, [checkSession]);
+
+  const resetUserInfo = useCallback(() => {
+    setUserName("");
+    setUserType("participante");
+    setIsOverlayOpen(false);
+    setIsAuthenticated(false);
+    setUserId(null);
+  }, []);
+
+  // Save user preferences to Supabase
+  const saveUserPreferences = async () => {
+    if (!userId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: userName,
+          user_type: userType,
+          updated_at: new Date().toISOString(),
+          profile_completed: true
+        })
+        .eq("id", userId);
+      
+      if (error) {
+        console.error("Error saving preferences:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível salvar suas preferências.",
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
+      toast({
+        title: "Sucesso",
+        description: "Suas preferências foram salvas com sucesso.",
+      });
+      
+      console.log("User preferences saved successfully");
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      throw error;
+    }
+  };
 
   return (
     <UserContext.Provider
@@ -213,15 +237,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsOverlayOpen,
         setIsAuthenticated,
         resetUserInfo,
-        clearUserSession,
         saveUserPreferences,
         isAuthLoading,
-        authError: authError || sessionAuthError,
+        authError,
         checkSession,
-        initialCheckDone,
       }}
     >
       {children}
     </UserContext.Provider>
   );
 };
+
+export const useUser = () => useContext(UserContext);

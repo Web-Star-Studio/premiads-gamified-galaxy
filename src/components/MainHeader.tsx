@@ -36,17 +36,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
     { id: "faq", label: "FAQ" },
   ];
 
-  // Handle main button click - either navigate to dashboard or login
-  const handleMainButtonClick = (e: React.MouseEvent) => {
-    if (isAuthenticated) {
-      navigateToDashboard();
-    } else {
-      if (onLoginClick) {
-        onLoginClick();
-      }
-    }
-  };
-
+  // Get the button text based on user type and authentication state
   const getButtonText = () => {
     if (isAuthenticated) {
       if (userType === "participante") return "Ver Missões";
@@ -74,17 +64,18 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
         <DesktopNavigation sections={sections} scrollToSection={scrollToSection} />
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* Always show the user type selector */}
-          <UserTypeSelector 
-            userType={userType} 
-            changeUserType={changeUserType} 
-            setIsOverlayOpen={setIsOverlayOpen} 
-          />
+          {!isAuthenticated && (
+            <UserTypeSelector 
+              userType={userType} 
+              changeUserType={changeUserType} 
+              setIsOverlayOpen={setIsOverlayOpen} 
+            />
+          )}
 
           <Button 
             className="hidden md:flex neon-button items-center justify-center" 
             size="sm"
-            onClick={handleMainButtonClick}
+            onClick={isAuthenticated ? navigateToDashboard : onLoginClick}
           >
             {getButtonText()}
           </Button>
@@ -107,7 +98,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
         sections={sections}
         mobileMenuOpen={mobileMenuOpen}
         scrollToSection={scrollToSection}
-        navigateToDashboard={handleMainButtonClick}
+        navigateToDashboard={isAuthenticated ? navigateToDashboard : onLoginClick}
         userType={userType}
         setMobileMenuOpen={setMobileMenuOpen}
       />

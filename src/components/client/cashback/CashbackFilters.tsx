@@ -38,16 +38,11 @@ const CashbackFilters: React.FC<CashbackFiltersProps> = ({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="border-galaxy-purple/30 w-full sm:w-auto !px-3 !py-2 flex items-center justify-center"
-        >
+        <Button variant="outline" size="icon" className="border-galaxy-purple/30">
           <SlidersHorizontal className="h-4 w-4" />
-          <span className="sm:hidden ml-2 text-xs">Filtros</span>
         </Button>
       </SheetTrigger>
-      <SheetContent className="glass-panel max-w-xs w-full">
+      <SheetContent className="glass-panel">
         <SheetHeader>
           <FilterHeader />
         </SheetHeader>
@@ -74,4 +69,3 @@ const CashbackFilters: React.FC<CashbackFiltersProps> = ({
 };
 
 export default CashbackFilters;
-

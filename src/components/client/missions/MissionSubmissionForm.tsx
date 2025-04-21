@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Mission } from "@/hooks/useMissions";
 import { useToast } from "@/hooks/use-toast";
 import { MissionType } from "@/hooks/useMissionsTypes";
-import { uploadFile } from "@/integrations/supabase/client";
 
 interface MissionSubmissionFormProps {
   mission: Mission | null;
@@ -20,10 +19,7 @@ interface MissionSubmissionFormProps {
 const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmissionFormProps) => {
   const [missionAnswer, setMissionAnswer] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   if (!mission) return null;
@@ -32,38 +28,6 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
-    const maxSizeInBytes = mission.type === "photo" ? 5 * 1024 * 1024 : 50 * 1024 * 1024; // 5MB for images, 50MB for videos
-    if (file.size > maxSizeInBytes) {
-      const maxSizeMB = maxSizeInBytes / (1024 * 1024);
-      toast({
-        title: "Arquivo muito grande",
-        description: `O tamanho máximo permitido é ${maxSizeMB}MB.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file type
-    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/webm'];
-    
-    const validTypes = mission.type === "photo" ? validImageTypes : validVideoTypes;
-    if (!validTypes.includes(file.type)) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: mission.type === "photo" 
-          ? "Por favor, envie uma imagem nos formatos JPG, PNG ou GIF." 
-          : "Por favor, envie um vídeo nos formatos MP4, MOV ou WEBM.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Set file for later upload
-    setSelectedFile(file);
-
-    // Create and set preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -73,94 +37,29 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
 
   const handleClearImage = () => {
     setImagePreview(null);
-    setSelectedFile(null);
   };
 
-  const handleSubmit = async () => {
-    setIsUploading(false);
-    setUploadProgress(0);
+  const handleSubmit = () => {
+    // Prepare submission data based on mission type
+    let submissionData = {};
     
-    try {
-      // Prepare submission data based on mission type
-      let submissionData: any = {};
-      
-      if (mission.type === "form" || mission.type === "survey") {
-        if (!missionAnswer.trim()) {
-          toast({
-            title: "Resposta necessária",
-            description: "Por favor, forneça uma resposta para esta missão.",
-            variant: "destructive",
-          });
-          return;
-        }
-        submissionData = { answer: missionAnswer };
-      } 
-      else if (mission.type === "photo" || mission.type === "video") {
-        if (!selectedFile) {
-          toast({
-            title: "Arquivo necessário",
-            description: "Por favor, envie uma imagem ou vídeo para concluir esta missão.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        setIsUploading(true);
-        
-        // Generate a unique file path
-        const timestamp = Date.now();
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${mission.type}_${timestamp}.${fileExt}`;
-        const filePath = `mission_submissions/${mission.id}/${fileName}`;
-        
-        // Upload to Supabase Storage
-        const { path, error } = await uploadFile('mission-media', filePath, selectedFile);
-        
-        if (error) {
-          throw error;
-        }
-        
-        setIsUploading(false);
-        setUploadProgress(100);
-        
-        submissionData = { mediaUrl: path, fileName: selectedFile.name, fileType: selectedFile.type };
-      } 
-      else if (mission.type === "social" || mission.type === "social_share") {
-        if (!missionAnswer.trim()) {
-          toast({
-            title: "Link necessário",
-            description: "Por favor, insira o link da sua postagem nas redes sociais.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Validate URL format
-        try {
-          new URL(missionAnswer);
-        } catch (err) {
-          toast({
-            title: "Link inválido",
-            description: "Por favor, insira um link válido de uma postagem nas redes sociais.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        submissionData = { shareLink: missionAnswer };
+    if (mission.type === "form" || mission.type === "survey") {
+      submissionData = { answer: missionAnswer };
+    } else if (mission.type === "photo" || mission.type === "video") {
+      if (!imagePreview) {
+        toast({
+          title: "Arquivo necessário",
+          description: "Por favor, envie uma imagem ou vídeo para concluir esta missão.",
+          variant: "destructive",
+        });
+        return;
       }
-      
-      onSubmit(submissionData);
-    } catch (error) {
-      console.error("Error submitting mission:", error);
-      setIsUploading(false);
-      
-      toast({
-        title: "Erro ao enviar missão",
-        description: "Ocorreu um erro ao enviar sua missão. Por favor, tente novamente.",
-        variant: "destructive",
-      });
+      submissionData = { mediaUrl: imagePreview };
+    } else if (mission.type === "social" || mission.type === "social_share") {
+      submissionData = { shareLink: missionAnswer };
     }
+    
+    onSubmit(submissionData);
   };
 
   return (
@@ -183,19 +82,11 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
           <Label>Enviar {mission.type === "photo" ? "foto" : "vídeo"}</Label>
           {imagePreview ? (
             <div className="relative">
-              {mission.type === "photo" ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="max-h-[200px] w-full object-cover rounded-md" 
-                />
-              ) : (
-                <div className="aspect-video bg-gray-800 rounded-md flex items-center justify-center">
-                  <p className="text-center text-sm">
-                    Vídeo selecionado: {selectedFile?.name}
-                  </p>
-                </div>
-              )}
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="max-h-[200px] w-full object-cover rounded-md" 
+              />
               <Button 
                 variant="destructive" 
                 size="sm" 
@@ -226,16 +117,6 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
                   ? "PNG, JPG ou GIF até 5MB" 
                   : "MP4 ou MOV até 50MB"}
               </p>
-            </div>
-          )}
-          
-          {isUploading && (
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-              <div 
-                className="bg-neon-cyan h-2.5 rounded-full" 
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-              <p className="text-xs text-gray-400 mt-1">Enviando arquivo...</p>
             </div>
           )}
           
@@ -309,11 +190,10 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
             (!(mission.type === "checkin" || mission.type === "visit") && 
              !missionAnswer && !imagePreview) || 
             !agreedToTerms || 
-            loading ||
-            isUploading
+            loading
           }
         >
-          {loading || isUploading ? "Enviando..." : "Enviar"}
+          {loading ? "Enviando..." : "Enviar"}
         </Button>
       </div>
     </div>

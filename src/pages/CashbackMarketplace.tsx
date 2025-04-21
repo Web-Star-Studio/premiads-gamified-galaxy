@@ -85,7 +85,7 @@ const CashbackMarketplace: React.FC = () => {
         <SidebarInset className="overflow-y-auto pb-20">
           <ClientHeader />
           
-          <div className="container px-2 sm:px-4 pt-20 py-4 sm:py-8 mx-auto">
+          <div className="container px-4 pt-20 py-8 mx-auto">
             {/* Header with user cashback balance */}
             <CashbackHeader 
               userName={userName} 
@@ -93,8 +93,8 @@ const CashbackMarketplace: React.FC = () => {
             />
             
             {/* Search and filters section */}
-            <div className={`mt-6 flex flex-col sm:flex-row flex-wrap sm:justify-between items-center gap-2 sm:gap-4`}>
-              <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="mt-6 flex flex-wrap justify-between items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3">
                 <CashbackSearch 
                   searchTerm={searchTerm} 
                   setSearchTerm={setSearchTerm} 

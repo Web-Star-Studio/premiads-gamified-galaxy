@@ -2,19 +2,17 @@
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarFooter as Footer } from "@/components/ui/sidebar";
-import { signOutAndCleanup } from "@/utils/auth"; // Use a função robusta diretamente
+import { useAuth } from "@/hooks/useAuth";
 
 export const SidebarFooter = () => {
-  const handleSignOut = async () => {
-    await signOutAndCleanup(); // Use nossa função robusta de logout
-  };
-
+  const { signOut } = useAuth();
+  
   return (
     <Footer className="p-4">
       <Button 
         variant="ghost" 
         className="w-full justify-start gap-2 text-gray-400 hover:text-white"
-        onClick={handleSignOut}
+        onClick={signOut}
       >
         <LogOut className="w-4 h-4" />
         <span>Sair</span>

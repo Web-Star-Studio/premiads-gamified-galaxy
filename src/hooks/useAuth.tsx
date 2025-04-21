@@ -1,16 +1,16 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { signOutAndCleanup } from "@/utils/auth"; 
 import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: any;
-  user: any;
-  loading: boolean;
+  user: any; // Add user property
+  loading: boolean; // Add loading property alias for isLoading
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (credentials: SignUpCredentials, metadata?: any) => Promise<void>;
@@ -24,31 +24,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Check for demo account on mount and clean up if needed
-  useEffect(() => {
-    const checkAndCleanDemoUser = () => {
-      const userName = localStorage.getItem("userName");
-      const demoUserEmails = [
-        "demo@premiads.com",
-        "demo@premiads.app", 
-        "demo@demo.com"
-      ];
-      
-      // Se o usuário está autologado como demo, força limpeza!
-      if (userName && (
-        userName.toLowerCase().includes("demo") || 
-        demoUserEmails.some(email => userName.toLowerCase() === email)
-      )) {
-        console.log("🔥 Demo user detected on auth mount, cleaning up...");
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.replace("/");
-      }
-    };
-    
-    checkAndCleanDemoUser();
-  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -113,13 +88,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await signOutAndCleanup(); // <--- Use robust universal handler
-      setIsAuthenticated(false);
-      setCurrentUser(null);
+      await supabase.auth.signOut();
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro ao sair",
@@ -169,8 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated,
         isLoading,
         currentUser,
-        user: currentUser,
-        loading: isLoading,
+        user: currentUser, // Alias for currentUser
+        loading: isLoading, // Alias for isLoading
         signIn,
         signOut,
         signUp,

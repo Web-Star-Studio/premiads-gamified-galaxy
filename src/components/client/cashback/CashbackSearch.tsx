@@ -16,13 +16,12 @@ const CashbackSearch: React.FC<CashbackSearchProps> = ({ searchTerm, setSearchTe
         placeholder="Buscar cupons..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="pl-10 bg-galaxy-deepPurple/50 border-galaxy-purple/30 h-10 text-base"
+        className="pl-10 bg-galaxy-deepPurple/50 border-galaxy-purple/30"
       />
       {searchTerm && (
         <button 
           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
           onClick={() => setSearchTerm('')}
-          type="button"
         >
           <X className="h-4 w-4" />
         </button>
@@ -32,4 +31,3 @@ const CashbackSearch: React.FC<CashbackSearchProps> = ({ searchTerm, setSearchTe
 };
 
 export default CashbackSearch;
-

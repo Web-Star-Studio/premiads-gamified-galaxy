@@ -1,9 +1,8 @@
-import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import RouteGuard from "@/components/auth/RouteGuard";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
-import { useActiveUserSession } from "@/hooks/useActiveUserSession";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -22,19 +21,6 @@ const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
-  const { isAdmin, isChecking } = useActiveUserSession();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // If not admin and finished checking, redirect
-    if (!isChecking && !isAdmin) {
-      console.log("AdminRoutes: User is not an admin, redirecting");
-      navigate("/", { replace: true });
-    }
-  }, [isAdmin, isChecking, navigate]);
-
-  // Use RouteGuard to protect admin routes
-  // Note: The userType prop accepts "admin" only now
   return (
     <RouteGuard userType="admin">
       <Routes>

@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut } from 'lucide-react';
-import { signOutAndCleanup } from '@/utils/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Sidebar, 
   SidebarHeader, 
@@ -21,15 +22,16 @@ interface ClientSidebarProps {
 
 const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' }) => {
   const location = useLocation();
-
+  const { signOut } = useAuth();
+  
   const isActive = (path: string) => {
+    // Account for both exact matches and nested routes
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   const handleLogout = async () => {
-    await signOutAndCleanup(); // Use função robusta de logout
+    await signOut();
   };
-
   
   return (
     <Sidebar>
@@ -142,6 +144,7 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
           </SidebarGroup>
         </SidebarMenu>
       </SidebarContent>
+      
       <SidebarFooter>
         <button 
           onClick={handleLogout}
