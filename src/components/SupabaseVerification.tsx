@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +9,6 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { storageUtils } from "@/lib/storage-utils";
-import { UserType } from "@/types/auth";
 
 interface TestResult {
   name: string;
@@ -33,7 +31,6 @@ export function SupabaseVerification() {
     // Test 1: Basic Connection
     setResults(prev => [...prev, { name: 'Basic Connection', status: 'pending' }]);
     try {
-      // Use a table we know exists in our schema
       const { data, error } = await supabase.from('profiles').select('count(*)', { count: 'exact', head: true });
       
       if (error) throw error;
@@ -97,31 +94,44 @@ export function SupabaseVerification() {
     setResults(prev => [...prev, { name: 'Database Tables', status: 'pending' }]);
     
     try {
-      // Check essential tables from our schema - only use known tables from the database types
       const knownTables = ['profiles', 'missions', 'raffles', 'submissions', 'raffle_numbers'];
-      const results = await Promise.all(
-        knownTables.map(table => 
-          // Explicitly add type assertion to specify the table name
-          supabase.from(table as any).select('count(*)', { count: 'exact', head: true })
-        )
+      const tableResults = await Promise.all(
+        knownTables.map(async (table) => {
+          try {
+            const { data, error, count } = await supabase
+              .from(table)
+              .select('*', { count: 'exact', head: true });
+            
+            if (error) throw error;
+            
+            return { table, count, success: true };
+          } catch (error) {
+            return { table, error: (error as Error).message, success: false };
+          }
+        })
       );
       
-      const errors = results.filter(result => result.error).map(result => result.error);
+      const failedTables = tableResults.filter(result => !result.success);
       
-      if (errors.length > 0) {
-        throw new Error(`Some tables not accessible: ${errors.map(e => e?.message).join(', ')}`);
+      if (failedTables.length > 0) {
+        setResults(prev => [
+          ...prev.slice(0, -1), 
+          { 
+            name: 'Database Tables', 
+            status: 'error', 
+            message: `Some tables not accessible: ${failedTables.map(t => t.table).join(', ')}` 
+          }
+        ]);
+      } else {
+        setResults(prev => [
+          ...prev.slice(0, -1), 
+          { 
+            name: 'Database Tables', 
+            status: 'success', 
+            message: `All required tables accessible` 
+          }
+        ]);
       }
-      
-      const tableCounts = results.map((r, i) => `${knownTables[i]}: ${r.count || 0}`);
-      
-      setResults(prev => [
-        ...prev.slice(0, -1), 
-        { 
-          name: 'Database Tables', 
-          status: 'success', 
-          message: `All required tables accessible. Row counts: ${tableCounts.join(', ')}` 
-        }
-      ]);
     } catch (error) {
       setResults(prev => [
         ...prev.slice(0, -1), 
