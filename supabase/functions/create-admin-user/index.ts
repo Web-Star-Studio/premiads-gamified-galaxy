@@ -61,10 +61,14 @@ serve(async (req) => {
       }
       
       // Update the user to be an admin
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ user_type: 'admin', profile_completed: true })
-        .eq('id', existingUser.id)
+      const { error: updateError } = await supabase.rpc(
+        'update_user_type',
+        { 
+          user_id: existingUser.id,
+          new_type: 'admin',
+          mark_completed: true
+        }
+      )
       
       if (updateError) throw updateError
       
@@ -93,15 +97,16 @@ serve(async (req) => {
 
     if (error) throw error
 
-    // Create profile with admin role
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user?.id,
+    // Create profile with admin role using RPC instead of direct table access
+    const { error: profileError } = await supabase.rpc(
+      'create_user_profile',
+      {
+        user_id: data.user?.id,
         full_name: fullName,
         user_type: 'admin',
-        profile_completed: true
-      })
+        mark_completed: true
+      }
+    )
 
     if (profileError) throw profileError
 

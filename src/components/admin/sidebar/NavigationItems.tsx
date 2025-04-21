@@ -1,6 +1,6 @@
 
 import React from "react";
-import { NavigationItem } from "./NavigationItem";
+import NavigationItem from "./NavigationItem";
 import { 
   Home, Users, Ticket, FileText, Shield, BarChart, Settings, Bell, 
   Eye, Book, Scale, Database
@@ -9,18 +9,20 @@ import {
 export const NavigationItems = () => {
   return (
     <div className="space-y-1">
-      <NavigationItem to="/admin" icon={<Home className="h-5 w-5" />} label="Dashboard" />
-      <NavigationItem to="/admin/users" icon={<Users className="h-5 w-5" />} label="Usuários" />
-      <NavigationItem to="/admin/lottery" icon={<Ticket className="h-5 w-5" />} label="Sorteios" />
-      <NavigationItem to="/admin/moderation" icon={<Eye className="h-5 w-5" />} label="Moderação" />
-      <NavigationItem to="/admin/rules" icon={<Scale className="h-5 w-5" />} label="Regras" />
-      <NavigationItem to="/admin/reports" icon={<BarChart className="h-5 w-5" />} label="Relatórios" />
-      <NavigationItem to="/admin/monitoring" icon={<Shield className="h-5 w-5" />} label="Monitoramento" />
-      <NavigationItem to="/admin/notifications" icon={<Bell className="h-5 w-5" />} label="Notificações" />
-      <NavigationItem to="/admin/access" icon={<Shield className="h-5 w-5" />} label="Controle de Acesso" />
-      <NavigationItem to="/admin/documentation" icon={<Book className="h-5 w-5" />} label="Documentação" />
-      <NavigationItem to="/admin/settings" icon={<Settings className="h-5 w-5" />} label="Configurações" />
-      <NavigationItem to="/admin/cleanup" icon={<Database className="h-5 w-5" />} label="Limpeza" />
+      <NavigationItem title="Dashboard" url="/admin" icon={Home} description="Visão geral do sistema" />
+      <NavigationItem title="Usuários" url="/admin/users" icon={Users} description="Gerenciamento de usuários" />
+      <NavigationItem title="Sorteios" url="/admin/lottery" icon={Ticket} description="Gerenciamento de sorteios" />
+      <NavigationItem title="Moderação" url="/admin/moderation" icon={Eye} description="Moderação de conteúdo" />
+      <NavigationItem title="Regras" url="/admin/rules" icon={Scale} description="Configuração de regras" />
+      <NavigationItem title="Relatórios" url="/admin/reports" icon={BarChart} description="Relatórios e estatísticas" />
+      <NavigationItem title="Monitoramento" url="/admin/monitoring" icon={Shield} description="Monitoramento do sistema" />
+      <NavigationItem title="Notificações" url="/admin/notifications" icon={Bell} description="Gerenciamento de notificações" />
+      <NavigationItem title="Controle de Acesso" url="/admin/access" icon={Shield} description="Controle de acesso ao sistema" />
+      <NavigationItem title="Documentação" url="/admin/documentation" icon={Book} description="Documentação do sistema" />
+      <NavigationItem title="Configurações" url="/admin/settings" icon={Settings} description="Configurações do sistema" />
+      <NavigationItem title="Limpeza" url="/admin/cleanup" icon={Database} description="Limpeza e manutenção do banco de dados" />
     </div>
   );
 };
+
+export default NavigationItems;

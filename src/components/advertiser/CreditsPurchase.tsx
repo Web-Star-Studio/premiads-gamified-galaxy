@@ -21,8 +21,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   
-  // Update credit packages to reflect the new conversion rate (10 credits = R$1.00)
-  // Package price now equals credits / 10 (10 credits = R$1.00)
+  // Credit packages with the new conversion rate (10 credits = R$1.00)
   const creditPackages = [
     { value: 1, credits: 500, price: 50, bonus: 0 },
     { value: 2, credits: 1000, price: 100, bonus: 100 },
@@ -55,14 +54,11 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
       if (userId) {
         const totalCredits = selectedPackage.credits + selectedPackage.bonus;
         
-        // Update the user's credits in the database
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            credits: (currentCredits || 0) + totalCredits,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", userId);
+        // Update the user's credits in the database - using rpc instead of direct table access
+        const { error } = await supabase.rpc('update_user_credits', {
+          user_id: userId,
+          new_credits: (currentCredits || 0) + totalCredits
+        });
           
         if (error) throw error;
       }

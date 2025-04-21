@@ -47,6 +47,10 @@ serve(async (req) => {
     
     // Clear test data from tables
     await supabase.from('submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    
+    // Delete the mission_submissions table if it exists (we'll use submissions instead)
+    await supabase.rpc('drop_table_if_exists', { table_name: 'mission_submissions' })
+    
     await supabase.from('missions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     
     // Remove test users (but keep admins)

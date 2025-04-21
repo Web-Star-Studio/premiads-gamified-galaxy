@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,21 +60,11 @@ const SubmissionsApproval = () => {
         
         const missionIds = missionsData.map(mission => mission.id);
         
-        // Get pending submissions for these missions
-        const { data: submissionsData, error: submissionsError } = await supabase
-          .from("mission_submissions")
-          .select(`
-            id, 
-            status, 
-            submission_data, 
-            submitted_at, 
-            feedback,
-            user_id,
-            mission_id
-          `)
-          .in("mission_id", missionIds)
-          .eq("status", "pending")
-          .order("submitted_at", { ascending: false });
+        // Get pending submissions for these missions using rpc call to get around type issues
+        const { data: submissionsData, error: submissionsError } = await supabase.rpc(
+          'get_mission_submissions',
+          { mission_ids: missionIds, status_filter: 'pending' }
+        );
           
         if (submissionsError) throw submissionsError;
         
@@ -85,41 +74,20 @@ const SubmissionsApproval = () => {
           return;
         }
         
-        // Get user profiles for submissions
-        const userIds = [...new Set(submissionsData.map(sub => sub.user_id))];
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", userIds);
-          
-        if (profilesError) throw profilesError;
-        
-        // Map mission titles to an object for easy lookup
-        const missionTitles = missionsData.reduce((acc, mission) => {
-          acc[mission.id] = mission.title;
-          return acc;
-        }, {} as Record<string, string>);
-        
-        // Map user names to an object for easy lookup
-        const userNames = (profilesData || []).reduce((acc, profile) => {
-          acc[profile.id] = profile.full_name;
-          return acc;
-        }, {} as Record<string, string>);
-        
         // Format submissions for display
-        const formattedSubmissions: Submission[] = submissionsData.map(submission => {
+        const formattedSubmissions: Submission[] = submissionsData.map((submission: any) => {
           const submissionType = determineSubmissionType(submission.submission_data);
           const submissionContent = getSubmissionContent(submission.submission_data, submissionType);
           
           return {
             id: submission.id,
             user: {
-              name: userNames[submission.user_id] || "Usuário",
+              name: submission.user_name || "Usuário",
               id: submission.user_id
             },
             mission: {
               id: submission.mission_id,
-              title: missionTitles[submission.mission_id] || "Missão"
+              title: submission.mission_title || "Missão"
             },
             type: submissionType,
             content: submissionContent,
@@ -183,11 +151,14 @@ const SubmissionsApproval = () => {
     try {
       const submission = submissions[currentIndex];
       
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ status: "approved" })
-        .eq("id", submission.id);
+      // Update submission status in database using RPC
+      const { error } = await supabase.rpc(
+        'update_submission_status',
+        {
+          submission_id: submission.id,
+          new_status: 'approved'
+        }
+      );
         
       if (error) throw error;
       
@@ -225,11 +196,14 @@ const SubmissionsApproval = () => {
     try {
       const submission = submissions[currentIndex];
       
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ status: "rejected" })
-        .eq("id", submission.id);
+      // Update submission status in database using RPC
+      const { error } = await supabase.rpc(
+        'update_submission_status',
+        {
+          submission_id: submission.id,
+          new_status: 'rejected'
+        }
+      );
         
       if (error) throw error;
       
