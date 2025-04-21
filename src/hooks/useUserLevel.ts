@@ -25,7 +25,14 @@ export function useUserLevel(points: number, userId?: string) {
         if (levelsData && levelsData.length > 0) {
           // Convert the benefits JSON to the correct type
           const typedLevelsData: UserLevel[] = levelsData.map(level => ({
-            ...level,
+            id: level.id,
+            name: level.name,
+            min_points: level.min_points,
+            max_points: level.max_points,
+            points_multiplier: level.points_multiplier,
+            icon: level.icon,
+            color: level.color,
+            description: level.description,
             benefits: {
               ticket_discount: level.benefits?.ticket_discount ?? 0,
               access_to_exclusive_raffles: level.benefits?.access_to_exclusive_raffles ?? false,

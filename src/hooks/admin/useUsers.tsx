@@ -2,7 +2,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/types';
+import { User as UserType } from '@/types';
+
+// Define a User type that matches what components expect
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'moderator' | 'anunciante' | 'participante';
+  status: 'active' | 'inactive' | 'pending';
+  avatar_url?: string;
+  lastLogin?: string;
+}
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,13 +29,15 @@ export const useUsers = () => {
         
       if (error) throw error;
       
-      // Type assertion and mapping
+      // Map the data to match our User interface
       const mappedUsers = (data || []).map((user: any) => ({
         id: user.id,
         email: user.email,
-        full_name: user.full_name || '',
-        user_type: user.user_type || 'participante',
-        avatar_url: user.avatar_url || undefined
+        name: user.full_name || 'User',
+        role: user.user_type || 'participante',
+        status: user.active ? 'active' : 'inactive',
+        avatar_url: user.avatar_url || undefined,
+        lastLogin: user.last_sign_in_at || 'Never'
       }));
       
       setUsers(mappedUsers);
@@ -42,6 +55,73 @@ export const useUsers = () => {
     }
   }, [toast]);
 
+  // Add updateUserStatus method
+  const updateUserStatus = async (userId: string, active: boolean) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ active })
+        .eq('id', userId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: active ? 'active' : 'inactive' } 
+            : user
+        )
+      );
+      
+      toast({
+        title: 'User updated',
+        description: `User status updated to ${active ? 'active' : 'inactive'}`
+      });
+    } catch (err: any) {
+      console.error('Error updating user status:', err);
+      toast({
+        title: 'Error updating user',
+        description: err.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add deleteUser method
+  const deleteUser = async (userId: string) => {
+    try {
+      setLoading(true);
+      
+      // This will delete the auth.user and cascade to the profile via RLS
+      const { error } = await supabase
+        .rpc('delete_user', { user_id: userId });
+        
+      if (error) throw error;
+      
+      // Update local state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      
+      toast({
+        title: 'User deleted',
+        description: 'User has been deleted successfully'
+      });
+    } catch (err: any) {
+      console.error('Error deleting user:', err);
+      toast({
+        title: 'Error deleting user',
+        description: err.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -50,6 +130,8 @@ export const useUsers = () => {
     users,
     loading,
     error,
-    fetchUsers
+    fetchUsers,
+    updateUserStatus,
+    deleteUser
   };
 };

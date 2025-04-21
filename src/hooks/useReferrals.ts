@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -34,9 +35,9 @@ export const useReferrals = () => {
         // Get user's referral code
         const { data: referralData, error: referralError } = await supabase
           .from('referrals')
-          .select('referral_code, referred:profiles(full_name, email)')
+          .select('referral_code')
           .eq('referrer_id', userId)
-          .single();
+          .maybeSingle();
         
         if (referralError) throw referralError;
         
@@ -46,7 +47,7 @@ export const useReferrals = () => {
         setReferralCode(userReferralCode);
         setReferralLink(`https://premiads.com/r/${userReferralCode}`);
         
-        // Get user's referrals with joined profile data
+        // Get user's referrals with a proper join
         const { data: allReferrals, error: allReferralsError } = await supabase
           .from('referrals')
           .select(`
@@ -54,21 +55,48 @@ export const useReferrals = () => {
             status, 
             created_at, 
             points_awarded,
-            referred:profiles(full_name, email)
+            referred_id
           `)
           .eq('referrer_id', userId);
         
         if (allReferralsError) throw allReferralsError;
         
-        const mappedReferrals: Referral[] = (allReferrals || []).map(referral => ({
-          id: referral.id,
-          name: referral.referred?.full_name || "Amigo convidado",
-          email: referral.referred?.email,
-          status: referral.status as Referral['status'],
-          date: referral.created_at,
-          completedMissions: referral.status === "completed" ? 1 : 0,
-          pointsEarned: referral.points_awarded || 0
-        }));
+        // If no referrals yet, just return empty array
+        if (!allReferrals || allReferrals.length === 0) {
+          setReferrals([]);
+          return;
+        }
+        
+        // Get referred user profiles separately
+        const referredIds = allReferrals.map(ref => ref.referred_id).filter(Boolean);
+        const { data: profiles, error: profilesError } = referredIds.length > 0 
+          ? await supabase
+              .from('profiles')
+              .select('id, full_name, email')
+              .in('id', referredIds)
+          : { data: [], error: null };
+        
+        if (profilesError) throw profilesError;
+        
+        // Create a map for quick lookup
+        const profileMap = new Map();
+        (profiles || []).forEach(profile => {
+          profileMap.set(profile.id, profile);
+        });
+        
+        const mappedReferrals: Referral[] = (allReferrals || []).map(referral => {
+          const profile = referral.referred_id ? profileMap.get(referral.referred_id) : null;
+          
+          return {
+            id: referral.id,
+            name: profile?.full_name || "Amigo convidado",
+            email: profile?.email,
+            status: referral.status as Referral['status'],
+            date: referral.created_at,
+            completedMissions: referral.status === "completed" ? 1 : 0,
+            pointsEarned: referral.points_awarded || 0
+          };
+        });
         
         setReferrals(mappedReferrals);
         playSound("chime");

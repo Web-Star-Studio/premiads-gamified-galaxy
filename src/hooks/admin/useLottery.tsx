@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +48,7 @@ export const useLottery = () => {
           type: raffle.type,
           points: raffle.points,
           numbers_total: raffle.numbers_total,
-          status: raffle.status as Lottery['status'], // Type assertion
+          status: raffle.status as Lottery['status'],
           start_date: raffle.start_date,
           end_date: raffle.end_date,
           draw_date: raffle.draw_date,
@@ -107,9 +108,10 @@ export const useLottery = () => {
       // Add the new lottery to state
       const newLottery: Lottery = {
         ...data,
+        winner: null,
+        numbers: [],
         progress: 0,
-        numbersSold: 0,
-        numbers: []
+        numbersSold: 0
       };
       
       setLotteries(prev => [newLottery, ...prev]);
@@ -214,7 +216,7 @@ export const useLottery = () => {
         if (lottery.id === lotteryId) {
           return {
             ...lottery,
-            status: 'completed',
+            status: 'completed' as Lottery['status'],
             winner: {
               id: profile.id,
               name: profile.full_name || 'Unknown',
