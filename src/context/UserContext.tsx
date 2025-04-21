@@ -45,16 +45,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Add an explicit method to clear user session
   const clearUserSession = useCallback(() => {
-    console.log("UserContext: Clearing user session");
+    console.log("UserContext: Clearing user session [forced]");
     resetUserInfo();
     setUserId(null);
     setIsAuthenticated(false);
     setAuthError(null);
-    
+
     // Clear any user data from localStorage
     localStorage.removeItem("userName");
     localStorage.removeItem("userCredits");
     localStorage.removeItem("userType");
+    localStorage.removeItem("lastActivity");
+
+    // Remove any Supabase session/storage keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith("sb-") || key.includes("supabase")) {
+        localStorage.removeItem(key);
+      }
+    });
+    sessionStorage.clear();
+
+    // Hard reload to fully reset (as last resort)
+    window.location.replace("/");
   }, [resetUserInfo]);
 
   // Load user data and subscribe to auth changes
