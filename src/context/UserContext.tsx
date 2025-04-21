@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { UserType } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,9 @@ type UserContextType = {
   setIsAuthenticated: (isAuth: boolean) => void;
   resetUserInfo: () => void;
   saveUserPreferences: () => Promise<void>;
+  isAuthLoading: boolean;
+  authError: string | null;
+  checkSession: () => Promise<boolean>;
 };
 
 const defaultContext: UserContextType = {
@@ -28,6 +31,9 @@ const defaultContext: UserContextType = {
   setIsAuthenticated: () => {},
   resetUserInfo: () => {},
   saveUserPreferences: async () => {},
+  isAuthLoading: true,
+  authError: null,
+  checkSession: async () => false,
 };
 
 const UserContext = createContext<UserContextType>(defaultContext);
@@ -38,33 +44,86 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
   const { toast } = useToast();
+
+  // Centralized session checking function with caching
+  const checkSession = useCallback(async (force = false): Promise<boolean> => {
+    // Skip duplicate checks in short time periods unless forced
+    const now = Date.now();
+    if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {
+      return isAuthenticated;
+    }
+    
+    setLastAuthCheck(now);
+    
+    try {
+      setAuthError(null);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session error:", error);
+        setAuthError("Erro ao verificar sua sessão.");
+        setIsAuthenticated(false);
+        setUserId(null);
+        return false;
+      }
+      
+      if (!data.session) {
+        // No active session
+        setIsAuthenticated(false);
+        setUserId(null);
+        return false;
+      }
+      
+      // We have a valid session
+      setIsAuthenticated(true);
+      setUserId(data.session.user.id);
+      
+      // Only fetch profile data if we haven't already or if forced
+      if (force || !userName) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name, user_type")
+            .eq("id", data.session.user.id)
+            .single();
+          
+          if (profileError) throw profileError;
+          
+          if (profileData) {
+            setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || "");
+            setUserType(profileData.user_type as UserType || "participante");
+          } else {
+            setUserName(data.session.user.email?.split('@')[0] || "");
+          }
+        } catch (profileError) {
+          console.warn("Could not fetch profile, using defaults:", profileError);
+          setUserName(data.session.user.email?.split('@')[0] || "");
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error in checkSession:", error);
+      setAuthError("Erro ao verificar sessão. Tente novamente.");
+      return false;
+    }
+  }, [isAuthenticated, lastAuthCheck, userName]);
 
   // Load user data when component mounts
   useEffect(() => {
     const loadUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user?.id) {
-        setUserId(session.user.id);
-        setIsAuthenticated(true);
-        
-        // Fetch user profile
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("full_name, user_type")
-          .eq("id", session.user.id)
-          .single();
-        
-        if (error) {
-          console.error("Error loading user profile:", error);
-          return;
-        }
-        
-        if (data) {
-          setUserName(data.full_name || session.user.email?.split('@')[0] || "");
-          setUserType(data.user_type as UserType || "participante");
-        }
+      try {
+        setIsAuthLoading(true);
+        await checkSession(true);
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        setAuthError("Erro ao carregar dados do usuário.");
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     
@@ -76,19 +135,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         console.log("Auth state changed:", event);
         
         if (event === "SIGNED_IN" && session) {
-          setUserId(session.user.id);
           setIsAuthenticated(true);
+          setUserId(session.user.id);
           
-          // Fetch user profile
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("full_name, user_type")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (!error && data) {
-            setUserName(data.full_name || session.user.email?.split('@')[0] || "");
-            setUserType(data.user_type as UserType || "participante");
+          try {
+            // Set user name and type from profile
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("full_name, user_type")
+              .eq("id", session.user.id)
+              .single();
+            
+            if (profileError) throw profileError;
+            
+            if (profileData) {
+              setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
+              setUserType(profileData.user_type as UserType || "participante");
+            } else {
+              setUserName(session.user.email?.split('@')[0] || "");
+            }
+          } catch (error) {
+            console.warn("Error loading profile after sign in:", error);
+            setUserName(session.user.email?.split('@')[0] || "");
           }
         } else if (event === "SIGNED_OUT") {
           resetUserInfo();
@@ -98,17 +166,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     );
     
+    // Set a timeout for auth loading
+    const loadingTimeout = setTimeout(() => {
+      if (isAuthLoading) {
+        setIsAuthLoading(false);
+        setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
+      }
+    }, 10000);
+    
     return () => {
       authListener.subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
     };
-  }, []);
+  }, [checkSession]);
 
-  const resetUserInfo = () => {
+  const resetUserInfo = useCallback(() => {
     setUserName("");
     setUserType("participante");
     setIsOverlayOpen(false);
     setIsAuthenticated(false);
-  };
+    setUserId(null);
+  }, []);
 
   // Save user preferences to Supabase
   const saveUserPreferences = async () => {
@@ -160,6 +238,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated,
         resetUserInfo,
         saveUserPreferences,
+        isAuthLoading,
+        authError,
+        checkSession,
       }}
     >
       {children}

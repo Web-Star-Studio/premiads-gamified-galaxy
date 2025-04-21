@@ -11,9 +11,10 @@ import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
 import AuthOverlay from "@/components/auth/AuthOverlay";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const MainContent = () => {
-  const { isOverlayOpen, setIsOverlayOpen } = useUser();
+  const { isOverlayOpen, setIsOverlayOpen, isAuthLoading, authError } = useUser();
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
@@ -28,6 +29,13 @@ const MainContent = () => {
       document.body.style.overflow = "";
     };
   }, [isOverlayOpen, showAuth]);
+
+  // Show temporary loading screen while checking auth
+  if (isAuthLoading) {
+    return <LoadingScreen message="Verificando sessão..." />;
+  }
+
+  // If there's an auth error, the app continues normally - errors will be handled by specific components
 
   return (
     <div className="flex flex-col min-h-screen w-full">
