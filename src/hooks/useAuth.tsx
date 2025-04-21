@@ -277,7 +277,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Check if user was created successfully
       if (data.user) {
-        setUserName(credentials.name);
+        // Don't use setUserName directly as it's not defined in this scope
         setUserType(credentials.userType || "participante");
         setIsAuthenticated(true);
         
