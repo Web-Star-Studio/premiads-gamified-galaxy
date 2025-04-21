@@ -35,12 +35,15 @@ const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(userType)) {
-    if (userType === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else if (userType === "employee") {
-      return <Navigate to="/employee" replace />;
-    } else {
-      return <Navigate to="/client" replace />;
+    switch (userType) {
+      case "admin":
+        return <Navigate to="/admin" replace />;
+      case "employee":
+        return <Navigate to="/employee" replace />;
+      case "client":
+        return <Navigate to="/client" replace />;
+      default:
+        return <Navigate to="/auth" replace />;
     }
   }
 

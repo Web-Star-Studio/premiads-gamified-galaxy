@@ -6,8 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import AuthPage from "@/pages/AuthPage";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
-import EmployeeDashboard from "@/pages/EmployeeDashboard";
-import ClientDashboard from "@/pages/ClientDashboard";
+import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
+import ClientDashboard from "@/pages/client/ClientDashboard";
 import AuthGuard from "@/components/auth/AuthGuard";
 import "./App.css";
 

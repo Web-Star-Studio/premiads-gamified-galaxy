@@ -1,4 +1,3 @@
-
 export type UserType = 'admin' | 'employee' | 'client';
 
 export interface SignUpCredentials {
