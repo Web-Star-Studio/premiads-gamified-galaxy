@@ -9,7 +9,253 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cashback_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          advertiser_image: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          conditions: string | null
+          created_at: string | null
+          description: string | null
+          discount_percentage: number
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          min_purchase: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percentage: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_purchase?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          advertiser_image?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          conditions?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_percentage?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_purchase?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cashback_redemptions: {
+        Row: {
+          amount: number
+          campaign_id: string | null
+          code: string | null
+          created_at: string | null
+          id: string
+          redeemed_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          campaign_id?: string | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashback_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "cashback_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_submissions: {
+        Row: {
+          feedback: string | null
+          id: string
+          mission_id: string | null
+          status: string | null
+          submission_data: Json | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          feedback?: string | null
+          id?: string
+          mission_id?: string | null
+          status?: string | null
+          submission_data?: Json | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          feedback?: string | null
+          id?: string
+          mission_id?: string | null
+          status?: string | null
+          submission_data?: Json | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_submissions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          advertiser_id: string | null
+          business_type: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          points: number
+          requirements: Json | null
+          start_date: string | null
+          target_audience_age_max: number | null
+          target_audience_age_min: number | null
+          target_audience_gender: string | null
+          target_audience_region: string | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          business_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          points?: number
+          requirements?: Json | null
+          start_date?: string | null
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
+          target_audience_gender?: string | null
+          target_audience_region?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          business_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          points?: number
+          requirements?: Json | null
+          start_date?: string | null
+          target_audience_age_max?: number | null
+          target_audience_age_min?: number | null
+          target_audience_gender?: string | null
+          target_audience_region?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          credits: number | null
+          description: string | null
+          email: string | null
+          email_notifications: boolean | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          points: number | null
+          profile_completed: boolean | null
+          push_notifications: boolean | null
+          updated_at: string | null
+          user_type: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          email?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          points?: number | null
+          profile_completed?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          email?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          points?: number | null
+          profile_completed?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
