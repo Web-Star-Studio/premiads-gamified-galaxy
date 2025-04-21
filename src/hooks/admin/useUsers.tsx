@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 export interface User {
   id: string;
@@ -42,17 +43,21 @@ export const useUsers = () => {
         return;
       }
       
-      // Safely type cast the response data
-      const userData = Array.isArray(functionData) ? functionData : [];
-      const mappedUsers: User[] = userData.map((user: UserRPCResponse) => ({
-        id: user.id,
-        email: user.email,
-        name: user.full_name || 'User',
-        role: (user.user_type || 'participante') as User['role'],
-        status: user.active ? 'active' : 'inactive',
-        avatar_url: user.avatar_url || undefined,
-        lastLogin: user.last_sign_in_at || 'Never'
-      }));
+      // Parse the JSON data and properly type it
+      const mappedUsers: User[] = (functionData as any[]).map((jsonData: any) => {
+        // Parse each JSON object to match our UserRPCResponse structure
+        const user = jsonData as unknown as UserRPCResponse;
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.full_name || 'User',
+          role: (user.user_type || 'participante') as User['role'],
+          status: user.active ? 'active' : 'inactive',
+          avatar_url: user.avatar_url || undefined,
+          lastLogin: user.last_sign_in_at || 'Never'
+        };
+      });
       
       setUsers(mappedUsers);
       setError(null);
