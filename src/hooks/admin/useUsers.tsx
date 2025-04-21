@@ -40,9 +40,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use a more explicit type assertion with generic parameters
+      // Fixed: Use proper generic type parameters for RPC call
       const { data: rawData, error } = await supabase
-        .rpc<GetAllUsersResponse[]>('get_all_users');
+        .rpc<GetAllUsersResponse[], null>('get_all_users', null);
         
       if (error) throw error;
       
@@ -127,9 +127,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use a more explicit type assertion with generic parameters and params interface
+      // Fixed: Use proper generic type parameters for RPC call
       const { error } = await supabase
-        .rpc('delete_user', { user_id: userId } as DeleteUserParams);
+        .rpc<null, DeleteUserParams>('delete_user', { user_id: userId });
         
       if (error) throw error;
       
