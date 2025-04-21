@@ -33,6 +33,7 @@ export function SupabaseVerification() {
     // Test 1: Basic Connection
     setResults(prev => [...prev, { name: 'Basic Connection', status: 'pending' }]);
     try {
+      // Use a table we know exists in our schema
       const { data, error } = await supabase.from('profiles').select('count(*)', { count: 'exact', head: true });
       
       if (error) throw error;
@@ -96,7 +97,7 @@ export function SupabaseVerification() {
     setResults(prev => [...prev, { name: 'Database Tables', status: 'pending' }]);
     
     try {
-      // Check essential tables
+      // Check essential tables - only use tables we know exist in our schema
       const tables = ['profiles', 'missions', 'submissions', 'raffles', 'raffle_numbers'];
       const results = await Promise.all(
         tables.map(table => 
@@ -337,7 +338,7 @@ export function SupabaseVerification() {
         )}
         
         {overallStatus === 'warning' && (
-          <Alert variant="warning">
+          <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Warnings Detected</AlertTitle>
             <AlertDescription>
