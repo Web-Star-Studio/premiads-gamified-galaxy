@@ -36,10 +36,11 @@ export const useUsers = () => {
       setLoading(true);
       
       // Properly type the response from the RPC function
-      const { data: rawData, error } = await supabase.rpc('get_all_users') as { 
-        data: GetAllUsersResponse[]; 
-        error: any 
-      };
+      const { data: rawData, error } = await supabase
+        .rpc('get_all_users') as unknown as { 
+          data: GetAllUsersResponse[]; 
+          error: any 
+        };
         
       if (error) throw error;
       
@@ -127,7 +128,7 @@ export const useUsers = () => {
       // This will delete the auth.user and cascade to the profile via RLS
       // Properly type the response from the RPC function
       const { error } = await supabase
-        .rpc('delete_user', { user_id: userId }) as { error: any };
+        .rpc('delete_user', { user_id: userId }) as unknown as { error: any };
         
       if (error) throw error;
       
