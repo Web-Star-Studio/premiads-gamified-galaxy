@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserProvider, useUser } from "@/context/UserContext";
 import MainHeader from "@/components/MainHeader";
 import Hero from "@/components/Hero";
@@ -14,10 +15,38 @@ import AuthOverlay from "@/components/auth/AuthOverlay";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const MainContent = () => {
-  const { isOverlayOpen, setIsOverlayOpen, isAuthLoading, authError, initialCheckDone } = useUser();
+  const {
+    isOverlayOpen,
+    setIsOverlayOpen,
+    isAuthLoading,
+    authError,
+    initialCheckDone,
+    isAuthenticated,
+    userType
+  } = useUser();
   const [showAuth, setShowAuth] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const navigate = useNavigate();
+
+  // AUTOMATIC REDIRECT FOR AUTHENTICATED USERS
+  useEffect(() => {
+    // Wait until auth status is loaded
+    if (initialCheckDone && isAuthenticated && !isAuthLoading) {
+      // Only redirect if user is on "/" route
+      if (window.location.pathname === "/") {
+        if (userType === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (userType === "anunciante") {
+          navigate("/anunciante", { replace: true });
+        } else {
+          // Default to participante
+          navigate("/cliente", { replace: true });
+        }
+      }
+    }
+    // No dependency on showAuth or isOverlayOpen here (avoid infinite loop)
+  }, [isAuthenticated, userType, isAuthLoading, initialCheckDone, navigate]);
 
   useEffect(() => {
     // Prevent scrolling when overlay is open
@@ -123,3 +152,4 @@ const Index = () => {
 };
 
 export default Index;
+
