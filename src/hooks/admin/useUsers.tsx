@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +34,6 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use correct generic type for RPC function
       const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;
@@ -45,7 +43,6 @@ export const useUsers = () => {
         return;
       }
       
-      // Map the data to match our User interface
       const mappedUsers: User[] = (data as unknown as GetAllUsersResponse[]).map((user) => ({
         id: user.id,
         email: user.email,
@@ -75,11 +72,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const updateData: Record<string, any> = { active };
-      
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({ active })
         .eq('id', userId);
         
       if (error) throw error;

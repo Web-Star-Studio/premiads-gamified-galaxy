@@ -9,7 +9,7 @@ export const useUserOperations = () => {
 
   const updateUserStatus = useCallback(async (userId: string, active: boolean) => {
     try {
-      const updateData: Record<string, boolean> = { active };
+      const updateData = { active };
       
       const { error } = await supabase
         .from('profiles')
@@ -37,10 +37,9 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      // Use type assertion with a Record<string, string> to fix type error
       const { error } = await supabase.rpc('delete_user', {
         user_id: userId
-      } as Record<string, string>);
+      });
         
       if (error) throw error;
       
