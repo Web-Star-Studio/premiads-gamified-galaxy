@@ -5,6 +5,7 @@ import { UserType } from "@/types/auth";
 import { useUserState } from "./UserStateContext";
 import { useUserSessionManager } from "./UserSessionManager";
 import { useUserProfileOperations } from "./UserProfileOperations";
+import { useNavigate } from "react-router-dom";
 
 // The main UserContext type that combines all relevant context values 
 type UserContextType = {
@@ -25,8 +26,7 @@ type UserContextType = {
   initialCheckDone: boolean;
 };
 
-// Create the context with a default value
-export const UserContext = createContext<UserContextType>({
+const UserContext = createContext<UserContextType>({
   userName: "",
   userType: "participante",
   isOverlayOpen: false,
@@ -44,9 +44,5 @@ export const UserContext = createContext<UserContextType>({
   initialCheckDone: false,
 });
 
-// Hook to use the context
 export const useUser = () => useContext(UserContext);
 
-// For backward compatibility with the old implementation
-// This is re-exporting the UserProvider from UserProvider.tsx
-export { UserProvider } from "./UserProvider";

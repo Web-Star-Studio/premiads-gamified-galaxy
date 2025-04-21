@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthMethods } from "@/hooks/useAuthMethods";
 import { useToast } from "@/hooks/use-toast";
 import { validateLogin } from "./authValidation";
@@ -9,6 +10,7 @@ import EmailNotConfirmedBox from "./EmailNotConfirmedBox";
 import LoginTimeout from "./LoginTimeout";
 import ForgotPasswordPrompt from "./ForgotPasswordPrompt";
 import { useNavigation } from "@/components/header/useNavigation";
+import { useUser } from "@/context/UserContext";
 
 type Props = {
   onSuccess: () => void;
@@ -25,6 +27,7 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
   const { signIn, loading } = useAuthMethods();
   const { toast } = useToast();
   const { navigateToDashboard } = useNavigation();
+  const { userType } = useUser();
 
   function triggerTimeout() {
     setLoadingTimeout(false);
@@ -54,14 +57,12 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
     setLoginAttempt(prev => prev + 1);
 
     try {
-      // signIn now returns boolean on success
-      // We'll just check for success, and trust session/user will be correctly set in the provider
       const success = await signIn({ email, password });
 
       await new Promise((resolve) => setTimeout(resolve, 400));
 
       if (success) {
-        // User should now be authenticated
+        // User is now authenticated, navigate based on user type
         setErrors({});
         setLoginAttempt(0);
         setEmailNotConfirmed(false);
