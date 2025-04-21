@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import MainHeader from "@/components/MainHeader";
@@ -32,18 +31,19 @@ const Index = () => {
     };
   }, [isOverlayOpen, showAuth]);
 
-  // Show loading screen while checking auth, but with a simplified approach
   if (isLoading) {
     return <LoadingScreen message="Carregando..." />;
   }
 
   // Redirect authenticated users to their dashboard
   if (isAuthenticated && userType) {
+    console.log("Redirecting authenticated user:", { userType });
+    
     switch(userType) {
-      case "anunciante":
-        return <Navigate to="/anunciante" replace />;
       case "admin":
         return <Navigate to="/admin" replace />;
+      case "anunciante":
+        return <Navigate to="/anunciante" replace />;
       default:
         return <Navigate to="/cliente" replace />;
     }

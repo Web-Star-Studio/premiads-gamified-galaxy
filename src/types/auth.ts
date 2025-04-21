@@ -12,3 +12,4 @@ export interface SignInCredentials {
 }
 
 export type UserType = "participante" | "anunciante" | "admin";
+
