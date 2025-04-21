@@ -2,46 +2,17 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface RouteGuardProps {
   children: ReactNode;
   userType?: "anunciante" | "participante" | "admin" | null;
 }
 
-/**
- * A component to protect routes that require authentication
- * Uses mock authentication for now - will be replaced with Supabase
- */
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Mock authentication for development
-  const [currentUserType, setCurrentUserType] = useState<string | null>("participante"); // Mock user type
-
-  // Simulate authentication check delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      
-      // For development, routes are authenticated by default 
-      // This will be replaced with actual Supabase auth checks
-      const mockAuth = localStorage.getItem("mockAuth");
-      
-      if (mockAuth === "false") {
-        setIsAuthenticated(false);
-      }
-      
-      // Get mock user type from localStorage
-      const storedUserType = localStorage.getItem("userType");
-      if (storedUserType) {
-        setCurrentUserType(storedUserType);
-      }
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Show loading spinner while checking authentication
+  const { isAuthenticated, isLoading, currentUser } = useAuth();
+  
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-galaxy-dark">
@@ -56,11 +27,13 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // If userType is specified, check if user has correct type
-  if (userType && currentUserType !== userType) {
+  if (userType && currentUser?.user_metadata?.user_type !== userType) {
     // Redirect to appropriate dashboard based on user type
-    if (currentUserType === "anunciante") {
+    const userRole = currentUser?.user_metadata?.user_type;
+    
+    if (userRole === "anunciante") {
       return <Navigate to="/anunciante" />;
-    } else if (currentUserType === "admin") {
+    } else if (userRole === "admin") {
       return <Navigate to="/admin" />;
     } else {
       return <Navigate to="/cliente" />;

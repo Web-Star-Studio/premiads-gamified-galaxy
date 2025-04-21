@@ -13,9 +13,9 @@ export interface User {
   lastLogin?: string;
 }
 
-// Define a type for the get_all_users RPC response
+// Update the GetAllUsersResponse interface to match the RPC function
 interface GetAllUsersResponse {
-  id: string;
+  id: uuid;
   email: string;
   full_name: string | null;
   user_type: string | null;
@@ -34,8 +34,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
-        .rpc('get_all_users') as { data: GetAllUsersResponse[] | null, error: any };
+      const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;
       
@@ -45,7 +44,7 @@ export const useUsers = () => {
       }
       
       // Map the data to match our User interface
-      const mappedUsers: User[] = data.map((user) => ({
+      const mappedUsers: User[] = data.map((user: GetAllUsersResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -118,8 +117,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { error } = await supabase
-        .rpc('delete_user', { user_id: userId });
+      const { error } = await supabase.rpc('delete_user', {
+        user_id: userId
+      });
         
       if (error) throw error;
       
