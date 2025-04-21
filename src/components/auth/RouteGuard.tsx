@@ -45,7 +45,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
         console.log("Authentication check is taking longer than expected");
         setAuthTimeout(true);
       }
-    }, 5000);
+    }, 10000); // Increased to 10s
 
     return () => clearTimeout(timeoutId);
   }, [checkSession, initialCheckDone, isAuthLoading, isAuthenticated, contextUserType]);

@@ -26,6 +26,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [initialCheckDone, setInitialCheckDone] = useState<boolean>(false);
+  const [sessionCheckFailed, setSessionCheckFailed] = useState<boolean>(false);
 
   const { checkSession, authError: sessionAuthError } = useUserSessionManager({
     setUserName,
@@ -65,13 +66,37 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     window.location.replace("/");
   }, [resetUserInfo, setIsAuthenticated]);
 
+  // Handle session timeout detection
+  useEffect(() => {
+    if (sessionAuthError && sessionAuthError.includes("expirou")) {
+      toast({
+        title: "Sessão expirada",
+        description: "Sua sessão expirou. Você será redirecionado para fazer login novamente.",
+        variant: "destructive",
+      });
+      
+      // Add a small delay before logout to ensure toast is visible
+      const logoutTimer = setTimeout(() => {
+        clearUserSession();
+      }, 2000);
+      
+      return () => clearTimeout(logoutTimer);
+    }
+  }, [sessionAuthError, clearUserSession, toast]);
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setIsAuthLoading(true);
-        await checkSession(true);
+        const success = await checkSession(true);
+        
+        if (!success) {
+          setSessionCheckFailed(true);
+        }
       } catch (error) {
+        console.error("Error loading user data:", error);
         setAuthError("Erro ao carregar dados do usuário.");
+        setSessionCheckFailed(true);
       } finally {
         setIsAuthLoading(false);
         setInitialCheckDone(true);
@@ -80,47 +105,73 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     loadUserData();
 
+    // Set up auth listener with deadlock prevention
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log("Auth state changed:", event);
+        
         if (event === "SIGNED_IN" && session) {
           setIsAuthenticated(true);
           setUserId(session.user.id);
+          
+          // Use setTimeout to avoid Supabase auth deadlock
+          setTimeout(async () => {
+            try {
+              const { data: profileData } = await supabase
+                .from("profiles")
+                .select("full_name, user_type")
+                .eq("id", session.user.id)
+                .maybeSingle();
 
-          try {
-            const { data: profileData } = await supabase
-              .from("profiles")
-              .select("full_name, user_type")
-              .eq("id", session.user.id)
-              .single();
-
-            if (profileData) {
-              setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
-              setUserType((profileData.user_type || "participante") as UserType);
-            } else {
-              setUserName(session.user.email?.split('@')[0] || "");
+              if (profileData) {
+                setUserName(profileData.full_name || session.user.email?.split('@')[0] || "");
+                setUserType((profileData.user_type || "participante") as UserType);
+              } else {
+                setUserName(session.user.email?.split('@')[0] || "");
+              }
+            } catch (error) {
+              console.error("Error fetching profile after sign in:", error);
             }
-          } catch {
-            setUserName(session.user.email?.split('@')[0] || "");
-          }
+          }, 0);
         } else if (event === "SIGNED_OUT") {
           resetUserInfo();
           setUserId(null);
           setIsAuthenticated(false);
+        } else if (event === "TOKEN_REFRESHED") {
+          console.log("Token refreshed successfully");
+        } else if (event === "USER_UPDATED") {
+          console.log("User data updated");
+          
+          // Refresh session data after update
+          setTimeout(async () => {
+            await checkSession(true);
+          }, 0);
         }
       }
     );
 
-    const loadingTimeout = setTimeout(() => {
+    // Better timeout handling with fallback
+    const loadingTimeoutId = setTimeout(() => {
       if (isAuthLoading && !initialCheckDone) {
+        console.log("Auth verification taking longer than expected");
         setIsAuthLoading(false);
         setInitialCheckDone(true);
         setAuthError("A verificação está demorando mais que o esperado. Verifique sua conexão.");
+        
+        // Make one final attempt to get the session
+        setTimeout(async () => {
+          try {
+            await checkSession(true);
+          } catch (error) {
+            console.error("Final session check attempt failed:", error);
+          }
+        }, 1000);
       }
-    }, 5000);
+    }, 10000); // Increased to 10s
 
     return () => {
       authListener.subscription.unsubscribe();
-      clearTimeout(loadingTimeout);
+      clearTimeout(loadingTimeoutId);
     };
   }, [
     checkSession,

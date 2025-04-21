@@ -17,6 +17,7 @@ const MainContent = () => {
   const { isOverlayOpen, setIsOverlayOpen, isAuthLoading, authError, initialCheckDone } = useUser();
   const [showAuth, setShowAuth] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     // Prevent scrolling when overlay is open
@@ -32,13 +33,20 @@ const MainContent = () => {
         setLoadingTimeout(true);
         console.log("Loading timeout triggered");
       }
-    }, 7000);
+    }, 10000); // Increased to 10s
 
     return () => {
       document.body.style.overflow = "";
       clearTimeout(timeoutId);
     };
   }, [isOverlayOpen, showAuth, isAuthLoading]);
+
+  // Handle retry logic
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setLoadingTimeout(false);
+    window.location.reload();
+  };
 
   // Show temporary loading screen while checking auth with timeout option
   if (isAuthLoading && !loadingTimeout) {
@@ -51,13 +59,31 @@ const MainContent = () => {
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-galaxy-dark p-4">
         <div className="text-center max-w-md space-y-4">
           <h2 className="text-2xl font-bold text-neon-cyan">Verificação está demorando</h2>
-          <p className="text-gray-300">Estamos tendo problemas para carregar a aplicação. Isso pode ser devido a problemas de conexão ou serviço.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-neon-cyan text-galaxy-dark rounded-md hover:bg-neon-cyan/80 transition-colors"
-          >
-            Tentar novamente
-          </button>
+          <p className="text-gray-300">
+            {retryCount > 1 
+              ? "Continuamos com problemas para verificar sua sessão. Talvez haja um problema com o servidor ou sua conexão."
+              : "Estamos tendo problemas para carregar a aplicação. Isso pode ser devido a problemas de conexão ou serviço."}
+          </p>
+          <div className="flex flex-col space-y-2">
+            <button 
+              onClick={handleRetry}
+              className="px-4 py-2 bg-neon-cyan text-galaxy-dark rounded-md hover:bg-neon-cyan/80 transition-colors"
+            >
+              Tentar novamente
+            </button>
+            {retryCount > 1 && (
+              <button 
+                onClick={() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.replace("/");
+                }}
+                className="px-4 py-2 bg-transparent border border-neon-cyan text-neon-cyan rounded-md hover:bg-neon-cyan/10 transition-colors"
+              >
+                Limpar dados e reiniciar
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
