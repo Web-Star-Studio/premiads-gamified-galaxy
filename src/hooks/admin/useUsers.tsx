@@ -29,13 +29,18 @@ export const useUsers = () => {
         
       if (error) throw error;
       
+      if (!data) {
+        setUsers([]);
+        return;
+      }
+      
       // Map the data to match our User interface
-      const mappedUsers = (data || []).map((user: any) => ({
+      const mappedUsers: User[] = data.map((user: any) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
-        role: user.user_type || 'participante',
-        status: user.active ? 'active' : 'inactive',
+        role: (user.user_type || 'participante') as User['role'],
+        status: user.active ? 'active' as const : 'inactive' as const,
         avatar_url: user.avatar_url || undefined,
         lastLogin: user.last_sign_in_at || 'Never'
       }));
@@ -62,7 +67,7 @@ export const useUsers = () => {
       
       const { error } = await supabase
         .from('profiles')
-        .update({ active })
+        .update({ active: active })
         .eq('id', userId);
         
       if (error) throw error;

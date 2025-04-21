@@ -18,7 +18,7 @@ import { useSounds } from '@/hooks/use-sounds';
 
 interface LotteryListProps {
   lotteries: Lottery[];
-  selectedLotteryId: number | null;
+  selectedLotteryId: string | null;
   onSelectLottery: (lottery: Lottery) => void;
   onLotteryCreated: (lottery: Lottery) => void;
 }
@@ -37,7 +37,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
   
   // Filter lotteries based on search term and status
   const filteredLotteries = lotteries.filter(lottery => {
-    const matchesSearch = lottery.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = lottery.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || lottery.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -64,7 +64,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
     } catch (error) {
       console.log("Som não reproduzido", error);
     }
-    toastInfo("Edição", `A funcionalidade de edição para "${lottery.name}" será implementada em breve.`);
+    toastInfo("Edição", `A funcionalidade de edição para "${lottery.title}" será implementada em breve.`);
   };
 
   const handleViewClick = (e: React.MouseEvent, lottery: Lottery) => {
@@ -88,7 +88,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
     // Update the list after confirming
     const updatedLotteries = lotteries.filter(item => item.id !== lottery.id);
     setLotteries(updatedLotteries);
-    toastSuccess("Removido", `O sorteio "${lottery.name}" foi removido com sucesso.`);
+    toastSuccess("Removido", `O sorteio "${lottery.title}" foi removido com sucesso.`);
   };
 
   const handleSelectWinnerClick = (e: React.MouseEvent, lottery: Lottery) => {
@@ -101,7 +101,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
     
     // Mock winner selection
     const winner = {
-      id: 1,
+      id: "1",
       name: "João Silva",
       avatar: "https://i.pravatar.cc/150?img=1"
     };
@@ -119,7 +119,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
     });
     
     setLotteries(updatedLotteries);
-    toastSuccess("Sorteio Realizado", `Parabéns a ${winner.name} por ganhar "${lottery.name}"!`);
+    toastSuccess("Sorteio Realizado", `Parabéns a ${winner.name} por ganhar "${lottery.title}"!`);
   };
 
   const handleExportClick = () => {
@@ -271,28 +271,28 @@ const LotteryList: React.FC<LotteryListProps> = ({
                     </div>
                   </div>
                   
-                  <h3 className="font-semibold text-white mt-2 line-clamp-1">{lottery.name}</h3>
+                  <h3 className="font-semibold text-white mt-2 line-clamp-1">{lottery.title}</h3>
                   
                   <div className="mt-2 text-xs text-muted-foreground">
                     <div className="flex justify-between mb-1">
                       <span>Tipo:</span>
-                      <span className="text-white">{lottery.prizeType === 'electronics' ? 'Eletrônico' : 
-                        lottery.prizeType === 'travel' ? 'Viagem' : 
-                        lottery.prizeType === 'cash' ? 'Dinheiro' : 
-                        lottery.prizeType === 'service' ? 'Serviço' : 
+                      <span className="text-white">{lottery.prize_type === 'electronics' ? 'Eletrônico' : 
+                        lottery.prize_type === 'travel' ? 'Viagem' : 
+                        lottery.prize_type === 'cash' ? 'Dinheiro' : 
+                        lottery.prize_type === 'service' ? 'Serviço' : 
                         'Outro'}</span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Valor:</span>
-                      <span className="text-white">R$ {lottery.prizeValue.toLocaleString('pt-BR')}</span>
+                      <span className="text-white">R$ {lottery.prize_value.toLocaleString('pt-BR')}</span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Números:</span>
-                      <span className="text-white">{lottery.numbersSold || 0} / {lottery.numbersTotal}</span>
+                      <span className="text-white">{lottery.numbersSold || 0} / {lottery.numbers_total}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Pontos por número:</span>
-                      <span className="text-white">{lottery.pointsPerNumber}</span>
+                      <span className="text-white">{lottery.pointsPerNumber || lottery.points}</span>
                     </div>
                   </div>
                   
@@ -326,14 +326,14 @@ const LotteryList: React.FC<LotteryListProps> = ({
                         <CalendarIcon className="h-3 w-3 mr-1" />
                         <span>Início:</span>
                       </div>
-                      <span>{format(parseISO(lottery.startDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                      <span>{format(parseISO(lottery.start_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
                     </div>
                     <div className="flex justify-between mt-1">
                       <div className="flex items-center">
                         <CalendarIcon className="h-3 w-3 mr-1" />
                         <span>Sorteio:</span>
                       </div>
-                      <span>{format(parseISO(lottery.drawDate), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                      <span>{format(parseISO(lottery.draw_date), 'dd/MM/yyyy', { locale: ptBR })}</span>
                     </div>
                   </div>
                 </CardContent>

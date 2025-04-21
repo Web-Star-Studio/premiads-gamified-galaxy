@@ -1,17 +1,15 @@
 
 import React from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, InfoIcon } from "lucide-react";
 import { UseFormReturn } from 'react-hook-form';
 import { LotteryFormValues } from '../types';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 
 interface DateSelectionSectionProps {
@@ -21,65 +19,34 @@ interface DateSelectionSectionProps {
 const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => {
   return (
     <motion.div 
-      className="space-y-4"
+      className="space-y-6"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.15 }}
     >
       <h3 className="text-base font-medium text-white flex items-center border-b border-galaxy-purple/20 pb-2 mb-4">
-        <span className="bg-neon-orange/20 text-neon-orange p-1 rounded-md text-xs mr-2">4</span>
-        Datas e Agendamento
+        <span className="bg-galaxy-blue/20 text-galaxy-blue p-1 rounded-md text-xs mr-2">2</span>
+        Período do Sorteio
       </h3>
-
-      <Alert className="bg-galaxy-purple/10 border-galaxy-purple/30">
-        <InfoIcon className="h-4 w-4 text-neon-cyan" />
-        <AlertDescription className="text-sm">
-          O sorteio será automaticamente agendado para 48 horas após atingir o número mínimo de pontos definido.
-        </AlertDescription>
-      </Alert>
-
-      <FormField
-        control={form.control}
-        name="isAutoScheduled"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-galaxy-purple/20 p-3 shadow-sm bg-galaxy-dark/30">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Agendamento Automático</FormLabel>
-              <FormDescription>
-                Sorteio ocorrerá 48h após atingir meta de pontos
-              </FormDescription>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <FormField
           control={form.control}
           name="startDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Data Inicial</FormLabel>
+              <FormLabel>Data de Início</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
                       variant={"outline"}
-                      className={cn(
-                        "pl-3 text-left font-normal bg-galaxy-dark/50 border-galaxy-purple/20",
-                        !field.value && "text-muted-foreground"
-                      )}
+                      className={`w-full pl-3 text-left font-normal bg-galaxy-dark/50 border-galaxy-purple/20 ${!field.value && "text-muted-foreground"}`}
                     >
                       {field.value ? (
-                        format(field.value, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                        format(field.value, "PPP", { locale: ptBR })
                       ) : (
-                        <span>Selecione data inicial</span>
+                        <span>Selecione uma data</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -90,9 +57,8 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) => date < new Date()}
+                    locale={ptBR}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -106,21 +72,18 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
           name="endDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Data Final</FormLabel>
+              <FormLabel>Data de Término</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
                       variant={"outline"}
-                      className={cn(
-                        "pl-3 text-left font-normal bg-galaxy-dark/50 border-galaxy-purple/20",
-                        !field.value && "text-muted-foreground"
-                      )}
+                      className={`w-full pl-3 text-left font-normal bg-galaxy-dark/50 border-galaxy-purple/20 ${!field.value && "text-muted-foreground"}`}
                     >
                       {field.value ? (
-                        format(field.value, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                        format(field.value, "PPP", { locale: ptBR })
                       ) : (
-                        <span>Selecione data final</span>
+                        <span>Selecione uma data</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -131,9 +94,8 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) => date < (form.getValues("startDate") || new Date())}
+                    locale={ptBR}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
@@ -142,22 +104,30 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
           )}
         />
       </div>
+      
+      <FormField
+        control={form.control}
+        name="isAutoScheduled"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border border-galaxy-purple/20 p-4 space-y-0 bg-galaxy-dark/50">
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Agendamento Automático</FormLabel>
+              <FormDescription>
+                O sorteio será realizado automaticamente 48 horas após atingir o mínimo de pontos ou ao vender todos os números.
+              </FormDescription>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                className="data-[state=checked]:bg-neon-pink"
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </motion.div>
   );
 };
-
-const FormDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => {
-  return (
-    <p
-      ref={ref}
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
-});
-FormDescription.displayName = "FormDescription";
 
 export default DateSelectionSection;

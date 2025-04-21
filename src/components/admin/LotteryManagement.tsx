@@ -12,84 +12,135 @@ import LotteryDetails from './lottery/LotteryDetails';
 // Mock lottery data with proper type-safe status values
 const initialLotteries: Lottery[] = [
   { 
-    id: 1, 
-    name: 'iPhone 15 Pro Max 256GB', 
+    id: "1", 
+    title: 'iPhone 15 Pro Max 256GB', 
+    name: 'iPhone 15 Pro Max 256GB', // Add alias
     description: 'Sorteio do mais recente iPhone com armazenamento ampliado.', 
-    detailedDescription: 'O iPhone 15 Pro Max com memória de 256GB, cor Titanium Black, com 1 ano de garantia Apple, desbloqueado para todas as operadoras.', 
-    prizeType: 'electronics', 
-    prizeValue: 9999, 
+    detailed_description: 'O iPhone 15 Pro Max com memória de 256GB, cor Titanium Black, com 1 ano de garantia Apple, desbloqueado para todas as operadoras.', 
+    detailedDescription: 'O iPhone 15 Pro Max com memória de 256GB, cor Titanium Black, com 1 ano de garantia Apple, desbloqueado para todas as operadoras.', // Add alias
+    type: 'electronics', 
+    prize_type: 'electronics',
+    prizeType: 'electronics', // Add alias 
+    prize_value: 9999, 
+    prizeValue: 9999, // Add alias
     imageUrl: 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-7inch-naturaltitanium?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009284517', 
-    startDate: '2025-04-15', 
-    endDate: '2025-04-22', 
-    drawDate: '2025-04-23',
+    start_date: '2025-04-15', 
+    startDate: '2025-04-15', // Add alias
+    end_date: '2025-04-22', 
+    endDate: '2025-04-22', // Add alias
+    draw_date: '2025-04-23',
+    drawDate: '2025-04-23', // Add alias
     status: 'active',
-    numbersTotal: 1000,
-    pointsPerNumber: 100,
-    minPoints: 500,
+    numbers_total: 1000,
+    numbersTotal: 1000, // Add alias
+    points: 100,
+    pointsPerNumber: 100, // Add alias
     progress: 75,
     numbersSold: 750,
+    numbers: [],
+    created_at: '',
+    updated_at: '',
+    winner: null,
     prizes: []
   },
   { 
-    id: 2, 
-    name: 'PS5 Slim Digital Edition', 
+    id: "2", 
+    title: 'PS5 Slim Digital Edition',
+    name: 'PS5 Slim Digital Edition', // Add alias
     description: 'PlayStation 5 versão digital com jogo de lançamento.', 
-    detailedDescription: 'Console PlayStation 5 Slim Digital Edition, acompanha um controle DualSense e um jogo digital à escolha do ganhador no valor de até R$ 350.', 
-    prizeType: 'electronics', 
-    prizeValue: 3799, 
+    detailed_description: 'Console PlayStation 5 Slim Digital Edition, acompanha um controle DualSense e um jogo digital à escolha do ganhador no valor de até R$ 350.', 
+    detailedDescription: 'Console PlayStation 5 Slim Digital Edition, acompanha um controle DualSense e um jogo digital à escolha do ganhador no valor de até R$ 350.', // Add alias
+    type: 'electronics', 
+    prize_type: 'electronics',
+    prizeType: 'electronics', // Add alias
+    prize_value: 3799, 
+    prizeValue: 3799, // Add alias
     imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=627&q=80', 
-    startDate: '2025-04-17', 
-    endDate: '2025-04-24', 
-    drawDate: '2025-04-25',
+    start_date: '2025-04-17', 
+    startDate: '2025-04-17', // Add alias
+    end_date: '2025-04-24',
+    endDate: '2025-04-24', // Add alias 
+    draw_date: '2025-04-25',
+    drawDate: '2025-04-25', // Add alias
     status: 'pending',
-    numbersTotal: 500,
-    pointsPerNumber: 50,
-    minPoints: 200,
+    numbers_total: 500,
+    numbersTotal: 500, // Add alias
+    points: 50,
+    pointsPerNumber: 50, // Add alias
     progress: 0,
     numbersSold: 0,
+    numbers: [],
+    created_at: '',
+    updated_at: '',
+    winner: null,
     prizes: []
   },
   { 
-    id: 3, 
-    name: 'Pacote Viagem Cancún', 
+    id: "3", 
+    title: 'Pacote Viagem Cancún',
+    name: 'Pacote Viagem Cancún', // Add alias
     description: 'Semana completa em Cancún para duas pessoas, tudo incluso.', 
-    detailedDescription: 'Passagem aérea de ida e volta para duas pessoas, 7 noites em hotel 5 estrelas em regime all-inclusive, traslados e seguro viagem inclusos. Válido para utilização em até 12 meses após o sorteio.', 
-    prizeType: 'travel', 
-    prizeValue: 15000, 
+    detailed_description: 'Passagem aérea de ida e volta para duas pessoas, 7 noites em hotel 5 estrelas em regime all-inclusive, traslados e seguro viagem inclusos. Válido para utilização em até 12 meses após o sorteio.', 
+    detailedDescription: 'Passagem aérea de ida e volta para duas pessoas, 7 noites em hotel 5 estrelas em regime all-inclusive, traslados e seguro viagem inclusos. Válido para utilização em até 12 meses após o sorteio.', // Add alias
+    type: 'travel', 
+    prize_type: 'travel',
+    prizeType: 'travel', // Add alias
+    prize_value: 15000, 
+    prizeValue: 15000, // Add alias
     imageUrl: 'https://images.unsplash.com/photo-1552074284-5e88ef1aef18?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 
-    startDate: '2025-04-01', 
-    endDate: '2025-04-10', 
-    drawDate: '2025-04-12',
+    start_date: '2025-04-01', 
+    startDate: '2025-04-01', // Add alias
+    end_date: '2025-04-10', 
+    endDate: '2025-04-10', // Add alias
+    draw_date: '2025-04-12',
+    drawDate: '2025-04-12', // Add alias
     status: 'completed',
-    numbersTotal: 2000,
-    pointsPerNumber: 200,
-    minPoints: 1000,
+    numbers_total: 2000,
+    numbersTotal: 2000, // Add alias
+    points: 200,
+    pointsPerNumber: 200, // Add alias
     progress: 100,
     numbersSold: 2000,
-    prizes: [],
+    numbers: [],
+    created_at: '',
+    updated_at: '',
     winner: {
-      id: 2,
+      id: "2",
       name: "Maria Oliveira",
       avatar: "https://i.pravatar.cc/150?img=5"
-    }
+    },
+    prizes: []
   },
   { 
-    id: 4, 
-    name: 'MacBook Air M3', 
+    id: "4", 
+    title: 'MacBook Air M3',
+    name: 'MacBook Air M3', // Add alias
     description: 'O laptop mais fino e leve da Apple com o novo chip M3.', 
-    detailedDescription: 'MacBook Air com chip M3, tela de 13.6", 16GB de RAM e 512GB de SSD. Acompanha carregador de 35W com duas portas USB-C e 1 ano de garantia Apple.', 
-    prizeType: 'electronics', 
-    prizeValue: 12999, 
+    detailed_description: 'MacBook Air com chip M3, tela de 13.6", 16GB de RAM e 512GB de SSD. Acompanha carregador de 35W com duas portas USB-C e 1 ano de garantia Apple.', 
+    detailedDescription: 'MacBook Air com chip M3, tela de 13.6", 16GB de RAM e 512GB de SSD. Acompanha carregador de 35W com duas portas USB-C e 1 ano de garantia Apple.', // Add alias
+    type: 'electronics', 
+    prize_type: 'electronics',
+    prizeType: 'electronics', // Add alias
+    prize_value: 12999, 
+    prizeValue: 12999, // Add alias
     imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFjYm9vayUyMGFpcnxlbnwwfHwwfHx8MA%3D%3D', 
-    startDate: '2025-04-28', 
-    endDate: '2025-05-28', 
-    drawDate: '2025-05-30',
+    start_date: '2025-04-28', 
+    startDate: '2025-04-28', // Add alias
+    end_date: '2025-05-28', 
+    endDate: '2025-05-28', // Add alias
+    draw_date: '2025-05-30',
+    drawDate: '2025-05-30', // Add alias
     status: 'pending',
-    numbersTotal: 1500,
-    pointsPerNumber: 150,
-    minPoints: 750,
+    numbers_total: 1500,
+    numbersTotal: 1500, // Add alias
+    points: 150,
+    pointsPerNumber: 150, // Add alias
     progress: 0,
     numbersSold: 0,
+    numbers: [],
+    created_at: '',
+    updated_at: '',
+    winner: null,
     prizes: []
   },
 ];
@@ -119,7 +170,7 @@ const LotteryManagement: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (id: number, newStatus: 'active' | 'pending' | 'completed' | 'canceled') => {
+  const handleStatusChange = (id: string, newStatus: 'active' | 'pending' | 'completed' | 'canceled') => {
     setLoading(true);
     
     setTimeout(() => {
@@ -131,7 +182,7 @@ const LotteryManagement: React.FC = () => {
       if (lottery) {
         toastSuccess(
           `Status Alterado`,
-          `O sorteio "${lottery.name}" foi ${
+          `O sorteio "${lottery.title}" foi ${
             newStatus === 'active' ? 'ativado' : 
             newStatus === 'pending' ? 'pausado' : 
             newStatus === 'completed' ? 'finalizado' : 'cancelado'

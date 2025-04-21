@@ -24,22 +24,29 @@ export function useUserLevel(points: number, userId?: string) {
         
         if (levelsData && levelsData.length > 0) {
           // Convert the benefits JSON to the correct type
-          const typedLevelsData: UserLevel[] = levelsData.map(level => ({
-            id: level.id,
-            name: level.name,
-            min_points: level.min_points,
-            max_points: level.max_points,
-            points_multiplier: level.points_multiplier,
-            icon: level.icon,
-            color: level.color,
-            description: level.description,
-            benefits: {
-              ticket_discount: level.benefits?.ticket_discount ?? 0,
-              access_to_exclusive_raffles: level.benefits?.access_to_exclusive_raffles ?? false,
-              priority_support: level.benefits?.priority_support ?? false,
-              early_access: level.benefits?.early_access ?? false
-            }
-          }));
+          const typedLevelsData: UserLevel[] = levelsData.map(level => {
+            // Ensure benefits is properly typed as an object
+            const benefitsObject = typeof level.benefits === 'string' 
+              ? JSON.parse(level.benefits) 
+              : level.benefits;
+              
+            return {
+              id: level.id,
+              name: level.name,
+              min_points: level.min_points,
+              max_points: level.max_points,
+              points_multiplier: level.points_multiplier,
+              icon: level.icon,
+              color: level.color,
+              description: level.description,
+              benefits: {
+                ticket_discount: benefitsObject?.ticket_discount ?? 0,
+                access_to_exclusive_raffles: benefitsObject?.access_to_exclusive_raffles ?? false,
+                priority_support: benefitsObject?.priority_support ?? false,
+                early_access: benefitsObject?.early_access ?? false
+              }
+            };
+          });
           
           setLevels(typedLevelsData);
           

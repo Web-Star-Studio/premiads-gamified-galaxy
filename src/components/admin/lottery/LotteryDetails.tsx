@@ -13,7 +13,7 @@ import { useSounds } from '@/hooks/use-sounds';
 
 interface LotteryDetailsProps {
   selectedLottery: Lottery;
-  onStatusChange: (id: number, newStatus: string) => void;
+  onStatusChange: (id: string, newStatus: string) => void;
 }
 
 const LotteryDetails: React.FC<LotteryDetailsProps> = ({ 
@@ -123,7 +123,7 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-xs text-muted-foreground">Nome</div>
-            <div className="font-medium">{selectedLottery.name}</div>
+            <div className="font-medium">{selectedLottery.title}</div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Status</div>
@@ -131,21 +131,21 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Data Início</div>
-            <div className="font-medium">{selectedLottery.startDate}</div>
+            <div className="font-medium">{selectedLottery.start_date}</div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">Data Fim</div>
-            <div className="font-medium">{selectedLottery.endDate}</div>
+            <div className="font-medium">{selectedLottery.end_date}</div>
           </div>
         </div>
       </motion.div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PrizeTable prizes={selectedLottery.prizes} isCompleted={selectedLottery.status === 'completed'} />
+        <PrizeTable prizes={selectedLottery.prizes || []} isCompleted={selectedLottery.status === 'completed'} />
         <SpinningWheel selectedLottery={selectedLottery} />
       </div>
       
-      {selectedLottery.prizes.length === 0 && (
+      {(!selectedLottery.prizes || selectedLottery.prizes.length === 0) && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

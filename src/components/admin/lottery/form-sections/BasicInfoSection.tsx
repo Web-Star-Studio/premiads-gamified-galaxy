@@ -2,10 +2,9 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from 'react-hook-form';
 import { LotteryFormValues } from '../types';
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from 'framer-motion';
 
 interface BasicInfoSectionProps {
@@ -25,64 +24,35 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
         Informações Básicas
       </h3>
       
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Título do Sorteio</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="Ex: iPhone 15 Pro Max 256GB"
-                className="bg-galaxy-dark/50 border-galaxy-purple/20"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome do Sorteio</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field} 
+                  placeholder="Ex: iPhone 15 Pro Max" 
+                  className="bg-galaxy-dark/50 border-galaxy-purple/20"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="prizeType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo de Prêmio</FormLabel>
-              <Select 
-                value={field.value} 
-                onValueChange={field.onChange}
-              >
-                <FormControl>
-                  <SelectTrigger className="bg-galaxy-dark/50 border-galaxy-purple/20">
-                    <SelectValue placeholder="Selecione o tipo de prêmio" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="electronics">Eletrônico</SelectItem>
-                  <SelectItem value="travel">Viagem</SelectItem>
-                  <SelectItem value="cash">Dinheiro</SelectItem>
-                  <SelectItem value="service">Serviço</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="prizeValue"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Valor do Prêmio (R$)</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  placeholder="Ex: 5000.00"
+                <Input 
+                  {...field} 
+                  placeholder="Ex: Eletrônico, Viagem, etc" 
                   className="bg-galaxy-dark/50 border-galaxy-purple/20"
                 />
               </FormControl>
@@ -91,25 +61,67 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
           )}
         />
       </div>
-
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
+          <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>URL da Imagem</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="https://exemplo.com/imagem.jpg" 
+                    className="bg-galaxy-dark/50 border-galaxy-purple/20"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="prizeValue"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor do Prêmio (R$)</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field}
+                  type="number"
+                  placeholder="Ex: 1999.90" 
+                  className="bg-galaxy-dark/50 border-galaxy-purple/20"
+                  onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
       <FormField
         control={form.control}
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Descrição do Sorteio</FormLabel>
+            <FormLabel>Descrição Curta</FormLabel>
             <FormControl>
-              <Textarea
-                {...field}
-                placeholder="Descrição breve do sorteio que será exibida nos cards."
-                className="bg-galaxy-dark/50 border-galaxy-purple/20 resize-none h-20"
+              <Textarea 
+                {...field} 
+                placeholder="Breve descrição do sorteio" 
+                className="resize-none bg-galaxy-dark/50 border-galaxy-purple/20"
               />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-
+      
       <FormField
         control={form.control}
         name="detailedDescription"
@@ -117,34 +129,15 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
           <FormItem>
             <FormLabel>Descrição Detalhada</FormLabel>
             <FormControl>
-              <Textarea
-                {...field}
-                placeholder="Especificações detalhadas do prêmio e termos do sorteio."
-                className="bg-galaxy-dark/50 border-galaxy-purple/20 resize-none h-32"
+              <Textarea 
+                {...field} 
+                placeholder="Descrição completa e detalhada do sorteio e do prêmio" 
+                className="resize-none min-h-[100px] bg-galaxy-dark/50 border-galaxy-purple/20"
+                value={field.value || ''}
+                onChange={field.onChange}
               />
             </FormControl>
             <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="imageUrl"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL da Imagem</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="https://exemplo.com/imagem.jpg"
-                className="bg-galaxy-dark/50 border-galaxy-purple/20"
-              />
-            </FormControl>
-            <FormMessage />
-            <p className="text-xs text-muted-foreground mt-1">
-              Insira uma URL de imagem válida que represente o prêmio. Recomendamos proporção 16:9.
-            </p>
           </FormItem>
         )}
       />

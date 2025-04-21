@@ -43,23 +43,33 @@ export const useLottery = () => {
         return {
           id: raffle.id,
           title: raffle.title,
+          name: raffle.title, // Alias for compatibility
           description: raffle.description,
           detailed_description: raffle.detailed_description,
+          detailedDescription: raffle.detailed_description, // Alias for compatibility
           type: raffle.type,
           points: raffle.points,
           numbers_total: raffle.numbers_total,
+          numbersTotal: raffle.numbers_total, // Alias for compatibility
           status: raffle.status as Lottery['status'],
           start_date: raffle.start_date,
+          startDate: raffle.start_date, // Alias for compatibility
           end_date: raffle.end_date,
+          endDate: raffle.end_date, // Alias for compatibility
           draw_date: raffle.draw_date,
+          drawDate: raffle.draw_date, // Alias for compatibility
           prize_type: raffle.prize_type,
+          prizeType: raffle.prize_type, // Alias for compatibility
           prize_value: raffle.prize_value,
+          prizeValue: raffle.prize_value, // Alias for compatibility
+          pointsPerNumber: raffle.points, // Using points as pointsPerNumber
           winner,
           created_at: raffle.created_at,
           updated_at: raffle.updated_at,
           numbers: raffle.numbers || [],
           progress,
-          numbersSold
+          numbersSold,
+          prizes: [] // Default empty array for prizes
         };
       });
       
@@ -87,18 +97,18 @@ export const useLottery = () => {
       const { data, error } = await supabase
         .from('raffles')
         .insert({
-          title: lotteryData.title,
+          title: lotteryData.title || lotteryData.name, // Support both title and name
           description: lotteryData.description,
-          detailed_description: lotteryData.detailed_description,
+          detailed_description: lotteryData.detailed_description || lotteryData.detailedDescription,
           type: lotteryData.type,
           points: lotteryData.points,
-          numbers_total: lotteryData.numbers_total,
+          numbers_total: lotteryData.numbers_total || lotteryData.numbersTotal,
           status: lotteryData.status,
-          start_date: lotteryData.start_date,
-          end_date: lotteryData.end_date,
-          draw_date: lotteryData.draw_date,
-          prize_type: lotteryData.prize_type,
-          prize_value: lotteryData.prize_value
+          start_date: lotteryData.start_date || lotteryData.startDate,
+          end_date: lotteryData.end_date || lotteryData.endDate,
+          draw_date: lotteryData.draw_date || lotteryData.drawDate,
+          prize_type: lotteryData.prize_type || lotteryData.prizeType,
+          prize_value: lotteryData.prize_value || lotteryData.prizeValue
         })
         .select()
         .single();
@@ -108,17 +118,27 @@ export const useLottery = () => {
       // Add the new lottery to state
       const newLottery: Lottery = {
         ...data,
+        name: data.title, // Add alias
+        detailedDescription: data.detailed_description,
+        numbersTotal: data.numbers_total,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        drawDate: data.draw_date,
+        prizeType: data.prize_type,
+        prizeValue: data.prize_value,
+        pointsPerNumber: data.points,
         winner: null,
         numbers: [],
         progress: 0,
-        numbersSold: 0
+        numbersSold: 0,
+        prizes: []
       };
       
       setLotteries(prev => [newLottery, ...prev]);
       
       toast({
         title: 'Sorteio criado',
-        description: `O sorteio "${lotteryData.title}" foi criado com sucesso.`
+        description: `O sorteio "${data.title}" foi criado com sucesso.`
       });
       
       return newLottery;

@@ -64,17 +64,25 @@ export const useReferrals = () => {
         // If no referrals yet, just return empty array
         if (!allReferrals || allReferrals.length === 0) {
           setReferrals([]);
+          setLoading(false);
           return;
         }
         
         // Get referred user profiles separately
         const referredIds = allReferrals.map(ref => ref.referred_id).filter(Boolean);
-        const { data: profiles, error: profilesError } = referredIds.length > 0 
-          ? await supabase
-              .from('profiles')
-              .select('id, full_name, email')
-              .in('id', referredIds)
-          : { data: [], error: null };
+        
+        let profiles: any[] = [];
+        let profilesError = null;
+        
+        if (referredIds.length > 0) {
+          const result = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', referredIds);
+            
+          profiles = result.data || [];
+          profilesError = result.error;
+        }
         
         if (profilesError) throw profilesError;
         

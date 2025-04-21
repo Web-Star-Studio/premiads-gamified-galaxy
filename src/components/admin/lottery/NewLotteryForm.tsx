@@ -57,18 +57,28 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       
       // Criar novo sorteio (simulado)
       const newLottery: Lottery = {
-        id: Date.now(), // Usar timestamp como ID temporário
+        id: `${Date.now()}`, // Usar timestamp como ID temporário
+        title: values.name,
         name: values.name,
         description: values.description,
+        detailed_description: values.detailedDescription,
         detailedDescription: values.detailedDescription,
+        prize_type: values.prizeType,
         prizeType: values.prizeType,
+        prize_value: values.prizeValue,
         prizeValue: values.prizeValue,
+        type: 'regular',
         imageUrl: values.imageUrl,
+        start_date: format(values.startDate, 'yyyy-MM-dd'),
         startDate: format(values.startDate, 'yyyy-MM-dd'),
+        end_date: format(values.endDate, 'yyyy-MM-dd'),
         endDate: format(values.endDate, 'yyyy-MM-dd'),
-        drawDate: null, // Não definimos a data do sorteio, será automático
+        draw_date: values.drawDate ? format(values.drawDate, 'yyyy-MM-dd') : format(values.endDate, 'yyyy-MM-dd'),
+        drawDate: values.drawDate ? format(values.drawDate, 'yyyy-MM-dd') : format(values.endDate, 'yyyy-MM-dd'),
         status: values.status,
+        numbers_total: values.numbersTotal,
         numbersTotal: values.numbersTotal,
+        points: values.pointsPerNumber,
         pointsPerNumber: values.pointsPerNumber,
         minPoints: values.minPoints,
         isAutoScheduled: values.isAutoScheduled,
@@ -76,6 +86,10 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
         prizes: [], // Começar sem prêmios
         progress: 0, // 0% inicial
         numbersSold: 0, // Nenhum número vendido inicialmente
+        numbers: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        winner: null
       };
       
       toastSuccess('Sorteio criado', `O sorteio "${values.name}" foi criado com sucesso.`);

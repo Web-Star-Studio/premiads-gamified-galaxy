@@ -12,20 +12,36 @@ jest.mock('@/utils/toast', () => ({
 
 describe('LotteryDetails Component', () => {
   const mockLottery: Lottery = {
-    id: 1,
+    id: "1",
+    title: 'Sorteio de Teste',
     name: 'Sorteio de Teste',
     description: 'Descrição do sorteio de teste',
+    detailed_description: 'Uma descrição detalhada do sorteio de teste',
     detailedDescription: 'Uma descrição detalhada do sorteio de teste',
+    prize_type: 'electronics',
     prizeType: 'electronics',
+    prize_value: 1000,
     prizeValue: 1000,
     imageUrl: 'https://example.com/image.jpg',
+    start_date: '2025-04-15',
     startDate: '2025-04-15',
+    end_date: '2025-04-22',
     endDate: '2025-04-22',
+    draw_date: '2025-04-23',
     drawDate: '2025-04-23',
     status: 'active',
+    numbers_total: 100,
     numbersTotal: 100,
+    points: 50,
+    type: 'regular',
     pointsPerNumber: 50,
     minPoints: 100,
+    numbers: [],
+    created_at: '',
+    updated_at: '',
+    progress: 0,
+    numbersSold: 0,
+    winner: null,
     prizes: [
       { id: 1, name: 'Prêmio 1', rarity: 'common', probability: 60 },
       { id: 2, name: 'Prêmio 2', rarity: 'uncommon', probability: 40 }
@@ -76,7 +92,7 @@ describe('LotteryDetails Component', () => {
     
     // Wait for update to complete
     await waitFor(() => {
-      expect(mockOnStatusChange).toHaveBeenCalledWith(1, 'pending');
+      expect(mockOnStatusChange).toHaveBeenCalledWith("1", 'pending');
     });
   });
   
