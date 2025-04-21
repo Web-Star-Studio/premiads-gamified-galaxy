@@ -21,6 +21,7 @@ export const useUsers = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       // Use the get_all_users() function instead of direct table access
       const { data, error } = await supabase.rpc('get_all_users');
       
@@ -56,8 +57,7 @@ export const useUsers = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          // Assuming we have a status column in the profiles table
-          user_status: isActive ? 'active' : 'inactive' 
+          user_type: isActive ? 'participante' : 'participante' 
         })
         .eq('id', userId);
       

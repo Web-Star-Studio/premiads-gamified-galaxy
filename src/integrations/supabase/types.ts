@@ -394,7 +394,14 @@ export type Database = {
     Functions: {
       get_all_users: {
         Args: Record<PropertyKey, never>
-        Returns: Json[]
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          user_type: Database["public"]["Enums"]["user_role"]
+          last_sign_in_at: string
+          created_at: string
+        }[]
       }
       get_mission_submissions: {
         Args: { mission_ids: string[]; status_filter: string }
@@ -418,7 +425,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "participante" | "anunciante" | "admin-master"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -533,6 +540,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "participante", "anunciante", "admin-master"],
+    },
   },
 } as const
