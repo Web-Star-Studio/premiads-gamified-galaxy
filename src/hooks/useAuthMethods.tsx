@@ -4,11 +4,12 @@ import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
-import { signOutAndCleanup } from "@/utils/auth"; // <--- Import utility
+import { signOutAndCleanup } from "@/utils/auth";
 import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 export const useAuthMethods = () => {
   const [loading, setLoading] = useState(false);
+  const [sessionCheckInProgress, setSessionCheckInProgress] = useState(false);
   const { setUserName, setUserType, setIsAuthenticated, resetUserInfo, checkSession } = useUser();
   const { toast } = useToast();
   const { playSound } = useSounds();
@@ -114,38 +115,55 @@ export const useAuthMethods = () => {
   };
 
   const signIn = async (credentials: SignInCredentials) => {
+    if (sessionCheckInProgress) {
+      console.log("Session check in progress, waiting...");
+      return false;
+    }
+
     setLoading(true);
+    setSessionCheckInProgress(true);
     
     try {
-      // Add a short delay to prevent UI flashing if auth is quick
-      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Sign in the user
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
       
-      // Wait for minimum loading time to complete
-      await minLoadingTime;
-      
       if (error) throw error;
-      
-      playSound("chime");
       
       if (data.user) {
         setIsAuthenticated(true);
         
-        // Force a session check which will get the profile data
-        await checkSession();
-        
-        toast({
-          title: "Login bem-sucedido",
-          description: "Você foi autenticado com sucesso!",
-        });
-        
-        // Let the session check handle the redirection to prevent race conditions
-        return true;
+        // Get user profile to determine type
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type, full_name')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile) {
+          setUserName(profile.full_name);
+          setUserType(profile.user_type);
+
+          // Redirect based on user type
+          switch (profile.user_type) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'anunciante':
+              navigate('/anunciante');
+              break;
+            default:
+              navigate('/cliente');
+          }
+
+          toast({
+            title: "Login realizado com sucesso",
+            description: "Bem-vindo de volta!",
+          });
+          
+          return true;
+        }
       }
       
       return false;
@@ -153,6 +171,7 @@ export const useAuthMethods = () => {
       return handleAuthError(error, "Ocorreu um erro durante o login");
     } finally {
       setLoading(false);
+      setSessionCheckInProgress(false);
     }
   };
 
