@@ -21,7 +21,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     // Use the centralized checkSession function
     const verifyAuth = async () => {
       try {
-        await checkSession(true);
+        await checkSession();
         setIsChecking(false);
       } catch (error) {
         console.error("Error in RouteGuard:", error);

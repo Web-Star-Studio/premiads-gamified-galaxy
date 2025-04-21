@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -84,7 +83,7 @@ export const useAuthMethods = () => {
         }
         
         // Force a session check
-        await checkSession(true);
+        await checkSession();
         
         // Redirect based on user type
         if (credentials.userType === "anunciante") {
@@ -126,7 +125,7 @@ export const useAuthMethods = () => {
         setIsAuthenticated(true);
         
         // Force a session check which will get the profile data
-        await checkSession(true);
+        await checkSession();
         
         toast({
           title: "Login bem-sucedido",

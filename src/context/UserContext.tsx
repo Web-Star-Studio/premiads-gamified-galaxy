@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { UserType } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +16,7 @@ type UserContextType = {
   saveUserPreferences: () => Promise<void>;
   isAuthLoading: boolean;
   authError: string | null;
-  checkSession: () => Promise<boolean>;
+  checkSession: (force?: boolean) => Promise<boolean>;
 };
 
 const defaultContext: UserContextType = {
@@ -49,8 +48,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
   const { toast } = useToast();
 
-  // Centralized session checking function with caching
-  const checkSession = useCallback(async (force = false): Promise<boolean> => {
+  // Centralized session checking function with caching - modified to accept an optional force parameter
+  const checkSession = useCallback(async (force?: boolean): Promise<boolean> => {
     // Skip duplicate checks in short time periods unless forced
     const now = Date.now();
     if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {

@@ -20,7 +20,7 @@ const AuthOverlay = ({ isOpen, onClose }: AuthOverlayProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [userType, setUserType] = useState<UserType>("participante");
+  const [userType, setUserType] = useState<"participante" | "anunciante">("participante");
   const { signIn, signUp, loading } = useAuthMethods();
   const { toast } = useToast();
   
@@ -78,6 +78,7 @@ const AuthOverlay = ({ isOpen, onClose }: AuthOverlayProps) => {
     if (!validateSignup()) return;
     
     try {
+      // Make sure we only pass valid userType values to signUp
       const success = await signUp({ name, email, password, userType });
       if (success) {
         onClose();
