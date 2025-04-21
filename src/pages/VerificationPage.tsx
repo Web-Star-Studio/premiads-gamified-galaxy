@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import SupabaseVerification from "@/components/SupabaseVerification";
+import SupabaseTest from "@/components/SupabaseTest";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 import { CheckCircle2, ChevronLeft, Database, FileText, Shield } from "lucide-react";
@@ -125,6 +125,10 @@ export default function VerificationPage() {
         <Separator className="my-4" />
         
         <SupabaseVerification />
+        
+        <Separator className="my-4" />
+        
+        <SupabaseTest />
         
         <Card className="mt-8">
           <CardHeader>
