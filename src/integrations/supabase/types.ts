@@ -259,6 +259,95 @@ export type Database = {
         }
         Relationships: []
       }
+      raffle_numbers: {
+        Row: {
+          created_at: string | null
+          id: string
+          number: number
+          raffle_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          number: number
+          raffle_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          number?: number
+          raffle_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string | null
+          description: string
+          detailed_description: string | null
+          draw_date: string
+          end_date: string
+          id: string
+          numbers_total: number
+          points: number
+          prize_type: string
+          prize_value: number
+          start_date: string
+          status: string
+          title: string
+          type: string
+          updated_at: string | null
+          winner_user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          detailed_description?: string | null
+          draw_date: string
+          end_date: string
+          id?: string
+          numbers_total: number
+          points: number
+          prize_type: string
+          prize_value: number
+          start_date: string
+          status: string
+          title: string
+          type: string
+          updated_at?: string | null
+          winner_user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          detailed_description?: string | null
+          draw_date?: string
+          end_date?: string
+          id?: string
+          numbers_total?: number
+          points?: number
+          prize_type?: string
+          prize_value?: number
+          start_date?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          winner_user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
