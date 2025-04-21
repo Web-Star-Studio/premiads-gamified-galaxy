@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import { UserType } from "@/types/auth";
 
 import HeaderLogo from "./header/HeaderLogo";
 import DesktopNavigation from "./header/DesktopNavigation";
@@ -32,6 +33,13 @@ const Header = () => {
     { id: "blog", label: "Blog", isLink: true, to: "/blog" },
   ];
 
+  // Helper function to get button text based on user type
+  const getButtonText = () => {
+    if (userType === "participante") return "Ver Missões";
+    if (userType === "anunciante") return "Criar Campanha";
+    return "Acessar Painel";
+  };
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -50,7 +58,7 @@ const Header = () => {
 
         <div className="flex items-center space-x-2 sm:space-x-4">
           <UserTypeSelector 
-            userType={userType} 
+            userType={userType as UserType} 
             changeUserType={changeUserType} 
             setIsOverlayOpen={setIsOverlayOpen} 
           />
@@ -60,7 +68,7 @@ const Header = () => {
             size="sm"
             onClick={navigateToDashboard}
           >
-            {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
+            {getButtonText()}
           </Button>
 
           {/* Mobile menu button */}
@@ -82,7 +90,7 @@ const Header = () => {
         mobileMenuOpen={mobileMenuOpen}
         scrollToSection={scrollToSection}
         navigateToDashboard={navigateToDashboard}
-        userType={userType}
+        userType={userType as UserType}
         setMobileMenuOpen={setMobileMenuOpen}
       />
     </motion.header>

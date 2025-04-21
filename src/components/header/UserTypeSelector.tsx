@@ -7,10 +7,11 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { UserType } from "@/types/auth";
 
 interface UserTypeSelectorProps {
-  userType: "participante" | "anunciante";
-  changeUserType: (type: "participante" | "anunciante") => void;
+  userType: UserType;
+  changeUserType: (type: UserType) => void;
   setIsOverlayOpen: (open: boolean) => void;
 }
 
@@ -25,6 +26,9 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
   };
   
+  // Only show participante and anunciante options in the dropdown
+  const showAdminOption = userType === "admin" || userType === "moderator";
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,7 +37,9 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
           size="sm" 
           className="bg-galaxy-deepPurple/70 border-neon-cyan/30 flex items-center justify-center"
         >
-          {userType === "participante" ? "Participante" : "Anunciante"} 
+          {userType === "participante" ? "Participante" : 
+           userType === "anunciante" ? "Anunciante" : 
+           userType === "admin" ? "Admin" : "Moderador"} 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">
@@ -49,6 +55,14 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
         >
           Anunciante
         </DropdownMenuItem>
+        {showAdminOption && (
+          <DropdownMenuItem 
+            onClick={() => changeUserType(userType)}
+            className={`cursor-pointer neon-text-cyan`}
+          >
+            {userType === "admin" ? "Admin" : "Moderador"}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem 
           onClick={() => setIsOverlayOpen(true)}
           className="cursor-pointer text-neon-pink"

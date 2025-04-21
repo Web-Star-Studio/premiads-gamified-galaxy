@@ -33,7 +33,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Using a more generic approach to handle RPC call
+      // Using a more generic approach to avoid TypeScript conflicts
       const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;

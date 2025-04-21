@@ -18,7 +18,7 @@ export const useUserOperations = () => {
 
   const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
-      // Using a more generic type for RPC to avoid TypeScript conflicts
+      // Using a more generic approach to avoid TypeScript conflicts
       const { error } = await supabase.rpc('update_user_status', {
         user_id: userId,
         is_active: isActive
@@ -46,7 +46,7 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      // Using a more generic type for RPC to avoid TypeScript conflicts
+      // Using a more generic approach to avoid TypeScript conflicts
       const { error } = await supabase.rpc('delete_user_account', {
         target_user_id: userId
       } as DeleteUserParams);
