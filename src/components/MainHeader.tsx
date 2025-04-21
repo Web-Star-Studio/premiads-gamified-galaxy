@@ -36,7 +36,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
     { id: "faq", label: "FAQ" },
   ];
 
-  // Always use the centralized dashboard navigation
+  // Handle main button click - either navigate to dashboard or login
   const handleMainButtonClick = (e: React.MouseEvent) => {
     if (isAuthenticated) {
       navigateToDashboard();

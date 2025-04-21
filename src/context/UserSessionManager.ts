@@ -38,22 +38,15 @@ export const useUserSessionManager = ({
         setLastAuthCheck(now);
         setAuthError(null);
         
-        // Wrap Supabase call in a Promise.race with a timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Timeout ao verificar sessão")), 10000);
-        });
-        
-        const { data, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as { data: any, error: any };
+        // Use getSession() with a direct try/catch instead of Promise.race
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error checking session:", error);
           setAuthError("Erro ao verificar sua sessão: " + error.message);
           setIsAuthenticated(false);
           setUserId(null);
+          checkInProgress.current = false;
           return false;
         }
         
@@ -61,34 +54,15 @@ export const useUserSessionManager = ({
           console.log("No active session found");
           setIsAuthenticated(false);
           setUserId(null);
+          checkInProgress.current = false;
           return false;
         }
         
-        // Check if session has expired
-        const expiresAt = data.session.expires_at;
-        if (expiresAt && new Date(expiresAt * 1000) < new Date()) {
-          console.log("Session has expired, logging out");
-          setAuthError("Sua sessão expirou. Por favor, faça login novamente.");
-          await supabase.auth.signOut();
-          setIsAuthenticated(false);
-          setUserId(null);
-          return false;
-        }
-        
-        // Verify email confirmation status if needed
-        const user = data.session.user;
-        if (user && !user.email_confirmed_at && user.confirmation_sent_at) {
-          // Only show warning if confirmation was sent but not confirmed
-          console.log("User email not confirmed");
-          setAuthError("Por favor, confirme seu email para acesso completo.");
-        } else {
-          setAuthError(null);
-        }
-        
+        // Session found and valid
         setIsAuthenticated(true);
         setUserId(data.session.user.id);
 
-        // Fetch user profile with a separate timeout to prevent deadlock
+        // Use setTimeout to prevent potential auth deadlocks
         setTimeout(async () => {
           try {
             const { data: profileData, error: profileError } = await supabase
@@ -110,6 +84,8 @@ export const useUserSessionManager = ({
             }
           } catch (err) {
             console.error("Error in profile fetch:", err);
+          } finally {
+            checkInProgress.current = false;
           }
         }, 0);
         
@@ -117,9 +93,8 @@ export const useUserSessionManager = ({
       } catch (error: any) {
         console.error("Session check failed:", error);
         setAuthError("Erro ao verificar sessão: " + (error.message || "Tente novamente."));
-        return false;
-      } finally {
         checkInProgress.current = false;
+        return false;
       }
     },
     [lastAuthCheck, setIsAuthenticated, setUserId, setUserName, setUserType]
