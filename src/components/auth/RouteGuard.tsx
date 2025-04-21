@@ -103,10 +103,11 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     // Redirect to appropriate dashboard based on user type
     if (contextUserType === "anunciante") {
       return <Navigate to="/anunciante" replace />;
-    } else if (contextUserType === "admin") {
-      return <Navigate to="/admin" replace />;
-    } else {
+    } else if (contextUserType === "participante") {
       return <Navigate to="/cliente" replace />;
+    } else {
+      // This is a fallback for any other user type
+      return <Navigate to="/" replace />;
     }
   }
 
