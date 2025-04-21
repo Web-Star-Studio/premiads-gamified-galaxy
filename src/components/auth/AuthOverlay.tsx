@@ -8,7 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Particles from "@/components/Particles";
-import { UserType } from "@/types/auth";
+
+// Use a more specific type for signup userType that excludes "admin"
+type SignupUserType = "participante" | "anunciante";
 
 interface AuthOverlayProps {
   isOpen: boolean;
@@ -20,7 +22,7 @@ const AuthOverlay = ({ isOpen, onClose }: AuthOverlayProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [userType, setUserType] = useState<UserType>("participante");
+  const [userType, setUserType] = useState<SignupUserType>("participante");
   const { signIn, signUp, loading } = useAuthMethods();
   const { toast } = useToast();
   

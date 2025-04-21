@@ -50,9 +50,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   // Centralized session checking function with caching
-  const checkSession = useCallback(async (force = false): Promise<boolean> => {
+  const checkSession = useCallback(async (): Promise<boolean> => {
     // Skip duplicate checks in short time periods unless forced
     const now = Date.now();
+    const force = false; // Default to not forcing a check
+    
     if (!force && lastAuthCheck && now - lastAuthCheck < 5000) {
       return isAuthenticated;
     }
@@ -118,7 +120,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const loadUserData = async () => {
       try {
         setIsAuthLoading(true);
-        await checkSession(true);
+        await checkSession();
       } catch (error) {
         console.error("Error loading user data:", error);
         setAuthError("Erro ao carregar dados do usuário.");
