@@ -41,13 +41,13 @@ const CampaignDialogDetails: React.FC<CampaignDialogDetailsProps> = ({
         
         <div className="flex justify-between">
           <span className="text-gray-400">Validade:</span>
-          <span>{formatDate(campaign.end_date)}</span>
+          <span>{formatDate(campaign.expires_at)}</span>
         </div>
         
-        {campaign.minimum_purchase && (
+        {campaign.min_purchase && (
           <div className="flex justify-between">
             <span className="text-gray-400">Compra mínima:</span>
-            <span>R$ {campaign.minimum_purchase.toFixed(2)}</span>
+            <span>R$ {campaign.min_purchase.toFixed(2)}</span>
           </div>
         )}
         

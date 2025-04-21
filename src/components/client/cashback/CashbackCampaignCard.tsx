@@ -78,8 +78,8 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
           
           <CampaignContent
             description={campaign.description}
-            endDate={campaign.end_date}
-            minimumPurchase={campaign.minimum_purchase}
+            endDate={campaign.expires_at}
+            minimumPurchase={campaign.min_purchase}
             formatDate={formatDate}
           />
           
