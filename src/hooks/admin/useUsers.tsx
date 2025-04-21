@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +16,7 @@ export interface User {
 
 // Update the GetAllUsersResponse interface to match the RPC function
 interface GetAllUsersResponse {
-  id: uuid;
+  id: string;
   email: string;
   full_name: string | null;
   user_type: string | null;
@@ -34,7 +35,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('get_all_users');
+      const { data, error } = await supabase.rpc<GetAllUsersResponse>('get_all_users');
         
       if (error) throw error;
       
@@ -44,7 +45,7 @@ export const useUsers = () => {
       }
       
       // Map the data to match our User interface
-      const mappedUsers: User[] = data.map((user: GetAllUsersResponse) => ({
+      const mappedUsers: User[] = (data as GetAllUsersResponse[]).map((user) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -73,14 +74,8 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // We need to update the 'active' field in the profiles table
-      // But first we need to check if this field exists in the database schema
-      // Since it's not in the TypeScript type, we'll use a generic update approach
-      
-      // Set the update data as a record with any key
       const updateData: Record<string, any> = { active };
       
-      // Custom update to ensure we're setting the active field
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
