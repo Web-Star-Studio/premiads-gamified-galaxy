@@ -14,7 +14,8 @@ const CreateAdminUser = () => {
         body: JSON.stringify({
           email: 'felipe@webstar.studio',
           password: 'Client@123',
-          fullName: 'Felipe Antunes'
+          fullName: 'Felipe Antunes',
+          adminKey: 'your-admin-key-here' // This will be handled by the edge function's env var
         })
       });
 
@@ -50,4 +51,3 @@ const CreateAdminUser = () => {
 };
 
 export default CreateAdminUser;
-

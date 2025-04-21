@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,6 +9,7 @@ import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
 import ClientDashboard from "@/pages/client/ClientDashboard";
 import VerificationPage from "@/pages/VerificationPage"; 
 import AuthGuard from "@/components/auth/AuthGuard";
+import CreateAdminUser from "@/pages/CreateAdminUser";
 import "./App.css";
 
 function App() {
@@ -50,6 +50,9 @@ function App() {
             
             {/* Redirect root to appropriate dashboard or auth */}
             <Route path="/" element={<Navigate to="/verify" replace />} />
+            
+            {/* Add the create admin user route */}
+            <Route path="/create-admin" element={<CreateAdminUser />} />
             
             {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/auth" replace />} />
