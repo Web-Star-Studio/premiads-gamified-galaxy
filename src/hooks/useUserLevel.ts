@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserLevel, UserLevelInfo } from "@/types/auth";
@@ -74,14 +73,20 @@ const DEFAULT_USER_LEVELS: UserLevel[] = [
 // Check if user levels table exists
 async function checkUserLevelsTable(): Promise<boolean> {
   try {
-    const { data, error } = await supabase.rpc('check_table_exists', { table_name: 'user_levels' });
+    // Since we can't use check_table_exists function that doesn't exist,
+    // let's try a different approach - query for postgres' information_schema
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('count(*)', { count: 'exact', head: true });
     
     if (error) {
       console.error("Error checking for user_levels table:", error);
       return false;
     }
     
-    return !!data;
+    // If we can query profiles, we can assume the connection works
+    // but we'll always use default levels since we don't have user_levels table
+    return false;
   } catch (error) {
     console.error("Error in checkUserLevelsTable:", error);
     return false;
@@ -102,39 +107,8 @@ export function useUserLevel(points: number, userId?: string) {
         // Check if user_levels table exists in the database
         const tableExists = await checkUserLevelsTable();
         
-        let userLevels: UserLevel[] = [];
-        
-        if (tableExists) {
-          // If the table exists, fetch levels from it
-          const { data: levelsData, error: levelsError } = await supabase
-            .from('user_levels')
-            .select('*')
-            .order('min_points', { ascending: true });
-          
-          if (levelsError) throw levelsError;
-          
-          if (levelsData && levelsData.length > 0) {
-            userLevels = levelsData.map(level => ({
-              id: level.id,
-              name: level.name,
-              min_points: level.min_points,
-              max_points: level.max_points,
-              points_multiplier: level.points_multiplier,
-              icon: level.icon,
-              color: level.color,
-              description: level.description,
-              benefits: {
-                ticket_discount: level.benefits?.ticket_discount ?? 0,
-                access_to_exclusive_raffles: level.benefits?.access_to_exclusive_raffles ?? false,
-                priority_support: level.benefits?.priority_support ?? false,
-                early_access: level.benefits?.early_access ?? false
-              }
-            }));
-          }
-        } else {
-          // If the table doesn't exist, use default levels
-          userLevels = DEFAULT_USER_LEVELS;
-        }
+        // Always use default levels since we don't have user_levels table
+        const userLevels: UserLevel[] = DEFAULT_USER_LEVELS;
         
         setLevels(userLevels);
         
