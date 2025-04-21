@@ -1,8 +1,9 @@
+
 export interface SignUpCredentials {
   email: string;
   password: string;
   name: string;
-  userType?: "participante" | "anunciante";
+  userType?: UserType;
 }
 
 export interface SignInCredentials {

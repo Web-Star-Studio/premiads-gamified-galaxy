@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndCleanup } from "@/utils/auth"; // <--- Import utility
-import { SignUpCredentials, SignInCredentials } from "@/types/auth";
+import { SignUpCredentials, SignInCredentials, UserType } from "@/types/auth";
 
 export const useAuthMethods = () => {
   const [loading, setLoading] = useState(false);
