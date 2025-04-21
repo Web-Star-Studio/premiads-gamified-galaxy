@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft, ChevronRight } from "lucide-react";
@@ -17,6 +16,7 @@ import ProfileForm from "@/components/client/profile/ProfileForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 // Form schemas for validation
 const personalInfoSchema = z.object({
@@ -86,6 +86,82 @@ const ClientProfile = () => {
       });
       playSound("chime");
     }, 800);
+  };
+
+  // Add these additional state variables and handlers for the security tab
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  
+  const handleUpdatePassword = async () => {
+    // Reset errors
+    setPasswordError("");
+    
+    // Validate inputs
+    if (!currentPassword) {
+      setPasswordError("Senha atual é obrigatória");
+      return;
+    }
+    
+    if (!newPassword) {
+      setPasswordError("Nova senha é obrigatória");
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      setPasswordError("A nova senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("As senhas não coincidem");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // First verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: "usuario@example.com", // You would need the actual user email here
+        password: currentPassword
+      });
+      
+      if (signInError) {
+        setPasswordError("Senha atual incorreta");
+        return;
+      }
+      
+      // Update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (updateError) throw updateError;
+      
+      // Clear form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      
+      toast({
+        title: "Senha atualizada",
+        description: "Sua senha foi atualizada com sucesso",
+      });
+      
+      playSound("chime");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar senha",
+        description: error.message || "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+      
+      playSound("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -292,61 +368,91 @@ const ClientProfile = () => {
                             type="password"
                             placeholder="Sua senha atual"
                             className="pl-10"
+                            value={currentPassword}
+                            onChange={(e) => {
+                              setCurrentPassword(e.target.value);
+                              setPasswordError("");
+                            }}
                           />
                         </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="new-password">Nova Senha</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="new-password"
-                            type="password"
-                            placeholder="Sua nova senha"
-                            className="pl-10"
-                          />
-                        </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">Nova Senha</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="new-password"
+                          type="password"
+                          placeholder="Sua nova senha"
+                          className="pl-10"
+                          value={newPassword}
+                          onChange={(e) => {
+                            setNewPassword(e.target.value);
+                            setPasswordError("");
+                          }}
+                        />
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="confirm-password"
-                            type="password"
-                            placeholder="Confirme sua nova senha"
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                      {newPassword && newPassword.length < 6 && (
+                        <p className="text-red-400 text-xs">A senha deve ter pelo menos 6 caracteres</p>
+                      )}
                     </div>
                     
-                    <Button className="w-full neon-button">
-                      Atualizar Senha
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          placeholder="Confirme sua nova senha"
+                          className="pl-10"
+                          value={confirmNewPassword}
+                          onChange={(e) => {
+                            setConfirmNewPassword(e.target.value);
+                            setPasswordError("");
+                          }}
+                        />
+                      </div>
+                      {confirmNewPassword && newPassword !== confirmNewPassword && (
+                        <p className="text-red-400 text-xs">As senhas não coincidem</p>
+                      )}
+                    </div>
+                    
+                    {passwordError && (
+                      <div className="p-3 rounded-md bg-red-500/20 border border-red-500/30 text-sm text-white">
+                        {passwordError}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    className="w-full neon-button"
+                    disabled={loading || !currentPassword || !newPassword || !confirmNewPassword}
+                    onClick={handleUpdatePassword}
+                  >
+                    {loading ? "Atualizando..." : "Atualizar Senha"}
+                  </Button>
+                  
+                  <div className="pt-4 border-t border-galaxy-purple/20">
+                    <h4 className="font-medium mb-4">Opções Adicionais de Segurança</h4>
+                    
+                    <Button variant="outline" className="w-full justify-between mb-3 border-galaxy-purple/30 hover:bg-galaxy-deepPurple/50">
+                      <span>Ativar Autenticação de Dois Fatores</span>
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                     
-                    <div className="pt-4 border-t border-galaxy-purple/20">
-                      <h4 className="font-medium mb-4">Opções Adicionais de Segurança</h4>
-                      
-                      <Button variant="outline" className="w-full justify-between mb-3 border-galaxy-purple/30 hover:bg-galaxy-deepPurple/50">
-                        <span>Ativar Autenticação de Dois Fatores</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                      
-                      <Button variant="outline" className="w-full justify-between border-galaxy-purple/30 hover:bg-galaxy-deepPurple/50 text-destructive hover:text-destructive">
-                        <span>Desativar Conta</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Button variant="outline" className="w-full justify-between border-galaxy-purple/30 hover:bg-galaxy-deepPurple/50 text-destructive hover:text-destructive">
+                      <span>Desativar Conta</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
     </div>
   );
 };

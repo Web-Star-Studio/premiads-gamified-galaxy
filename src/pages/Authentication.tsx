@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,16 +12,28 @@ import Particles from "@/components/Particles";
 import { UserType } from "@/types/auth";
 
 const Authentication = () => {
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "signup" | "reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<UserType>("participante");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [passwordResetMode, setPasswordResetMode] = useState(false);
   
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, loading, resetPassword, updatePassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Check for password reset mode
+  useEffect(() => {
+    const isReset = searchParams.get('reset') === 'true';
+    if (isReset) {
+      setPasswordResetMode(true);
+      setActiveTab('reset');
+    }
+  }, [searchParams]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +67,15 @@ const Authentication = () => {
       return;
     }
     
+    if (password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const credentials: SignUpCredentials = {
       email,
       password,
@@ -62,8 +83,53 @@ const Authentication = () => {
       userType
     };
     
-    await signUp(credentials);
-    setActiveTab("login");
+    const success = await signUp(credentials);
+    if (success) {
+      setActiveTab("login");
+    }
+  };
+  
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordResetMode) {
+      // Update password mode
+      if (!password) {
+        toast({
+          title: "Senha obrigatória",
+          description: "Por favor, digite sua nova senha.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        toast({
+          title: "Senhas não coincidem",
+          description: "As senhas digitadas não são iguais.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const success = await updatePassword(password);
+      if (success) {
+        setActiveTab("login");
+        setPasswordResetMode(false);
+      }
+    } else {
+      // Request password reset mode
+      if (!email) {
+        toast({
+          title: "Email obrigatório",
+          description: "Por favor, digite seu email para recuperar a senha.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await resetPassword(email);
+    }
   };
   
   const toggleAdvancedOptions = () => {
@@ -84,10 +150,11 @@ const Authentication = () => {
           <p className="text-muted-foreground">Entrar ou criar sua conta</p>
         </div>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup")}>
-          <TabsList className="grid grid-cols-2 mb-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup" | "reset")}>
+          <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Cadastro</TabsTrigger>
+            <TabsTrigger value="reset">Recuperar</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
@@ -107,9 +174,14 @@ const Authentication = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <a href="#" className="text-xs text-neon-pink hover:underline">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-xs text-neon-pink hover:underline"
+                    onClick={() => setActiveTab("reset")}
+                  >
                     Esqueceu a senha?
-                  </a>
+                  </Button>
                 </div>
                 <Input
                   id="password"
@@ -163,6 +235,9 @@ const Authentication = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-galaxy-dark"
                 />
+                {password && password.length < 6 && (
+                  <p className="text-red-400 text-xs">A senha deve ter pelo menos 6 caracteres</p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -222,6 +297,68 @@ const Authentication = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Cadastrando..." : "Cadastrar"}
               </Button>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="reset">
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              {!passwordResetMode ? (
+                // Request password reset form
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-galaxy-dark"
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full bg-neon-pink/80 hover:bg-neon-pink" disabled={loading}>
+                    {loading ? "Enviando..." : "Enviar link de recuperação"}
+                  </Button>
+                </>
+              ) : (
+                // Set new password form
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">Nova senha</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Nova senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-galaxy-dark"
+                    />
+                    {password && password.length < 6 && (
+                      <p className="text-red-400 text-xs">A senha deve ter pelo menos 6 caracteres</p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirme a senha</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirme a senha"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-galaxy-dark"
+                    />
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-red-400 text-xs">As senhas não coincidem</p>
+                    )}
+                  </div>
+                  
+                  <Button type="submit" className="w-full bg-neon-pink/80 hover:bg-neon-pink" disabled={loading}>
+                    {loading ? "Atualizando..." : "Atualizar senha"}
+                  </Button>
+                </>
+              )}
             </form>
           </TabsContent>
         </Tabs>

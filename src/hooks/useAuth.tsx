@@ -14,13 +14,22 @@ interface AuthContextType {
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (credentials: SignUpCredentials) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading: sessionLoading } = useAuthSession();
-  const { loading: methodsLoading, signIn: signInMethod, signOut: signOutMethod, signUp: signUpMethod } = useAuthMethods();
+  const { 
+    loading: methodsLoading, 
+    signIn: signInMethod, 
+    signOut: signOutMethod, 
+    signUp: signUpMethod,
+    resetPassword: resetPasswordMethod,
+    updatePassword: updatePasswordMethod
+  } = useAuthMethods();
   
   const isLoading = sessionLoading || methodsLoading;
   
@@ -37,6 +46,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signOutMethod();
   };
   
+  const resetPassword = async (email: string): Promise<void> => {
+    await resetPasswordMethod(email);
+  };
+  
+  const updatePassword = async (password: string): Promise<void> => {
+    await updatePasswordMethod(password);
+  };
+  
   return (
     <AuthContext.Provider
       value={{
@@ -48,6 +65,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signIn,
         signOut,
         signUp,
+        resetPassword,
+        updatePassword
       }}
     >
       {children}
