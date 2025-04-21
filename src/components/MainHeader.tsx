@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
@@ -36,7 +37,7 @@ const MainHeader = ({ onLoginClick }: MainHeaderProps) => {
   ];
 
   // Always use the centralized dashboard navigation
-  const handleMainButtonClick = () => {
+  const handleMainButtonClick = (e: React.MouseEvent) => {
     if (isAuthenticated) {
       navigateToDashboard();
     } else {

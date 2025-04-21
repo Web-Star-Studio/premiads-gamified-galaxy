@@ -39,6 +39,12 @@ const Header = () => {
     return "Acessar Painel";
   };
 
+  // Create a handler function that accepts the MouseEvent
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigateToDashboard();
+  };
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -65,7 +71,7 @@ const Header = () => {
           <Button 
             className="hidden md:flex neon-button items-center justify-center" 
             size="sm"
-            onClick={navigateToDashboard}
+            onClick={handleDashboardClick}
           >
             {getButtonText()}
           </Button>
@@ -88,7 +94,7 @@ const Header = () => {
         sections={sections}
         mobileMenuOpen={mobileMenuOpen}
         scrollToSection={scrollToSection}
-        navigateToDashboard={navigateToDashboard}
+        navigateToDashboard={handleDashboardClick}
         userType={userType}
         setMobileMenuOpen={setMobileMenuOpen}
       />

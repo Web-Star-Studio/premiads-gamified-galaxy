@@ -1,117 +1,74 @@
 
-import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { UserType } from "@/types/auth";
 
-interface Section {
-  id: string;
-  label: string;
-  isLink?: boolean;
-  to?: string;
-}
-
 interface MobileNavigationProps {
-  sections: Section[];
+  sections: Array<{
+    id: string;
+    label: string;
+    isLink?: boolean;
+    to?: string;
+  }>;
   mobileMenuOpen: boolean;
-  scrollToSection: (id: string) => void;
-  navigateToDashboard: () => void;
+  scrollToSection: (sectionId: string) => void;
+  navigateToDashboard: (e: React.MouseEvent) => void;
   userType: UserType;
   setMobileMenuOpen: (open: boolean) => void;
 }
 
-const MobileNavigation = ({
+const MobileNavigation: React.FC<MobileNavigationProps> = ({
   sections,
   mobileMenuOpen,
   scrollToSection,
   navigateToDashboard,
   userType,
-  setMobileMenuOpen
-}: MobileNavigationProps) => {
-  // Prevents scrolling when the mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileMenuOpen]);
-
-  // Close mobile menu after clicking a link
-  const handleSectionClick = (id: string) => {
-    scrollToSection(id);
-    setMobileMenuOpen(false);
-  };
-  
-  // Handle dashboard navigation
-  const handleDashboardClick = () => {
-    navigateToDashboard();
-    setMobileMenuOpen(false);
-  };
-  
-  // Get button text based on user type
+  setMobileMenuOpen,
+}) => {
   const getButtonText = () => {
     if (userType === "participante") return "Ver Missões";
     if (userType === "anunciante") return "Criar Campanha";
-    if (userType === "admin") return "Painel Admin";
     return "Acessar Painel";
   };
-  
+
   return (
     <AnimatePresence>
       {mobileMenuOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 top-[60px] z-30 bg-galaxy-dark/95 backdrop-blur-sm overflow-y-auto"
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+          className="absolute top-full left-0 right-0 bg-galaxy-dark/95 backdrop-blur-lg shadow-lg z-40"
         >
-          <div className="container mx-auto py-8 px-4">
-            <ul className="space-y-4">
+          <div className="container mx-auto px-4 py-6 flex flex-col space-y-6">
+            <nav className="flex flex-col space-y-4">
               {sections.map((section) => (
-                <motion.li
-                  key={section.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                >
-                  {section.isLink ? (
-                    <a
-                      href={section.to}
-                      className="text-xl font-medium py-2 px-4 block text-white hover:text-neon-cyan transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {section.label}
-                    </a>
-                  ) : (
-                    <button
-                      onClick={() => handleSectionClick(section.id)}
-                      className="text-xl font-medium py-2 px-4 block text-white hover:text-neon-cyan transition-colors w-full text-left"
-                    >
-                      {section.label}
-                    </button>
-                  )}
-                </motion.li>
-              ))}
-              <motion.li
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-                className="pt-6"
-              >
                 <Button
-                  className="w-full neon-button text-lg py-6"
-                  onClick={handleDashboardClick}
+                  key={section.id}
+                  variant="ghost"
+                  className="justify-start px-2 py-3 text-white hover:text-neon-cyan hover:bg-galaxy-purple/20"
+                  onClick={() => {
+                    if (section.isLink && section.to) {
+                      window.location.href = section.to;
+                    } else {
+                      scrollToSection(section.id);
+                      setMobileMenuOpen(false);
+                    }
+                  }}
                 >
-                  {getButtonText()}
+                  {section.label}
                 </Button>
-              </motion.li>
-            </ul>
+              ))}
+            </nav>
+            
+            <Button 
+              className="w-full neon-button" 
+              onClick={navigateToDashboard}
+            >
+              {getButtonText()}
+            </Button>
           </div>
         </motion.div>
       )}
