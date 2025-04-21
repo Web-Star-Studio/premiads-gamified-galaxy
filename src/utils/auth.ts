@@ -7,9 +7,19 @@ import { supabase, cleanSessionData } from '@/integrations/supabase/client';
  */
 export const signOutAndCleanup = async (): Promise<void> => {
   try {
+    console.log("Starting signout process...");
+    
     // First, sign out from Supabase
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    const { error } = await supabase.auth.signOut({
+      scope: 'local' // Only clear local session, not other tabs
+    });
+    
+    if (error) {
+      console.error("Error during Supabase signout:", error);
+      throw error;
+    }
+    
+    console.log("Supabase signout successful, cleaning up local data...");
     
     // Then clean up all local storage items
     cleanSessionData();
@@ -17,6 +27,7 @@ export const signOutAndCleanup = async (): Promise<void> => {
     // For security, clear any session storage as well
     sessionStorage.clear();
     
+    console.log("Signout and cleanup complete");
   } catch (error) {
     console.error('Error during sign out:', error);
     // Clean up even if there's an error with Supabase signOut
@@ -74,6 +85,8 @@ export const getUserRole = async (): Promise<string | null> => {
  */
 export const resendConfirmationEmail = async (email: string): Promise<void> => {
   try {
+    console.log("Attempting to resend confirmation email to:", email);
+    
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
@@ -82,7 +95,12 @@ export const resendConfirmationEmail = async (email: string): Promise<void> => {
       }
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error resending confirmation email:", error);
+      throw error;
+    }
+    
+    console.log("Confirmation email resent successfully");
   } catch (error) {
     console.error('Error resending confirmation email:', error);
     throw error;

@@ -13,6 +13,8 @@ export const useAuthMethods = () => {
     try {
       setLoading(true);
       
+      console.log("Attempting login with:", credentials.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
@@ -40,6 +42,7 @@ export const useAuthMethods = () => {
       }
       
       if (!data?.session) {
+        console.log("Login failed: No session returned");
         toast({
           title: "Erro no login",
           description: "Não foi possível obter a sessão. Tente novamente.",
@@ -48,6 +51,7 @@ export const useAuthMethods = () => {
         return false;
       }
       
+      console.log("Login successful, session established");
       return true;
     } catch (error) {
       // Erro já tratado acima
