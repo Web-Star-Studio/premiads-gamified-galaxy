@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserLevel, UserLevelInfo } from "@/types/levels";
+import { UserLevel, UserLevelInfo } from "@/types/auth";
 
 export function useUserLevel(points: number, userId?: string) {
   const [loading, setLoading] = useState(true);
@@ -14,6 +14,7 @@ export function useUserLevel(points: number, userId?: string) {
       try {
         setLoading(true);
         
+        // Use a custom query to get user_levels, since our Database object doesn't know about them yet
         const { data: levelsData, error: levelsError } = await supabase
           .from('user_levels')
           .select('*')
@@ -22,6 +23,7 @@ export function useUserLevel(points: number, userId?: string) {
         if (levelsError) throw levelsError;
         
         if (levelsData && levelsData.length > 0) {
+          // Type assertion to handle the conversion
           const typedLevels = levelsData.map(level => ({
             id: level.id,
             name: level.name,
@@ -85,7 +87,7 @@ export function useUserLevel(points: number, userId?: string) {
         }
       } catch (err) {
         console.error("Error fetching level data:", err);
-        setError("Não foi possível carregar os dados de nível.");
+        setError("Couldn't load level data.");
       } finally {
         setLoading(false);
       }
