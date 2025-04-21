@@ -7,7 +7,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: localStorage,
+    storage: localStorage, // Especifique explicitamente o localStorage
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
