@@ -118,6 +118,44 @@ export const useLottery = () => {
     }
   }, [toast]);
 
+  const transformRaffleData = (raffle: any): Lottery => {
+    const numbersSold = raffle.numbers_sold || 0;
+    const progress = raffle.numbers_total > 0 
+      ? Math.round((numbersSold / raffle.numbers_total) * 100) 
+      : 0;
+    
+    let winner = null;
+    if (raffle.winner_profile && typeof raffle.winner_profile === 'object') {
+      winner = {
+        id: raffle.winner_profile.id || '',
+        name: raffle.winner_profile.full_name || 'Unknown',
+        avatar: raffle.winner_profile.avatar_url || 'https://i.pravatar.cc/150?img=1'
+      };
+    }
+    
+    return {
+      id: raffle.id,
+      name: raffle.title,
+      description: raffle.description,
+      detailedDescription: raffle.detailed_description,
+      prizeType: raffle.prize_type,
+      prizeValue: raffle.prize_value,
+      imageUrl: raffle.image_url,
+      startDate: raffle.start_date,
+      endDate: raffle.end_date,
+      drawDate: raffle.draw_date,
+      status: raffle.status as Lottery['status'],
+      winner,
+      numbersTotal: raffle.numbers_total,
+      pointsPerNumber: raffle.points_per_number,
+      minPoints: raffle.min_points,
+      numbersSold,
+      progress,
+      isAutoScheduled: true,
+      prizes: []
+    };
+  };
+
   // Create a new lottery
   const createLottery = async (lotteryData: Omit<Lottery, 'id' | 'progress' | 'numbersSold'>) => {
     try {

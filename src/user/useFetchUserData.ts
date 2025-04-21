@@ -52,11 +52,22 @@ export const useFetchUserData = () => {
       }
       
       if (profileData) {
-        // Convert profile_data to the proper type for Profile
         const typedProfile: Profile = {
-          ...profileData,
-          profile_data: profileData.profile_data as Record<string, any>,
-          user_type: (profileData.user_type || "participante") as "participante" | "anunciante" | "admin"
+          id: profileData.id,
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
+          website: profileData.website,
+          user_type: profileData.user_type || "participante",
+          points: profileData.points || 0,
+          credits: profileData.credits || 0,
+          profile_completed: profileData.profile_completed || false,
+          email_notifications: profileData.email_notifications || false,
+          push_notifications: profileData.push_notifications || false,
+          description: profileData.description,
+          phone: profileData.phone,
+          profile_data: typeof profileData.profile_data === 'object' ? profileData.profile_data : {},
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
         };
         
         if (typedProfile.full_name) {

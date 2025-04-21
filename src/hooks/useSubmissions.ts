@@ -19,7 +19,6 @@ export const useSubmissions = ({ filterStatus, searchQuery, tabValue }: UseSubmi
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        // Get current user session
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData?.session?.user?.id;
         
@@ -27,7 +26,6 @@ export const useSubmissions = ({ filterStatus, searchQuery, tabValue }: UseSubmi
           throw new Error("Usuário não autenticado");
         }
         
-        // Get missions created by this advertiser
         const { data: missionsData, error: missionsError } = await supabase
           .from("missions")
           .select("id")
@@ -43,7 +41,6 @@ export const useSubmissions = ({ filterStatus, searchQuery, tabValue }: UseSubmi
         
         const missionIds = missionsData.map(mission => mission.id);
         
-        // Use the RPC function to get submissions
         const { data: submissionsData, error: submissionsError } = await supabase
           .rpc('get_mission_submissions', {
             mission_ids: missionIds,
@@ -58,17 +55,28 @@ export const useSubmissions = ({ filterStatus, searchQuery, tabValue }: UseSubmi
           return;
         }
         
-        // Apply search filter if needed
-        let filteredSubmissions = submissionsData;
+        const typedSubmissions: MissionSubmission[] = submissionsData.map((sub: any) => ({
+          id: sub.id,
+          user_id: sub.user_id,
+          user_name: sub.user_name,
+          mission_id: sub.mission_id,
+          mission_title: sub.mission_title,
+          submission_data: sub.submission_data,
+          status: sub.status,
+          submitted_at: sub.submitted_at,
+          feedback: sub.feedback?.toString()
+        }));
+        
+        let filteredSubmissions = typedSubmissions;
         if (searchQuery) {
           const lowerQuery = searchQuery.toLowerCase();
-          filteredSubmissions = submissionsData.filter((sub: any) => 
+          filteredSubmissions = typedSubmissions.filter(sub => 
             sub.user_name.toLowerCase().includes(lowerQuery) || 
             sub.mission_title.toLowerCase().includes(lowerQuery)
           );
         }
         
-        setSubmissions(filteredSubmissions as MissionSubmission[]);
+        setSubmissions(filteredSubmissions);
       } catch (error: any) {
         console.error("Error fetching submissions:", error);
         toast({

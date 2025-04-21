@@ -14,7 +14,6 @@ export function useUserLevel(points: number, userId?: string) {
       try {
         setLoading(true);
         
-        // Fetch all level definitions
         const { data: levelsData, error: levelsError } = await supabase
           .from('user_levels')
           .select('*')
@@ -23,58 +22,47 @@ export function useUserLevel(points: number, userId?: string) {
         if (levelsError) throw levelsError;
         
         if (levelsData && levelsData.length > 0) {
-          // Convert the benefits JSON to the correct type
-          const typedLevelsData = levelsData.map(level => {
-            // Safely extract benefits with default values
-            let benefitsObj: Record<string, any> = {};
-            try {
-              // If benefits is a string, parse it, otherwise use it directly
-              if (typeof level.benefits === 'string') {
-                benefitsObj = JSON.parse(level.benefits);
-              } else if (level.benefits && typeof level.benefits === 'object') {
-                benefitsObj = level.benefits;
-              }
-            } catch (e) {
-              console.error("Error parsing benefits JSON:", e);
+          const typedLevels = levelsData.map(level => ({
+            id: level.id,
+            name: level.name,
+            min_points: level.min_points,
+            max_points: level.max_points,
+            points_multiplier: level.points_multiplier,
+            icon: level.icon,
+            color: level.color,
+            description: level.description,
+            benefits: {
+              ticket_discount: level.benefits?.ticket_discount ?? 0,
+              access_to_exclusive_raffles: level.benefits?.access_to_exclusive_raffles ?? false,
+              priority_support: level.benefits?.priority_support ?? false,
+              early_access: level.benefits?.early_access ?? false
             }
-            
-            return {
-              ...level,
-              benefits: {
-                ticket_discount: benefitsObj.ticket_discount ?? 0,
-                access_to_exclusive_raffles: benefitsObj.access_to_exclusive_raffles ?? false,
-                priority_support: benefitsObj.priority_support ?? false,
-                early_access: benefitsObj.early_access ?? false
-              }
-            };
-          }) as UserLevel[];
+          })) as UserLevel[];
           
-          setLevels(typedLevelsData);
+          setLevels(typedLevels);
           
           // Calculate current level and next level based on points
-          const currentLevel = typedLevelsData.find(
+          const currentLevel = typedLevels.find(
             level => points >= level.min_points && 
                    (level.max_points === null || points <= level.max_points)
-          ) as UserLevel;
+          );
           
           if (!currentLevel) {
-            // Fallback to the first level if nothing else matches
             setLevelInfo({
-              currentLevel: typedLevelsData[0],
-              nextLevel: typedLevelsData.length > 1 ? typedLevelsData[1] : null,
+              currentLevel: typedLevels[0],
+              nextLevel: typedLevels.length > 1 ? typedLevels[1] : null,
               progress: 0,
-              pointsToNextLevel: typedLevelsData.length > 1 ? typedLevelsData[1].min_points - points : 0
+              pointsToNextLevel: typedLevels.length > 1 ? typedLevels[1].min_points - points : 0
             });
             setLoading(false);
             return;
           }
           
-          const currentLevelIndex = typedLevelsData.findIndex(level => level.id === currentLevel.id);
-          const nextLevel = currentLevelIndex < typedLevelsData.length - 1 
-                          ? typedLevelsData[currentLevelIndex + 1] as UserLevel 
+          const currentLevelIndex = typedLevels.findIndex(level => level.id === currentLevel.id);
+          const nextLevel = currentLevelIndex < typedLevels.length - 1 
+                          ? typedLevels[currentLevelIndex + 1]
                           : null;
           
-          // Calculate progress as percentage within current level range
           let progress = 0;
           let pointsToNextLevel = 0;
           
@@ -84,7 +72,6 @@ export function useUserLevel(points: number, userId?: string) {
             progress = Math.min(Math.round((pointsInLevel / rangeSize) * 100), 100);
             pointsToNextLevel = nextLevel.min_points - points;
           } else {
-            // User is at max level
             progress = 100;
             pointsToNextLevel = 0;
           }
@@ -104,7 +91,6 @@ export function useUserLevel(points: number, userId?: string) {
       }
     };
 
-    // Only fetch if we have points
     if (points !== undefined) {
       fetchLevels();
     }
