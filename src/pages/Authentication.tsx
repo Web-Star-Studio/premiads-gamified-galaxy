@@ -15,7 +15,8 @@ const Authentication = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [userType, setUserType] = useState<"participante" | "anunciante">("participante");
+  const [userType, setUserType] = useState<UserType>("participante");
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
   const { signIn, signUp, loading } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +63,10 @@ const Authentication = () => {
     
     await signUp(credentials);
     setActiveTab("login");
+  };
+  
+  const toggleAdvancedOptions = () => {
+    setShowAdvancedOptions(!showAdvancedOptions);
   };
   
   return (
@@ -161,22 +166,54 @@ const Authentication = () => {
               
               <div className="space-y-2">
                 <Label>Tipo de conta</Label>
-                <div className="grid grid-cols-2 gap-2">
+                {!showAdvancedOptions ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={userType === "participante" ? "default" : "outline"}
+                      className={userType === "participante" ? "bg-neon-cyan/80 hover:bg-neon-cyan" : ""}
+                      onClick={() => setUserType("participante")}
+                    >
+                      Participante
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={userType === "anunciante" ? "default" : "outline"}
+                      className={userType === "anunciante" ? "bg-neon-pink/80 hover:bg-neon-pink" : ""}
+                      onClick={() => setUserType("anunciante")}
+                    >
+                      Anunciante
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={userType === "admin" ? "default" : "outline"}
+                      className={userType === "admin" ? "bg-purple-600/80 hover:bg-purple-600" : ""}
+                      onClick={() => setUserType("admin")}
+                    >
+                      Admin
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={userType === "moderator" ? "default" : "outline"}
+                      className={userType === "moderator" ? "bg-indigo-600/80 hover:bg-indigo-600" : ""}
+                      onClick={() => setUserType("moderator")}
+                    >
+                      Moderador
+                    </Button>
+                  </div>
+                )}
+                <div className="text-center mt-1">
                   <Button
                     type="button"
-                    variant={userType === "participante" ? "default" : "outline"}
-                    className={userType === "participante" ? "bg-neon-cyan/80 hover:bg-neon-cyan" : ""}
-                    onClick={() => setUserType("participante")}
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleAdvancedOptions}
+                    className="text-xs text-muted-foreground"
                   >
-                    Participante
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={userType === "anunciante" ? "default" : "outline"}
-                    className={userType === "anunciante" ? "bg-neon-pink/80 hover:bg-neon-pink" : ""}
-                    onClick={() => setUserType("anunciante")}
-                  >
-                    Anunciante
+                    {showAdvancedOptions ? "Opções Básicas" : "Opções Avançadas"}
                   </Button>
                 </div>
               </div>

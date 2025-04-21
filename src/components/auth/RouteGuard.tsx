@@ -3,10 +3,11 @@ import { ReactNode, useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
+import { UserType } from "@/types/auth";
 
 interface RouteGuardProps {
   children: ReactNode;
-  userType?: "anunciante" | "participante" | "admin" | "moderator" | null;
+  userType?: UserType | null;
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
@@ -26,12 +27,18 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
       
       const userRole = currentUser?.user_metadata?.user_type || 'participante';
       
+      // Admin and moderators have access to all routes
+      if (userRole === 'admin' || userRole === 'moderator') {
+        setHasAccess(true);
+        setChecking(false);
+        return;
+      }
+      
       // If no specific userType required, or user has the required type
       if (!userType || userType === userRole) {
         setHasAccess(true);
       } else {
-        // Admin has access to all routes
-        setHasAccess(userRole === 'admin');
+        setHasAccess(false);
       }
       
       setChecking(false);
@@ -61,6 +68,8 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     
     if (userRole === "admin") {
       return <Navigate to="/admin" />;
+    } else if (userRole === "moderator") {
+      return <Navigate to="/admin" />; // Moderators also go to admin panel
     } else if (userRole === "anunciante") {
       return <Navigate to="/anunciante" />;
     } else {

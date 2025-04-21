@@ -3,7 +3,7 @@ export interface SignUpCredentials {
   email: string;
   password: string;
   name: string;
-  userType?: "participante" | "anunciante";
+  userType?: "participante" | "anunciante" | "admin" | "moderator";
 }
 
 export interface SignInCredentials {
@@ -11,4 +11,4 @@ export interface SignInCredentials {
   password: string;
 }
 
-export type UserType = "participante" | "anunciante";
+export type UserType = "participante" | "anunciante" | "admin" | "moderator";

@@ -38,11 +38,11 @@ export const useAdminAuth = () => {
           throw error;
         }
         
-        // Verify if user has admin privileges
-        if (profileData?.user_type === 'admin') {
+        // Verify if user has admin privileges (admin or moderator)
+        if (profileData?.user_type === 'admin' || profileData?.user_type === 'moderator') {
           setIsAdmin(true);
         } else {
-          // User is authenticated but not an admin, redirect to appropriate dashboard
+          // User is authenticated but not an admin or moderator, redirect to appropriate dashboard
           playSound('error');
           toast({
             title: "Acesso negado",
