@@ -1,4 +1,5 @@
-export type UserType = 'admin' | 'employee' | 'client';
+
+export type UserType = 'admin' | 'employee' | 'client' | 'participante' | 'anunciante' | 'admin-master';
 
 export interface SignUpCredentials {
   email: string;

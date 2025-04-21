@@ -8,6 +8,7 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import UserManagementPage from "@/pages/admin/UserManagementPage";
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
 import ClientDashboard from "@/pages/client/ClientDashboard";
+import VerificationPage from "@/pages/VerificationPage"; 
 import AuthGuard from "@/components/auth/AuthGuard";
 import "./App.css";
 
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/verify" element={<VerificationPage />} />
             
             {/* Admin routes */}
             <Route path="/admin" element={
@@ -46,8 +48,8 @@ function App() {
               </AuthGuard>
             } />
             
-            {/* Redirect root to appropriate dashboard based on role or to auth */}
-            <Route path="/" element={<Navigate to="/auth" replace />} />
+            {/* Redirect root to appropriate dashboard or auth */}
+            <Route path="/" element={<Navigate to="/verify" replace />} />
             
             {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/auth" replace />} />

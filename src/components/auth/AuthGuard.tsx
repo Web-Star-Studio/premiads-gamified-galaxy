@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,7 @@ const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
       case "employee":
         return <Navigate to="/employee" replace />;
       case "client":
+      case "participante":
         return <Navigate to="/client" replace />;
       default:
         return <Navigate to="/auth" replace />;

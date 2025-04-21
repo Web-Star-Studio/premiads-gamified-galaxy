@@ -1,90 +1,167 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabaseUrl = "https://wvhgfxeqrjavxlzvxqqh.supabase.co";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-}
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
-
+  
+  // Only allow POST requests
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), { 
+      status: 405,
+      headers: { 
+        "Content-Type": "application/json",
+        ...corsHeaders
+      } 
+    });
+  }
+  
+  // Verify JWT token (requires auth)
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: "Missing authorization header" }),
+      { 
+        status: 401, 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        } 
+      }
+    );
+  }
+  
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      throw new Error('Supabase environment variables are not set')
-    }
-
-    const supabase = createClient(
-      supabaseUrl, 
-      supabaseServiceRoleKey
-    )
-
-    // Only admin can run this function
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
     
-    if (!user) {
-      throw new Error('Authentication required')
+    if (authError || !user) {
+      throw new Error('Unauthorized');
     }
     
     // Check if user is admin
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_type')
       .eq('id', user.id)
-      .single()
+      .single();
       
-    if (profileError) throw profileError
+    if (profileError) throw profileError;
     
-    if (profileData?.user_type !== 'admin') {
-      throw new Error('Admin privileges required')
+    if (profile.user_type !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: "Only admins can run database cleanup" }),
+        { 
+          status: 403, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
     }
     
-    // Clear test data from tables
-    await supabase.from('submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    console.log("Starting database cleanup process");
     
-    // Delete the mission_submissions table if it exists (we'll use submissions instead)
-    await supabase.rpc('drop_table_if_exists', { table_name: 'mission_submissions' })
+    // Parse request body
+    const { dryRun = true } = await req.json().catch(() => ({}));
     
-    await supabase.from('missions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    let results = {
+      completedRaffles: 0,
+      expiredMissions: 0,
+      dryRun: dryRun
+    };
     
-    // Remove test users (but keep admins)
-    const { data: testUsers, error: testUsersError } = await supabase
-      .from('profiles')
-      .select('id, user_type')
-      .neq('user_type', 'admin')
+    // 1. Clean up completed raffles
+    const { data: completedRaffles, error: rafflesError } = await supabase
+      .from('raffles')
+      .select('id')
+      .eq('status', 'completed')
+      .lt('end_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
       
-    if (testUsersError) throw testUsersError
+    if (rafflesError) throw rafflesError;
     
-    for (const testUser of testUsers || []) {
-      await supabase.auth.admin.deleteUser(testUser.id)
+    if (completedRaffles && completedRaffles.length > 0) {
+      console.log(`Found ${completedRaffles.length} old completed raffles to archive`);
+      results.completedRaffles = completedRaffles.length;
+      
+      if (!dryRun) {
+        // Archive the raffles
+        const { error: updateError } = await supabase
+          .from('raffles')
+          .update({ status: 'archived' })
+          .in('id', completedRaffles.map(r => r.id));
+          
+        if (updateError) throw updateError;
+      }
     }
-
-    return new Response(JSON.stringify({ 
-      message: 'Database cleaned up successfully',
-      removedUsers: testUsers?.length || 0
-    }), {
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'application/json' 
-      },
-      status: 200
-    })
+    
+    // 2. Clean up expired missions
+    const { data: expiredMissions, error: missionsError } = await supabase
+      .from('missions')
+      .select('id')
+      .eq('is_active', true)
+      .lt('end_date', new Date().toISOString());
+      
+    if (missionsError) throw missionsError;
+    
+    if (expiredMissions && expiredMissions.length > 0) {
+      console.log(`Found ${expiredMissions.length} expired missions to deactivate`);
+      results.expiredMissions = expiredMissions.length;
+      
+      if (!dryRun) {
+        // Deactivate the missions
+        const { error: updateError } = await supabase
+          .from('missions')
+          .update({ is_active: false })
+          .in('id', expiredMissions.map(m => m.id));
+          
+        if (updateError) throw updateError;
+      }
+    }
+    
+    // Return results
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: `Database cleanup ${dryRun ? '(dry run)' : ''} completed successfully`,
+        results
+      }),
+      { 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        } 
+      }
+    );
   } catch (error) {
-    console.error('Error cleaning up database:', error)
-    return new Response(JSON.stringify({ 
-      error: error.message 
-    }), {
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'application/json' 
-      },
-      status: 400
-    })
+    console.error("Error in cleanup-database function:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || "Internal server error during database cleanup"
+      }),
+      { 
+        status: 500, 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        } 
+      }
+    );
   }
-})
+});
