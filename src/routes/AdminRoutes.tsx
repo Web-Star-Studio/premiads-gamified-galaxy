@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
