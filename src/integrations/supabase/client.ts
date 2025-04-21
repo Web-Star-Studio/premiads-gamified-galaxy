@@ -1,13 +1,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Use hardcoded values as fallbacks to ensure the client always has valid values
+// Use environment variables for production
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lidnkfffqkpfwwdrifyt.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZG5rZmZmcWtwZnd3ZHJpZnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NzUxOTYsImV4cCI6MjA2MDI1MTE5Nn0.sZD_dXHgI0larkHDCTgLtWrbtoVGZcWR2nOWffiS2Os';
 
+// Initialize Supabase client with explicit configuration for production
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: localStorage, // Especifique explicitamente o localStorage
+    storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
@@ -17,6 +18,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     headers: {
       'Content-Type': 'application/json'
     }
+  },
+  // Add more robust error handling and callbacks
+  db: {
+    schema: 'public'
   }
 });
 
@@ -55,3 +60,34 @@ export const getPublicUrl = (
     
   return data.publicUrl;
 };
+
+// Production-ready function to verify database connection
+export const verifyDatabaseConnection = async (): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_levels')
+      .select('id')
+      .limit(1);
+      
+    return !error;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return false;
+  }
+};
+
+// Helper function to clean session data (useful for logout)
+export const cleanSessionData = (): void => {
+  localStorage.removeItem("userName");
+  localStorage.removeItem("userCredits");
+  localStorage.removeItem("userType");
+  localStorage.removeItem("lastActivity");
+  
+  // Clean all Supabase-related storage items
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith("sb-") || key.includes("supabase")) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+

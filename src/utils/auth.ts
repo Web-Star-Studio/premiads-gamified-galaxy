@@ -1,67 +1,70 @@
-import { supabase } from "@/integrations/supabase/client";
+
+import { supabase, cleanSessionData } from '@/integrations/supabase/client';
 
 /**
- * Utility function to sign out a user and perform robust cleanup
+ * Comprehensive function to sign out and clean up user data
+ * Used throughout the application for consistent logout behavior
  */
-export const signOutAndCleanup = async () => {
+export const signOutAndCleanup = async (): Promise<void> => {
   try {
-    // Actual sign-out from Supabase
-    await supabase.auth.signOut();
-
-    // Try to clear all possible session data
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userCredits");
-    localStorage.removeItem("userType");
-    localStorage.removeItem("lastActivity");
-
-    // Extra: Remove the Supabase session token storage
-    localStorage.removeItem("sb-lidnkfffqkpfwwdrifyt-auth-token");
-    localStorage.removeItem("supabase.auth.token"); // Smaller possibility
+    // First, sign out from Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    
+    // Then clean up all local storage items
+    cleanSessionData();
+    
+    // For security, clear any session storage as well
     sessionStorage.clear();
-
-    // Defensive: Always remove all demo-related keys!
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith("sb-") || key.includes("supabase") || key.toLowerCase().includes("demo")) {
-        localStorage.removeItem(key);
-      }
-    });
-
-    // Also, if somehow the demo user is present, nuke everything and reload
-    const userName = localStorage.getItem("userName");
-    if (userName && userName.toLowerCase().includes("demo")) {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("/");
-      return true;
-    }
-
-    // Force reload (bypass cache) to reset React state and prevent auto-login
-    window.location.replace("/");
-    return true;
+    
   } catch (error) {
-    console.error("Error during signOutAndCleanup:", error);
-    // Fallback: try to clean and reload anyway
-    localStorage.clear();
+    console.error('Error during sign out:', error);
+    // Clean up even if there's an error with Supabase signOut
+    cleanSessionData();
     sessionStorage.clear();
-    window.location.replace("/");
+    throw error;
+  }
+};
+
+/**
+ * Utility function to check if user has admin privileges
+ */
+export const isUserAdmin = async (): Promise<boolean> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', session.user.id)
+      .single();
+      
+    return data?.user_type === 'admin';
+  } catch (error) {
+    console.error('Error checking admin status:', error);
     return false;
   }
 };
 
 /**
- * Utilitário: Reenvia email de confirmação para o Supabase.
+ * Function to get user role directly from database
  */
-export const resendConfirmationEmail = async (email: string) => {
-  // Verifica sempre se o email existe antes
-  if (!email) throw new Error("Email não informado.");
-
-  // Utiliza a API do Supabase para reenviar (magic link)
-  const { error } = await supabase.auth.resend({
-    type: "signup",
-    email,
-    options: { emailRedirectTo: window.location.origin },
-  });
-
-  if (error) throw error;
-  return true;
+export const getUserRole = async (): Promise<string | null> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', session.user.id)
+      .single();
+      
+    return data?.user_type || null;
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    return null;
+  }
 };
+
