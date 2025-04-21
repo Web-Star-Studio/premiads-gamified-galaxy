@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PostgrestError } from '@supabase/supabase-js';
 
 interface UpdateUserStatusParams {
   user_id: string;
@@ -17,7 +18,7 @@ export const useUserOperations = () => {
 
   const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase.rpc<null, UpdateUserStatusParams>('update_user_status', {
+      const { error } = await supabase.rpc('update_user_status', {
         user_id: userId,
         is_active: isActive
       });
@@ -30,11 +31,12 @@ export const useUserOperations = () => {
       });
 
       return true;
-    } catch (err: any) {
-      console.error('Error updating user status:', err);
+    } catch (err: unknown) {
+      const error = err as PostgrestError;
+      console.error('Error updating user status:', error);
       toast({
         title: 'Error updating user',
-        description: err.message,
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive'
       });
       return false;
@@ -43,7 +45,7 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { error } = await supabase.rpc<null, DeleteUserParams>('delete_user_account', {
+      const { error } = await supabase.rpc('delete_user_account', {
         target_user_id: userId
       });
         
@@ -55,11 +57,12 @@ export const useUserOperations = () => {
       });
 
       return true;
-    } catch (err: any) {
-      console.error('Error deleting user:', err);
+    } catch (err: unknown) {
+      const error = err as PostgrestError;
+      console.error('Error deleting user:', error);
       toast({
         title: 'Error deleting user',
-        description: err.message,
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive'
       });
       return false;

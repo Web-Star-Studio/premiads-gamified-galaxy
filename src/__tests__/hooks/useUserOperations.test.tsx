@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from 'vitest';
 import { useUserOperations } from "@/hooks/admin/useUserOperations";
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestError } from "@supabase/supabase-js";
 
 // Mock the toast hook
 vi.mock("@/hooks/use-toast", () => ({
@@ -45,9 +46,13 @@ describe('useUserOperations', () => {
     const { result } = renderHook(() => useUserOperations());
 
     // Mock error response
-    vi.mocked(supabase.rpc).mockResolvedValueOnce({
-      error: new Error('Update failed')
-    });
+    const mockError: PostgrestError = {
+      message: 'Update failed',
+      details: '',
+      hint: '',
+      code: 'ERROR'
+    };
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ error: mockError });
 
     await act(async () => {
       const success = await result.current.updateUserStatus('test-id', true);
@@ -84,8 +89,14 @@ describe('useUserOperations', () => {
     const { result } = renderHook(() => useUserOperations());
 
     // Mock error response
+    const mockError: PostgrestError = {
+      message: 'Delete failed',
+      details: '',
+      hint: '',
+      code: 'ERROR'
+    };
     vi.mocked(supabase.rpc).mockResolvedValueOnce({
-      error: new Error('Delete failed')
+      error: mockError
     });
 
     await act(async () => {
