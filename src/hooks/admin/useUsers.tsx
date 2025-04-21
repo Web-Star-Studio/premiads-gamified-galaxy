@@ -24,17 +24,22 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('get_all_users');
+      // Cast the response data to any type first to avoid TypeScript errors 
+      // with the RPC function return type
+      const { data: rawData, error } = await supabase.rpc('get_all_users') as { 
+        data: any[]; 
+        error: any 
+      };
         
       if (error) throw error;
       
-      if (!data) {
+      if (!rawData) {
         setUsers([]);
         return;
       }
       
       // Map the data to match our User interface
-      const mappedUsers: User[] = data.map((user: any) => ({
+      const mappedUsers: User[] = rawData.map((user: any) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -68,7 +73,7 @@ export const useUsers = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          "active": active // Use quotes to ensure it's treated as a field name
+          active: active // Using key without quotes for proper TypeScript handling
         })
         .eq('id', userId);
         
@@ -105,8 +110,9 @@ export const useUsers = () => {
       setLoading(true);
       
       // This will delete the auth.user and cascade to the profile via RLS
+      // Cast the response to avoid TypeScript errors with the RPC function
       const { error } = await supabase
-        .rpc('delete_user', { user_id: userId });
+        .rpc('delete_user', { user_id: userId }) as { error: any };
         
       if (error) throw error;
       
