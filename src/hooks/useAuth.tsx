@@ -20,9 +20,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading: sessionLoading } = useAuthSession();
-  const { loading: methodsLoading, signIn, signOut, signUp } = useAuthMethods();
+  const { loading: methodsLoading, signIn: signInMethod, signOut: signOutMethod, signUp: signUpMethod } = useAuthMethods();
   
   const isLoading = sessionLoading || methodsLoading;
+  
+  // Adapt the return types to match the interface
+  const signIn = async (credentials: SignInCredentials): Promise<void> => {
+    await signInMethod(credentials);
+  };
+
+  const signUp = async (credentials: SignUpCredentials): Promise<void> => {
+    await signUpMethod(credentials);
+  };
+
+  const signOut = async (): Promise<void> => {
+    await signOutMethod();
+  };
   
   return (
     <AuthContext.Provider

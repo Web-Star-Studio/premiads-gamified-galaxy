@@ -35,7 +35,8 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.rpc<GetAllUsersResponse, any>('get_all_users');
+      // Type the RPC call correctly
+      const { data, error } = await supabase.rpc<GetAllUsersResponse>('get_all_users');
         
       if (error) throw error;
       
@@ -45,7 +46,7 @@ export const useUsers = () => {
       }
       
       // Map the data to match our User interface
-      const mappedUsers: User[] = (data as GetAllUsersResponse[]).map((user) => ({
+      const mappedUsers: User[] = (data as unknown as GetAllUsersResponse[]).map((user) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -112,9 +113,10 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Properly type the RPC call with unknown
       const { error } = await supabase.rpc('delete_user', {
         user_id: userId
-      });
+      } as unknown as Record<string, never>);
         
       if (error) throw error;
       

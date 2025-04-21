@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -14,7 +13,8 @@ export const useAuthMethods = () => {
   const { playSound } = useSounds();
   const navigate = useNavigate();
 
-  const signUp = async (credentials: SignUpCredentials) => {
+  // Keep the return type as Promise<boolean> for internal use
+  const signUp = async (credentials: SignUpCredentials): Promise<boolean> => {
     setLoading(true);
     
     try {
@@ -63,7 +63,8 @@ export const useAuthMethods = () => {
     }
   };
 
-  const signIn = async (credentials: SignInCredentials) => {
+  // Keep the return type as Promise<boolean> for internal use
+  const signIn = async (credentials: SignInCredentials): Promise<boolean> => {
     setLoading(true);
     
     try {
@@ -143,12 +144,15 @@ export const useAuthMethods = () => {
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      
+      return true;
     } catch (error: any) {
       toast({
         title: "Erro ao desconectar",
         description: error.message || "Ocorreu um erro durante o logout",
         variant: "destructive",
       });
+      return false;
     } finally {
       setLoading(false);
     }
