@@ -59,6 +59,7 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
     try {
       const success = await signIn({ email, password });
 
+      // Add a small delay to ensure state is updated
       await new Promise((resolve) => setTimeout(resolve, 400));
 
       if (success) {
@@ -67,6 +68,10 @@ const LoginFormContainer = ({ onSuccess }: Props) => {
         setLoginAttempt(0);
         setEmailNotConfirmed(false);
         setLoadingTimeout(false);
+        
+        console.log("Login successful, navigating to dashboard for user type:", userType);
+        
+        // Immediately navigate to dashboard and close the overlay
         navigateToDashboard();
         onSuccess();
         return;

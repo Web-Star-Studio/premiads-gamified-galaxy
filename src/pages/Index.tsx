@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -12,6 +13,7 @@ import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
 import AuthOverlay from "@/components/auth/AuthOverlay";
 import LoadingScreen from "@/components/LoadingScreen";
+import { useNavigation } from "@/components/header/useNavigation";
 
 const MainContent = () => {
   const {
@@ -27,10 +29,15 @@ const MainContent = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
+  const { navigateToDashboard } = useNavigation();
 
-  // UPDATED: DO NOT automatically redirect here. We'll rely on post-login and header logic.
-  // The dashboard navigation is always controlled after login through the useNavigation hook.
-  // This avoids race conditions and duplicate redirects.
+  // Automatically redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (!isAuthLoading && initialCheckDone && isAuthenticated) {
+      console.log("User is authenticated, redirecting to dashboard for user type:", userType);
+      navigateToDashboard();
+    }
+  }, [isAuthenticated, userType, isAuthLoading, initialCheckDone, navigateToDashboard]);
 
   // Handle overlay state and loading timeouts
   useEffect(() => {

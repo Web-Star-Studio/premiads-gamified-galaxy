@@ -48,9 +48,14 @@ export const useNavigation = () => {
   // Centralized robust dashboard navigation
   const navigateToDashboard = (overrideType?: UserType) => {
     const currentUserType = overrideType || userType;
+    
     if (!isAuthenticated) {
+      console.log("Not authenticated, cannot navigate to dashboard");
       return false;
     }
+    
+    console.log("Navigating to dashboard for user type:", currentUserType);
+    
     if (currentUserType === "participante") {
       navigate("/cliente", { replace: true });
       return true;
@@ -61,6 +66,7 @@ export const useNavigation = () => {
       navigate("/admin", { replace: true });
       return true;
     }
+    
     toast({
       title: "Erro de navegação",
       description: "Tipo de usuário desconhecido ou não suportado",

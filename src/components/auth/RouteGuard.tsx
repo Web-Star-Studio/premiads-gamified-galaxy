@@ -19,13 +19,13 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
-    console.log("RouteGuard: Initializing", { isAuthLoading, isAuthenticated, userType: contextUserType });
+    console.log("RouteGuard: Initializing", { isAuthLoading, isAuthenticated, userType: contextUserType, path: location.pathname });
     
     // Use the centralized checkSession function
     const verifyAuth = async () => {
       try {
         console.log("RouteGuard: Verifying auth");
-        await checkSession();
+        await checkSession(true); // Force check to ensure latest state
         setIsChecking(false);
       } catch (error) {
         console.error("Error in RouteGuard:", error);
@@ -45,10 +45,10 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
         console.log("Authentication check is taking longer than expected");
         setAuthTimeout(true);
       }
-    }, 10000); // Increased to 10s
+    }, 10000); // 10 seconds timeout
 
     return () => clearTimeout(timeoutId);
-  }, [checkSession, initialCheckDone, isAuthLoading, isAuthenticated, contextUserType]);
+  }, [checkSession, initialCheckDone, isAuthLoading, isAuthenticated, contextUserType, location.pathname]);
 
   // Show error message if auth check takes too long
   if (authTimeout && isChecking) {
@@ -79,7 +79,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
 
   // If not authenticated, redirect to login with return path
   if (!isAuthenticated && !isAuthLoading && !isChecking) {
-    console.log("RouteGuard: Not authenticated, redirecting to login");
+    console.log("RouteGuard: Not authenticated, redirecting to login from path:", location.pathname);
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
@@ -112,7 +112,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   }
 
   // If all checks pass, render the protected route
-  console.log("RouteGuard: Access granted");
+  console.log("RouteGuard: Access granted for route", location.pathname);
   return <>{children}</>;
 };
 
