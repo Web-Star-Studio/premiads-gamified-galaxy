@@ -4,25 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PostgrestError } from '@supabase/supabase-js';
 
-interface UpdateUserStatusParams {
-  user_id: string;
-  is_active: boolean;
-}
-
-interface DeleteUserParams {
-  target_user_id: string;
-}
-
 export const useUserOperations = () => {
   const { toast } = useToast();
 
   const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
-      // Corrigimos a chamada para que ela corresponda à função RPC no Supabase
-      const { error } = await supabase.rpc('update_user_status', {
+      const { data, error } = await supabase.rpc('update_user_status', {
         user_id: userId,
         is_active: isActive
-      } as UpdateUserStatusParams);
+      });
         
       if (error) throw error;
       
@@ -46,10 +36,9 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      // Corrigimos a chamada para que ela corresponda à função RPC no Supabase
-      const { error } = await supabase.rpc('delete_user_account', {
+      const { data, error } = await supabase.rpc('delete_user_account', {
         target_user_id: userId
-      } as DeleteUserParams);
+      });
         
       if (error) throw error;
       

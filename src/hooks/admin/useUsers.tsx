@@ -33,18 +33,17 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Corrigimos a chamada para a função RPC correta
-      const { data, error } = await supabase.rpc('get_all_users');
-        
-      if (error) throw error;
+      const { data: functionData, error: functionError } = await supabase.rpc('get_all_users');
       
-      if (!data) {
+      if (functionError) throw functionError;
+      
+      if (!functionData) {
         setUsers([]);
         return;
       }
       
       // Safely type cast the response data
-      const userData = Array.isArray(data) ? data : [];
+      const userData = Array.isArray(functionData) ? functionData : [];
       const mappedUsers: User[] = userData.map((user: UserRPCResponse) => ({
         id: user.id,
         email: user.email,

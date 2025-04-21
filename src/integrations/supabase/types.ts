@@ -204,6 +204,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean | null
           avatar_url: string | null
           created_at: string | null
           credits: number | null
@@ -222,6 +223,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          active?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           credits?: number | null
@@ -240,6 +242,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          active?: boolean | null
           avatar_url?: string | null
           created_at?: string | null
           credits?: number | null
@@ -430,8 +433,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_account: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      get_all_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin_or_moderator: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      update_user_status: {
+        Args: { user_id: string; is_active: boolean }
         Returns: boolean
       }
     }
