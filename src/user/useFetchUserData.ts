@@ -61,7 +61,7 @@ export const useFetchUserData = () => {
           full_name: profileData.full_name,
           avatar_url: profileData.avatar_url,
           website: profileData.website,
-          user_type: (profileData.user_type as UserType) || "client",
+          user_type: profileData.user_type as UserType,
           points: profileData.points || 0,
           credits: profileData.credits || 0,
           profile_completed: profileData.profile_completed || false,

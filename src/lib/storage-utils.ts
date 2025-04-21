@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import React from "react";
+import { useState, useCallback } from "react";
 
 export const storageUtils = {
   /**
@@ -13,7 +13,7 @@ export const storageUtils = {
     onProgress?: (progress: number) => void
   ): Promise<{ path: string; error: Error | null }> {
     try {
-      // Create options object without onUploadProgress which isn't in the type
+      // Create options object with supported properties
       const options = {
         cacheControl: '3600',
         upsert: true
@@ -123,11 +123,11 @@ export const storageUtils = {
 
 // Create a React hook for file uploads
 export function useFileUpload() {
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<Error | null>(null);
   
-  const uploadFile = React.useCallback(
+  const uploadFile = useCallback(
     async (bucket: string, path: string, file: File): Promise<string> => {
       setIsUploading(true);
       setProgress(0);

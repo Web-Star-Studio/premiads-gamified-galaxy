@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -53,9 +52,8 @@ export const useLottery = () => {
       // Also fetch counts for raffle numbers separately
       const { data: raffleCounts, error: countError } = await supabase
         .from('raffle_numbers')
-        .select('raffle_id, count')
-        .select('raffle_id, count(*)', { count: 'exact' })
-        .groupBy('raffle_id');
+        .select('raffle_id, count(*)')
+        .group('raffle_id');
         
       if (countError) console.error("Error fetching raffle counts:", countError);
       
