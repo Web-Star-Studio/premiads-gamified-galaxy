@@ -1,102 +1,26 @@
 
+import React from "react";
+import { NavigationItem } from "./NavigationItem";
 import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Shield,
-  DatabaseZap,
-  Bell,
-  BarChart4,
-  Ticket,
-  FileText,
-  BookOpen
+  Home, Users, Ticket, FileText, Shield, BarChart, Settings, Bell, 
+  Eye, Book, Scale, Database
 } from "lucide-react";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
-import NavigationItem, { NavigationItemProps } from "./NavigationItem";
 
 export const NavigationItems = () => {
-  // Navigation items with descriptive properties
-  const navigationItems: NavigationItemProps[] = [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-      description: "Visão geral do sistema"
-    },
-    {
-      title: "Usuários",
-      url: "/admin/usuarios",
-      icon: Users,
-      description: "Gerenciamento de usuários"
-    },
-    {
-      title: "Acesso",
-      url: "/admin/acesso",
-      icon: Shield,
-      description: "Controle de permissões"
-    },
-    {
-      title: "Regras",
-      url: "/admin/regras",
-      icon: FileText,
-      description: "Configurações de regras"
-    },
-    {
-      title: "Monitoramento",
-      url: "/admin/monitoramento",
-      icon: DatabaseZap,
-      description: "Status do sistema"
-    },
-    {
-      title: "Relatórios",
-      url: "/admin/relatorios",
-      icon: BarChart4,
-      description: "Análise de dados"
-    },
-    {
-      title: "Sorteios",
-      url: "/admin/sorteios",
-      icon: Ticket,
-      description: "Gestão de sorteios"
-    },
-    {
-      title: "Notificações",
-      url: "/admin/notificacoes",
-      icon: Bell,
-      description: "Gerenciar notificações"
-    },
-    {
-      title: "Documentação",
-      url: "/admin/documentacao",
-      icon: BookOpen,
-      description: "Manual técnico do sistema"
-    },
-    {
-      title: "Configurações",
-      url: "/admin/configuracoes",
-      icon: Settings,
-      description: "Configurações do sistema"
-    },
-  ];
-
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Sistema</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {navigationItems.map((item) => (
-            <NavigationItem 
-              key={item.title} 
-              title={item.title} 
-              url={item.url} 
-              icon={item.icon} 
-              description={item.description} 
-            />
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <div className="space-y-1">
+      <NavigationItem to="/admin" icon={<Home className="h-5 w-5" />} label="Dashboard" />
+      <NavigationItem to="/admin/users" icon={<Users className="h-5 w-5" />} label="Usuários" />
+      <NavigationItem to="/admin/lottery" icon={<Ticket className="h-5 w-5" />} label="Sorteios" />
+      <NavigationItem to="/admin/moderation" icon={<Eye className="h-5 w-5" />} label="Moderação" />
+      <NavigationItem to="/admin/rules" icon={<Scale className="h-5 w-5" />} label="Regras" />
+      <NavigationItem to="/admin/reports" icon={<BarChart className="h-5 w-5" />} label="Relatórios" />
+      <NavigationItem to="/admin/monitoring" icon={<Shield className="h-5 w-5" />} label="Monitoramento" />
+      <NavigationItem to="/admin/notifications" icon={<Bell className="h-5 w-5" />} label="Notificações" />
+      <NavigationItem to="/admin/access" icon={<Shield className="h-5 w-5" />} label="Controle de Acesso" />
+      <NavigationItem to="/admin/documentation" icon={<Book className="h-5 w-5" />} label="Documentação" />
+      <NavigationItem to="/admin/settings" icon={<Settings className="h-5 w-5" />} label="Configurações" />
+      <NavigationItem to="/admin/cleanup" icon={<Database className="h-5 w-5" />} label="Limpeza" />
+    </div>
   );
 };
-
-export default NavigationItems;

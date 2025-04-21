@@ -9,96 +9,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Define our own type for the database structure
-// This acts as a workaround since we can't modify the types.ts file
-export type CustomDatabase = {
-  public: {
-    Tables: {
-      missions: {
-        Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          type: string | null;
-          points: number;
-          is_active: boolean;
-          advertiser_id: string;
-          requirements: any[] | null;
-          start_date: string | null;
-          end_date: string | null;
-          target_audience_gender: string | null;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          type?: string | null;
-          points?: number;
-          is_active?: boolean;
-          advertiser_id: string;
-          requirements?: any[] | null;
-          start_date?: string | null;
-          end_date?: string | null;
-          target_audience_gender?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          type?: string | null;
-          points?: number;
-          is_active?: boolean;
-          advertiser_id?: string;
-          requirements?: any[] | null;
-          start_date?: string | null;
-          end_date?: string | null;
-          target_audience_gender?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-      };
-      submissions: {
-        Row: {
-          id: string;
-          mission_id: string;
-          user_id: string;
-          status: string;
-          content: any | null;
-          points_awarded: number | null;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          mission_id: string;
-          user_id: string;
-          status?: string;
-          content?: any | null;
-          points_awarded?: number | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          mission_id?: string;
-          user_id?: string;
-          status?: string;
-          content?: any | null;
-          points_awarded?: number | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-      };
-    };
-    Views: {};
-    Functions: {};
-    Enums: {};
-  };
-};
-
-// Create and export the typed Supabase client
-export const supabase = createClient<CustomDatabase>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});

@@ -28,15 +28,66 @@ serve(async (req) => {
 
     const { email, password, fullName } = await req.json()
 
-    // Create user with admin role
-    const { data, error } = await supabase.auth.signUp({
+    // First check if user already exists
+    const { data: existingUser, error: checkError } = await supabase.auth.admin.getUserByEmail(email)
+    
+    if (checkError && checkError.message !== 'User not found') {
+      throw checkError
+    }
+    
+    if (existingUser) {
+      // User exists, check if they are already an admin
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', existingUser.id)
+        .single()
+      
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError
+      }
+      
+      if (existingProfile?.user_type === 'admin') {
+        return new Response(JSON.stringify({ 
+          message: 'User already exists as admin',
+          userId: existingUser.id 
+        }), {
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          },
+          status: 200
+        })
+      }
+      
+      // Update the user to be an admin
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ user_type: 'admin', profile_completed: true })
+        .eq('id', existingUser.id)
+      
+      if (updateError) throw updateError
+      
+      return new Response(JSON.stringify({ 
+        message: 'User successfully updated to admin',
+        userId: existingUser.id 
+      }), {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
+        status: 200
+      })
+    }
+
+    // Create new admin user
+    const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          user_type: 'admin'
-        }
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        user_type: 'admin'
       }
     })
 
@@ -65,6 +116,7 @@ serve(async (req) => {
       status: 200
     })
   } catch (error) {
+    console.error('Error creating/updating admin user:', error)
     return new Response(JSON.stringify({ 
       error: error.message 
     }), {
