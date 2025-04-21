@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, ReactNode } from "react";
 import { UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +42,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     userType
   );
   const { toast } = useToast();
+
+  // Add an explicit method to clear user session
+  const clearUserSession = useCallback(() => {
+    console.log("UserContext: Clearing user session");
+    resetUserInfo();
+    setUserId(null);
+    setIsAuthenticated(false);
+    setAuthError(null);
+    
+    // Clear any user data from localStorage
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userCredits");
+    localStorage.removeItem("userType");
+  }, [resetUserInfo]);
 
   // Load user data and subscribe to auth changes
   useEffect(() => {
@@ -131,6 +144,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsOverlayOpen,
         setIsAuthenticated,
         resetUserInfo,
+        clearUserSession,
         saveUserPreferences,
         isAuthLoading,
         authError: authError || sessionAuthError,

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,13 +86,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log("useAuth: Signing out...");
       setIsLoading(true);
-      await supabase.auth.signOut();
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("useAuth: Error during signOut:", error);
+        throw error;
+      }
+      
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      
+      // Clear any user data from localStorage
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCredits");
+      localStorage.removeItem("userType");
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-      navigate("/");
+      
+      // Force navigation to home page
+      navigate("/", { replace: true });
     } catch (error: any) {
       toast({
         title: "Erro ao sair",

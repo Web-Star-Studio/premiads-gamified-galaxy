@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -148,17 +149,29 @@ export const useAuthMethods = () => {
     setLoading(true);
     
     try {
+      console.log("Attempting to sign out...");
       const { error } = await supabase.auth.signOut();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error during signOut:", error);
+        throw error;
+      }
       
+      console.log("Sign out successful, resetting user info");
       resetUserInfo();
-      navigate("/");
+      
+      // Clear any user data from localStorage
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCredits");
+      localStorage.removeItem("userType");
       
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      
+      // Force navigation to home page
+      navigate("/", { replace: true });
       
       return true;
     } catch (error: any) {

@@ -1,11 +1,12 @@
-
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
 import { UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthMethods } from "@/hooks/useAuthMethods";
 
 export const useNavigation = () => {
-  const { userType, setUserType, saveUserPreferences } = useUser();
+  const { userType, setUserType, saveUserPreferences, clearUserSession } = useUser();
+  const { signOut } = useAuthMethods();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -49,9 +50,24 @@ export const useNavigation = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log("Navigation: Handling logout");
+      await signOut();
+    } catch (error) {
+      console.error("Navigation: Error during logout:", error);
+      toast({
+        title: "Erro ao fazer logout",
+        description: "Não foi possível desconectar. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     changeUserType,
     navigateToDashboard,
-    scrollToSection
+    scrollToSection,
+    handleLogout
   };
 };
