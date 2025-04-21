@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -6,7 +7,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface RouteGuardProps {
   children: ReactNode;
-  userType?: "participante" | "anunciante" | "admin";
+  userType?: "participante" | "anunciante" | "admin" | "admin-master";
 }
 
 const RouteGuard = ({ children, userType }: RouteGuardProps) => {
@@ -73,6 +74,11 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
+  // Se o usuário for admin-master, permitir acesso a todas as rotas de admin
+  if (contextUserType === "admin-master") {
+    return <>{children}</>;
+  }
+
   // If userType is specified, check if user has correct type
   if (userType && contextUserType !== userType) {
     // Show access denied toast
@@ -85,7 +91,7 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     // Redirect to appropriate dashboard based on user type
     if (contextUserType === "anunciante") {
       return <Navigate to="/anunciante" replace />;
-    } else if (contextUserType === "admin") {
+    } else if (contextUserType === "admin" || contextUserType === "admin-master") {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/cliente" replace />;

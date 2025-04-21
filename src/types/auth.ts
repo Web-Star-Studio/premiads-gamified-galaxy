@@ -11,4 +11,4 @@ export interface SignInCredentials {
   password: string;
 }
 
-export type UserType = "participante" | "anunciante" | "admin";
+export type UserType = "participante" | "anunciante" | "admin" | "admin-master";
