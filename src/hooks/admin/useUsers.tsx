@@ -14,6 +14,17 @@ export interface User {
   lastLogin?: string;
 }
 
+// Define a type for the get_all_users RPC response
+interface GetAllUsersResponse {
+  id: string;
+  email: string;
+  full_name?: string; 
+  user_type?: string;
+  active?: boolean;
+  avatar_url?: string;
+  last_sign_in_at?: string;
+}
+
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,10 +35,9 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Cast the response data to any type first to avoid TypeScript errors 
-      // with the RPC function return type
+      // Properly type the response from the RPC function
       const { data: rawData, error } = await supabase.rpc('get_all_users') as { 
-        data: any[]; 
+        data: GetAllUsersResponse[]; 
         error: any 
       };
         
@@ -39,7 +49,7 @@ export const useUsers = () => {
       }
       
       // Map the data to match our User interface
-      const mappedUsers: User[] = rawData.map((user: any) => ({
+      const mappedUsers: User[] = rawData.map((user: GetAllUsersResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
@@ -69,8 +79,12 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Define the update data using a type that matches what Supabase expects
-      const updateData = { active };
+      // We need to update the 'active' field in the profiles table
+      // But first we need to check if this field exists in the database schema
+      // Since it's not in the TypeScript type, we'll use a generic update approach
+      
+      // Set the update data as a record with any key
+      const updateData: Record<string, any> = { active };
       
       // Custom update to ensure we're setting the active field
       const { error } = await supabase
@@ -111,7 +125,7 @@ export const useUsers = () => {
       setLoading(true);
       
       // This will delete the auth.user and cascade to the profile via RLS
-      // Cast the response to avoid TypeScript errors with the RPC function
+      // Properly type the response from the RPC function
       const { error } = await supabase
         .rpc('delete_user', { user_id: userId }) as { error: any };
         
