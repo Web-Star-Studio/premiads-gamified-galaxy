@@ -9,6 +9,7 @@ interface StatCardProps {
   value: string | number;
   icon: React.ReactNode;
   trend?: number;
+  additionalInfo?: string;
   variant?: 'blue' | 'purple' | 'pink' | 'green';
   delay?: number;
 }
@@ -17,7 +18,8 @@ const StatCard: React.FC<StatCardProps> = ({
   title, 
   value, 
   icon, 
-  trend, 
+  trend,
+  additionalInfo,
   variant = 'blue',
   delay = 0
 }) => {
@@ -56,6 +58,9 @@ const StatCard: React.FC<StatCardProps> = ({
                   )} />
                   <span>{Math.abs(trend)}% em relação ao mês anterior</span>
                 </div>
+              )}
+              {additionalInfo && (
+                <p className="text-xs text-muted-foreground mt-2">{additionalInfo}</p>
               )}
             </div>
             <div
@@ -97,6 +102,8 @@ interface DashboardStatsProps {
   ticketsTrend?: number;
   pointsTrend?: number;
   referralsTrend?: number;
+  completionRate?: number;
+  averagePointsPerDay?: number;
 }
 
 const DashboardStats: React.FC<DashboardStatsProps> = ({
@@ -106,7 +113,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
   level,
   ticketsTrend,
   pointsTrend,
-  referralsTrend
+  referralsTrend,
+  completionRate,
+  averagePointsPerDay
 }) => {
   const statCards = [
     {
@@ -114,6 +123,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       value: tickets,
       icon: <Ticket className="w-5 h-5 text-white" />,
       trend: ticketsTrend,
+      additionalInfo: "Tickets disponíveis para sorteios",
       variant: "blue" as const,
       delay: 0.1,
     },
@@ -122,6 +132,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       value: points.toLocaleString('pt-BR'),
       icon: <Award className="w-5 h-5 text-white" />,
       trend: pointsTrend,
+      additionalInfo: `Média diária: ${averagePointsPerDay} pontos`,
       variant: "purple" as const,
       delay: 0.2,
     },
@@ -137,6 +148,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       title: "Nível",
       value: level,
       icon: <TrendingUp className="w-5 h-5 text-white" />,
+      additionalInfo: completionRate ? `Taxa de conclusão: ${completionRate.toFixed(1)}%` : undefined,
       variant: "green" as const,
       delay: 0.4,
     },
@@ -147,12 +159,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       {statCards.map((stat) => (
         <StatCard
           key={stat.title}
-          title={stat.title}
-          value={stat.value}
-          icon={stat.icon}
-          trend={stat.trend}
-          variant={stat.variant}
-          delay={stat.delay}
+          {...stat}
         />
       ))}
     </div>
