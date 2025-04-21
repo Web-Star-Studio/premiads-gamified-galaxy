@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -18,16 +17,11 @@ export interface User {
 interface GetAllUsersResponse {
   id: string;
   email: string;
-  full_name?: string; 
-  user_type?: string;
-  active?: boolean;
-  avatar_url?: string;
-  last_sign_in_at?: string;
-}
-
-// Define RPC function param types
-interface DeleteUserParams {
-  user_id: string;
+  full_name: string | null;
+  user_type: string | null;
+  active: boolean;
+  avatar_url: string | null;
+  last_sign_in_at: string | null;
 }
 
 export const useUsers = () => {
@@ -40,27 +34,23 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Fix: Use proper generic type for RPC call without typed parameters
-      const { data: rawData, error } = await supabase
-        .rpc('get_all_users');
+      const { data, error } = await supabase
+        .rpc('get_all_users') as { data: GetAllUsersResponse[] | null, error: any };
         
       if (error) throw error;
       
-      if (!rawData) {
+      if (!data) {
         setUsers([]);
         return;
       }
       
-      // Type assertion to handle unknown data type from RPC
-      const typedData = rawData as GetAllUsersResponse[];
-      
       // Map the data to match our User interface
-      const mappedUsers: User[] = typedData.map((user: GetAllUsersResponse) => ({
+      const mappedUsers: User[] = data.map((user) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',
         role: (user.user_type || 'participante') as User['role'],
-        status: user.active ? 'active' as const : 'inactive' as const,
+        status: user.active ? 'active' : 'inactive',
         avatar_url: user.avatar_url || undefined,
         lastLogin: user.last_sign_in_at || 'Never'
       }));
@@ -80,7 +70,6 @@ export const useUsers = () => {
     }
   }, [toast]);
 
-  // Add updateUserStatus method
   const updateUserStatus = async (userId: string, active: boolean) => {
     try {
       setLoading(true);
@@ -125,12 +114,10 @@ export const useUsers = () => {
     }
   };
 
-  // Add deleteUser method
   const deleteUser = async (userId: string) => {
     try {
       setLoading(true);
       
-      // Fix: Use proper RPC call without explicit generic types
       const { error } = await supabase
         .rpc('delete_user', { user_id: userId });
         
