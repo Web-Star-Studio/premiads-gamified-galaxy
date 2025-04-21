@@ -79,12 +79,12 @@ export async function checkSupabaseHealth(): Promise<HealthCheckResult> {
     try {
       for (const func of Object.keys(result.functions)) {
         try {
-          const { error } = await supabase.functions.invoke(func, {
+          const response = await supabase.functions.invoke(func, {
             method: 'GET',
             body: { test: true }
           });
           
-          result.functions[func] = error ? 'error' : 'ok';
+          result.functions[func] = response.error ? 'error' : 'ok';
         } catch (funcError) {
           console.error(`Function ${func} error:`, funcError);
           result.functions[func] = 'error';

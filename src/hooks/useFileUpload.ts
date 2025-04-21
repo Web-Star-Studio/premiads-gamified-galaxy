@@ -25,8 +25,20 @@ export const useFileUpload = () => {
     try {
       setIsUploading(true);
       setUploadProgress(0);
+      
+      // Generate a path if one is not provided
+      const path = customPath || `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      
+      const { path: uploadedPath, error } = await storageUtils.uploadFile(
+        bucket, 
+        path, 
+        file,
+        (progress) => setUploadProgress(progress)
+      );
 
-      const result = await storageUtils.uploadFile(bucket, file, customPath);
+      if (error) throw error;
+      
+      const publicUrl = storageUtils.getPublicUrl(bucket, uploadedPath);
 
       toast({
         title: 'Upload Successful',
@@ -34,7 +46,7 @@ export const useFileUpload = () => {
         variant: 'default'
       });
 
-      return result;
+      return publicUrl;
     } catch (error) {
       toast({
         title: 'Upload Failed',

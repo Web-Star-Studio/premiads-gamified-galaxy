@@ -97,7 +97,7 @@ export function SupabaseVerification() {
     setResults(prev => [...prev, { name: 'Database Tables', status: 'pending' }]);
     
     try {
-      // Check essential tables - only use tables we know exist in our schema
+      // Check essential tables from our schema
       const tables = ['profiles', 'missions', 'submissions', 'raffles', 'raffle_numbers'];
       const results = await Promise.all(
         tables.map(table => 
