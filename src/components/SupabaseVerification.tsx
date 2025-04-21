@@ -101,7 +101,8 @@ export function SupabaseVerification() {
       const knownTables = ['profiles', 'missions', 'raffles', 'submissions', 'raffle_numbers'];
       const results = await Promise.all(
         knownTables.map(table => 
-          supabase.from(table).select('count(*)', { count: 'exact', head: true })
+          // Explicitly add type assertion to specify the table name
+          supabase.from(table as any).select('count(*)', { count: 'exact', head: true })
         )
       );
       

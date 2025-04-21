@@ -50,23 +50,28 @@ export const useLottery = () => {
         
       if (error) throw error;
       
-      // Also fetch counts for raffle numbers separately
-      const { data: raffleCounts, error: countError } = await supabase
+      // Instead of using groupBy which may not be available, we'll fetch all raffle numbers
+      // and then perform the grouping on the client side
+      const { data: raffleNumbers, error: countError } = await supabase
         .from('raffle_numbers')
-        .select('raffle_id, count(*)')
-        .groupBy('raffle_id');
+        .select('raffle_id, id');
         
       if (countError) console.error("Error fetching raffle counts:", countError);
       
       // Create a map of raffle_id to count
       const numbersSoldMap: Record<string, number> = {};
-      raffleCounts?.forEach(item => {
-        if (item.raffle_id) {
-          // Convert count to number safely
-          numbersSoldMap[item.raffle_id] = typeof item.count === 'number' ? item.count : 
-                                           parseInt(String(item.count || '0'), 10);
-        }
-      });
+      
+      // Group manually
+      if (raffleNumbers) {
+        raffleNumbers.forEach(item => {
+          if (item.raffle_id) {
+            if (!numbersSoldMap[item.raffle_id]) {
+              numbersSoldMap[item.raffle_id] = 0;
+            }
+            numbersSoldMap[item.raffle_id]++;
+          }
+        });
+      }
       
       // Transform data to match our interface
       const transformedData: Lottery[] = data.map(raffle => {
