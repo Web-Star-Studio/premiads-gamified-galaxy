@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserLevel, UserLevelInfo } from "@/types/auth";
@@ -73,8 +74,8 @@ const DEFAULT_USER_LEVELS: UserLevel[] = [
 // Check if user levels table exists
 async function checkUserLevelsTable(): Promise<boolean> {
   try {
-    // Since we can't use check_table_exists function that doesn't exist,
-    // let's try a different approach - query for postgres' information_schema
+    // Since we can't directly call check_table_exists function,
+    // we'll try to query the profiles table as a fallback
     const { data, error } = await supabase
       .from('profiles')
       .select('count(*)', { count: 'exact', head: true });
@@ -84,8 +85,8 @@ async function checkUserLevelsTable(): Promise<boolean> {
       return false;
     }
     
-    // If we can query profiles, we can assume the connection works
-    // but we'll always use default levels since we don't have user_levels table
+    // We can assume the connection works if profiles can be queried,
+    // but we'll always use default levels since we don't have user_levels table yet
     return false;
   } catch (error) {
     console.error("Error in checkUserLevelsTable:", error);
@@ -105,9 +106,8 @@ export function useUserLevel(points: number, userId?: string) {
         setLoading(true);
         
         // Check if user_levels table exists in the database
+        // For now, we'll always use default levels
         const tableExists = await checkUserLevelsTable();
-        
-        // Always use default levels since we don't have user_levels table
         const userLevels: UserLevel[] = DEFAULT_USER_LEVELS;
         
         setLevels(userLevels);

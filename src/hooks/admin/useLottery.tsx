@@ -50,11 +50,12 @@ export const useLottery = () => {
         
       if (error) throw error;
       
-      // Also fetch winners separately since we have foreign key relationship issues
+      // Also fetch counts for raffle numbers separately
       const { data: raffleCounts, error: countError } = await supabase
         .from('raffle_numbers')
-        .select('raffle_id, count(*)')
-        .group('raffle_id');
+        .select('raffle_id, count')
+        .select('raffle_id, count(*)', { count: 'exact' })
+        .groupBy('raffle_id');
         
       if (countError) console.error("Error fetching raffle counts:", countError);
       
@@ -62,7 +63,9 @@ export const useLottery = () => {
       const numbersSoldMap: Record<string, number> = {};
       raffleCounts?.forEach(item => {
         if (item.raffle_id) {
-          numbersSoldMap[item.raffle_id] = parseInt(item.count as any, 10);
+          // Convert count to number safely
+          numbersSoldMap[item.raffle_id] = typeof item.count === 'number' ? item.count : 
+                                           parseInt(String(item.count || '0'), 10);
         }
       });
       

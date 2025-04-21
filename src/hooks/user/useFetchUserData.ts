@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSounds } from "@/hooks/use-sounds";
 import { useAuth } from "@/context/AuthContext";
-import { UserProfile } from "@/types/auth";
+import { UserProfile, UserType } from "@/types/auth";
 
 export const useFetchUserData = () => {
   const { playSound } = useSounds();
@@ -60,7 +60,7 @@ export const useFetchUserData = () => {
           full_name: profileData.full_name,
           avatar_url: profileData.avatar_url,
           website: profileData.website,
-          user_type: profileData.user_type || "client",
+          user_type: (profileData.user_type as UserType) || "client",
           points: profileData.points || 0,
           credits: profileData.credits || 0,
           profile_completed: profileData.profile_completed || false,

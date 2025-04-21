@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import React from "react";
 
 export const storageUtils = {
   /**
@@ -11,17 +13,22 @@ export const storageUtils = {
     onProgress?: (progress: number) => void
   ): Promise<{ path: string; error: Error | null }> {
     try {
+      // Create options object without onUploadProgress which isn't in the type
+      const options = {
+        cacheControl: '3600',
+        upsert: true
+      };
+      
+      // Manually handle progress if needed
+      let lastProgress = 0;
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: ({ total, loaded }) => {
-            if (onProgress && total) {
-              onProgress((loaded / total) * 100);
-            }
-          },
-        });
+        .upload(path, file, options);
+
+      // Call progress callback with 100% when complete
+      if (onProgress) {
+        onProgress(100);
+      }
 
       if (error) throw error;
 

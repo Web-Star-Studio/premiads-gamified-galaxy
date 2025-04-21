@@ -97,10 +97,10 @@ export function SupabaseVerification() {
     setResults(prev => [...prev, { name: 'Database Tables', status: 'pending' }]);
     
     try {
-      // Check essential tables from our schema
-      const tables = ['profiles', 'missions', 'submissions', 'raffles', 'raffle_numbers'];
+      // Check essential tables from our schema - only use known tables from the database types
+      const knownTables = ['profiles', 'missions', 'raffles', 'submissions', 'raffle_numbers'];
       const results = await Promise.all(
-        tables.map(table => 
+        knownTables.map(table => 
           supabase.from(table).select('count(*)', { count: 'exact', head: true })
         )
       );
@@ -111,7 +111,7 @@ export function SupabaseVerification() {
         throw new Error(`Some tables not accessible: ${errors.map(e => e?.message).join(', ')}`);
       }
       
-      const tableCounts = results.map((r, i) => `${tables[i]}: ${r.count || 0}`);
+      const tableCounts = results.map((r, i) => `${knownTables[i]}: ${r.count || 0}`);
       
       setResults(prev => [
         ...prev.slice(0, -1), 
