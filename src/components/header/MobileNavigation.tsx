@@ -1,26 +1,23 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-
-interface Section {
-  id: string;
-  label: string;
-  isLink?: boolean;
-  to?: string;
-}
+import { FC } from "react";
+import { UserType } from "@/types/auth";
+import { cn } from "@/lib/utils";
 
 interface MobileNavigationProps {
-  sections: Section[];
+  sections: Array<{
+    id: string;
+    label: string;
+    isLink?: boolean;
+    to?: string;
+  }>;
   mobileMenuOpen: boolean;
   scrollToSection: (sectionId: string) => void;
   navigateToDashboard: () => void;
-  userType: "participante" | "anunciante";
-  setMobileMenuOpen: (isOpen: boolean) => void;
+  userType: UserType;
+  setMobileMenuOpen: (open: boolean) => void;
 }
 
-const MobileNavigation: React.FC<MobileNavigationProps> = ({
+const MobileNavigation: FC<MobileNavigationProps> = ({
   sections,
   mobileMenuOpen,
   scrollToSection,
@@ -28,83 +25,49 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   userType,
   setMobileMenuOpen,
 }) => {
-  const handleNavigation = (section: Section) => {
-    setMobileMenuOpen(false);
-    
-    if (section.isLink && section.to) {
-      // For direct links, the Link component will handle navigation
-      return;
-    } else {
-      scrollToSection(section.id);
-    }
-  };
-
-  const openWhatsApp = () => {
-    const phoneNumber = "5581985595912";
-    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  const getButtonText = () => {
+    if (userType === "participante") return "Ver Missões";
+    if (userType === "anunciante") return "Criar Campanha";
+    if (userType === "admin") return "Painel Admin";
+    if (userType === "moderator") return "Painel Moderador";
+    return "Acessar Painel";
   };
 
   return (
-    <AnimatePresence>
-      {mobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 top-[60px] bg-black/95 backdrop-blur-md z-30 md:hidden overflow-auto pt-6"
-        >
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col space-y-4">
-              {sections.map((section) => (
-                section.isLink && section.to ? (
-                  <Link
-                    key={section.id}
-                    to={section.to}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {section.label}
-                  </Link>
-                ) : (
-                  <button
-                    key={section.id}
-                    onClick={() => handleNavigation(section)}
-                    className="text-lg py-3 border-b border-zinc-800 text-white hover:text-neon-cyan transition-colors text-left"
-                  >
-                    {section.label}
-                  </button>
-                )
-              ))}
-
-              <Button
-                className="neon-button mt-6"
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigateToDashboard();
-                }}
-              >
-                {userType === "participante" ? "Ver Missões" : "Criar Campanha"}
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="bg-transparent border-white/20 hover:bg-white/5 mt-2"
-                size="lg"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openWhatsApp();
-                }}
-              >
-                Fale com um Especialista
-              </Button>
-            </div>
-          </div>
-        </motion.div>
+    <div
+      className={cn(
+        "fixed inset-0 z-50 bg-galaxy-dark/95 backdrop-blur-sm transform transition-transform duration-300 ease-in-out",
+        mobileMenuOpen ? "translate-x-0" : "translate-x-full"
       )}
-    </AnimatePresence>
+    >
+      <nav className="flex flex-col items-center justify-center h-full space-y-8">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => {
+              if (section.isLink && section.to) {
+                // Handle navigation to link
+              } else {
+                scrollToSection(section.id);
+              }
+              setMobileMenuOpen(false);
+            }}
+            className="text-lg font-medium text-white hover:text-neon-cyan transition-colors"
+          >
+            {section.label}
+          </button>
+        ))}
+        <button
+          onClick={() => {
+            navigateToDashboard();
+            setMobileMenuOpen(false);
+          }}
+          className="px-6 py-2 bg-neon-cyan/80 hover:bg-neon-cyan text-white rounded-md transition-colors"
+        >
+          {getButtonText()}
+        </button>
+      </nav>
+    </div>
   );
 };
 

@@ -36,6 +36,7 @@ const MainHeader = () => {
   const getButtonText = () => {
     if (userType === "participante") return "Ver Missões";
     if (userType === "anunciante") return "Criar Campanha";
+    if (userType === "admin" || userType === "moderator") return "Acessar Painel";
     return "Acessar Painel";
   };
 
