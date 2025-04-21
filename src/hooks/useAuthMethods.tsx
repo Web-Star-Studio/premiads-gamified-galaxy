@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -40,11 +39,15 @@ export const useAuthMethods = () => {
       
       if (data.user) {
         setUserName(credentials.name);
-        setUserType(credentials.userType || "participante");
+        setUserType(credentials.userType as UserType || "participante");
         
         // Redirect based on user type
         if (credentials.userType === "anunciante") {
           navigate("/anunciante");
+        } else if (credentials.userType === "admin") {
+          navigate("/admin");
+        } else if (credentials.userType === "moderator") {
+          navigate("/admin");
         } else {
           navigate("/cliente");
         }
@@ -95,11 +98,13 @@ export const useAuthMethods = () => {
           
           if (profileData) {
             setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
-            setUserType((profileData.user_type || "participante") as "participante" | "anunciante");
+            setUserType((profileData.user_type || "participante") as UserType);
             
             // Redirect based on user type
             if (profileData.user_type === "anunciante") {
               navigate("/anunciante");
+            } else if (profileData.user_type === "admin" || profileData.user_type === "moderator") {
+              navigate("/admin");
             } else {
               navigate("/cliente");
             }

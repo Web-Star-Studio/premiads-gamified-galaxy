@@ -33,6 +33,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Using a more generic approach to handle RPC call
       const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;
@@ -42,7 +43,9 @@ export const useUsers = () => {
         return;
       }
       
-      const mappedUsers: User[] = (data as UserRPCResponse[]).map((user: UserRPCResponse) => ({
+      // Safely type cast the response data
+      const userData = Array.isArray(data) ? data : [];
+      const mappedUsers: User[] = userData.map((user: UserRPCResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',

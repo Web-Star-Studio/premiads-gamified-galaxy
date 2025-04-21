@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-
-type UserType = "participante" | "anunciante";
+import { UserType } from "@/types/auth";
 
 interface UserContextType {
   userType: UserType;

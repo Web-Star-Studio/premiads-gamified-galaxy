@@ -37,8 +37,9 @@ export const useAuthSession = () => {
             
             if (profileData) {
               setUserName(profileData.full_name || data.session.user.email?.split('@')[0] || 'Usuário');
-              // Set user type from profile
-              setUserType((profileData.user_type || "participante") as UserType);
+              // Set user type from profile with proper type casting
+              const userType = (profileData.user_type || "participante") as UserType;
+              setUserType(userType);
               
               // Check if profile is incomplete and show toast
               if (!profileData.profile_completed) {
@@ -49,12 +50,12 @@ export const useAuthSession = () => {
               }
             } else {
               setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
-              setUserType("participante");
+              setUserType("participante" as UserType);
             }
           } catch (error) {
             console.error("Error fetching profile:", error);
             setUserName(data.session.user.email?.split('@')[0] || 'Usuário');
-            setUserType("participante");
+            setUserType("participante" as UserType);
           }
         }
       } catch (error) {
@@ -86,8 +87,9 @@ export const useAuthSession = () => {
             
             if (profileData) {
               setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
-              // Set user type from profile
-              setUserType((profileData.user_type || "participante") as UserType);
+              // Set user type from profile with proper type casting
+              const userType = (profileData.user_type || "participante") as UserType;
+              setUserType(userType);
               
               // Check if profile is incomplete and show toast
               if (!profileData.profile_completed) {
@@ -98,12 +100,12 @@ export const useAuthSession = () => {
               }
             } else {
               setUserName(session.user.email?.split('@')[0] || 'Usuário');
-              setUserType("participante");
+              setUserType("participante" as UserType);
             }
           } catch (error) {
             console.error("Error fetching profile:", error);
             setUserName(session.user.email?.split('@')[0] || 'Usuário');
-            setUserType("participante");
+            setUserType("participante" as UserType);
           }
         } else if (event === "SIGNED_OUT") {
           setUser(null);
