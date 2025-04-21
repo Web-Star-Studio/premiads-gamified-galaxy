@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import MainHeader from "@/components/MainHeader";
@@ -17,6 +18,7 @@ const Index = () => {
   const { isAuthenticated, userType, isLoading } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
   useEffect(() => {
     // Prevent scrolling when overlay is open
@@ -31,25 +33,33 @@ const Index = () => {
     };
   }, [isOverlayOpen, showAuth]);
 
+  // Handle redirection in a separate effect
+  useEffect(() => {
+    // Only attempt redirection after authentication is checked and user is authenticated
+    if (!isLoading && isAuthenticated && userType) {
+      console.log("Index preparing to redirect authenticated user:", { userType });
+      
+      if (userType === "admin" || userType === "admin-master") {
+        setRedirectTo("/admin");
+      } else if (userType === "anunciante") {
+        setRedirectTo("/anunciante");
+      } else if (userType === "participante") {
+        setRedirectTo("/cliente");
+      } else {
+        // Default case if userType is not one of the expected values
+        console.warn("Unknown user type:", userType);
+        setRedirectTo("/");
+      }
+    }
+  }, [isAuthenticated, userType, isLoading]);
+
   if (isLoading) {
     return <LoadingScreen message="Carregando..." />;
   }
 
   // Redirect authenticated users to their dashboard
-  if (isAuthenticated && userType) {
-    console.log("Index redirecting authenticated user:", { userType });
-    
-    if (userType === "admin" || userType === "admin-master") {
-      return <Navigate to="/admin" replace />;
-    } else if (userType === "anunciante") {
-      return <Navigate to="/anunciante" replace />;
-    } else if (userType === "participante") {
-      return <Navigate to="/cliente" replace />;
-    } else {
-      // Default case if userType is not one of the expected values
-      console.warn("Unknown user type:", userType);
-      return <Navigate to="/" replace />;
-    }
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   return (
