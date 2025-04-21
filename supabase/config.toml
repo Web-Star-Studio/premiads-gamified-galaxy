@@ -1,2 +1,12 @@
 
 project_id = "wvhgfxeqrjavxlzvxqqh"
+
+[functions]
+[functions.check-raffle-deadlines]
+verify_jwt = true
+
+[functions.cleanup-database]
+verify_jwt = true
+
+[functions.create-admin-user]
+verify_jwt = false
