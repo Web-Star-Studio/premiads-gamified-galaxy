@@ -69,6 +69,7 @@ export type Database = {
           phone: string | null
           points: number | null
           profile_completed: boolean | null
+          profile_data: Json | null
           push_notifications: boolean | null
           updated_at: string | null
           user_type: string | null
@@ -85,6 +86,7 @@ export type Database = {
           phone?: string | null
           points?: number | null
           profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string | null
           user_type?: string | null
@@ -101,10 +103,103 @@ export type Database = {
           phone?: string | null
           points?: number | null
           profile_completed?: boolean | null
+          profile_data?: Json | null
           push_notifications?: boolean | null
           updated_at?: string | null
           user_type?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      raffle_numbers: {
+        Row: {
+          created_at: string
+          id: string
+          number: number
+          raffle_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          number: number
+          raffle_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          number?: number
+          raffle_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string
+          description: string
+          detailed_description: string | null
+          draw_date: string | null
+          end_date: string
+          id: string
+          image_url: string | null
+          min_points: number
+          numbers_total: number
+          points_per_number: number
+          prize_type: string
+          prize_value: number
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+          winner_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          detailed_description?: string | null
+          draw_date?: string | null
+          end_date: string
+          id?: string
+          image_url?: string | null
+          min_points?: number
+          numbers_total?: number
+          points_per_number?: number
+          prize_type: string
+          prize_value: number
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+          winner_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          detailed_description?: string | null
+          draw_date?: string | null
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          min_points?: number
+          numbers_total?: number
+          points_per_number?: number
+          prize_type?: string
+          prize_value?: number
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          winner_user_id?: string | null
         }
         Relationships: []
       }
@@ -157,6 +252,10 @@ export type Database = {
       get_mission_submissions: {
         Args: { mission_ids: string[]; status_filter: string }
         Returns: Json[]
+      }
+      select_raffle_winner: {
+        Args: { raffle_id: string }
+        Returns: string
       }
       update_submission_status: {
         Args: { submission_id: string; new_status: string }

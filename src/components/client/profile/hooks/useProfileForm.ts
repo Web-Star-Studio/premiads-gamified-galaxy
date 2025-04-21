@@ -37,7 +37,10 @@ export function useProfileForm() {
   // Load profile data
   useEffect(() => {
     if (profile && !profileLoading) {
-      form.reset(profile.profile_data as ProfileFormValues);
+      const formData = profile.profile_data as ProfileFormValues;
+      if (formData) {
+        form.reset(formData);
+      }
     }
   }, [profile, profileLoading, form]);
 
