@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -179,6 +180,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       if (data.user) {
+        try {
+          // Get user type from profile
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", data.user.id)
+            .single();
+          
+          if (profileError) {
+            console.warn("Error fetching user profile after login:", profileError);
+          } else if (profileData) {
+            console.log("User profile after login:", profileData);
+            setUserType(profileData.user_type as UserType);
+          }
+        } catch (error) {
+          console.error("Error fetching profile after login:", error);
+        }
+        
         toast({
           title: "Login realizado com sucesso",
           description: "Você foi autenticado com sucesso.",
@@ -225,6 +244,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (credentials: SignUpCredentials, metadata?: any): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log("Signing up with credentials:", { 
+        email: credentials.email, 
+        userType: credentials.userType || "participante"
+      });
+      
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
@@ -251,7 +275,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Verifique seu email para confirmar o cadastro.",
       });
       
-      return !!data.user;
+      // Check if user was created successfully
+      if (data.user) {
+        setUserName(credentials.name);
+        setUserType(credentials.userType || "participante");
+        setIsAuthenticated(true);
+        
+        // Check if profile exists, if not create one
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+        
+        if (profileError && profileError.code === "PGRST116") {
+          // Profile doesn't exist, create one
+          console.log("Creating new profile with user type:", credentials.userType || "participante");
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: data.user.id,
+                full_name: credentials.name,
+                user_type: credentials.userType || "participante",
+                points: 0,
+                credits: 0,
+                profile_completed: false
+              }
+            ]);
+          
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+          }
+        }
+        
+        return true;
+      }
+      
+      return false;
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",

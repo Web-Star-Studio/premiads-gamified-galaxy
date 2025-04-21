@@ -80,8 +80,16 @@ const AuthOverlay = ({ isOpen, onClose }: AuthOverlayProps) => {
     if (!validateSignup()) return;
     
     try {
+      // Make sure userType is correctly passed
+      console.log("Signing up with userType:", userType);
       const success = await signUp({ name, email, password, userType });
       if (success) {
+        toast({
+          title: "Conta criada com sucesso",
+          description: userType === "anunciante" 
+            ? "Bem-vindo à área de anunciantes!" 
+            : "Bem-vindo à plataforma!",
+        });
         onClose();
       }
     } catch (error) {

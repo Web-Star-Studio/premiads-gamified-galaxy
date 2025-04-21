@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +15,6 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
   const { isAuthenticated, userType: contextUserType, isLoading } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
-  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
   // Prevent infinite redirection loops by checking current path
   const isAdminPath = location.pathname.startsWith('/admin');
@@ -28,7 +27,8 @@ const RouteGuard = ({ children, userType }: RouteGuardProps) => {
     isAuthenticated, 
     path: location.pathname,
     isAdminPath,
-    isClientPath
+    isClientPath,
+    isAdvertiserPath
   });
   
   // Show loading screen while checking authentication

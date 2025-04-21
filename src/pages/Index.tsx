@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import MainHeader from "@/components/MainHeader";
@@ -49,7 +48,7 @@ const Index = () => {
     } else {
       // Default case if userType is not one of the expected values
       console.warn("Unknown user type:", userType);
-      return <Navigate to="/cliente" replace />;
+      return <Navigate to="/" replace />;
     }
   }
 
