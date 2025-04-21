@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +11,15 @@ export interface Referral {
   date: string;
   completedMissions?: number;
   pointsEarned?: number;
+}
+
+export interface ReferralReward {
+  id: number;
+  description: string;
+  type: "points" | "tickets" | "special";
+  value: number;
+  status: "available" | "claimed";
+  expiresAt?: string;
 }
 
 export const useReferrals = () => {
@@ -141,12 +149,14 @@ export const useReferrals = () => {
       }
       
       // In a real app, this would make an API call to send emails
-      // For demo purposes, we'll just show a success toast
       
-      playSound("reward");
+      // Simulate a network request
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      playSound("chime");
       toast({
-        title: "Convites enviados!",
-        description: `${validEmails.length} convite(s) enviado(s) com sucesso.`,
+        title: "Convites enviados",
+        description: `${validEmails.length} convites foram enviados com sucesso.`,
       });
       
       return true;
@@ -154,7 +164,7 @@ export const useReferrals = () => {
       console.error("Error sending invites:", error);
       toast({
         title: "Erro ao enviar convites",
-        description: error.message || "Ocorreu um erro ao enviar os convites",
+        description: error.message,
         variant: "destructive",
       });
       return false;
@@ -163,11 +173,11 @@ export const useReferrals = () => {
     }
   };
 
-  return {
-    loading,
-    referrals,
-    referralCode,
-    referralLink,
-    sendInvites
+  return { 
+    loading, 
+    referrals, 
+    referralCode, 
+    referralLink, 
+    sendInvites 
   };
 };

@@ -97,7 +97,7 @@ export const useLottery = () => {
       const { data, error } = await supabase
         .from('raffles')
         .insert({
-          title: lotteryData.title || lotteryData.name, // Support both title and name
+          title: lotteryData.title || lotteryData.name, 
           description: lotteryData.description,
           detailed_description: lotteryData.detailed_description || lotteryData.detailedDescription,
           type: lotteryData.type,
@@ -115,20 +115,34 @@ export const useLottery = () => {
         
       if (error) throw error;
       
-      // Add the new lottery to state
+      // Add the new lottery to state with proper type casting
       const newLottery: Lottery = {
-        ...data,
-        name: data.title, // Add alias
+        id: data.id,
+        title: data.title,
+        name: data.title,
+        description: data.description,
+        detailed_description: data.detailed_description,
         detailedDescription: data.detailed_description,
+        type: data.type,
+        points: data.points,
+        numbers_total: data.numbers_total,
         numbersTotal: data.numbers_total,
+        status: data.status as Lottery['status'],
+        start_date: data.start_date,
         startDate: data.start_date,
+        end_date: data.end_date,
         endDate: data.end_date,
+        draw_date: data.draw_date,
         drawDate: data.draw_date,
+        prize_type: data.prize_type,
         prizeType: data.prize_type,
+        prize_value: data.prize_value,
         prizeValue: data.prize_value,
         pointsPerNumber: data.points,
         winner: null,
         numbers: [],
+        created_at: data.created_at,
+        updated_at: data.updated_at,
         progress: 0,
         numbersSold: 0,
         prizes: []
@@ -231,7 +245,7 @@ export const useLottery = () => {
         
       if (profileError) throw profileError;
       
-      // Update state
+      // Update state with proper type casting
       setLotteries(prev => prev.map(lottery => {
         if (lottery.id === lotteryId) {
           return {

@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User as UserType } from '@/types';
 
 // Define a User type that matches what components expect
 export interface User {
@@ -65,9 +64,12 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Custom update to ensure we're setting the active field
       const { error } = await supabase
         .from('profiles')
-        .update({ active: active })
+        .update({ 
+          "active": active // Use quotes to ensure it's treated as a field name
+        })
         .eq('id', userId);
         
       if (error) throw error;

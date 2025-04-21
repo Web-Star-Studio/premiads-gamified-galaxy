@@ -22,6 +22,7 @@ export interface Lottery {
   prize_value: number;
   prizeValue?: number; // Alias for prize_value
   pointsPerNumber?: number; // Points cost per number
+  imageUrl?: string; // Add imageUrl property
   winner: {
     id: string;
     name: string;
