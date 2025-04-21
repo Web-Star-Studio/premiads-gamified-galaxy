@@ -1,10 +1,3 @@
-
-// Authentication hooks
-export { useAuth } from './useAuth';
-export { useAuthMethods } from './useAuthMethods';
-export { useAuthRedirection } from './useAuthRedirection';
-export { useAuthSession } from './useAuthSession';
-
 // UI hooks
 export { useIsMobile, useMediaQuery } from './use-mobile';
 export { useSounds } from './use-sounds';
@@ -36,3 +29,9 @@ export * from './missions/types';
 
 // Admin hooks
 export * from './admin';
+
+// Authentication hooks
+export { useAuth } from './useAuth';
+export { useAuthMethods } from './useAuthMethods';
+export { useAuthRedirection } from './useAuthRedirection';
+export { useAuthSession } from './useAuthSession';
