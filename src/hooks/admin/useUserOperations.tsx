@@ -18,10 +18,11 @@ export const useUserOperations = () => {
 
   const updateUserStatus = useCallback(async (userId: string, isActive: boolean) => {
     try {
+      // Corrigimos a chamada para que ela corresponda à função RPC no Supabase
       const { error } = await supabase.rpc('update_user_status', {
         user_id: userId,
         is_active: isActive
-      });
+      } as UpdateUserStatusParams);
         
       if (error) throw error;
       
@@ -45,9 +46,10 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
+      // Corrigimos a chamada para que ela corresponda à função RPC no Supabase
       const { error } = await supabase.rpc('delete_user_account', {
         target_user_id: userId
-      });
+      } as DeleteUserParams);
         
       if (error) throw error;
       

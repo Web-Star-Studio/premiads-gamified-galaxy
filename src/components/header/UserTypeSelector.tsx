@@ -2,11 +2,11 @@
 import { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+  Users, 
+  Megaphone, 
+  ShieldCheck, 
+  BookMinus
+} from "lucide-react";
 import { UserType } from "@/types/auth";
 
 interface UserTypeSelectorProps {
@@ -15,68 +15,61 @@ interface UserTypeSelectorProps {
   setIsOverlayOpen: (open: boolean) => void;
 }
 
-const UserTypeSelector: FC<UserTypeSelectorProps> = ({ 
-  userType, 
+const UserTypeSelector: FC<UserTypeSelectorProps> = ({
+  userType,
   changeUserType,
-  setIsOverlayOpen 
+  setIsOverlayOpen,
 }) => {
-  const openWhatsApp = () => {
-    const phoneNumber = "5581985595912";
-    const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  const handleTypeChange = (type: UserType) => {
+    changeUserType(type);
+    setIsOverlayOpen(false);
   };
-  
-  // Only show participante and anunciante options in the dropdown
-  const showAdminOption = userType === "admin" || userType === "moderator";
-  
+
+  const getActiveStyle = (type: UserType) => {
+    return userType === type
+      ? "border-2 border-neon-cyan bg-galaxy-purple/40"
+      : "hover:bg-galaxy-purple/20";
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-galaxy-deepPurple/70 border-neon-cyan/30 flex items-center justify-center"
-        >
-          {userType === "participante" ? "Participante" : 
-           userType === "anunciante" ? "Anunciante" : 
-           userType === "admin" ? "Admin" : "Moderador"} 
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-galaxy-deepPurple/90 backdrop-blur-md border-neon-cyan/50">
-        <DropdownMenuItem 
-          onClick={() => changeUserType("participante")}
-          className={`cursor-pointer ${userType === "participante" ? "neon-text-cyan" : ""}`}
-        >
-          Participante
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => changeUserType("anunciante")}
-          className={`cursor-pointer ${userType === "anunciante" ? "neon-text-cyan" : ""}`}
-        >
-          Anunciante
-        </DropdownMenuItem>
-        {showAdminOption && (
-          <DropdownMenuItem 
-            onClick={() => changeUserType(userType)}
-            className={`cursor-pointer neon-text-cyan`}
-          >
-            {userType === "admin" ? "Admin" : "Moderador"}
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem 
-          onClick={() => setIsOverlayOpen(true)}
-          className="cursor-pointer text-neon-pink"
-        >
-          Alterar Perfil
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={openWhatsApp}
-          className="cursor-pointer text-white hover:text-neon-cyan"
-        >
-          Fale Conosco
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center space-x-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`px-3 ${getActiveStyle("participante")}`}
+        onClick={() => handleTypeChange("participante")}
+      >
+        <Users size={16} className="mr-2" />
+        <span className="hidden sm:inline">Participante</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`px-3 ${getActiveStyle("anunciante")}`}
+        onClick={() => handleTypeChange("anunciante")}
+      >
+        <Megaphone size={16} className="mr-2" />
+        <span className="hidden sm:inline">Anunciante</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`px-3 ${getActiveStyle("admin")}`}
+        onClick={() => handleTypeChange("admin")}
+      >
+        <ShieldCheck size={16} className="mr-2" />
+        <span className="hidden sm:inline">Admin</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`px-3 ${getActiveStyle("moderator")}`}
+        onClick={() => handleTypeChange("moderator")}
+      >
+        <BookMinus size={16} className="mr-2" />
+        <span className="hidden sm:inline">Moderador</span>
+      </Button>
+    </div>
   );
 };
 

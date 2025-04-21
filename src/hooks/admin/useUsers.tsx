@@ -33,6 +33,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
+      // Corrigimos a chamada para a função RPC correta
       const { data, error } = await supabase.rpc('get_all_users');
         
       if (error) throw error;
