@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useAuthMethods } from "@/hooks/useAuthMethods";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/Icons";
 import { validateLogin } from "./authValidation";
 import { resendConfirmationEmail } from "@/utils/auth";
 import { supabase } from "@/integrations/supabase/client";
+import LoginFields from "./LoginFields";
+import LoginTimeout from "./LoginTimeout";
+import EmailNotConfirmedBox from "./EmailNotConfirmedBox";
 
 type Props = {
   onSuccess: () => void;
@@ -153,52 +154,21 @@ const LoginForm = ({ onSuccess }: Props) => {
     }
   };
 
-  // Sessão travada
+  // Loading timeout view
   if (loadingTimeout) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[260px] p-4 space-y-3">
-        <Icons.spinner className="animate-spin w-6 h-6 text-neon-cyan mx-auto" />
-        <p className="text-center text-neon-cyan font-semibold">
-          A verificação de login está demorando mais que o esperado.
-        </p>
-        <p className="text-center text-muted-foreground text-sm">
-          Verifique sua conexão ou tente novamente. Se o problema persistir, aguarde alguns minutos.
-        </p>
-        <Button variant="outline" className="mt-2" onClick={() => setLoadingTimeout(false)}>
-          Tentar novamente
-        </Button>
-      </div>
-    );
+    return <LoginTimeout onRetry={() => setLoadingTimeout(false)} />;
   }
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          type="email"
-          id="email"
-          placeholder="seu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
-          className={errors.email ? "border-red-500" : ""}
-        />
-        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-      </div>
-      <div>
-        <Label htmlFor="password">Senha</Label>
-        <Input
-          type="password"
-          id="password"
-          placeholder="********"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-          className={errors.password ? "border-red-500" : ""}
-        />
-        {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-      </div>
+      <LoginFields
+        email={email}
+        password={password}
+        errors={errors}
+        loading={loading}
+        setEmail={setEmail}
+        setPassword={setPassword}
+      />
       <Button type="submit" className="w-full neon-button" disabled={loading}>
         {loading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
         {loading ? "Entrando..." : "Entrar"}
@@ -211,24 +181,11 @@ const LoginForm = ({ onSuccess }: Props) => {
           </a>
         </p>
       )}
-
       {emailNotConfirmed && (
-        <div className="bg-yellow-50 border border-yellow-400 rounded-md p-3 text-yellow-800 mt-2 text-sm flex flex-col items-center">
-          <span>Seu email ainda não foi confirmado.</span>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-2"
-            onClick={handleResendEmail}
-            disabled={resendLoading}
-          >
-            {resendLoading ? <Icons.spinner className="animate-spin w-4 h-4 mr-2" /> : null}
-            Reenviar email de confirmação
-          </Button>
-          <span className="text-xs text-muted-foreground mt-1">
-            Verifique sua caixa de entrada/spam.
-          </span>
-        </div>
+        <EmailNotConfirmedBox
+          resendLoading={resendLoading}
+          onResend={handleResendEmail}
+        />
       )}
     </form>
   );
