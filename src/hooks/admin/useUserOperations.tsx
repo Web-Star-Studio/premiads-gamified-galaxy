@@ -21,7 +21,7 @@ export const useUserOperations = () => {
       const { error } = await supabase.rpc('update_user_status', {
         user_id: userId,
         is_active: isActive
-      });
+      } as UpdateUserStatusParams);
         
       if (error) throw error;
       
@@ -47,7 +47,7 @@ export const useUserOperations = () => {
     try {
       const { error } = await supabase.rpc('delete_user_account', {
         target_user_id: userId
-      });
+      } as DeleteUserParams);
         
       if (error) throw error;
       

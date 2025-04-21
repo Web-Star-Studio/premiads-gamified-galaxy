@@ -1,3 +1,4 @@
+
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from 'vitest';
 import { useUserOperations } from "@/hooks/admin/useUserOperations";
@@ -27,7 +28,13 @@ describe('useUserOperations', () => {
     const { result } = renderHook(() => useUserOperations());
 
     // Mock successful response
-    vi.mocked(supabase.rpc).mockResolvedValueOnce({ error: null });
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ 
+      data: null, 
+      error: null,
+      count: null,
+      status: 200,
+      statusText: 'OK'
+    });
 
     await act(async () => {
       const success = await result.current.updateUserStatus('test-id', true);
@@ -50,9 +57,17 @@ describe('useUserOperations', () => {
       message: 'Update failed',
       details: '',
       hint: '',
-      code: 'ERROR'
+      code: 'ERROR',
+      name: 'PostgrestError'
     };
-    vi.mocked(supabase.rpc).mockResolvedValueOnce({ error: mockError });
+    
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ 
+      data: null, 
+      error: mockError,
+      count: null,
+      status: 400,
+      statusText: 'Bad Request'
+    });
 
     await act(async () => {
       const success = await result.current.updateUserStatus('test-id', true);
@@ -71,7 +86,13 @@ describe('useUserOperations', () => {
     const { result } = renderHook(() => useUserOperations());
 
     // Mock successful response
-    vi.mocked(supabase.rpc).mockResolvedValueOnce({ error: null });
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ 
+      data: null, 
+      error: null,
+      count: null,
+      status: 200,
+      statusText: 'OK'
+    });
 
     await act(async () => {
       const success = await result.current.deleteUser('test-id');
@@ -93,10 +114,16 @@ describe('useUserOperations', () => {
       message: 'Delete failed',
       details: '',
       hint: '',
-      code: 'ERROR'
+      code: 'ERROR',
+      name: 'PostgrestError'
     };
+    
     vi.mocked(supabase.rpc).mockResolvedValueOnce({
-      error: mockError
+      data: null, 
+      error: mockError,
+      count: null,
+      status: 400,
+      statusText: 'Bad Request'
     });
 
     await act(async () => {

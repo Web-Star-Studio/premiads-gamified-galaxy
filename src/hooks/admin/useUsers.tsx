@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/hooks/admin/useUsers'; // This might cause a circular import
 
 export interface User {
   id: string;
@@ -44,7 +43,7 @@ export const useUsers = () => {
       }
       
       // Map the response to our User interface
-      const mappedUsers: User[] = data.map((user: UserRPCResponse) => ({
+      const mappedUsers: User[] = (data as UserRPCResponse[]).map((user: UserRPCResponse) => ({
         id: user.id,
         email: user.email,
         name: user.full_name || 'User',

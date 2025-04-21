@@ -1,13 +1,14 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserOperations } from '@/hooks/admin/useUserOperations';
-import { useUserSelection } from './hooks/useUserSelection';
-import UserTable from './components/UserTable';
-import UserToolbar from './components/UserToolbar';
-import BulkActions from './components/BulkActions';
-import UserActivityLogs from './UserActivityLogs';
+import { useUserSelection } from '@/components/admin/users/hooks/useUserSelection';
+import UserTable from '@/components/admin/users/components/UserTable';
+import UserToolbar from '@/components/admin/users/components/UserToolbar';
+import BulkActions from '@/components/admin/users/components/BulkActions';
+import UserActivityLogs from '@/components/admin/users/UserActivityLogs';
 
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
