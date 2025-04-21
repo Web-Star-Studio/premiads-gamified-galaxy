@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -81,7 +80,7 @@ export const useLottery = () => {
           type: raffle.type,
           points: raffle.points,
           numbers_total: raffle.numbers_total,
-          status: raffle.status,
+          status: raffle.status as Lottery['status'],
           start_date: raffle.start_date,
           end_date: raffle.end_date,
           draw_date: raffle.draw_date,

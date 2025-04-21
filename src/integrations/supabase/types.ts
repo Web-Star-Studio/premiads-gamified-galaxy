@@ -346,6 +346,47 @@ export type Database = {
           updated_at?: string | null
           winner_user_id?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "raffles_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          points_awarded: number | null
+          referral_code: string
+          referred_id: string | null
+          referrer_id: string
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code: string
+          referred_id?: string | null
+          referrer_id: string
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          referral_code?: string
+          referred_id?: string | null
+          referrer_id?: string
+          status?: string | null
+        }
         Relationships: []
       }
     }

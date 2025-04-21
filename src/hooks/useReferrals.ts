@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -31,10 +30,8 @@ export const useReferrals = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  // Fetch user's referrals and generate referral code if needed
   useEffect(() => {
     const fetchReferrals = async () => {
-      setLoading(true);
       try {
         const session = await supabase.auth.getSession();
         const userId = session.data.session?.user.id;
@@ -43,24 +40,23 @@ export const useReferrals = () => {
           throw new Error("Usuário não autenticado");
         }
         
-        // Generate or get user's referral code
+        // Get user's referral code
         const { data: referralData, error: referralError } = await supabase
-          .from("referrals")
-          .select("referral_code")
-          .eq("referrer_id", userId)
-          .limit(1);
+          .from('referrals')
+          .select('referral_code')
+          .eq('referrer_id', userId)
+          .maybeSingle();
         
         if (referralError) throw referralError;
         
         let userReferralCode = "";
         
-        if (referralData && referralData.length > 0) {
-          userReferralCode = referralData[0].referral_code;
+        if (referralData?.referral_code) {
+          userReferralCode = referralData.referral_code;
         } else {
           // Generate new referral code
           userReferralCode = `${userId.substring(0, 8).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
           
-          // Save new referral code
           const { error: insertError } = await supabase
             .from("referrals")
             .insert({
@@ -72,61 +68,35 @@ export const useReferrals = () => {
         }
         
         setReferralCode(userReferralCode);
-        // In a real app, this would be the actual website URL
         setReferralLink(`https://premiads.com/r/${userReferralCode}`);
         
-        // Get user's referrals with proper error handling for join queries
+        // Get user's referrals
         const { data: allReferrals, error: allReferralsError } = await supabase
-          .from("referrals")
+          .from('referrals')
           .select(`
             id,
-            referral_code,
+            referred_id,
             status,
             created_at,
             completed_at,
-            referred_id
+            points_awarded,
+            referred:profiles!referrals_referred_id_fkey(
+              full_name,
+              email
+            )
           `)
-          .eq("referrer_id", userId);
+          .eq('referrer_id', userId);
         
         if (allReferralsError) throw allReferralsError;
         
-        // Get profile names for referred users in a separate query
-        const referredIds = allReferrals
-          ?.filter(ref => ref.referred_id)
-          .map(ref => ref.referred_id) || [];
-          
-        let profilesMap: Record<string, string> = {};
-        
-        if (referredIds.length > 0) {
-          const { data: profilesData } = await supabase
-            .from("profiles")
-            .select("id, full_name")
-            .in("id", referredIds);
-            
-          if (profilesData) {
-            profilesMap = profilesData.reduce((acc, profile) => {
-              if (profile.id) {
-                acc[profile.id] = profile.full_name || "Usuário";
-              }
-              return acc;
-            }, {} as Record<string, string>);
-          }
-        }
-        
-        // Transform data for UI
         const mappedReferrals: Referral[] = (allReferrals || []).map(referral => ({
           id: referral.id,
-          name: referral.referred_id 
-            ? profilesMap[referral.referred_id] || "Amigo convidado"
-            : "Amigo convidado",
-          status: referral.status === "completed" 
-            ? "completed" 
-            : referral.referred_id 
-              ? "registered" 
-              : "pending",
+          name: referral.referred?.full_name || "Amigo convidado",
+          email: referral.referred?.email,
+          status: referral.status as Referral['status'],
           date: referral.created_at,
           completedMissions: referral.status === "completed" ? 1 : 0,
-          pointsEarned: referral.status === "completed" ? 200 : 0,
+          pointsEarned: referral.points_awarded || 0
         }));
         
         setReferrals(mappedReferrals);
@@ -135,7 +105,7 @@ export const useReferrals = () => {
         console.error("Error fetching referrals:", error);
         toast({
           title: "Erro ao carregar referências",
-          description: error.message || "Ocorreu um erro ao buscar suas referências",
+          description: error.message,
           variant: "destructive",
         });
       } finally {
