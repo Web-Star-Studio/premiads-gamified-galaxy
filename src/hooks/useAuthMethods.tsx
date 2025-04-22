@@ -13,12 +13,10 @@ export const useAuthMethods = () => {
   const { playSound } = useSounds();
   const navigate = useNavigate();
 
-  // Keep the return type as Promise<boolean> for internal use
   const signUp = async (credentials: SignUpCredentials): Promise<boolean> => {
     setLoading(true);
     
     try {
-      // Input validation
       if (!credentials.email || !credentials.password || !credentials.name) {
         throw new Error("Todos os campos são obrigatórios");
       }
@@ -40,7 +38,6 @@ export const useAuthMethods = () => {
       
       if (error) throw error;
       
-      // Check if user is already registered
       if (data?.user && data.user.identities?.length === 0) {
         throw new Error("Email já cadastrado. Por favor, tente fazer login.");
       }
@@ -55,7 +52,6 @@ export const useAuthMethods = () => {
         setUserName(credentials.name);
         setUserType(credentials.userType as UserType || "participante");
         
-        // Redirect based on user type
         if (credentials.userType === "anunciante") {
           navigate("/anunciante");
         } else if (credentials.userType === "admin") {
@@ -69,10 +65,8 @@ export const useAuthMethods = () => {
       
       return true;
     } catch (error: any) {
-      // Better error handling with appropriate messages
       let errorMessage = error.message || "Ocorreu um erro durante o cadastro";
       
-      // Translate common Supabase error messages
       if (error.message.includes("Email already registered")) {
         errorMessage = "Email já cadastrado. Por favor, tente fazer login.";
       } else if (error.message.includes("Password should be at least")) {
@@ -93,12 +87,10 @@ export const useAuthMethods = () => {
     }
   };
 
-  // Keep the return type as Promise<boolean> for internal use
   const signIn = async (credentials: SignInCredentials): Promise<boolean> => {
     setLoading(true);
     
     try {
-      // Input validation
       if (!credentials.email || !credentials.password) {
         throw new Error("Email e senha são obrigatórios");
       }
@@ -110,26 +102,24 @@ export const useAuthMethods = () => {
       
       if (error) throw error;
       
-      playSound("chime");
-      toast({
-        title: "Login bem-sucedido",
-        description: "Bem-vindo de volta à plataforma!",
-      });
-      
       if (data.user) {
         try {
-          // Check if account is active
-          const { data: profileData, error } = await supabase
+          console.log("Fetching user profile for:", data.user.id);
+          
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("full_name, user_type, active")
             .eq("id", data.user.id)
             .single();
           
-          if (error) throw error;
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            throw profileError;
+          }
           
-          // Check if user is active
+          console.log("Profile data:", profileData);
+          
           if (profileData && profileData.active === false) {
-            // Log the user out immediately
             await supabase.auth.signOut();
             throw new Error("Sua conta está desativada. Entre em contato com o suporte.");
           }
@@ -138,33 +128,38 @@ export const useAuthMethods = () => {
             setUserName(profileData.full_name || data.user.email?.split('@')[0] || 'Usuário');
             setUserType((profileData.user_type || "participante") as UserType);
             
-            // Redirect based on user type
-            if (profileData.user_type === "anunciante") {
-              navigate("/anunciante");
-            } else if (profileData.user_type === "admin" || profileData.user_type === "moderator") {
+            console.log("User type from profile:", profileData.user_type);
+            
+            if (profileData.user_type === "admin" || profileData.user_type === "moderator") {
+              console.log("Redirecting to admin panel");
               navigate("/admin");
+            } else if (profileData.user_type === "anunciante") {
+              navigate("/anunciante");
             } else {
               navigate("/cliente");
             }
           } else {
+            console.log("No profile found, setting default user type");
             setUserName(data.user.email?.split('@')[0] || 'Usuário');
             setUserType("participante");
             navigate("/cliente");
           }
         } catch (error) {
-          console.error("Error fetching profile:", error);
-          setUserName(data.user.email?.split('@')[0] || 'Usuário');
-          setUserType("participante");
-          navigate("/cliente");
+          console.error("Error setting up user session:", error);
+          throw error;
         }
       }
       
+      playSound("chime");
+      toast({
+        title: "Login bem-sucedido",
+        description: "Bem-vindo de volta à plataforma!",
+      });
+      
       return true;
     } catch (error: any) {
-      // Better error handling with appropriate messages
       let errorMessage = error.message || "Ocorreu um erro durante o login";
       
-      // Translate common Supabase error messages
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Email ou senha incorretos. Por favor, tente novamente.";
       } else if (error.message.includes("Email not confirmed")) {
@@ -214,7 +209,6 @@ export const useAuthMethods = () => {
     }
   }, [navigate, resetUserInfo, toast]);
 
-  // Add password recovery functionality
   const resetPassword = async (email: string): Promise<boolean> => {
     setLoading(true);
     
@@ -253,7 +247,6 @@ export const useAuthMethods = () => {
     }
   };
   
-  // Add update password functionality
   const updatePassword = async (password: string): Promise<boolean> => {
     setLoading(true);
     

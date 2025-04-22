@@ -1,83 +1,42 @@
 
-import { ReactNode, useState, useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { useAuth } from "@/hooks/useAuth";
+import { ReactNode } from "react";
 import { UserType } from "@/types/auth";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 
 interface RouteGuardProps {
   children: ReactNode;
-  userType?: UserType | null;
+  allowedRoles?: UserType[];
 }
 
-const RouteGuard = ({ children, userType }: RouteGuardProps) => {
-  const location = useLocation();
-  const { isAuthenticated, isLoading, currentUser } = useAuth();
-  const [checking, setChecking] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
+const RouteGuard = ({ children, allowedRoles }: RouteGuardProps) => {
+  const { currentUser, isLoading } = useAuth();
   
-  useEffect(() => {
-    // Check user access based on user type
-    const checkAccess = async () => {
-      if (!isAuthenticated || !currentUser) {
-        setHasAccess(false);
-        setChecking(false);
-        return;
-      }
-      
-      const userRole = currentUser?.user_metadata?.user_type || 'participante';
-      
-      // Admin and moderators have access to all routes
-      if (userRole === 'admin' || userRole === 'moderator') {
-        setHasAccess(true);
-        setChecking(false);
-        return;
-      }
-      
-      // If no specific userType required, or user has the required type
-      if (!userType || userType === userRole) {
-        setHasAccess(true);
-      } else {
-        setHasAccess(false);
-      }
-      
-      setChecking(false);
-    };
-    
-    if (!isLoading) {
-      checkAccess();
-    }
-  }, [isAuthenticated, isLoading, currentUser, userType]);
+  if (isLoading) {
+    return null;
+  }
   
-  if (isLoading || checking) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-galaxy-dark">
-        <LoadingSpinner data-testid="route-loading-spinner" />
-      </div>
-    );
-  }
-
-  // If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} />;
-  }
-
-  // If user doesn't have access, redirect to appropriate dashboard
-  if (!hasAccess && currentUser) {
-    const userRole = currentUser?.user_metadata?.user_type;
+  // Get user type from metadata
+  const userType = currentUser?.user_metadata?.user_type as UserType;
+  
+  console.log("RouteGuard - Current user type:", userType);
+  console.log("RouteGuard - Allowed roles:", allowedRoles);
+  
+  // If roles are specified, check if user has permission
+  if (allowedRoles && (!userType || !allowedRoles.includes(userType))) {
+    console.log("Access denied - Redirecting based on user type");
     
-    if (userRole === "admin") {
-      return <Navigate to="/admin" />;
-    } else if (userRole === "moderator") {
-      return <Navigate to="/admin" />; // Moderators also go to admin panel
-    } else if (userRole === "anunciante") {
+    // Redirect based on user type
+    if (userType === "anunciante") {
       return <Navigate to="/anunciante" />;
+    } else if (userType === "admin" || userType === "moderator") {
+      return <Navigate to="/admin" />;
     } else {
       return <Navigate to="/cliente" />;
     }
   }
-
-  // If all checks pass, render the protected route
+  
+  // If no roles specified or user has permission, render children
   return <>{children}</>;
 };
 
