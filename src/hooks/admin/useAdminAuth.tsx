@@ -3,12 +3,14 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
+import { useNavigate } from "react-router-dom";
 
 export const useAdminAuth = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const navigate = useNavigate();
 
   const checkAdminStatus = useCallback(async () => {
     try {
@@ -20,7 +22,8 @@ export const useAdminAuth = () => {
       if (!session) {
         // No session means not authenticated
         setIsAdmin(false);
-        return;
+        setLoading(false);
+        return false;
       }
       
       // Check if user is admin by querying profiles table
@@ -28,11 +31,13 @@ export const useAdminAuth = () => {
         .from('profiles')
         .select('user_type, active')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching user profile:", error);
-        throw error;
+        setIsAdmin(false);
+        setLoading(false);
+        return false;
       }
       
       // Check if the account is active
@@ -45,12 +50,15 @@ export const useAdminAuth = () => {
         });
         await supabase.auth.signOut();
         setIsAdmin(false);
-        return;
+        setLoading(false);
+        return false;
       }
       
       // Verify if user has admin privileges (admin or moderator)
       if (profileData?.user_type === 'admin' || profileData?.user_type === 'moderator') {
         setIsAdmin(true);
+        setLoading(false);
+        return true;
       } else {
         // User is authenticated but not an admin or moderator
         playSound('error');
@@ -60,12 +68,14 @@ export const useAdminAuth = () => {
           variant: "destructive"
         });
         setIsAdmin(false);
+        setLoading(false);
+        return false;
       }
     } catch (error) {
       console.error("Error in admin authentication:", error);
       setIsAdmin(false);
-    } finally {
       setLoading(false);
+      return false;
     }
   }, [toast, playSound]);
   
@@ -73,5 +83,5 @@ export const useAdminAuth = () => {
     checkAdminStatus();
   }, [checkAdminStatus]);
   
-  return { isAdmin, loading };
+  return { isAdmin, loading, checkAdminStatus };
 };

@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,10 +12,15 @@ const AdvertiserRoutes = lazy(() => import("./AdvertiserRoutes"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppRoutes = () => {
-  const { isAuthenticated, currentUser } = useAuth();
+  const { isAuthenticated, currentUser, isLoading } = useAuth();
   const location = useLocation();
   
-  console.log("AppRoutes rendered, current path:", location.pathname);
+  console.log("AppRoutes rendered, current path:", location.pathname, "isAuthenticated:", isAuthenticated, "loading:", isLoading);
+  
+  // Don't render any routes until we've checked auth status
+  if (isLoading) {
+    return <RouteLoadingSpinner />;
+  }
   
   // Helper function to handle redirections for root and auth paths
   const shouldRedirect = () => {

@@ -1,9 +1,7 @@
 
-import { Suspense, lazy } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
-import NotFound from "@/pages/NotFound";
-import RoleGuard from "@/components/auth/RoleGuard";
 import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
 
 // Lazy load admin pages
@@ -17,21 +15,26 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AdminRoutes = () => {
-  const location = useLocation();
   const { isAdmin, loading } = useAdminAuth();
+  const navigate = useNavigate();
   
-  console.log("AdminRoutes rendered, path:", location.pathname, "isAdmin:", isAdmin, "loading:", loading);
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      navigate("/auth", { replace: true });
+    }
+  }, [isAdmin, loading, navigate]);
 
   // Show loading state while checking admin status
   if (loading) {
     return <RouteLoadingSpinner />;
   }
 
-  // If not admin, redirect to appropriate page
+  // If not admin and not loading, we'll redirect in the useEffect
   if (!isAdmin) {
-    return <Navigate to="/auth" />;
+    return <RouteLoadingSpinner />;
   }
 
   return (
@@ -39,110 +42,90 @@ const AdminRoutes = () => {
       <Route 
         index 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AdminPanel />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdminPanel />
+          </Suspense>
         } 
       />
       
       <Route 
         path="usuarios" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <UserManagementPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <UserManagementPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="sorteios" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <LotteryManagementPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <LotteryManagementPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="relatorios" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <ReportsPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <ReportsPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="monitoramento" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <MonitoringPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <MonitoringPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="notificacoes" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <NotificationsPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <NotificationsPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="regras" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <RulesPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <RulesPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="acessos" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AccessControlPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AccessControlPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="configuracoes" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <SettingsPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <SettingsPage />
+          </Suspense>
         } 
       />
       
       <Route 
         path="documentacao" 
         element={
-          <RoleGuard allowedRoles={["admin", "moderator"]}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <DocumentationPage />
-            </Suspense>
-          </RoleGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <DocumentationPage />
+          </Suspense>
         } 
       />
       
