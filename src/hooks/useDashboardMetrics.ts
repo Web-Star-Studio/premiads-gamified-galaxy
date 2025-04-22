@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface DashboardMetrics {
+export interface DashboardMetrics {
   totalUsers: number;
   activeMissions: number;
   totalPoints: number;
@@ -24,14 +24,14 @@ export const useDashboardMetrics = () => {
       const [
         { count: totalUsers },
         { count: activeMissions },
-        { sum: totalPoints },
+        { data: totalPointsData },
         { count: activeRaffles },
         { count: pendingSubmissions },
         { count: completedMissions },
         // Historical data (30 days ago)
         { count: previousMonthUsers },
         { count: previousMonthCompletedMissions },
-        { sum: previousMonthPoints },
+        { data: previousMonthPointsData },
       ] = await Promise.all([
         // Current metrics
         supabase
@@ -80,8 +80,9 @@ export const useDashboardMetrics = () => {
           .lt("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
       ]);
 
-      const currentPoints = totalPoints?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
-      const previousPoints = previousMonthPoints?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
+      // Calculate total points by summing the points from each profile
+      const currentPoints = totalPointsData?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
+      const previousPoints = previousMonthPointsData?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
 
       // Calculate additional metrics
       const averagePointsPerUser = totalUsers ? Math.round(currentPoints / totalUsers) : 0;

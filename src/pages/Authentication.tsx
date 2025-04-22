@@ -52,7 +52,11 @@ const Authentication = () => {
       password
     };
     
-    await signIn(credentials);
+    try {
+      await signIn(credentials);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
   
   const handleSignup = async (e: React.FormEvent) => {
@@ -83,9 +87,11 @@ const Authentication = () => {
       userType
     };
     
-    const success = await signUp(credentials);
-    if (success) {
+    try {
+      await signUp(credentials);
       setActiveTab("login");
+    } catch (error) {
+      console.error("Signup error:", error);
     }
   };
   
@@ -112,10 +118,12 @@ const Authentication = () => {
         return;
       }
       
-      const success = await updatePassword(password);
-      if (success) {
+      try {
+        await updatePassword(password);
         setActiveTab("login");
         setPasswordResetMode(false);
+      } catch (error) {
+        console.error("Password update error:", error);
       }
     } else {
       // Request password reset mode
@@ -128,7 +136,11 @@ const Authentication = () => {
         return;
       }
       
-      await resetPassword(email);
+      try {
+        await resetPassword(email);
+      } catch (error) {
+        console.error("Password reset error:", error);
+      }
     }
   };
   
@@ -346,7 +358,7 @@ const Authentication = () => {
                       type="password"
                       placeholder="Confirme a senha"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
                       className="bg-galaxy-dark"
                     />
                     {confirmPassword && password !== confirmPassword && (

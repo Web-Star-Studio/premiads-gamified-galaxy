@@ -12,9 +12,11 @@ interface PointsCardProps {
   credits?: number;
   level?: number; // Keep for backward compatibility
   progress?: number; // Keep for backward compatibility
+  isLoading?: boolean;
+  tickets?: number;
 }
 
-const PointsCard = ({ points, credits }: PointsCardProps) => {
+const PointsCard = ({ points, credits, isLoading, tickets }: PointsCardProps) => {
   const { playSound } = useSounds();
   const { levelInfo, loading } = useUserLevel(points);
   
