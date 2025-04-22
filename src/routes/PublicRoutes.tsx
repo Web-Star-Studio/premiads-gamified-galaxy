@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -15,6 +14,10 @@ const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+
+const Tour = lazy(() => import("@/pages/Tour"));
+const Careers = lazy(() => import("@/pages/Careers"));
+const Team = lazy(() => import("@/pages/Team"));
 
 const PublicRoutes = () => {
   return (
@@ -72,6 +75,24 @@ const PublicRoutes = () => {
       
       {/* Redirect /documentacao to /admin/documentacao */}
       <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
+
+      <Route path="tour" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Tour />
+        </Suspense>
+      } />
+      
+      <Route path="nosso-time" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Team />
+        </Suspense>
+      } />
+      
+      <Route path="carreiras" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <Careers />
+        </Suspense>
+      } />
       
       {/* Catch-all for missing routes */}
       <Route path="*" element={
