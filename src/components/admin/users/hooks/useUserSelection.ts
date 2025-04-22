@@ -13,12 +13,12 @@ export const useUserSelection = (users: User[]) => {
     }
   };
 
-  const handleSelectUser = (userId: string, checked: boolean) => {
+  const handleSelectUser = (userId: string) => {
     const newSelected = new Set(selectedUsers);
-    if (checked) {
-      newSelected.add(userId);
-    } else {
+    if (newSelected.has(userId)) {
       newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
     }
     setSelectedUsers(newSelected);
   };

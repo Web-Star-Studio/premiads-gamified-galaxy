@@ -1,16 +1,15 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserOperations } from '@/hooks/admin/useUserOperations';
-import { useUserSelection } from '@/components/admin/users/hooks/useUserSelection';
-import UserTable from '@/components/admin/users/components/UserTable';
-import UserToolbar from '@/components/admin/users/components/UserToolbar';
-import BulkActions from '@/components/admin/users/components/BulkActions';
-import UserActivityLogs from '@/components/admin/users/UserActivityLogs';
-import CreateUserDialog from '@/components/admin/users/CreateUserDialog';
-import EditUserDialog from '@/components/admin/users/EditUserDialog';
+import { useUserSelection } from './users/hooks/useUserSelection';
+import UserTable from './users/components/UserTable';
+import UserToolbar from './users/components/UserToolbar';
+import BulkActions from './users/components/BulkActions';
+import UserActivityLogs from './users/UserActivityLogs';
+import CreateUserDialog from './users/CreateUserDialog';
+import EditUserDialog from './users/EditUserDialog';
 
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +18,12 @@ const UserManagement = () => {
     updateUserStatus, 
     deleteUser 
   } = useUserOperations();
-  const { selectedUsers, handleSelectAll, handleSelectUser, setSelectedUsers } = useUserSelection(users);
+  const { 
+    selectedUsers, 
+    handleSelectAll, 
+    handleSelectUser, 
+    setSelectedUsers 
+  } = useUserSelection(users);
 
   // Dialogs for add/edit
   const [createOpen, setCreateOpen] = useState(false);
@@ -86,7 +90,6 @@ const UserManagement = () => {
               onAddUser={handleAddUser}
             />
           </div>
-
           <UserTable
             users={users}
             selectedUsers={selectedUsers}

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,7 +40,7 @@ const UserTable = ({
             <th className="px-3 py-3.5 text-left text-sm font-semibold text-white">
               <Checkbox 
                 checked={allSelected}
-                onCheckedChange={onSelectAll}
+                onCheckedChange={(checked) => onSelectAll(!!checked)}
                 aria-label="Select all users"
               />
             </th>
