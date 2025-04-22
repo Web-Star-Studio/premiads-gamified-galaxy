@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import NotFound from "@/pages/NotFound";
 import RouteGuard from "@/components/auth/RouteGuard";
 import { useAdminAuth } from "@/hooks/admin/useAdminAuth";

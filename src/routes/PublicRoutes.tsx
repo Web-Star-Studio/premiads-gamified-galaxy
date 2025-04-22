@@ -1,7 +1,15 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
+import NotFound from "@/pages/NotFound";
+
+// Add new lazy imports
+const Tour = lazy(() => import("@/pages/Tour"));
+const Team = lazy(() => import("@/pages/Team")); 
+const Careers = lazy(() => import("@/pages/Careers"));
+const TermsOfUse = lazy(() => import("@/pages/legal/TermsOfUse"));
+const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
+const CookiesPolicy = lazy(() => import("@/pages/legal/CookiesPolicy"));
 
 // Lazy load public pages
 const Index = lazy(() => import("@/pages/Index"));
@@ -14,66 +22,57 @@ const Authentication = lazy(() => import("@/pages/Authentication"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-
-// Add new lazy imports
-const Tour = lazy(() => import("@/pages/Tour"));
-const Team = lazy(() => import("@/pages/Team")); 
-const Careers = lazy(() => import("@/pages/Careers"));
-const TermsOfUse = lazy(() => import("@/pages/legal/TermsOfUse"));
-const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
-const CookiesPolicy = lazy(() => import("@/pages/legal/CookiesPolicy"));
 
 const PublicRoutes = () => {
   return (
     <Routes>
       <Route index element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Index />
         </Suspense>
       } />
       <Route path="sobre" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <About />
         </Suspense>
       } />
       <Route path="como-funciona" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <HowItWorks />
         </Suspense>
       } />
       <Route path="faq" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Faq />
         </Suspense>
       } />
       <Route path="feedback" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Feedback />
         </Suspense>
       } />
       <Route path="tutoriais" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Tutorials />
         </Suspense>
       } />
       <Route path="auth" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Authentication />
         </Suspense>
       } />
       <Route path="blog" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Blog />
         </Suspense>
       } />
       <Route path="blog/:id" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <BlogPost />
         </Suspense>
       } />
       <Route path="suporte" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Support />
         </Suspense>
       } />
@@ -83,45 +82,45 @@ const PublicRoutes = () => {
 
       
       <Route path="tour" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Tour />
         </Suspense>
       } />
       
       <Route path="nosso-time" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Team />
         </Suspense>
       } />
       
       <Route path="carreiras" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <Careers />
         </Suspense>
       } />
       
       {/* Política e termos legais */}
       <Route path="termos-de-uso" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <TermsOfUse />
         </Suspense>
       } />
       
       <Route path="politica-de-privacidade" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <PrivacyPolicy />
         </Suspense>
       } />
       
       <Route path="cookies" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <CookiesPolicy />
         </Suspense>
       } />
       
       {/* Catch-all for missing routes */}
       <Route path="*" element={
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<RouteLoadingSpinner />}>
           <NotFound />
         </Suspense>
       } />
