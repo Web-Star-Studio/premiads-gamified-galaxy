@@ -1,8 +1,9 @@
 
-import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAdminAuth } from "@/hooks/admin/useAdminAuth";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Lazy load admin pages
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
@@ -19,22 +20,15 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AdminRoutes = () => {
   const { isAdmin, loading } = useAdminAuth();
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate("/auth", { replace: true });
-    }
-  }, [isAdmin, loading, navigate]);
 
   // Show loading state while checking admin status
   if (loading) {
     return <RouteLoadingSpinner />;
   }
 
-  // If not admin and not loading, we'll redirect in the useEffect
+  // If not admin and not loading, the redirect will happen in useAdminAuth
   if (!isAdmin) {
-    return <RouteLoadingSpinner />;
+    return null;
   }
 
   return (
@@ -42,90 +36,110 @@ const AdminRoutes = () => {
       <Route 
         index 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdminPanel />
-          </Suspense>
+          <ErrorBoundary fallback={<div className="p-8">Erro ao carregar o painel de administração. Tente novamente.</div>}>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <AdminPanel />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="usuarios" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <UserManagementPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <UserManagementPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="sorteios" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <LotteryManagementPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <LotteryManagementPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="relatorios" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <ReportsPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <ReportsPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="monitoramento" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <MonitoringPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <MonitoringPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="notificacoes" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <NotificationsPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <NotificationsPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="regras" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <RulesPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <RulesPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="acessos" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AccessControlPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <AccessControlPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="configuracoes" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <SettingsPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <SettingsPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
       <Route 
         path="documentacao" 
         element={
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <DocumentationPage />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <DocumentationPage />
+            </Suspense>
+          </ErrorBoundary>
         } 
       />
       
