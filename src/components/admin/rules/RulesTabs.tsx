@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ruleCategories } from "./rulesData";
@@ -24,7 +25,7 @@ const RulesTabs = ({
   onSaveRule,
 }: RulesTabsProps) => {
   return (
-    <Tabs defaultValue={currentCategory} onValueChange={setCurrentCategory} className="w-full">
+    <Tabs defaultValue={currentCategory} onValueChange={setCurrentCategory}>
       <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
         {ruleCategories.map(category => (
           <TabsTrigger

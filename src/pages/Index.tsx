@@ -49,6 +49,7 @@ const MainContent = () => {
 };
 
 const Index = () => {
+  // Remover qualquer lógica de redirecionamento para login
   return (
     <UserProvider>
       <MainContent />

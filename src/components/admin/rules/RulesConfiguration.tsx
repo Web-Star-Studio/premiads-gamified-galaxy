@@ -1,160 +1,160 @@
-
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, FileText, RefreshCw } from 'lucide-react';
-import { useSounds } from '@/hooks/use-sounds';
-import { toast } from "@/hooks/use-toast";
-import LoadingParticles from '../LoadingParticles';
-import CategoryRules from './CategoryRules';
-import { RuleCategory, RulesByCategory } from './types';
-import { initialRules, ruleCategories } from './rulesData';
+import { ruleCategories } from "./rulesData";
+import RulesTabs from "./RulesTabs";
+import { Rules, RulesByCategory } from "./types";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getRules, updateRule } from "@/lib/api/rules";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const RulesConfiguration = () => {
-  const [rules, setRules] = useState<RulesByCategory>(initialRules);
-  const [currentCategory, setCurrentCategory] = useState('points');
+  const [search, setSearch] = useState("");
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [category, setCategory] = useState(ruleCategories[0].id);
   const [editingRule, setEditingRule] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const { playSound } = useSounds();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+  const { data: rules, isLoading, isError, error } = useQuery({
+    queryKey: ["rules"],
+    queryFn: getRules,
+  });
+
+  const { mutate: saveRuleMutation, isLoading: isSaving } = useMutation({
+    mutationFn: updateRule,
+    onSuccess: () => {
+      toast({
+        title: "Regra salva com sucesso!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["rules"] });
+      setEditingRule(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao salvar regra!",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleFilter = () => {
+    setIsFiltered(!isFiltered);
+  };
+
+  const handleEditRule = useCallback((ruleId: string) => {
+    setEditingRule(ruleId);
   }, []);
 
-  const handleToggleRule = (category: string, ruleId: string) => {
-    setRules(prevRules => {
-      const updatedRules = { ...prevRules };
-      const ruleIndex = updatedRules[category].findIndex(rule => rule.id === ruleId);
-      
-      if (ruleIndex !== -1) {
-        updatedRules[category][ruleIndex].enabled = !updatedRules[category][ruleIndex].enabled;
-      }
-      
-      return updatedRules;
-    });
-    
-    playSound('pop');
-    toast({
-      title: "Regra atualizada",
-      description: `Status da regra alterado com sucesso.`,
-    });
-  };
+  const handleToggleRule = useCallback((ruleId: string) => {
+    if (!rules) return;
 
-  const handleSaveRule = (category: string, ruleId: string, newValue: any) => {
-    setRules(prevRules => {
-      const updatedRules = { ...prevRules };
-      const ruleIndex = updatedRules[category].findIndex(rule => rule.id === ruleId);
-      
-      if (ruleIndex !== -1) {
-        updatedRules[category][ruleIndex].value = newValue;
-        updatedRules[category][ruleIndex].lastModified = new Date().toISOString().split('T')[0];
-      }
-      
-      return updatedRules;
-    });
-  };
+    const ruleToUpdate = Object.values(rules)
+      .flat()
+      .find((rule) => rule.id === ruleId);
 
-  const handleSaveAllRules = () => {
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      playSound('reward');
-      toast({
-        title: "Configurações salvas",
-        description: `Todas as configurações de regras foram atualizadas e aplicadas ao sistema.`,
-      });
-    }, 1500);
-  };
+    if (!ruleToUpdate) {
+      console.error("Rule not found:", ruleId);
+      return;
+    }
+
+    saveRuleMutation({ ...ruleToUpdate, active: !ruleToUpdate.active });
+  }, [rules, saveRuleMutation]);
+
+  const handleSaveRule = useCallback((ruleId: string, value: any) => {
+    if (!rules) return;
+
+    const ruleToUpdate = Object.values(rules)
+      .flat()
+      .find((rule) => rule.id === ruleId);
+
+    if (!ruleToUpdate) {
+      console.error("Rule not found:", ruleId);
+      return;
+    }
+
+    saveRuleMutation({ ...ruleToUpdate, value });
+  }, [rules, saveRuleMutation]);
+
+  useEffect(() => {
+    if (rules && Object.keys(rules).length > 0 && !category) {
+      setCategory(Object.keys(rules)[0]);
+    }
+  }, [rules, category]);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (isError) {
+    return <p>Error: {error.message}</p>;
+  }
+
+  if (!rules) {
+    return <p>No rules found.</p>;
+  }
+
+  const rulesByCategory = Object.entries(rules).reduce((acc: RulesByCategory, [category, rules]) => {
+    acc[category] = rules;
+    return acc;
+  }, {});
+
+  const filteredRules: RulesByCategory = Object.entries(rulesByCategory).reduce((acc: RulesByCategory, [category, rules]) => {
+    const filtered = rules.filter(rule =>
+      rule.label.toLowerCase().includes(search.toLowerCase()) ||
+      rule.description.toLowerCase().includes(search.toLowerCase())
+    );
+    if (filtered.length > 0) {
+      acc[category] = filtered;
+    }
+    return acc;
+  }, {});
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="bg-galaxy-deepPurple border-galaxy-purple/30">
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-xl font-heading text-white flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-neon-lime" />
-                  Configuração de Regras
-                </CardTitle>
-                <CardDescription>
-                  Defina parâmetros para missões, recompensas, sorteios e sistema de pontos.
-                </CardDescription>
-              </div>
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="bg-neon-lime text-galaxy-dark hover:bg-neon-lime/80"
-                onClick={handleSaveAllRules}
-                disabled={saving}
-              >
-                <Save className={`h-4 w-4 mr-2 ${saving ? 'animate-spin' : ''}`} />
-                Salvar Alterações
-              </Button>
+    <div>
+      <Card className="bg-galaxy-dark border-galaxy-purple/30">
+        <CardHeader>
+          <CardTitle className="text-lg">Configuração de Regras</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid grid-cols-[1fr_110px] gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="search">Pesquisar Regra</Label>
+              <Input
+                id="search"
+                placeholder="Pesquisar por nome ou descrição..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center items-center h-60 relative">
-                <LoadingParticles />
-                <div className="w-12 h-12 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <Tabs defaultValue={currentCategory} onValueChange={setCurrentCategory} className="w-full">
-                <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
-                  {ruleCategories.map(category => (
-                    <TabsTrigger 
-                      key={category.id} 
-                      value={category.id}
-                      className="data-[state=active]:text-neon-cyan"
-                    >
-                      <category.icon className="h-4 w-4 mr-2" />
-                      {category.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                
-                {Object.keys(rules).map(category => (
-                  <TabsContent key={category} value={category}>
-                    <CategoryRules
-                      rules={rules[category]}
-                      editingRule={editingRule}
-                      onToggleRule={(ruleId) => handleToggleRule(category, ruleId)}
-                      onEditRule={setEditingRule}
-                      onSaveRule={(ruleId, value) => handleSaveRule(category, ruleId, value)}
-                    />
-                  </TabsContent>
-                ))}
-              </Tabs>
-            )}
-          </CardContent>
-          <CardFooter className="border-t border-galaxy-purple/30 mt-4 pt-4 flex justify-between">
-            <Button variant="outline" className="border-galaxy-purple/30">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Restaurar Padrões
+            <Button variant="outline" className="h-fit" onClick={handleToggleFilter}>
+              {isFiltered ? "Remover Filtro" : "Filtrar"}
             </Button>
-            <Button 
-              onClick={handleSaveAllRules}
-              disabled={saving}
-              className="bg-neon-lime text-galaxy-dark hover:bg-neon-lime/80"
-            >
-              <Save className={`h-4 w-4 mr-2 ${saving ? 'animate-spin' : ''}`} />
-              Aplicar Configurações
-            </Button>
-          </CardFooter>
-        </Card>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch id="active" defaultChecked />
+            <Label htmlFor="active">Mostrar apenas regras ativas</Label>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="mt-4">
+        {/* Ajuste: Removido prop className inválido na chamada <RulesTabs /> */}
+        <RulesTabs
+          rules={isFiltered ? filteredRules : rulesByCategory}
+          currentCategory={category}
+          setCurrentCategory={setCategory}
+          editingRule={editingRule}
+          onEditRule={handleEditRule}
+          onToggleRule={handleToggleRule}
+          onSaveRule={handleSaveRule}
+        />
       </div>
-    </motion.div>
+    </div>
   );
 };
 

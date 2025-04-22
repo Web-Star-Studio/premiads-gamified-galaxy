@@ -34,13 +34,8 @@ const ProfileOverlay = () => {
     // Transition effect
     setTimeout(() => {
       setIsOverlayOpen(false);
-      
-      // Navigate to dashboard if user is a participant
-      if (userType === "participante") {
-        navigate("/cliente");
-      } else {
-        navigate("/anunciante");
-      }
+      // NOVO: Sempre direcionar para home após criar perfil
+      navigate("/");
     }, 800);
   };
 
@@ -145,3 +140,4 @@ const ProfileOverlay = () => {
 };
 
 export default ProfileOverlay;
+
