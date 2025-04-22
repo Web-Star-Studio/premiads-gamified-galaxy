@@ -14,67 +14,44 @@ export const useAuthSession = () => {
 
   // Check for existing session and set up auth state listener
   useEffect(() => {
-    const checkTokenExpiration = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error || !data.session) {
-          resetUserInfo();
-          return null;
-        }
-        
-        // Check token expiration
-        const expiresAt = data.session.expires_at;
-        if (expiresAt && expiresAt * 1000 < Date.now()) {
-          // Token has expired, sign the user out
-          console.log("Session expired, logging out");
-          await supabase.auth.signOut();
-          resetUserInfo();
-          return null;
-        }
-        
-        return data.session.user;
-      } catch (error) {
-        console.error("Error checking token expiration:", error);
-        return null;
-      }
-    };
-    
     const checkSession = async () => {
       try {
         setLoading(true);
         
-        // Check if token is valid
-        const validUser = await checkTokenExpiration();
-        if (!validUser) {
+        // Check current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
           setUser(null);
           setLoading(false);
           return;
         }
         
-        setUser(validUser);
+        if (!session) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         
-        console.log("Fetching profile for user:", validUser.id);
+        setUser(session.user);
         
         try {
-          // Check user profile and status
-          const { data: profileData, error } = await supabase
+          // Fetch user profile data
+          const { data: profileData, error: profileError } = await supabase
             .from("profiles")
             .select("full_name, user_type, profile_completed, active")
-            .eq("id", validUser.id)
-            .maybeSingle(); // Use maybeSingle instead of single to handle case when profile doesn't exist
+            .eq("id", session.user.id)
+            .maybeSingle();
           
-          if (error) {
-            console.error("Error fetching profile:", error);
-            // Don't throw the error, continue with user metadata
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            resetUserInfo();
+            return;
           }
           
-          console.log("Profile data:", profileData);
-          
           if (profileData) {
-            // Check if account is active
-            if (profileData.active === false) {
-              console.log("Account inactive, logging out");
+            if (!profileData.active) {
               toast({
                 title: "Conta desativada",
                 description: "Sua conta foi desativada. Entre em contato com o suporte.",
@@ -87,37 +64,15 @@ export const useAuthSession = () => {
               return;
             }
             
-            setUserName(profileData.full_name || validUser.email?.split('@')[0] || 'Usuário');
+            setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
             setUserType((profileData.user_type || "participante") as UserType);
-            
-            // Debug log
-            console.log("Set user type to:", profileData.user_type);
-            
-            // Check if profile is incomplete
-            if (!profileData.profile_completed) {
-              toast({
-                title: "Perfil incompleto",
-                description: "Complete seu perfil para obter todas as funcionalidades.",
-              });
-            }
-          } else {
-            console.warn("No profile found for user:", validUser.id);
-            // Fallback to user metadata for type
-            const userTypeFromMetadata = validUser.user_metadata?.user_type as UserType;
-            setUserName(validUser.email?.split('@')[0] || 'Usuário');
-            setUserType(userTypeFromMetadata || "participante" as UserType);
-            console.log("Using user type from metadata:", userTypeFromMetadata);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
-          // Fallback to user metadata
-          const userTypeFromMetadata = validUser.user_metadata?.user_type as UserType;
-          setUserName(validUser.email?.split('@')[0] || 'Usuário');
-          setUserType(userTypeFromMetadata || "participante" as UserType);
-          console.log("Using user type from metadata (after error):", userTypeFromMetadata);
+          resetUserInfo();
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        console.error("Error in session check:", error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -126,76 +81,46 @@ export const useAuthSession = () => {
     
     checkSession();
     
-    // Subscribe to auth changes with improved error handling
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
       if (event === "SIGNED_IN" && session) {
         setUser(session.user);
         
-        // Using setTimeout to avoid deadlocks in Supabase auth
-        setTimeout(async () => {
-          try {
-            console.log("Fetching profile after sign in for:", session.user.id);
-            
-            const { data: profileData, error } = await supabase
-              .from("profiles")
-              .select("full_name, user_type, profile_completed, active")
-              .eq("id", session.user.id)
-              .maybeSingle(); // Use maybeSingle instead of single
-            
-            if (error) {
-              console.error("Error fetching profile after sign in:", error);
-              // Fallback to user metadata
-              const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
-              setUserName(session.user.email?.split('@')[0] || 'Usuário');
-              setUserType(userTypeFromMetadata || "participante");
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name, user_type, profile_completed, active")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            resetUserInfo();
+            return;
+          }
+          
+          if (profileData) {
+            if (!profileData.active) {
+              toast({
+                title: "Conta desativada",
+                description: "Sua conta foi desativada. Entre em contato com o suporte.",
+                variant: "destructive"
+              });
+              
+              await supabase.auth.signOut();
+              resetUserInfo();
+              setUser(null);
               return;
             }
             
-            console.log("Profile data after sign in:", profileData);
-            
-            if (profileData) {
-              // Check if account is active
-              if (profileData.active === false) {
-                toast({
-                  title: "Conta desativada",
-                  description: "Sua conta foi desativada. Entre em contato com o suporte.",
-                  variant: "destructive"
-                });
-                
-                await supabase.auth.signOut();
-                resetUserInfo();
-                setUser(null);
-                return;
-              }
-              
-              setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
-              setUserType((profileData.user_type || "participante") as UserType);
-              
-              // Debug log
-              console.log("Updated user type to:", profileData.user_type);
-              
-              if (!profileData.profile_completed) {
-                toast({
-                  title: "Perfil incompleto",
-                  description: "Complete seu perfil para obter todas as funcionalidades.",
-                });
-              }
-            } else {
-              console.log("No profile found, using metadata for user type");
-              const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
-              setUserName(session.user.email?.split('@')[0] || 'Usuário');
-              setUserType(userTypeFromMetadata || "participante");
-            }
-          } catch (error) {
-            console.error("Error setting up user session:", error);
-            // Fallback to user metadata
-            const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
-            setUserName(session.user.email?.split('@')[0] || 'Usuário');
-            setUserType(userTypeFromMetadata || "participante");
+            setUserName(profileData.full_name || session.user.email?.split('@')[0] || 'Usuário');
+            setUserType((profileData.user_type || "participante") as UserType);
           }
-        }, 0);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          resetUserInfo();
+        }
       } else if (event === "SIGNED_OUT") {
         console.log("User signed out");
         setUser(null);
@@ -204,7 +129,7 @@ export const useAuthSession = () => {
     });
     
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [setUserName, setUserType, resetUserInfo, toast]);
 

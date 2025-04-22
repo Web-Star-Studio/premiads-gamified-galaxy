@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 interface RouteGuardProps {
   children: ReactNode;
   allowedRoles?: UserType[];
-  userType?: UserType; // Add this prop to support the previous API
+  userType?: UserType;
 }
 
 const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
@@ -30,8 +30,6 @@ const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
   
   // Convert single userType prop to allowedRoles array for backward compatibility
   const effectiveAllowedRoles = allowedRoles || (userType ? [userType] : undefined);
-  
-  console.log("RouteGuard - Allowed roles:", effectiveAllowedRoles);
   
   // If roles are specified, check if user has permission
   if (effectiveAllowedRoles && (!userTypeFromMetadata || !effectiveAllowedRoles.includes(userTypeFromMetadata))) {
