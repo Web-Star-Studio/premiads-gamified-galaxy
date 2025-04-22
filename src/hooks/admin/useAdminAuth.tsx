@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,61 +12,61 @@ export const useAdminAuth = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        setLoading(true);
-        
-        // Get the current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          // No session means not authenticated
-          navigate('/auth', { replace: true });
-          return;
-        }
-        
-        // Check if user is admin by querying profiles table
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (error) {
-          console.error("Error fetching user profile:", error);
-          throw error;
-        }
-        
-        // Verify if user has admin privileges (admin or moderator)
-        if (profileData?.user_type === 'admin' || profileData?.user_type === 'moderator') {
-          setIsAdmin(true);
-        } else {
-          // User is authenticated but not an admin or moderator, redirect to appropriate dashboard
-          playSound('error');
-          toast({
-            title: "Acesso negado",
-            description: "Você não tem permissão para acessar o painel de administração.",
-            variant: "destructive"
-          });
-          
-          // Redirect based on user type
-          const redirectPath = profileData?.user_type === 'anunciante' 
-            ? '/anunciante' 
-            : '/cliente';
-          
-          navigate(redirectPath, { replace: true });
-        }
-      } catch (error) {
-        console.error("Error in admin authentication:", error);
+  const checkAdminStatus = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // No session means not authenticated
         navigate('/auth', { replace: true });
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    
-    checkAdminStatus();
+      
+      // Check if user is admin by querying profiles table
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        throw error;
+      }
+      
+      // Verify if user has admin privileges (admin or moderator)
+      if (profileData?.user_type === 'admin' || profileData?.user_type === 'moderator') {
+        setIsAdmin(true);
+      } else {
+        // User is authenticated but not an admin or moderator, redirect to appropriate dashboard
+        playSound('error');
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar o painel de administração.",
+          variant: "destructive"
+        });
+        
+        // Redirect based on user type
+        const redirectPath = profileData?.user_type === 'anunciante' 
+          ? '/anunciante' 
+          : '/cliente';
+        
+        navigate(redirectPath, { replace: true });
+      }
+    } catch (error) {
+      console.error("Error in admin authentication:", error);
+      navigate('/auth', { replace: true });
+    } finally {
+      setLoading(false);
+    }
   }, [navigate, toast, playSound]);
+  
+  useEffect(() => {
+    checkAdminStatus();
+  }, [checkAdminStatus]);
   
   return { isAdmin, loading };
 };
