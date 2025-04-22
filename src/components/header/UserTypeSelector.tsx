@@ -3,9 +3,7 @@ import { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Users, 
-  Megaphone, 
-  ShieldCheck, 
-  BookMinus
+  Megaphone
 } from "lucide-react";
 import { UserType } from "@/types/auth";
 
@@ -51,26 +49,9 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
         <Megaphone size={16} className="mr-2" />
         <span className="hidden sm:inline">Anunciante</span>
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`px-3 ${getActiveStyle("admin")}`}
-        onClick={() => handleTypeChange("admin")}
-      >
-        <ShieldCheck size={16} className="mr-2" />
-        <span className="hidden sm:inline">Admin</span>
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`px-3 ${getActiveStyle("moderator")}`}
-        onClick={() => handleTypeChange("moderator")}
-      >
-        <BookMinus size={16} className="mr-2" />
-        <span className="hidden sm:inline">Moderador</span>
-      </Button>
     </div>
   );
 };
 
 export default UserTypeSelector;
+
