@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import UserTable from '@/components/admin/users/components/UserTable';
 import UserToolbar from '@/components/admin/users/components/UserToolbar';
 import BulkActions from '@/components/admin/users/components/BulkActions';
 import UserActivityLogs from '@/components/admin/users/UserActivityLogs';
+import CreateUserDialog from '@/components/admin/users/CreateUserDialog';
+import EditUserDialog from '@/components/admin/users/EditUserDialog';
 
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -18,6 +19,10 @@ const UserManagement = () => {
     deleteUser 
   } = useUserOperations();
   const { selectedUsers, handleSelectAll, handleSelectUser, setSelectedUsers } = useUserSelection(users);
+
+  // Dialogs for add/edit
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editUser, setEditUser] = useState<null | typeof users[0]>(null);
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {
     const newActiveState = currentStatus !== 'active';
@@ -50,6 +55,10 @@ const UserManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Add 'onAddUser' handler
+  const handleAddUser = () => setCreateOpen(true);
+
+  // Update BulkActions call to use handler
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,7 +79,7 @@ const UserManagement = () => {
               selectedCount={selectedUsers.size}
               onBulkDelete={handleBulkDelete}
               onExportUsers={handleExportUsers}
-              onAddUser={fetchUsers}
+              onAddUser={handleAddUser}
             />
           </div>
 
@@ -81,7 +90,18 @@ const UserManagement = () => {
             onSelectAll={handleSelectAll}
             onToggleStatus={handleToggleStatus}
             onDeleteUser={deleteUser}
+            // Add edit button action for each row in UserTable implementation (you may need to update UserTable if not already supports it)
+            onEditUser={user => setEditUser(user)}
           />
+          <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={fetchUsers} />
+          {editUser && (
+            <EditUserDialog
+              open={!!editUser}
+              onOpenChange={() => setEditUser(null)}
+              user={editUser}
+              onUpdated={fetchUsers}
+            />
+          )}
         </CardContent>
       </Card>
 
