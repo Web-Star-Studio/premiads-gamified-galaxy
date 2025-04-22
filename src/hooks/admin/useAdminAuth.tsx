@@ -1,6 +1,5 @@
 
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -8,7 +7,6 @@ import { useSounds } from "@/hooks/use-sounds";
 export const useAdminAuth = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();
 
@@ -21,7 +19,7 @@ export const useAdminAuth = () => {
       
       if (!session) {
         // No session means not authenticated
-        navigate('/auth', { replace: true });
+        setIsAdmin(false);
         return;
       }
       
@@ -46,7 +44,7 @@ export const useAdminAuth = () => {
           variant: "destructive"
         });
         await supabase.auth.signOut();
-        navigate('/auth', { replace: true });
+        setIsAdmin(false);
         return;
       }
       
@@ -54,28 +52,22 @@ export const useAdminAuth = () => {
       if (profileData?.user_type === 'admin' || profileData?.user_type === 'moderator') {
         setIsAdmin(true);
       } else {
-        // User is authenticated but not an admin or moderator, redirect to appropriate dashboard
+        // User is authenticated but not an admin or moderator
         playSound('error');
         toast({
           title: "Acesso negado",
           description: "Você não tem permissão para acessar o painel de administração.",
           variant: "destructive"
         });
-        
-        // Redirect based on user type
-        const redirectPath = profileData?.user_type === 'anunciante' 
-          ? '/anunciante' 
-          : '/cliente';
-        
-        navigate(redirectPath, { replace: true });
+        setIsAdmin(false);
       }
     } catch (error) {
       console.error("Error in admin authentication:", error);
-      navigate('/auth', { replace: true });
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
-  }, [navigate, toast, playSound]);
+  }, [toast, playSound]);
   
   useEffect(() => {
     checkAdminStatus();

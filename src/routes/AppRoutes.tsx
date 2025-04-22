@@ -1,9 +1,8 @@
+
 import { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 
 // Lazy load route components
 const PublicRoutes = lazy(() => import("./PublicRoutes"));
@@ -14,29 +13,38 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppRoutes = () => {
   const { isAuthenticated, currentUser } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    // Auto-redirect authenticated users at root or /auth
-    if (
-      isAuthenticated &&
-      currentUser &&
-      (location.pathname === "/" || location.pathname === "/auth")
-    ) {
-      const userType = currentUser?.user_metadata?.user_type;
-      if (userType === "participante") {
-        navigate("/cliente", { replace: true });
-      } else if (userType === "anunciante") {
-        navigate("/anunciante", { replace: true });
-      } else if (userType === "admin" || userType === "moderator") {
-        navigate("/admin", { replace: true });
-      }
-    }
-  }, [isAuthenticated, currentUser, location.pathname, navigate]);
+  
+  console.log("AppRoutes rendered, current path:", location.pathname);
+  
+  // Helper function to handle redirections for root and auth paths
+  const shouldRedirect = () => {
+    return isAuthenticated && 
+           currentUser && 
+           (location.pathname === "/" || location.pathname === "/auth");
+  };
+  
+  // Get appropriate dashboard path based on user type
+  const getDashboardPath = () => {
+    const userType = currentUser?.user_metadata?.user_type;
+    
+    if (userType === "participante") return "/cliente";
+    if (userType === "anunciante") return "/anunciante";
+    if (userType === "admin" || userType === "moderator") return "/admin";
+    
+    return "/auth"; // Default fallback
+  };
 
   return (
     <Routes>
+      {/* Redirect root path for authenticated users */}
+      {shouldRedirect() && (
+        <Route 
+          index 
+          element={<Navigate to={getDashboardPath()} replace />} 
+        />
+      )}
+      
       {/* Public routes with suspense loading */}
       <Route path="/*" element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -66,7 +74,7 @@ const AppRoutes = () => {
       } />
       
       {/* Redirect URLs with "/" at the end to versions without "/" */}
-      <Route path="/*/" element={<Navigate to={window.location.pathname.slice(0, -1)} replace />} />
+      <Route path="/*/" element={<Navigate to={location.pathname.slice(0, -1)} replace />} />
       
       {/* Global catch-all route */}
       <Route path="*" element={
