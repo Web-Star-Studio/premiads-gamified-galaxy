@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -358,7 +357,7 @@ const Authentication = () => {
                       type="password"
                       placeholder="Confirme a senha"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       className="bg-galaxy-dark"
                     />
                     {confirmPassword && password !== confirmPassword && (
