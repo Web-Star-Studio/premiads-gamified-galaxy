@@ -3,9 +3,13 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
-const ImportantConsiderations = () => {
+interface ImportantConsiderationsProps {
+  className?: string;
+}
+
+const ImportantConsiderations = ({ className }: ImportantConsiderationsProps) => {
   return (
-    <Card className="bg-galaxy-dark border-galaxy-purple/30">
+    <Card className={`bg-galaxy-dark border-galaxy-purple/30 ${className || ''}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center">
           <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
