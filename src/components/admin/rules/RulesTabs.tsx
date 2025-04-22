@@ -33,8 +33,7 @@ const RulesTabs = ({
             value={category.id}
             className="data-[state=active]:text-neon-cyan"
           >
-            {/* Render the icon as a component without passing className to it */}
-            <category.icon className="h-4 w-4 mr-2" />
+            {React.createElement(category.icon, { className: "h-4 w-4 mr-2" })}
             {category.label}
           </TabsTrigger>
         ))}
@@ -55,3 +54,4 @@ const RulesTabs = ({
 };
 
 export default RulesTabs;
+
