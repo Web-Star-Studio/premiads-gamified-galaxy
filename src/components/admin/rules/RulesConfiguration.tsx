@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { ruleCategories } from "./rulesData";
 import RulesTabs from "./RulesTabs";
-import { Rules, RulesByCategory } from "./types";
+import { Rule, RulesByCategory } from "./types";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRules, updateRule } from "@/lib/api/rules";
@@ -25,7 +26,7 @@ const RulesConfiguration = () => {
     queryFn: getRules,
   });
 
-  const { mutate: saveRuleMutation, isLoading: isSaving } = useMutation({
+  const mutation = useMutation({
     mutationFn: updateRule,
     onSuccess: () => {
       toast({
@@ -47,11 +48,11 @@ const RulesConfiguration = () => {
     setIsFiltered(!isFiltered);
   };
 
-  const handleEditRule = useCallback((ruleId: string) => {
+  const handleEditRule = useCallback((category: string, ruleId: string) => {
     setEditingRule(ruleId);
   }, []);
 
-  const handleToggleRule = useCallback((ruleId: string) => {
+  const handleToggleRule = useCallback((category: string, ruleId: string) => {
     if (!rules) return;
 
     const ruleToUpdate = Object.values(rules)
@@ -63,10 +64,10 @@ const RulesConfiguration = () => {
       return;
     }
 
-    saveRuleMutation({ ...ruleToUpdate, active: !ruleToUpdate.active });
-  }, [rules, saveRuleMutation]);
+    mutation.mutate({ ...ruleToUpdate, enabled: !ruleToUpdate.enabled });
+  }, [rules, mutation]);
 
-  const handleSaveRule = useCallback((ruleId: string, value: any) => {
+  const handleSaveRule = useCallback((category: string, ruleId: string, value: any) => {
     if (!rules) return;
 
     const ruleToUpdate = Object.values(rules)
@@ -78,8 +79,8 @@ const RulesConfiguration = () => {
       return;
     }
 
-    saveRuleMutation({ ...ruleToUpdate, value });
-  }, [rules, saveRuleMutation]);
+    mutation.mutate({ ...ruleToUpdate, value });
+  }, [rules, mutation]);
 
   useEffect(() => {
     if (rules && Object.keys(rules).length > 0 && !category) {
@@ -106,7 +107,7 @@ const RulesConfiguration = () => {
 
   const filteredRules: RulesByCategory = Object.entries(rulesByCategory).reduce((acc: RulesByCategory, [category, rules]) => {
     const filtered = rules.filter(rule =>
-      rule.label.toLowerCase().includes(search.toLowerCase()) ||
+      rule.name.toLowerCase().includes(search.toLowerCase()) ||
       rule.description.toLowerCase().includes(search.toLowerCase())
     );
     if (filtered.length > 0) {
@@ -143,7 +144,6 @@ const RulesConfiguration = () => {
         </CardContent>
       </Card>
       <div className="mt-4">
-        {/* Ajuste: Removido prop className inválido na chamada <RulesTabs /> */}
         <RulesTabs
           rules={isFiltered ? filteredRules : rulesByCategory}
           currentCategory={category}
