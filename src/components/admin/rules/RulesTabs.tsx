@@ -54,4 +54,3 @@ const RulesTabs = ({
 };
 
 export default RulesTabs;
-

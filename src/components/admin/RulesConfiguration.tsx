@@ -7,8 +7,8 @@ import { Save, FileText, RefreshCw } from 'lucide-react';
 import { useSounds } from '@/hooks/use-sounds';
 import { toast } from "@/hooks/use-toast";
 import LoadingParticles from './LoadingParticles';
-import { initialRules } from "../rules/rulesData";
-import RulesTabs from "../rules/RulesTabs";
+import { initialRules } from "./rules/rulesData";
+import RulesTabs from "./rules/RulesTabs";
 
 const RulesConfiguration: React.FC = () => {
   const [rules, setRules] = useState(initialRules);
@@ -158,4 +158,3 @@ const RulesConfiguration: React.FC = () => {
 };
 
 export default RulesConfiguration;
-
