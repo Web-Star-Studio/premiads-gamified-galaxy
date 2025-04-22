@@ -7,7 +7,7 @@ interface ImportantConsiderationsProps {
   className?: string;
 }
 
-const ImportantConsiderations = ({ className }: ImportantConsiderationsProps) => {
+const ImportantConsiderations: React.FC<ImportantConsiderationsProps> = ({ className }) => {
   return (
     <Card className={`bg-galaxy-dark border-galaxy-purple/30 ${className || ''}`}>
       <CardHeader className="pb-2">
