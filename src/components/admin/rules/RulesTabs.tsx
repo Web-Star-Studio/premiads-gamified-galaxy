@@ -27,18 +27,23 @@ const RulesTabs = ({
   return (
     <Tabs defaultValue={currentCategory} onValueChange={setCurrentCategory}>
       <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
-        {ruleCategories.map(category => (
-          <TabsTrigger
-            key={category.id}
-            value={category.id}
-            className="data-[state=active]:text-neon-cyan"
-          >
-            <span className="flex items-center">
-              {React.createElement(category.icon, { className: "mr-2 h-4 w-4" })}
-              {category.label}
-            </span>
-          </TabsTrigger>
-        ))}
+        {ruleCategories.map(category => {
+          const Icon = category.icon;
+          return (
+            <TabsTrigger
+              key={category.id}
+              value={category.id}
+              className="data-[state=active]:text-neon-cyan"
+            >
+              <span className="flex items-center">
+                {/* Only pass className if Icon is a valid React component accepting it */}
+                {/* For Lucide icons, this is valid */}
+                <Icon className="mr-2 h-4 w-4" />
+                {category.label}
+              </span>
+            </TabsTrigger>
+          );
+        })}
       </TabsList>
       {Object.keys(rules).map(category => (
         <TabsContent key={category} value={category}>
