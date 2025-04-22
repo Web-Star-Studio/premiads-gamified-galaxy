@@ -2,9 +2,11 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserType } from "@/types/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useNavigation = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   
   const changeUserType = useCallback((type: UserType) => {
     localStorage.setItem("userType", type);
@@ -12,6 +14,11 @@ export const useNavigation = () => {
   }, []);
   
   const navigateToDashboard = useCallback(() => {
+    // If not authenticated, send to login/register
+    if (!isAuthenticated) {
+      navigate("/auth");
+      return;
+    }
     const userType = localStorage.getItem("userType") as UserType || "participante";
     
     if (userType === "anunciante") {
@@ -21,7 +28,7 @@ export const useNavigation = () => {
     } else {
       navigate("/cliente");
     }
-  }, [navigate]);
+  }, [navigate, isAuthenticated]);
   
   const scrollToSection = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
