@@ -62,6 +62,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="relatorios" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -69,6 +70,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="monitoramento" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -76,6 +78,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="notificacoes" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -83,6 +86,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="regras" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -90,6 +94,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="acessos" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -97,6 +102,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="configuracoes" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
@@ -104,6 +110,7 @@ const AdminRoutes = () => {
           </Suspense>
         </RoleGuard>
       } />
+      
       <Route path="documentacao" element={
         <RoleGuard allowedRoles={["admin", "moderator"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
