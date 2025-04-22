@@ -36,9 +36,9 @@ const RulesTabs = ({
               className="data-[state=active]:text-neon-cyan"
             >
               <span className="flex items-center">
-                {/* Only pass className if Icon is a valid React component accepting it */}
-                {/* For Lucide icons, this is valid */}
-                <Icon className="mr-2 h-4 w-4" />
+                {typeof Icon === "function"
+                  ? <Icon className="mr-2 h-4 w-4" />
+                  : null}
                 {category.label}
               </span>
             </TabsTrigger>
@@ -61,3 +61,4 @@ const RulesTabs = ({
 };
 
 export default RulesTabs;
+
