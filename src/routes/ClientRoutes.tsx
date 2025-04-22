@@ -22,77 +22,77 @@ const ClientRoutes = () => {
   return (
     <Routes>
       <Route index element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientDashboard />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="missoes" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientMissions />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="perfil" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientProfile />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="sorteios" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientRaffles />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="indicacoes" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientReferrals />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="cashback" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <CashbackMarketplace />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="suporte" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Support />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="tour" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Tour />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="como-funciona" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <HowItWorks />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="faq" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Faq />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <RouteGuard userType="participante">
+        <RouteGuard allowedRoles={["participante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientNotifications />
           </Suspense>

@@ -104,7 +104,7 @@ describe("RouteGuard", () => {
           <Route 
             path="/cliente" 
             element={
-              <RouteGuard userType="participante">
+              <RouteGuard allowedRoles={["participante"]}>
                 <div data-testid="client-content">Client Content</div>
               </RouteGuard>
             } 

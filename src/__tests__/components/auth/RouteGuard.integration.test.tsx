@@ -1,3 +1,4 @@
+
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -56,7 +57,7 @@ describe("RouteGuard Integration", () => {
           <Route 
             path="/protected" 
             element={
-              <RouteGuard userType="anunciante">
+              <RouteGuard allowedRoles={["anunciante"]}>
                 <div>Protected Advertiser Content</div>
               </RouteGuard>
             } 
@@ -84,7 +85,7 @@ describe("RouteGuard Integration", () => {
           <Route 
             path="/admin" 
             element={
-              <RouteGuard userType="admin">
+              <RouteGuard allowedRoles={["admin"]}>
                 <div>Admin Content</div>
               </RouteGuard>
             } 

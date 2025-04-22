@@ -23,63 +23,63 @@ const AdvertiserRoutes = () => {
   return (
     <Routes>
       <Route index element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserDashboard />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="campanhas" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserCampaigns />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="nova-campanha" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserNewCampaign />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="analises" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserAnalytics />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="creditos" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserCredits />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserNotifications />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="perfil" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserProfilePage />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="configuracoes" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserSettings />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="moderacao" element={
-        <RouteGuard userType="anunciante">
+        <RouteGuard allowedRoles={["anunciante"]}>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ModerationPage />
           </Suspense>

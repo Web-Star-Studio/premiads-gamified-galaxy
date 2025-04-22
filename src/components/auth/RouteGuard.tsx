@@ -7,9 +7,10 @@ import { Navigate } from "react-router-dom";
 interface RouteGuardProps {
   children: ReactNode;
   allowedRoles?: UserType[];
+  userType?: UserType; // Add this prop to support the previous API
 }
 
-const RouteGuard = ({ children, allowedRoles }: RouteGuardProps) => {
+const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
   const { currentUser, isLoading } = useAuth();
   
   if (isLoading) {
@@ -17,19 +18,23 @@ const RouteGuard = ({ children, allowedRoles }: RouteGuardProps) => {
   }
   
   // Get user type from metadata
-  const userType = currentUser?.user_metadata?.user_type as UserType;
+  const userTypeFromMetadata = currentUser?.user_metadata?.user_type as UserType;
   
-  console.log("RouteGuard - Current user type:", userType);
-  console.log("RouteGuard - Allowed roles:", allowedRoles);
+  console.log("RouteGuard - Current user type:", userTypeFromMetadata);
+  
+  // Convert single userType prop to allowedRoles array for backward compatibility
+  const effectiveAllowedRoles = allowedRoles || (userType ? [userType] : undefined);
+  
+  console.log("RouteGuard - Allowed roles:", effectiveAllowedRoles);
   
   // If roles are specified, check if user has permission
-  if (allowedRoles && (!userType || !allowedRoles.includes(userType))) {
+  if (effectiveAllowedRoles && (!userTypeFromMetadata || !effectiveAllowedRoles.includes(userTypeFromMetadata))) {
     console.log("Access denied - Redirecting based on user type");
     
     // Redirect based on user type
-    if (userType === "anunciante") {
+    if (userTypeFromMetadata === "anunciante") {
       return <Navigate to="/anunciante" />;
-    } else if (userType === "admin" || userType === "moderator") {
+    } else if (userTypeFromMetadata === "admin" || userTypeFromMetadata === "moderator") {
       return <Navigate to="/admin" />;
     } else {
       return <Navigate to="/cliente" />;
