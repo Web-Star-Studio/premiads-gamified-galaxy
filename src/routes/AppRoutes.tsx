@@ -1,6 +1,9 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Lazy load route components
 const PublicRoutes = lazy(() => import("./PublicRoutes"));
@@ -10,6 +13,28 @@ const AdvertiserRoutes = lazy(() => import("./AdvertiserRoutes"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppRoutes = () => {
+  const { isAuthenticated, currentUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Auto-redirect authenticated users at root or /auth
+    if (
+      isAuthenticated &&
+      currentUser &&
+      (location.pathname === "/" || location.pathname === "/auth")
+    ) {
+      const userType = currentUser?.user_metadata?.user_type;
+      if (userType === "participante") {
+        navigate("/cliente", { replace: true });
+      } else if (userType === "anunciante") {
+        navigate("/anunciante", { replace: true });
+      } else if (userType === "admin" || userType === "moderator") {
+        navigate("/admin", { replace: true });
+      }
+    }
+  }, [isAuthenticated, currentUser, location.pathname, navigate]);
+
   return (
     <Routes>
       {/* Public routes with suspense loading */}

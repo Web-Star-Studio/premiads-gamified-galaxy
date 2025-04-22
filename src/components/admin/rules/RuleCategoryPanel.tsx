@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
@@ -11,7 +10,6 @@ interface RuleCategoryPanelProps {
   onEditRule: (ruleId: string) => void;
   onToggleRule: (ruleId: string) => void;
   onSaveRule: (ruleId: string, value: any) => void;
-  className?: string; // Added className prop
 }
 
 const RuleCategoryPanel = ({
@@ -19,11 +17,10 @@ const RuleCategoryPanel = ({
   editingRule,
   onEditRule,
   onToggleRule,
-  onSaveRule,
-  className, // Add to destructuring
+  onSaveRule
 }: RuleCategoryPanelProps) => {
   return (
-    <div className={`space-y-4 ${className || ''}`}>
+    <div className="space-y-4">
       <Card className="bg-galaxy-dark border-galaxy-purple/30">
         <CardContent className="p-0">
           <div className="divide-y divide-galaxy-purple/20">
