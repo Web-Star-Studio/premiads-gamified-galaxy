@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,11 +62,11 @@ export const useAuthSession = () => {
             .from("profiles")
             .select("full_name, user_type, profile_completed, active")
             .eq("id", validUser.id)
-            .single();
+            .maybeSingle(); // Use maybeSingle instead of single to handle case when profile doesn't exist
           
           if (error) {
             console.error("Error fetching profile:", error);
-            throw error;
+            // Don't throw the error, continue with user metadata
           }
           
           console.log("Profile data:", profileData);
@@ -101,12 +102,19 @@ export const useAuthSession = () => {
             }
           } else {
             console.warn("No profile found for user:", validUser.id);
+            // Fallback to user metadata for type
+            const userTypeFromMetadata = validUser.user_metadata?.user_type as UserType;
             setUserName(validUser.email?.split('@')[0] || 'Usuário');
-            setUserType("participante" as UserType);
+            setUserType(userTypeFromMetadata || "participante" as UserType);
+            console.log("Using user type from metadata:", userTypeFromMetadata);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
-          throw error;
+          // Fallback to user metadata
+          const userTypeFromMetadata = validUser.user_metadata?.user_type as UserType;
+          setUserName(validUser.email?.split('@')[0] || 'Usuário');
+          setUserType(userTypeFromMetadata || "participante" as UserType);
+          console.log("Using user type from metadata (after error):", userTypeFromMetadata);
         }
       } catch (error) {
         console.error("Error checking session:", error);
@@ -134,9 +142,16 @@ export const useAuthSession = () => {
               .from("profiles")
               .select("full_name, user_type, profile_completed, active")
               .eq("id", session.user.id)
-              .single();
+              .maybeSingle(); // Use maybeSingle instead of single
             
-            if (error) throw error;
+            if (error) {
+              console.error("Error fetching profile after sign in:", error);
+              // Fallback to user metadata
+              const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
+              setUserName(session.user.email?.split('@')[0] || 'Usuário');
+              setUserType(userTypeFromMetadata || "participante");
+              return;
+            }
             
             console.log("Profile data after sign in:", profileData);
             
@@ -168,14 +183,17 @@ export const useAuthSession = () => {
                 });
               }
             } else {
-              console.warn("No profile found after sign in for:", session.user.id);
+              console.log("No profile found, using metadata for user type");
+              const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
               setUserName(session.user.email?.split('@')[0] || 'Usuário');
-              setUserType("participante" as UserType);
+              setUserType(userTypeFromMetadata || "participante");
             }
           } catch (error) {
-            console.error("Error fetching profile after sign in:", error);
+            console.error("Error setting up user session:", error);
+            // Fallback to user metadata
+            const userTypeFromMetadata = session.user.user_metadata?.user_type as UserType;
             setUserName(session.user.email?.split('@')[0] || 'Usuário');
-            setUserType("participante" as UserType);
+            setUserType(userTypeFromMetadata || "participante");
           }
         }, 0);
       } else if (event === "SIGNED_OUT") {

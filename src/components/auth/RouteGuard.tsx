@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { UserType } from "@/types/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -11,13 +12,18 @@ interface RouteGuardProps {
 }
 
 const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
-  const { currentUser, isLoading } = useAuth();
+  const { currentUser, isLoading, isAuthenticated } = useAuth();
   
   if (isLoading) {
-    return null;
+    return <LoadingSpinner />;
   }
   
-  // Get user type from metadata
+  if (!isAuthenticated || !currentUser) {
+    console.log("User not authenticated - Redirecting to auth");
+    return <Navigate to="/auth" />;
+  }
+  
+  // Get user type from metadata or user_metadata
   const userTypeFromMetadata = currentUser?.user_metadata?.user_type as UserType;
   
   console.log("RouteGuard - Current user type:", userTypeFromMetadata);
