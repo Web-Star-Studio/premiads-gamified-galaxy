@@ -15,9 +15,10 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
+// Add new lazy imports
 const Tour = lazy(() => import("@/pages/Tour"));
+const Team = lazy(() => import("@/pages/Team")); 
 const Careers = lazy(() => import("@/pages/Careers"));
-const Team = lazy(() => import("@/pages/Team"));
 
 const PublicRoutes = () => {
   return (
@@ -76,6 +77,7 @@ const PublicRoutes = () => {
       {/* Redirect /documentacao to /admin/documentacao */}
       <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
 
+      
       <Route path="tour" element={
         <Suspense fallback={<LoadingSpinner />}>
           <Tour />
