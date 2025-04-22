@@ -1,3 +1,4 @@
+
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -17,9 +18,6 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
-
-// Custom loading component for routes
-const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdminRoutes = () => {
   const location = useLocation();
