@@ -4,15 +4,35 @@ import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Footer = () => {
   const { userType } = useUser();
+  const navigate = useNavigate();
   
   const openWhatsApp = () => {
     const phoneNumber = "5581985595912";
     const message = encodeURIComponent("Olá, gostaria de saber mais sobre o PremiAds!");
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
+  };
+  
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.querySelector('input[type="email"]').value;
+    
+    if (email) {
+      toast.success("Inscrição realizada com sucesso!");
+      form.reset();
+    } else {
+      toast.error("Por favor, insira um email válido");
+    }
+  };
+  
+  const handleNavigation = (route) => {
+    navigate(route);
+    window.scrollTo(0, 0);
   };
   
   const footerLinks = [
@@ -22,23 +42,23 @@ const Footer = () => {
         { name: "Sobre Nós", href: "/sobre", isRouterLink: true },
         { name: "Nosso Time", href: "/nosso-time", isRouterLink: true },
         { name: "Carreiras", href: "/carreiras", isRouterLink: true },
-        { name: "Contato", href: "#" }
+        { name: "Contato", href: "#", action: openWhatsApp }
       ]
     },
     {
       title: userType === "participante" ? "Para Participantes" : "Para Anunciantes",
       links: userType === "participante" 
         ? [
-            { name: "Como Participar", href: "#" },
-            { name: "Catálogo de Prêmios", href: "#" },
-            { name: "Missões Disponíveis", href: "#" },
-            { name: "Programa de Indicação", href: "#" }
+            { name: "Como Participar", href: "/como-funciona", isRouterLink: true },
+            { name: "Catálogo de Prêmios", href: "/cliente/cashback", isRouterLink: true },
+            { name: "Missões Disponíveis", href: "/cliente/missoes", isRouterLink: true },
+            { name: "Programa de Indicação", href: "/cliente/indicacoes", isRouterLink: true }
           ]
         : [
-            { name: "Soluções", href: "#" },
-            { name: "Estudos de Caso", href: "#" },
-            { name: "Preços", href: "#" },
-            { name: "API & Integrações", href: "#" }
+            { name: "Soluções", href: "/como-funciona", isRouterLink: true },
+            { name: "Estudos de Caso", href: "/blog", isRouterLink: true },
+            { name: "Preços", href: "/tour", isRouterLink: true },
+            { name: "API & Integrações", href: "/admin/documentacao", isRouterLink: true }
           ]
     },
     {
@@ -53,10 +73,10 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: <Facebook size={18} />, href: "#" },
-    { icon: <Twitter size={18} />, href: "#" },
-    { icon: <Instagram size={18} />, href: "#" },
-    { icon: <Linkedin size={18} />, href: "#" }
+    { icon: <Facebook size={18} />, href: "https://facebook.com", newTab: true },
+    { icon: <Twitter size={18} />, href: "https://twitter.com", newTab: true },
+    { icon: <Instagram size={18} />, href: "https://instagram.com", newTab: true },
+    { icon: <Linkedin size={18} />, href: "https://linkedin.com", newTab: true }
   ];
 
   return (
@@ -80,6 +100,8 @@ const Footer = () => {
                 <a
                   key={index}
                   href={link.href}
+                  target={link.newTab ? "_blank" : undefined}
+                  rel={link.newTab ? "noopener noreferrer" : undefined}
                   className="w-10 h-10 rounded-full bg-galaxy-deepPurple/50 flex items-center justify-center text-gray-300 hover:text-neon-cyan hover:bg-galaxy-deepPurple/80 transition-colors"
                 >
                   {link.icon}
@@ -98,13 +120,14 @@ const Footer = () => {
                       <Link
                         to={link.href}
                         className="text-gray-400 hover:text-neon-cyan transition-colors"
+                        onClick={() => window.scrollTo(0, 0)}
                       >
                         {link.name}
                       </Link>
                     ) : (
                       <a
-                        href={link.href === "#" && link.name === "Contato" ? "#" : link.href}
-                        onClick={link.name === "Contato" ? openWhatsApp : undefined}
+                        href={link.href}
+                        onClick={link.action}
                         className="text-gray-400 hover:text-neon-cyan transition-colors cursor-pointer"
                       >
                         {link.name}
@@ -122,16 +145,16 @@ const Footer = () => {
               Receba novidades sobre missões e promoções exclusivas.
             </p>
             
-            <div className="flex space-x-2">
+            <form onSubmit={handleSubscribe} className="flex space-x-2">
               <Input
                 type="email"
                 placeholder="Seu email"
                 className="bg-galaxy-deepPurple/50 border-gray-700"
               />
-              <Button size="icon" className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80">
+              <Button type="submit" size="icon" className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80">
                 <Send size={18} />
               </Button>
-            </div>
+            </form>
           </div>
         </div>
         
@@ -151,9 +174,9 @@ const Footer = () => {
           </div>
           
           <div className="flex space-x-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-neon-cyan transition-colors">Termos de Uso</a>
-            <a href="#" className="hover:text-neon-cyan transition-colors">Política de Privacidade</a>
-            <a href="#" className="hover:text-neon-cyan transition-colors">Cookies</a>
+            <Link to="/termos-de-uso" className="hover:text-neon-cyan transition-colors">Termos de Uso</Link>
+            <Link to="/politica-de-privacidade" className="hover:text-neon-cyan transition-colors">Política de Privacidade</Link>
+            <Link to="/cookies" className="hover:text-neon-cyan transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

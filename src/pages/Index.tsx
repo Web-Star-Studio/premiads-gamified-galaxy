@@ -11,6 +11,7 @@ import Faq from "@/components/Faq";
 import CallToAction from "@/components/CallToAction";
 import Footer from "@/components/Footer";
 import SupportTools from "@/components/client/SupportTools";
+import CookieConsent from "@/components/CookieConsent";
 
 const MainContent = () => {
   const { isOverlayOpen } = useUser();
@@ -42,6 +43,7 @@ const MainContent = () => {
       </main>
       <Footer />
       <SupportTools />
+      <CookieConsent />
     </div>
   );
 };

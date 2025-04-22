@@ -1,116 +1,79 @@
 
-import { HelpCircle } from "lucide-react";
 import { useState } from "react";
+import { HelpCircle, X, MessageSquare, BookOpen, LifeBuoy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { useSounds } from "@/hooks/use-sounds";
 import { useNavigate } from "react-router-dom";
 
 const HelpButton = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { playSound } = useSounds();
   const navigate = useNavigate();
-
-  const toggleHelpMenu = () => {
+  
+  const toggleOpen = () => {
     setIsOpen(!isOpen);
-    playSound("pop");
   };
-
-  const handleOptionClick = (option: string) => {
+  
+  const navigateTo = (path: string) => {
+    navigate(path);
     setIsOpen(false);
-    playSound("chime");
-    
-    switch (option) {
-      case "faq":
-        navigate("/faq");
-        break;
-      case "support":
-        navigate("/suporte");
-        break;
-      case "tour":
-        navigate("/tour");
-        break;
-      case "how-it-works":
-        navigate("/como-funciona");
-        break;
-      case "feedback":
-        navigate("/feedback");
-        break;
-      default:
-        break;
-    }
+  };
+  
+  const openLiveChat = () => {
+    // Aqui poderia implementar uma lógica para abrir um chat ao vivo
+    console.log("Abrir chat ao vivo");
+    setIsOpen(false);
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <Button
-        variant="outline"
-        size="icon"
-        className="w-12 h-12 rounded-full bg-galaxy-purple text-white border-neon-cyan shadow-glow"
-        onClick={toggleHelpMenu}
-      >
-        <HelpCircle className="h-6 w-6" />
-      </Button>
-
+    <div className="fixed bottom-6 right-6 z-40">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="absolute bottom-16 right-0 glass-panel p-4 rounded-lg w-64 shadow-glow"
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="absolute bottom-16 right-0 bg-galaxy-deepPurple border border-galaxy-purple/40 rounded-lg shadow-xl p-4 w-64"
           >
-            <h3 className="text-lg font-heading mb-3">Ajuda</h3>
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => handleOptionClick("faq")}
-                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-neon-cyan rounded-full mr-2"></span>
-                  Perguntas frequentes
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleOptionClick("support")}
-                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-neon-pink rounded-full mr-2"></span>
-                  Falar com suporte
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleOptionClick("tour")}
-                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-neon-lime rounded-full mr-2"></span>
-                  Tour guiado
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleOptionClick("how-it-works")}
-                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-neon-cyan rounded-full mr-2"></span>
-                  Como funciona
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleOptionClick("feedback")}
-                  className="w-full text-left text-sm text-gray-300 hover:text-white flex items-center p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-neon-pink rounded-full mr-2"></span>
-                  Enviar feedback
-                </button>
-              </li>
-            </ul>
+            <div className="space-y-2">
+              <button 
+                onClick={() => navigateTo("/faq")}
+                className="flex items-center w-full p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors text-left"
+              >
+                <BookOpen size={18} className="mr-2 text-neon-cyan" />
+                <span>FAQs e Ajuda</span>
+              </button>
+              
+              <button 
+                onClick={() => navigateTo("/tutoriais")}
+                className="flex items-center w-full p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors text-left"
+              >
+                <LifeBuoy size={18} className="mr-2 text-neon-cyan" />
+                <span>Tutoriais</span>
+              </button>
+              
+              <button 
+                onClick={() => navigateTo("/suporte")}
+                className="flex items-center w-full p-2 rounded-md hover:bg-galaxy-purple/20 transition-colors text-left"
+              >
+                <MessageSquare size={18} className="mr-2 text-neon-cyan" />
+                <span>Contato</span>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+      
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={toggleOpen}
+        className="w-12 h-12 rounded-full bg-neon-cyan flex items-center justify-center shadow-lg shadow-neon-cyan/20"
+      >
+        {isOpen ? (
+          <X size={24} className="text-galaxy-dark" />
+        ) : (
+          <HelpCircle size={24} className="text-galaxy-dark" />
+        )}
+      </motion.button>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -19,6 +20,9 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const Tour = lazy(() => import("@/pages/Tour"));
 const Team = lazy(() => import("@/pages/Team")); 
 const Careers = lazy(() => import("@/pages/Careers"));
+const TermsOfUse = lazy(() => import("@/pages/legal/TermsOfUse"));
+const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
+const CookiesPolicy = lazy(() => import("@/pages/legal/CookiesPolicy"));
 
 const PublicRoutes = () => {
   return (
@@ -93,6 +97,25 @@ const PublicRoutes = () => {
       <Route path="carreiras" element={
         <Suspense fallback={<LoadingSpinner />}>
           <Careers />
+        </Suspense>
+      } />
+      
+      {/* Política e termos legais */}
+      <Route path="termos-de-uso" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <TermsOfUse />
+        </Suspense>
+      } />
+      
+      <Route path="politica-de-privacidade" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <PrivacyPolicy />
+        </Suspense>
+      } />
+      
+      <Route path="cookies" element={
+        <Suspense fallback={<LoadingSpinner />}>
+          <CookiesPolicy />
         </Suspense>
       } />
       
