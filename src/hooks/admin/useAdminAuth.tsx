@@ -28,13 +28,26 @@ export const useAdminAuth = () => {
       // Check if user is admin by querying profiles table
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('user_type')
+        .select('user_type, active')
         .eq('id', session.user.id)
         .single();
       
       if (error) {
         console.error("Error fetching user profile:", error);
         throw error;
+      }
+      
+      // Check if the account is active
+      if (profileData && !profileData.active) {
+        playSound('error');
+        toast({
+          title: "Conta desativada",
+          description: "Sua conta está desativada. Entre em contato com o suporte.",
+          variant: "destructive"
+        });
+        await supabase.auth.signOut();
+        navigate('/auth', { replace: true });
+        return;
       }
       
       // Verify if user has admin privileges (admin or moderator)

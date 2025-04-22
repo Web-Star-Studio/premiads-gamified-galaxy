@@ -2,7 +2,7 @@
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/context/UserContext";
-import { UserType } from "@/types/auth";
+import { UserType, UserProfile } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export const useProfileSync = (user: User | null) => {

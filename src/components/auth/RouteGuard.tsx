@@ -15,7 +15,7 @@ const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
   const { currentUser, isLoading, isAuthenticated } = useAuth();
   
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner data-testid="route-loading-spinner" />;
   }
   
   if (!isAuthenticated || !currentUser) {
