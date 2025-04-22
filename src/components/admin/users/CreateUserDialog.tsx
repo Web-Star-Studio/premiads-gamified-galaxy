@@ -5,22 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminCreateUser } from "@/hooks/admin/useAdminCreateUser";
 import UserRoleSelector from "./UserRoleSelector";
+import { UserType } from "@/types/auth";
 
 interface CreateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }
-const initialForm = {
+
+type FormState = {
+  email: string;
+  name: string;
+  password: string;
+  user_type: UserType;
+  active: boolean;
+};
+
+const initialForm: FormState = {
   email: "",
   name: "",
   password: "",
   user_type: "participante",
   active: true
-} as const;
+};
 
 export default function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDialogProps) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     ...initialForm
   });
   const [loading, setLoading] = useState(false);
@@ -35,7 +45,7 @@ export default function CreateUserDialog({ open, onOpenChange, onCreated }: Crea
 
   const submit = async () => {
     setLoading(true);
-    const result = await createUser(form as any);
+    const result = await createUser(form);
     setLoading(false);
     if (result.success) {
       setForm({ ...initialForm });
@@ -57,29 +67,32 @@ export default function CreateUserDialog({ open, onOpenChange, onCreated }: Crea
           <Input
             placeholder="Nome completo"
             value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
             required
           />
           <Input
             placeholder="E-mail"
             type="email"
             value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
             required
           />
           <Input
             placeholder="Senha"
             type="text"
             value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+            onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
             required
           />
-          <UserRoleSelector currentRole={form.user_type} onRoleChange={role => setForm(f => ({ ...f, user_type: role }))} />
+          <UserRoleSelector 
+            currentRole={form.user_type} 
+            onRoleChange={(role) => setForm(prev => ({ ...prev, user_type: role as UserType }))} 
+          />
           <label className="flex items-center gap-2 mt-2">
             <input
               type="checkbox"
               checked={form.active}
-              onChange={e => setForm(f => ({ ...f, active: e.target.checked }))}
+              onChange={e => setForm(prev => ({ ...prev, active: e.target.checked }))}
             />
             Ativo
           </label>
@@ -91,7 +104,6 @@ export default function CreateUserDialog({ open, onOpenChange, onCreated }: Crea
               type="submit"
               disabled={!canSubmit}
               className="bg-neon-pink text-white"
-              loading={loading}
             >
               {loading ? "Criando..." : "Criar Usuário"}
             </Button>

@@ -1,6 +1,14 @@
 
 import { RulesByCategory } from "@/components/admin/rules/types";
 import { apiService } from "@/services/api";
+import { ruleCategories } from "@/components/admin/rules/rulesData";
+
+// Create an initial structure based on rule categories
+const createInitialRuleStructure = () => {
+  return Object.fromEntries(
+    ruleCategories.map(category => [category.id, []])
+  );
+};
 
 // Get all rules 
 export const getRules = async (): Promise<RulesByCategory> => {
@@ -18,9 +26,8 @@ export const getRules = async (): Promise<RulesByCategory> => {
       return JSON.parse(storedRules) as RulesByCategory;
     }
     
-    // Import from rulesData if nothing in localStorage
-    const { initialRules } = await import("@/components/admin/rules/rulesData");
-    return initialRules;
+    // Create an empty structure if nothing in localStorage
+    return createInitialRuleStructure();
   } catch (error) {
     console.error("Error fetching rules:", error);
     throw error;
@@ -43,8 +50,7 @@ export const updateRule = async (rule: any): Promise<any> => {
     if (storedRules) {
       rules = JSON.parse(storedRules) as RulesByCategory;
     } else {
-      const { initialRules } = await import("@/components/admin/rules/rulesData");
-      rules = initialRules;
+      rules = createInitialRuleStructure();
     }
     
     // Find and update the rule

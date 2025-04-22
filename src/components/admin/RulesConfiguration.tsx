@@ -7,8 +7,16 @@ import { Save, FileText, RefreshCw } from 'lucide-react';
 import { useSounds } from '@/hooks/use-sounds';
 import { toast } from "@/hooks/use-toast";
 import LoadingParticles from './LoadingParticles';
-import { initialRules } from "./rules/rulesData";
+import { ruleCategories } from "./rules/rulesData";
 import RulesTabs from "./rules/RulesTabs";
+
+// Define a base structure for initialRules based on the categories
+const initialRules = Object.fromEntries(
+  ruleCategories.map(category => [
+    category.id, 
+    [] // Empty array for each category, will be populated with actual data
+  ])
+);
 
 const RulesConfiguration: React.FC = () => {
   const [rules, setRules] = useState(initialRules);

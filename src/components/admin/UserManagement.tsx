@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,8 +58,11 @@ const UserManagement = () => {
 
   // Add 'onAddUser' handler
   const handleAddUser = () => setCreateOpen(true);
+  
+  const handleEditUser = (user: typeof users[0]) => {
+    setEditUser(user);
+  };
 
-  // Update BulkActions call to use handler
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -90,8 +94,7 @@ const UserManagement = () => {
             onSelectAll={handleSelectAll}
             onToggleStatus={handleToggleStatus}
             onDeleteUser={deleteUser}
-            // Add edit button action for each row in UserTable implementation (you may need to update UserTable if not already supports it)
-            onEditUser={user => setEditUser(user)}
+            onEditUser={handleEditUser}
           />
           <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={fetchUsers} />
           {editUser && (
