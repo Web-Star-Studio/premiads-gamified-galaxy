@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Campaign } from "@/components/advertiser/campaignData";
 import { FormData, initialFormData, MissionType } from "@/components/advertiser/campaign-form/types";
 import { useToast } from "@/hooks/use-toast";
+import { useCampaignOperations } from "@/hooks/advertiser/useCampaignOperations";
 
 interface UseCampaignFormProps {
   /** Campaign data for editing mode */
@@ -39,6 +40,7 @@ export function useCampaignForm({ editCampaign, onClose }: UseCampaignFormProps)
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { toast } = useToast();
+  const { createCampaign, updateCampaign } = useCampaignOperations();
   
   // Initialize form with campaign data if in edit mode
   useEffect(() => {
@@ -104,30 +106,28 @@ export function useCampaignForm({ editCampaign, onClose }: UseCampaignFormProps)
   /**
    * Submit form data and close form
    */
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     try {
-      // Here we would send the data to an API or process it
-      console.log("Submitting form data:", formData);
+      let success;
       
-      // Show success message
-      toast({
-        title: editCampaign ? "Missão atualizada" : "Missão criada",
-        description: editCampaign 
-          ? "A missão foi atualizada com sucesso."
-          : "A nova missão foi criada com sucesso.",
-      });
+      if (editCampaign) {
+        success = await updateCampaign(editCampaign.id.toString(), formData);
+      } else {
+        success = await createCampaign(formData);
+      }
       
-      // Close the form
-      onClose();
-    } catch (error) {
+      if (success) {
+        onClose();
+      }
+    } catch (error: any) {
       console.error("Error submitting form:", error);
       toast({
         title: "Erro ao salvar missão",
-        description: "Ocorreu um erro ao salvar os dados da missão.",
+        description: error.message || "Ocorreu um erro ao salvar os dados da missão.",
         variant: "destructive",
       });
     }
-  }, [formData, editCampaign, onClose, toast]);
+  }, [formData, editCampaign, onClose, toast, createCampaign, updateCampaign]);
 
   /**
    * Get the title for the current step

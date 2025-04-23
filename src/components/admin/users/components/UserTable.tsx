@@ -12,7 +12,7 @@ interface UserTableProps {
   onSelectAll: (selected: boolean) => void;
   onToggleStatus: (userId: string, currentStatus: string) => void;
   onDeleteUser: (userId: string) => Promise<boolean>;
-  onEditUser: (user: User) => void;
+  onEditUser?: (user: User) => void;
 }
 
 const UserTable = ({
@@ -90,7 +90,7 @@ const UserTable = ({
               <td className="whitespace-nowrap px-3 py-4 text-sm flex items-center space-x-2">
                 <button
                   className="p-1 text-neon-cyan hover:text-neon-pink"
-                  onClick={() => onEditUser(user)}
+                  onClick={() => onEditUser && onEditUser(user)}
                   title="Editar"
                   type="button"
                 >
