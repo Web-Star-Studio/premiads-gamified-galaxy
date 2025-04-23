@@ -57,6 +57,8 @@ export interface FormData {
   streakBonus: boolean;
   /** List of campaign requirements */
   requirements: string[];
+  /** Minimum purchase amount (for coupon campaigns) */
+  minPurchase?: number;
 }
 
 /**
@@ -75,6 +77,7 @@ export const initialFormData: FormData = {
   endDate: "",
   streakBonus: false,
   requirements: [],
+  minPurchase: 0,
 };
 
 /**
