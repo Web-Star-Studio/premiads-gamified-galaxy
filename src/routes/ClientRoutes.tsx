@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -21,78 +20,81 @@ const ClientNotifications = lazy(() => import("@/pages/client/ClientNotification
 const ClientRoutes = () => {
   return (
     <Routes>
+      {/* Remover a restrição de roles e usar RouteGuard padrão */}
       <Route index element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientDashboard />
           </Suspense>
         </RouteGuard>
       } />
+      {/* Mesma lógica para todas as outras rotas */}
       <Route path="missoes" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientMissions />
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="perfil" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientProfile />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="sorteios" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientRaffles />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="indicacoes" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientReferrals />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="cashback" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <CashbackMarketplace />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="suporte" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Support />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="tour" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Tour />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="como-funciona" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <HowItWorks />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="faq" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <Faq />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="notificacoes" element={
-        <RouteGuard allowedRoles={["participante"]}>
+        <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ClientNotifications />
           </Suspense>

@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect } from "react";
 import { UserType } from "@/types/auth";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,22 +21,10 @@ const RouteGuard = ({ children, allowedRoles, userType }: RouteGuardProps) => {
   }
 
   if (!isAuthenticated || !currentUser) {
-    return null;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  const userTypeFromMetadata = currentUser?.user_metadata?.user_type as UserType;
-  const effectiveAllowedRoles = allowedRoles || (userType ? [userType] : undefined);
-
-  if (effectiveAllowedRoles && (!userTypeFromMetadata || !effectiveAllowedRoles.includes(userTypeFromMetadata))) {
-    if (userTypeFromMetadata === "anunciante") {
-      return <Navigate to="/anunciante" replace />;
-    } else if (userTypeFromMetadata === "admin" || userTypeFromMetadata === "moderator") {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/cliente" replace />;
-    }
-  }
-
+  // Temporariamente, liberar acesso para todos os usuários autenticados
   return <>{children}</>;
 };
 
