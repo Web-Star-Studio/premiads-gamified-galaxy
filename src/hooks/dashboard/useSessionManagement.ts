@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export const useSessionManagement = (navigate?: NavigateFunction) => {
