@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavigateFunction } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -20,50 +19,38 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
   const [profileData, setProfileData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if onboarding has been completed
+    // Check if onboarding has been completed immediately
     const onboardingComplete = localStorage.getItem("onboardingComplete");
     if (!onboardingComplete) {
-      // Only show after loading finishes
-      setTimeout(() => {
-        setShowOnboarding(true);
-      }, 2000);
+      setShowOnboarding(true);
     }
 
-    // Fetch user data from Supabase
+    // Fetch user data from Supabase without artificial delays
     const fetchUserData = async () => {
       try {
-        // Check if user is authenticated
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          console.log("Session error or no session - using empty data");
-          // Use empty data for demo mode
           setPoints(0);
           setCredits(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
-          playSound("chime");
           return;
         }
         
         const userId = session.user.id;
         
         if (!userId) {
-          console.log("No authenticated user found - using empty data");
-          // Use empty data for non-authenticated users
           setPoints(0);
           setCredits(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
-          playSound("chime");
           return;
         }
         
-        console.log("Fetching user data for:", userId);
-        
-        // Get user profile with points
+        // Get user profile with points - removed timeout
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
@@ -72,42 +59,31 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         
         if (profileError) {
           console.error("Profile error:", profileError);
-          // Still use empty data instead of throwing error
           setPoints(0);
           setCredits(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
-          playSound("chime");
           return;
         }
         
         if (profileData) {
           setProfileData(profileData);
           setPoints(profileData.points || 0);
-          // If credits exist in the database, use them, otherwise use points (1:1 conversion)
           setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
           setIsProfileCompleted(profileData.profile_completed || false);
           
-          // Update username if available in the profile
           if (profileData.full_name && !userName) {
             setUserName(profileData.full_name);
           }
-          
-          console.log("User points:", profileData.points);
-          console.log("User credits:", profileData.credits);
-          console.log("Profile completed:", profileData.profile_completed);
         }
         
-        // For streak, we would ideally have a user_activity table
-        // For now, let's set a default value of 0
         setStreak(0);
         
-        // Update last activity
+        // Update last activity without delay
         localStorage.setItem("lastActivity", Date.now().toString());
       } catch (error: any) {
         console.error("Error fetching user data:", error);
-        // For testing, don't redirect on error and still show empty data
         setPoints(0);
         setCredits(0);
         setStreak(0);
@@ -116,7 +92,6 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
         setLoading(false);
         playSound("chime");
         
-        // Check if user has been inactive
         const lastActivity = localStorage.getItem("lastActivity");
         if (lastActivity && Date.now() - parseInt(lastActivity) > 86400000) {
           toast({
@@ -127,10 +102,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
       }
     };
 
-    // Simulate loading
-    setTimeout(() => {
-      fetchUserData();
-    }, 1500);
+    fetchUserData();
   }, [userType, navigate, toast, playSound, userName, setUserName]);
 
   const handleExtendSession = () => {

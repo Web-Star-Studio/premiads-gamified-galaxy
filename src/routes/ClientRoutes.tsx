@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
-import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import NotFound from "@/pages/NotFound";
 import RouteGuard from "@/components/auth/RouteGuard";
 
@@ -20,18 +20,17 @@ const ClientNotifications = lazy(() => import("@/pages/client/ClientNotification
 const ClientRoutes = () => {
   return (
     <Routes>
-      {/* Remover a restrição de roles e usar RouteGuard padrão */}
       <Route index element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientDashboard />
           </Suspense>
         </RouteGuard>
       } />
-      {/* Mesma lógica para todas as outras rotas */}
+      
       <Route path="missoes" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientMissions />
           </Suspense>
         </RouteGuard>
@@ -39,69 +38,68 @@ const ClientRoutes = () => {
       
       <Route path="perfil" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientProfile />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="sorteios" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientRaffles />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="indicacoes" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientReferrals />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="cashback" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <CashbackMarketplace />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="suporte" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Support />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="tour" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Tour />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="como-funciona" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <HowItWorks />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="faq" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Faq />
           </Suspense>
         </RouteGuard>
       } />
       <Route path="notificacoes" element={
         <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <ClientNotifications />
           </Suspense>
         </RouteGuard>
       } />
       
-      {/* Catch-all route for 404 handling within client routes */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
