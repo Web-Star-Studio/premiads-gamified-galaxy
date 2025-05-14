@@ -1,4 +1,6 @@
+
 import { Campaign } from "../campaignData";
+import { MissionType } from "@/hooks/useMissionsTypes";
 
 /**
  * Props for the CampaignForm component
@@ -9,19 +11,6 @@ export interface CampaignFormProps {
   /** Optional campaign data for editing mode */
   editCampaign?: Campaign | null;
 }
-
-/**
- * Available mission types for campaigns
- */
-export type MissionType = 
-  | "form"    // Form filling missions
-  | "photo"   // Photo upload missions 
-  | "video"   // Video upload missions
-  | "checkin" // Location check-in missions
-  | "social"  // Social media sharing missions
-  | "coupon"  // Discount coupon missions
-  | "survey"  // Survey completion missions
-  | "review"; // Product/service review missions
 
 /**
  * Target audience types

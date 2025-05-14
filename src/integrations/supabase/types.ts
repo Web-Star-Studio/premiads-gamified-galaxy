@@ -101,6 +101,48 @@ export type Database = {
           },
         ]
       }
+      mission_rewards: {
+        Row: {
+          id: string
+          mission_id: string
+          points_earned: number
+          rewarded_at: string | null
+          submission_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          mission_id: string
+          points_earned?: number
+          rewarded_at?: string | null
+          submission_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          mission_id?: string
+          points_earned?: number
+          rewarded_at?: string | null
+          submission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_rewards_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_rewards_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "mission_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_submissions: {
         Row: {
           feedback: string | null
@@ -142,11 +184,51 @@ export type Database = {
           },
         ]
       }
+      mission_validation_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_admin: boolean | null
+          notes: string | null
+          result: string
+          submission_id: string
+          validated_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean | null
+          notes?: string | null
+          result: string
+          submission_id: string
+          validated_by: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean | null
+          notes?: string | null
+          result?: string
+          submission_id?: string
+          validated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_validation_logs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "mission_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missions: {
         Row: {
           advertiser_id: string | null
           business_type: string | null
+          cost_in_tokens: number | null
           created_at: string | null
+          created_by: string | null
           description: string | null
           end_date: string | null
           id: string
@@ -154,6 +236,7 @@ export type Database = {
           points: number
           requirements: Json | null
           start_date: string | null
+          status: string | null
           target_audience_age_max: number | null
           target_audience_age_min: number | null
           target_audience_gender: string | null
@@ -165,7 +248,9 @@ export type Database = {
         Insert: {
           advertiser_id?: string | null
           business_type?: string | null
+          cost_in_tokens?: number | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -173,6 +258,7 @@ export type Database = {
           points?: number
           requirements?: Json | null
           start_date?: string | null
+          status?: string | null
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
@@ -184,7 +270,9 @@ export type Database = {
         Update: {
           advertiser_id?: string | null
           business_type?: string | null
+          cost_in_tokens?: number | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -192,6 +280,7 @@ export type Database = {
           points?: number
           requirements?: Json | null
           start_date?: string | null
+          status?: string | null
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
@@ -428,6 +517,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          total_tokens: number | null
+          updated_at: string | null
+          used_tokens: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          total_tokens?: number | null
+          updated_at?: string | null
+          used_tokens?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          total_tokens?: number | null
+          updated_at?: string | null
+          used_tokens?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -456,6 +572,16 @@ export type Database = {
       update_user_status: {
         Args: { user_id: string; is_active: boolean }
         Returns: boolean
+      }
+      validate_mission_submission: {
+        Args: {
+          p_submission_id: string
+          p_validator_id: string
+          p_result: string
+          p_is_admin?: boolean
+          p_notes?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
