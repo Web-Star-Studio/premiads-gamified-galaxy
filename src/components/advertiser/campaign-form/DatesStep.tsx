@@ -1,4 +1,3 @@
-
 import { memo, useMemo } from "react";
 import { FormData } from "./types";
 import { Input } from "@/components/ui/input";
@@ -21,18 +20,25 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
   // Format today's date as YYYY-MM-DD for min attribute
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   
+  // Convert dates to string format if they are Date objects
+  const startDateStr = typeof formData.startDate === 'string' ? formData.startDate : 
+    formData.startDate instanceof Date ? formData.startDate.toISOString().split('T')[0] : '';
+  
+  const endDateStr = typeof formData.endDate === 'string' ? formData.endDate : 
+    formData.endDate instanceof Date ? formData.endDate.toISOString().split('T')[0] : '';
+  
   // Check if end date is before start date
-  const hasDateError = formData.startDate && formData.endDate && formData.startDate > formData.endDate;
+  const hasDateError = startDateStr && endDateStr && startDateStr > endDateStr;
   
   // Calculate campaign duration in days
   const durationInDays = useMemo(() => {
-    if (!formData.startDate || !formData.endDate) return null;
+    if (!startDateStr || !endDateStr) return null;
     
-    const start = new Date(formData.startDate);
-    const end = new Date(formData.endDate);
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include start date
-  }, [formData.startDate, formData.endDate]);
+  }, [startDateStr, endDateStr]);
 
   return (
     <div className="space-y-6">
@@ -42,11 +48,11 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
           id="start-date"
           type="date"
           min={today}
-          value={formData.startDate}
+          value={startDateStr}
           onChange={(e) => {
             updateFormData("startDate", e.target.value);
             // If end date is before start date, update end date
-            if (formData.endDate && e.target.value > formData.endDate) {
+            if (endDateStr && e.target.value > endDateStr) {
               updateFormData("endDate", e.target.value);
             }
           }}
@@ -60,8 +66,8 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
         <Input
           id="end-date"
           type="date"
-          min={formData.startDate || today}
-          value={formData.endDate}
+          min={startDateStr || today}
+          value={endDateStr}
           onChange={(e) => updateFormData("endDate", e.target.value)}
           className="bg-gray-800 border-gray-700 focus:border-neon-cyan w-full"
           aria-required="true"
@@ -103,12 +109,12 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
         <ul className="text-xs space-y-2 text-gray-300">
           <li><span className="text-gray-400">Nome:</span> {formData.title || "Não definido"}</li>
           <li><span className="text-gray-400">Tipo:</span> {formData.type || "Não definido"}</li>
-          <li><span className="text-gray-400">Requisitos:</span> {formData.requirements.length > 0 ? 
+          <li><span className="text-gray-400">Requisitos:</span> {Array.isArray(formData.requirements) && formData.requirements.length > 0 ? 
             `${formData.requirements.length} requisito(s)` : "Nenhum definido"}</li>
           <li><span className="text-gray-400">Pontos:</span> {formData.pointsRange[0] === formData.pointsRange[1] ? 
             formData.pointsRange[0] : `${formData.pointsRange[0]}-${formData.pointsRange[1]}`}</li>
-          <li><span className="text-gray-400">Duração:</span> {formData.startDate && formData.endDate ? 
-            `${formData.startDate} até ${formData.endDate}` : "Não definida"}</li>
+          <li><span className="text-gray-400">Duração:</span> {startDateStr && endDateStr ? 
+            `${startDateStr} até ${endDateStr}` : "Não definida"}</li>
         </ul>
       </div>
     </div>

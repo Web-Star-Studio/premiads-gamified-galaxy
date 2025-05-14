@@ -20,6 +20,8 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
+    "exactOptionalPropertyTypes": false,
+    "strictPropertyInitialization": false,
 
     "baseUrl": ".",
     "paths": {

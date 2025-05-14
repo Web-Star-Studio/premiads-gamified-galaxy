@@ -1,4 +1,3 @@
-
 import { FileText, Image, Camera, Upload, MapPin, Star, Share2, Tag } from "lucide-react";
 import { MissionType } from "@/hooks/useMissionsTypes";
 
@@ -16,10 +15,8 @@ const MissionTypeIcon = ({ type }: MissionTypeIconProps) => {
     case "video":
       return <Camera className="w-5 h-5 text-neon-pink" />;
     case "social":
-    case "social_share":
       return <Share2 className="w-5 h-5 text-yellow-400" />;
     case "checkin":
-    case "visit":
       return <MapPin className="w-5 h-5 text-neon-lime" />;
     case "coupon":
       return <Tag className="w-5 h-5 text-neon-cyan" />;

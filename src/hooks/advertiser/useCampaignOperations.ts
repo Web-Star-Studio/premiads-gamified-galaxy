@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSounds } from '@/hooks/use-sounds';
-import { FormData, MissionType } from '@/components/advertiser/campaign-form/types';
+import { FormData } from "@/components/advertiser/campaign-form/types";
+import { MissionType, Mission } from "@/hooks/useMissionsTypes";
 import { useAuth } from '@/hooks/useAuth';
-import { missionService, Mission } from '@/services/supabase';
+import { missionService } from '@/services/supabase';
 
 export const useCampaignOperations = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -90,16 +91,20 @@ export const useCampaignOperations = () => {
       }
       
       // Preparar dados da missão
-      const mission: Mission = {
+      const mission = {
         title: formData.title,
         description: formData.description,
-        requirements: formData.requirements.join('\n'),
-        type: mapMissionType(formData.type) as any,
+        requirements: Array.isArray(formData.requirements) 
+          ? formData.requirements.join('\n') 
+          : formData.requirements,
+        type: mapMissionType(formData.type) as MissionType,
         target_audience: formData.audience,
-        points_range: { min: formData.pointsRange[0], max: formData.pointsRange[1] },
+        points: formData.randomPoints 
+          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
+          : (formData.pointsValue || formData.pointsRange[0]),
         created_by: currentUser.id,
         cost_in_tokens: cost,
-        status: 'pendente', // Começa como pendente, admin pode aprovar para 'ativa'
+        status: 'pendente' as const, // Começa como pendente, admin pode aprovar para 'ativa'
         expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined
       };
       
@@ -157,13 +162,17 @@ export const useCampaignOperations = () => {
       }
       
       // Preparar dados da missão
-      const updatedMission: Partial<Mission> = {
+      const updatedMission = {
         title: formData.title,
         description: formData.description,
-        requirements: formData.requirements.join('\n'),
-        type: mapMissionType(formData.type) as any,
+        requirements: Array.isArray(formData.requirements) 
+          ? formData.requirements.join('\n') 
+          : formData.requirements,
+        type: mapMissionType(formData.type) as MissionType,
         target_audience: formData.audience,
-        points_range: { min: formData.pointsRange[0], max: formData.pointsRange[1] },
+        points: formData.randomPoints 
+          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
+          : (formData.pointsValue || formData.pointsRange[0]),
         expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
         updated_at: new Date().toISOString()
       };

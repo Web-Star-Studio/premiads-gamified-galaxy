@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { FileText, Image, Camera, Share2, MapPin, Tag, Star } from "lucide-react";
@@ -105,10 +104,8 @@ const renderMissionTypeIcon = (type: MissionType) => {
     case "video":
       return <Camera className="w-5 h-5 mr-2 text-neon-pink" />;
     case "checkin":
-    case "visit":
       return <MapPin className="w-5 h-5 mr-2 text-neon-pink" />;
     case "social":
-    case "social_share":
       return <Share2 className="w-5 h-5 mr-2 text-neon-pink" />;
     case "coupon":
       return <Tag className="w-5 h-5 mr-2 text-neon-pink" />;
@@ -128,9 +125,7 @@ const getReadableMissionType = (type: MissionType): string => {
     case "photo": return "Foto";
     case "video": return "Vídeo";
     case "checkin": return "Check-in";
-    case "visit": return "Visita Local";
     case "social": return "Redes Sociais";
-    case "social_share": return "Compartilhamento Social";
     case "coupon": return "Cupom";
     case "survey": return "Pesquisa";
     case "review": return "Avaliação";

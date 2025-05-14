@@ -1,4 +1,3 @@
-
 import { memo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,17 +18,22 @@ interface RequirementsStepProps {
  */
 const RequirementsStep = ({ formData, updateFormData }: RequirementsStepProps) => {
   const [newRequirement, setNewRequirement] = useState("");
+  
+  // Always ensure requirements is an array
+  const requirementsArray = Array.isArray(formData.requirements) 
+    ? formData.requirements 
+    : formData.requirements ? [formData.requirements] : [];
 
   const handleAddRequirement = () => {
     if (newRequirement.trim() === "") return;
     
-    const updatedRequirements = [...formData.requirements, newRequirement.trim()];
+    const updatedRequirements = [...requirementsArray, newRequirement.trim()];
     updateFormData("requirements", updatedRequirements);
     setNewRequirement("");
   };
 
   const handleRemoveRequirement = (index: number) => {
-    const updatedRequirements = formData.requirements.filter((_, i) => i !== index);
+    const updatedRequirements = requirementsArray.filter((_, i) => i !== index);
     updateFormData("requirements", updatedRequirements);
   };
 
@@ -70,12 +74,12 @@ const RequirementsStep = ({ formData, updateFormData }: RequirementsStepProps) =
         </div>
       </div>
       
-      {formData.requirements.length > 0 ? (
+      {requirementsArray.length > 0 ? (
         <div className="space-y-4">
           <label className="text-sm font-medium">Requisitos Adicionados</label>
           
           <div className="flex flex-wrap gap-2">
-            {formData.requirements.map((requirement, index) => (
+            {requirementsArray.map((requirement, index) => (
               <Badge 
                 key={index} 
                 variant="outline"

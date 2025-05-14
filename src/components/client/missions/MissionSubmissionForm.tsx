@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Camera, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,8 +54,10 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         return;
       }
       submissionData = { mediaUrl: imagePreview };
-    } else if (mission.type === "social" || mission.type === "social_share") {
+    } else if (mission.type === "social") {
       submissionData = { shareLink: missionAnswer };
+    } else if (mission.type === "checkin") {
+      submissionData = { checkin: true };
     }
     
     onSubmit(submissionData);
@@ -128,7 +129,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         </div>
       )}
       
-      {(mission.type === "social" || mission.type === "social_share") && (
+      {(mission.type === "social") && (
         <div className="space-y-2">
           <Label htmlFor="share-link">Link da postagem</Label>
           <Input
@@ -143,7 +144,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         </div>
       )}
       
-      {(mission.type === "checkin" || mission.type === "visit") && (
+      {(mission.type === "checkin") && (
         <div className="space-y-2">
           <Label>Check-in na loja</Label>
           <div className="bg-galaxy-deepPurple/80 rounded-md p-4">
@@ -187,8 +188,7 @@ const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmission
         <Button 
           onClick={handleSubmit}
           disabled={
-            (!(mission.type === "checkin" || mission.type === "visit") && 
-             !missionAnswer && !imagePreview) || 
+            (mission.type !== "checkin" && !missionAnswer && !imagePreview) || 
             !agreedToTerms || 
             loading
           }

@@ -103,7 +103,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       title: formData.title,
       description: formData.description || "Sem descrição",
       requirements: requirements,
-      type: "redes_sociais", // Tipo padrão, ajuste conforme necessário
+      type: "social", // Tipo padrão, ajuste conforme necessário
       target_audience: formData.audience || "todos",
       points_range: {
         min: formData.randomPoints ? pointsValue : formData.pointsRange[0],
