@@ -1,182 +1,299 @@
-
-import { useState, useEffect } from "react";
-import { Shield, Search, Filter } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter, Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import SubmissionsList from "./SubmissionsList";
-import { Skeleton } from "@/components/ui/skeleton";
+import SubmissionsLoading from "./SubmissionsLoading";
+import SubmissionsEmptyState from "./SubmissionsEmptyState";
+import { Badge } from "@/components/ui/badge";
+import FilterPopover from "./components/FilterPopover";
+import { useAuth } from "@/hooks/useAuth";
+import { missionService } from "@/services/supabase";
+
+export interface FilterOptions {
+  status: string[];
+  missionId?: string;
+  dateRange?: [Date | null, Date | null];
+}
+
+export interface Submission {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  proof_url?: string[];
+  proof_text?: string;
+  status: string;
+  missions?: {
+    title: string;
+  };
+  created_at: string;
+  user?: {
+    name?: string;
+    avatar_url?: string;
+  };
+}
 
 const ModerationContent = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+  const [activeTab, setActiveTab] = useState<string>("pendentes");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    status: [],
+  });
+  const { toast } = useToast();
+  const { currentUser } = useAuth();
+
+  // Mapear abas para status de submissão
+  const tabToStatusMap: Record<string, string> = {
+    'pendentes': 'pendente',
+    'aprovadas': 'aprovado',
+    'rejeitadas': 'rejeitado',
+    'segunda_instancia': 'segunda_instancia'
+  };
+
+  // Buscar submissões
+  const fetchSubmissions = async () => {
+    if (!currentUser?.id) return;
     
-    return () => clearTimeout(timer);
-  }, []);
-  
+    setIsLoading(true);
+    
+    try {
+      const fetchedSubmissions = await missionService.getSubmissions({
+        // Buscar submissões de missões criadas pelo anunciante atual
+        status: tabToStatusMap[activeTab]
+      });
+      
+      // Buscar detalhes dos usuários para as submissões
+      const enhancedSubmissions = await Promise.all(
+        fetchedSubmissions.map(async (submission) => {
+          try {
+            // Buscar informações do usuário
+            const { data: userData } = await missionService.supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', submission.user_id)
+              .single();
+            
+            return {
+              ...submission,
+              user: {
+                name: userData?.full_name || 'Usuário',
+                avatar_url: userData?.avatar_url || ''
+              }
+            };
+          } catch (error) {
+            return {
+              ...submission,
+              user: {
+                name: 'Usuário',
+                avatar_url: ''
+              }
+            };
+          }
+        })
+      );
+      
+      setSubmissions(enhancedSubmissions);
+      setFilteredSubmissions(enhancedSubmissions);
+    } catch (error) {
+      console.error('Erro ao buscar submissões:', error);
+      toast({
+        title: 'Erro ao carregar submissões',
+        description: 'Não foi possível carregar as submissões para moderação.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Aprovar uma submissão
+  const handleApproveSubmission = async (submissionId: string) => {
+    if (!currentUser?.id) return;
+    
+    try {
+      await missionService.validateSubmission(
+        submissionId,
+        currentUser.id,
+        'aprovado',
+        false
+      );
+      
+      toast({
+        title: 'Submissão aprovada',
+        description: 'A submissão foi aprovada com sucesso!'
+      });
+      
+      // Atualizar lista de submissões
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Erro ao aprovar submissão:', error);
+      toast({
+        title: 'Erro ao aprovar submissão',
+        description: 'Não foi possível aprovar esta submissão.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Rejeitar uma submissão
+  const handleRejectSubmission = async (submissionId: string, reason?: string) => {
+    if (!currentUser?.id) return;
+    
+    try {
+      await missionService.validateSubmission(
+        submissionId,
+        currentUser.id,
+        'rejeitado',
+        false,
+        reason
+      );
+      
+      toast({
+        title: 'Submissão rejeitada',
+        description: 'A submissão foi rejeitada e enviada para segunda validação.'
+      });
+      
+      // Atualizar lista de submissões
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Erro ao rejeitar submissão:', error);
+      toast({
+        title: 'Erro ao rejeitar submissão',
+        description: 'Não foi possível rejeitar esta submissão.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Filtrar submissões com base na pesquisa
+  const filterSubmissions = () => {
+    let filtered = [...submissions];
+    
+    // Filtrar por termo de pesquisa
+    if (searchQuery) {
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter((submission) => 
+        submission.missions?.title.toLowerCase().includes(lowerCaseQuery) ||
+        submission.proof_text?.toLowerCase().includes(lowerCaseQuery)
+      );
+    }
+    
+    // Filtrar por opções de filtro
+    if (filterOptions.missionId) {
+      filtered = filtered.filter((submission) => 
+        submission.mission_id === filterOptions.missionId
+      );
+    }
+    
+    // Filtrar por intervalo de datas
+    if (filterOptions.dateRange && filterOptions.dateRange[0] && filterOptions.dateRange[1]) {
+      const startDate = filterOptions.dateRange[0];
+      const endDate = filterOptions.dateRange[1];
+      
+      filtered = filtered.filter((submission) => {
+        const submissionDate = new Date(submission.created_at);
+        return submissionDate >= startDate && submissionDate <= endDate;
+      });
+    }
+    
+    setFilteredSubmissions(filtered);
+  };
+
+  // Ao mudar de aba, buscar submissões correspondentes
+  useEffect(() => {
+    fetchSubmissions();
+  }, [activeTab, currentUser?.id]);
+
+  // Ao mudar a pesquisa ou filtros, aplicar filtros
+  useEffect(() => {
+    filterSubmissions();
+  }, [searchQuery, filterOptions, submissions]);
+
+  // Renderização condicional com base no estado de carregamento
+  const renderContent = () => {
+    if (isLoading) {
+      return <SubmissionsLoading />;
+    }
+    
+    if (filteredSubmissions.length === 0) {
+      return <SubmissionsEmptyState activeTab={activeTab} />;
+    }
+    
+    return (
+      <SubmissionsList 
+        submissions={filteredSubmissions} 
+        onApprove={handleApproveSubmission}
+        onReject={handleRejectSubmission}
+      />
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Shield className="w-7 h-7 text-neon-cyan" />
-          <h1 className="text-2xl font-bold">Moderação de Conteúdo</h1>
-        </div>
-        
-        <div className="flex w-full md:w-auto gap-3">
-          <div className="relative flex-grow md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-            <Input 
-              placeholder="Buscar submissão..." 
-              className="pl-9 bg-gray-800/50 border-gray-700"
+      <div className="flex flex-col space-y-4">
+        <h1 className="text-2xl font-bold tracking-tight">Moderação de Submissões</h1>
+        <p className="text-muted-foreground">
+          Avalie as submissões de usuários para suas campanhas publicitárias
+        </p>
+      </div>
+      
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div className="flex items-center gap-2 flex-grow max-w-md">
+          <div className="relative flex-grow">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Pesquisar submissões..."
+              className="pl-8 bg-galaxy-darkPurple"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           
-          <Select 
-            defaultValue="all" 
-            onValueChange={(value) => setFilterStatus(value)}
+          <FilterPopover
+            onFilterChange={setFilterOptions}
+            currentFilters={filterOptions}
           >
-            <SelectTrigger className="w-36 bg-gray-800/50 border-gray-700">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <SelectValue placeholder="Status" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="approved">Aprovados</SelectItem>
-              <SelectItem value="rejected">Rejeitados</SelectItem>
-            </SelectContent>
-          </Select>
+            <Button variant="outline" size="icon" className="flex-shrink-0">
+              <Filter className="h-4 w-4" />
+            </Button>
+          </FilterPopover>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-galaxy-darkPurple">
+            {filteredSubmissions.length} submissões
+          </Badge>
         </div>
       </div>
       
-      <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="pending" className="gap-2">
-            Pendentes
-            <Badge variant="glow" className="ml-1">12</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="approved" className="gap-2">
-            Aprovados
-            <Badge variant="success" className="ml-1">45</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="rejected" className="gap-2">
-            Rejeitados
-            <Badge variant="warning" className="ml-1">8</Badge>
-          </TabsTrigger>
+      <Tabs defaultValue="pendentes" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="bg-galaxy-darkPurple grid grid-cols-4 mb-6">
+          <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
+          <TabsTrigger value="aprovadas">Aprovadas</TabsTrigger>
+          <TabsTrigger value="rejeitadas">Rejeitadas</TabsTrigger>
+          <TabsTrigger value="segunda_instancia">Segunda Instância</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="pending">
-          {isLoading ? (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Submissões Pendentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-4 border border-gray-700 rounded-lg">
-                      <div className="flex gap-4">
-                        <Skeleton className="w-12 h-12 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-1/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-40 w-full mt-4" />
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Skeleton className="h-9 w-24" />
-                        <Skeleton className="h-9 w-24" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SubmissionsList 
-              filterStatus={filterStatus} 
-              searchQuery={searchQuery}
-              tabValue="pending" 
-            />
-          )}
+        <TabsContent value="pendentes" className="space-y-4 mt-0">
+          {renderContent()}
         </TabsContent>
         
-        <TabsContent value="approved">
-          {isLoading ? (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Submissões Aprovadas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="p-4 border border-gray-700 rounded-lg">
-                      <div className="flex gap-4">
-                        <Skeleton className="w-12 h-12 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-1/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-40 w-full mt-4" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SubmissionsList 
-              filterStatus={filterStatus} 
-              searchQuery={searchQuery}
-              tabValue="approved" 
-            />
-          )}
+        <TabsContent value="aprovadas" className="space-y-4 mt-0">
+          {renderContent()}
         </TabsContent>
         
-        <TabsContent value="rejected">
-          {isLoading ? (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Submissões Rejeitadas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="p-4 border border-gray-700 rounded-lg">
-                      <div className="flex gap-4">
-                        <Skeleton className="w-12 h-12 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-1/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-40 w-full mt-4" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <SubmissionsList 
-              filterStatus={filterStatus} 
-              searchQuery={searchQuery}
-              tabValue="rejected" 
-            />
-          )}
+        <TabsContent value="rejeitadas" className="space-y-4 mt-0">
+          {renderContent()}
+        </TabsContent>
+        
+        <TabsContent value="segunda_instancia" className="space-y-4 mt-0">
+          {renderContent()}
         </TabsContent>
       </Tabs>
     </div>

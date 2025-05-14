@@ -1,107 +1,259 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSounds } from '@/hooks/use-sounds';
-import { FormData } from '@/components/advertiser/campaign-form/types';
+import { FormData, MissionType } from '@/components/advertiser/campaign-form/types';
+import { useAuth } from '@/hooks/useAuth';
+import { missionService, Mission } from '@/services/supabase';
 
 export const useCampaignOperations = () => {
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const { currentUser } = useAuth();
 
-  const createCampaign = async (formData: FormData) => {
+  /**
+   * Mapeia os tipos de missão do formulário para os tipos usados no backend
+   */
+  const mapMissionType = (formType: string): string => {
+    const typeMap: Record<string, string> = {
+      'form': 'formulario',
+      'photo': 'foto',
+      'video': 'video',
+      'checkin': 'check-in',
+      'social': 'redes_sociais',
+      'coupon': 'cupom',
+      'survey': 'pesquisa',
+      'review': 'avaliacao'
+    };
+    
+    return typeMap[formType] || formType;
+  };
+
+  /**
+   * Calcula o custo em tokens com base no tipo de missão e público-alvo
+   */
+  const calculateTokenCost = (type: string, audience: string): number => {
+    // Valores base por tipo de missão
+    const baseCosts: Record<string, number> = {
+      'formulario': 10,
+      'foto': 15,
+      'video': 20,
+      'check-in': 12,
+      'redes_sociais': 15,
+      'cupom': 8,
+      'pesquisa': 15,
+      'avaliacao': 12
+    };
+    
+    // Multiplicadores por público
+    const audienceMultipliers: Record<string, number> = {
+      'todos': 1.0,
+      'premium': 1.5,
+      'beta': 1.2
+    };
+    
+    const baseTokens = baseCosts[mapMissionType(type)] || 10;
+    const multiplier = audienceMultipliers[audience] || 1.0;
+    
+    return Math.round(baseTokens * multiplier);
+  };
+
+  /**
+   * Criar uma nova campanha/missão
+   */
+  const createCampaign = async (formData: FormData): Promise<boolean> => {
+    if (!currentUser?.id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para criar uma campanha.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setLoading(true);
+      // Verificar se o usuário tem tokens suficientes
+      const userTokens = await missionService.getUserTokens(currentUser.id);
+      const availableTokens = userTokens.total_tokens - userTokens.used_tokens;
+      const cost = calculateTokenCost(formData.type, formData.audience);
       
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .single();
-
-      const { data, error } = await supabase
-        .from('cashback_campaigns')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          discount_percentage: formData.pointsRange[0],
-          advertiser_id: (await supabase.auth.getUser()).data.user?.id,
-          advertiser_name: profile?.full_name,
-          conditions: formData.requirements?.join(', '),
-          expires_at: formData.endDate,
-          is_active: true,
-          min_purchase: formData.minPurchase || 0
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      playSound('success');
+      if (availableTokens < cost) {
+        toast({
+          title: "Tokens insuficientes",
+          description: `Você precisa de ${cost} tokens para criar esta campanha. Atualmente você tem ${availableTokens} tokens disponíveis.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Preparar dados da missão
+      const mission: Mission = {
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements.join('\n'),
+        type: mapMissionType(formData.type) as any,
+        target_audience: formData.audience,
+        points_range: { min: formData.pointsRange[0], max: formData.pointsRange[1] },
+        created_by: currentUser.id,
+        cost_in_tokens: cost,
+        status: 'pendente', // Começa como pendente, admin pode aprovar para 'ativa'
+        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined
+      };
+      
+      // Criar missão no Supabase
+      const createdMission = await missionService.createMission(mission);
+      
       toast({
-        title: 'Campanha criada',
-        description: 'Sua campanha foi criada com sucesso!'
+        title: "Missão criada com sucesso",
+        description: "Sua campanha foi criada e está aguardando aprovação.",
       });
-
-      return data;
+      
+      return true;
     } catch (error: any) {
-      console.error('Error creating campaign:', error);
-      playSound('error');
+      console.error("Erro ao criar campanha:", error);
+      
       toast({
-        title: 'Erro ao criar campanha',
-        description: error.message,
-        variant: 'destructive'
+        title: "Erro ao criar campanha",
+        description: error.message || "Ocorreu um erro ao criar a campanha.",
+        variant: "destructive",
       });
-      return null;
+      
+      return false;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const updateCampaign = async (id: string, formData: FormData) => {
+  /**
+   * Atualizar uma campanha existente
+   */
+  const updateCampaign = async (campaignId: string, formData: FormData): Promise<boolean> => {
+    if (!currentUser?.id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para atualizar uma campanha.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('cashback_campaigns')
-        .update({
-          title: formData.title,
-          description: formData.description,
-          discount_percentage: formData.pointsRange[0],
-          conditions: formData.requirements?.join(', '),
-          expires_at: formData.endDate,
-          min_purchase: formData.minPurchase || 0
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      playSound('success');
+      // Buscar missão existente
+      const existingMission = await missionService.getMissionById(campaignId);
+      
+      // Verificar permissão
+      if (existingMission.created_by !== currentUser.id) {
+        toast({
+          title: "Permissão negada",
+          description: "Você não tem permissão para editar esta campanha.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Preparar dados da missão
+      const updatedMission: Partial<Mission> = {
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements.join('\n'),
+        type: mapMissionType(formData.type) as any,
+        target_audience: formData.audience,
+        points_range: { min: formData.pointsRange[0], max: formData.pointsRange[1] },
+        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Atualizar missão no Supabase
+      await supabase
+        .from('missions')
+        .update(updatedMission)
+        .eq('id', campaignId);
+      
       toast({
-        title: 'Campanha atualizada',
-        description: 'Sua campanha foi atualizada com sucesso!'
+        title: "Campanha atualizada",
+        description: "As alterações foram salvas com sucesso.",
       });
-
-      return data;
+      
+      return true;
     } catch (error: any) {
-      console.error('Error updating campaign:', error);
-      playSound('error');
+      console.error("Erro ao atualizar campanha:", error);
+      
       toast({
-        title: 'Erro ao atualizar campanha',
-        description: error.message,
-        variant: 'destructive'
+        title: "Erro ao atualizar campanha",
+        description: error.message || "Ocorreu um erro ao atualizar a campanha.",
+        variant: "destructive",
       });
-      return null;
+      
+      return false;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Atualizar o status de uma campanha
+   */
+  const updateCampaignStatus = async (campaignId: string, status: 'ativa' | 'pendente' | 'encerrada'): Promise<boolean> => {
+    if (!currentUser?.id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para atualizar o status da campanha.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Verificar permissão
+      const existingMission = await missionService.getMissionById(campaignId);
+      
+      const isAdmin = currentUser?.user_metadata?.user_type === 'admin';
+      const isOwner = existingMission.created_by === currentUser.id;
+      
+      if (!isAdmin && !isOwner) {
+        toast({
+          title: "Permissão negada",
+          description: "Você não tem permissão para atualizar o status desta campanha.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Atualizar status
+      await missionService.updateMissionStatus(campaignId, status);
+      
+      toast({
+        title: "Status atualizado",
+        description: `A campanha agora está ${status}.`,
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Erro ao atualizar status:", error);
+      
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message || "Ocorreu um erro ao atualizar o status da campanha.",
+        variant: "destructive",
+      });
+      
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
+    isLoading,
     createCampaign,
     updateCampaign,
-    loading
+    updateCampaignStatus
   };
 };

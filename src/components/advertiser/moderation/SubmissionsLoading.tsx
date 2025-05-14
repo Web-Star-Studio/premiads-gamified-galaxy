@@ -1,28 +1,35 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const SubmissionsLoading = () => {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle><Skeleton className="h-6 w-48" /></CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 border border-gray-700 rounded-lg">
-              <div className="flex gap-4">
-                <Skeleton className="w-12 h-12 rounded-full" />
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-1/4" />
-                  <Skeleton className="h-4 w-1/2" />
+    <Card className="border-galaxy-purple bg-galaxy-darkPurple">
+      <CardContent className="p-6">
+        <div className="space-y-6">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div 
+              key={index}
+              className="p-4 rounded-lg border border-galaxy-purple/50 bg-gradient-to-tr from-galaxy-dark/20 to-galaxy-darkPurple/30"
+            >
+              <div className="flex items-start gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <div>
+                      <Skeleton className="h-5 w-32 mb-2" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  
+                  <Skeleton className="h-40 w-full mt-4" />
+                  
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
                 </div>
-              </div>
-              <Skeleton className="h-40 w-full mt-4" />
-              <div className="flex justify-end gap-2 mt-4">
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
               </div>
             </div>
           ))}

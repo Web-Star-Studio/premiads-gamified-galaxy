@@ -1,52 +1,25 @@
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import SubmissionCard from './SubmissionCard';
+import { Submission } from './ModerationContent';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SubmissionCard from "./SubmissionCard";
-import SubmissionsLoading from "./SubmissionsLoading";
-import SubmissionsEmptyState from "./SubmissionsEmptyState";
-import { useSubmissions } from "@/hooks/useSubmissions";
-
-interface SubmissionsListProps {
-  filterStatus: string;
-  searchQuery: string;
-  tabValue: 'pending' | 'approved' | 'rejected';
+export interface SubmissionsListProps {
+  submissions: Submission[];
+  onApprove: (submissionId: string) => Promise<void>;
+  onReject: (submissionId: string, reason?: string) => Promise<void>;
 }
 
-const SubmissionsList = ({ filterStatus, searchQuery, tabValue }: SubmissionsListProps) => {
-  const { submissions, loading, handleRemoveSubmission } = useSubmissions({
-    filterStatus,
-    searchQuery,
-    tabValue
-  });
-  
-  if (loading) {
-    return <SubmissionsLoading />;
-  }
-  
-  if (submissions.length === 0) {
-    return <SubmissionsEmptyState tabValue={tabValue} />;
-  }
-  
+const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListProps) => {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle>
-          {tabValue === 'pending' 
-            ? "Submissões Pendentes"
-            : tabValue === 'approved'
-              ? "Submissões Aprovadas"
-              : "Submissões Rejeitadas"
-          }
-          <span className="text-neon-cyan ml-2">({submissions.length})</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="border-galaxy-purple bg-galaxy-darkPurple">
+      <CardContent className="p-6">
         <div className="space-y-6">
           {submissions.map((submission) => (
             <SubmissionCard 
               key={submission.id}
               submission={submission}
-              mode={tabValue}
-              onRemove={handleRemoveSubmission}
+              onApprove={() => onApprove(submission.id)}
+              onReject={(reason) => onReject(submission.id, reason)}
             />
           ))}
         </div>

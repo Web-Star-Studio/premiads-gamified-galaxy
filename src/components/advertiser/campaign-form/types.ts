@@ -1,4 +1,3 @@
-
 import { Campaign } from "../campaignData";
 
 /**
@@ -45,18 +44,20 @@ export interface FormData {
   pointsRange: [number, number];
   /** Whether points should be randomly assigned within the range */
   randomPoints: boolean;
+  /** Valor específico de pontos quando randomPoints está ativo */
+  pointsValue?: number;
   /** Whether campaign awards badges */
   hasBadges: boolean;
   /** Whether campaign includes loot boxes */
   hasLootBox: boolean;
   /** Campaign start date (YYYY-MM-DD) */
-  startDate: string;
+  startDate: Date | string;
   /** Campaign end date (YYYY-MM-DD) */
-  endDate: string;
+  endDate: Date | string;
   /** Whether campaign has streak bonus */
   streakBonus: boolean;
   /** List of campaign requirements */
-  requirements: string[];
+  requirements: string[] | string;
   /** Minimum purchase amount (for coupon campaigns) */
   minPurchase?: number;
 }
@@ -71,6 +72,7 @@ export const initialFormData: FormData = {
   audience: "",
   pointsRange: [30, 50],
   randomPoints: true,
+  pointsValue: undefined,
   hasBadges: false,
   hasLootBox: false,
   startDate: "",
