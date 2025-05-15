@@ -1,7 +1,8 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { supabaseConfig, stripeConfig, corsHeaders } from '../_shared/config.ts'
 import { z } from 'https://esm.sh/zod@3.23.8'
+import Stripe from 'https://esm.sh/stripe@12.17.0'
 
 // Define schema for purchase request
 const purchaseSchema = z.object({
@@ -27,9 +28,41 @@ serve(async (req) => {
   
   try {
     // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(
+      supabaseConfig.url,
+      supabaseConfig.serviceRoleKey
+    )
+    
+    // Check for authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado. Token de autenticação ausente.' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+    
+    // Verify JWT token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação inválido', details: authError?.message }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+    
+    // Initialize Stripe
+    const stripe = new Stripe(stripeConfig.secretKey, {
+      apiVersion: stripeConfig.apiVersion,
+    })
     
     // Parse request body
     const body = await req.json()
@@ -50,6 +83,17 @@ serve(async (req) => {
     
     const { userId, packageId, customAmount, customPrice, paymentProvider, paymentMethod } = parseResult.data
     
+    // Ensure the authenticated user matches the requested userId
+    if (user.id !== userId) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado. ID de usuário não corresponde ao token.' }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+    
     // Fetch package or calculate custom package
     let packageData
     
@@ -64,7 +108,7 @@ serve(async (req) => {
       
       if (pkgError || !pkg) {
         return new Response(
-          JSON.stringify({ error: 'Pacote não encontrado ou inativo' }), 
+          JSON.stringify({ error: 'Pacote não encontrado ou inativo', details: pkgError }), 
           { 
             status: 404, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -84,7 +128,7 @@ serve(async (req) => {
       
       if (pkgsError || !packages || packages.length === 0) {
         return new Response(
-          JSON.stringify({ error: 'Erro ao calcular pacote personalizado' }), 
+          JSON.stringify({ error: 'Erro ao calcular pacote personalizado', details: pkgsError }), 
           { 
             status: 500, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -142,7 +186,7 @@ serve(async (req) => {
     if (purchaseError) {
       console.error('Error creating purchase record:', purchaseError)
       return new Response(
-        JSON.stringify({ error: 'Erro ao registrar compra' }), 
+        JSON.stringify({ error: 'Erro ao registrar compra', details: purchaseError }), 
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -150,25 +194,152 @@ serve(async (req) => {
       )
     }
     
-    // In a real implementation, we would call the payment provider's API here
-    // For now, we'll simulate a successful payment initiation
-    
-    // Generate a mock payment URL and ID based on the provider
+    // Handle payment based on provider
     let paymentData
+    
     if (paymentProvider === 'mercado_pago') {
+      // Simulated Mercado Pago integration
       paymentData = {
         payment_id: `mp-${Date.now()}`,
         payment_url: `https://mercadopago.com/checkout/${purchase.id}`,
         qr_code: paymentMethod === 'pix' ? 'data:image/png;base64,mockQrCode' : null,
         expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
       }
-    } else {
-      paymentData = {
-        payment_id: `stripe-${Date.now()}`,
-        payment_url: `https://stripe.com/checkout/${purchase.id}`,
-        session_id: `cs_${Date.now()}`,
-        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+    } else if (paymentProvider === 'stripe') {
+      try {
+        // Get user information for Stripe customer
+        const { data: userProfile, error: userError } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', userId)
+          .single()
+          
+        if (userError || !userProfile) {
+          throw new Error('User profile not found')
+        }
+        
+        // Create or retrieve Stripe customer
+        const { data: customers, error: customerError } = await supabase
+          .from('stripe_customers')
+          .select('stripe_id')
+          .eq('user_id', userId)
+          .maybeSingle()
+          
+        let customerId
+        
+        if (customerError) {
+          console.error('Error fetching customer:', customerError)
+        }
+        
+        if (!customers?.stripe_id) {
+          // Create new customer
+          const customer = await stripe.customers.create({
+            email: userProfile.email,
+            name: userProfile.full_name,
+            metadata: {
+              user_id: userId
+            }
+          })
+          
+          // Store customer ID
+          await supabase
+            .from('stripe_customers')
+            .insert({
+              user_id: userId,
+              stripe_id: customer.id
+            })
+            
+          customerId = customer.id
+        } else {
+          customerId = customers.stripe_id
+        }
+        
+        // Create payment session based on payment method
+        if (paymentMethod === 'credit_card' || paymentMethod === 'debit') {
+          // Create Stripe Checkout session
+          const session = await stripe.checkout.sessions.create({
+            customer: customerId,
+            payment_method_types: [paymentMethod === 'credit_card' ? 'card' : 'card'],
+            line_items: [
+              {
+                price_data: {
+                  currency: 'brl',
+                  product_data: {
+                    name: `${packageData.base} créditos + ${packageData.bonus} bônus`,
+                    description: 'Créditos para sua conta PremiAds',
+                  },
+                  unit_amount: Math.round(packageData.price * 100), // Stripe uses cents
+                },
+                quantity: 1,
+              },
+            ],
+            mode: 'payment',
+            success_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos`,
+            metadata: {
+              purchase_id: purchase.id,
+            },
+          })
+          
+          paymentData = {
+            payment_id: session.id,
+            payment_url: session.url,
+            session_id: session.id,
+            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+          }
+        } else if (paymentMethod === 'pix') {
+          // Create a PaymentIntent for PIX
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(packageData.price * 100),
+            currency: 'brl',
+            payment_method_types: ['pix'],
+            customer: customerId,
+            metadata: {
+              purchase_id: purchase.id,
+            },
+          })
+          
+          // Get PIX details
+          const pixDetails = paymentIntent.next_action?.display_bank_transfer_instructions
+          
+          paymentData = {
+            payment_id: paymentIntent.id,
+            payment_url: null,
+            pix_qr_code: pixDetails?.hosted_instructions_url || null,
+            pix_code: pixDetails?.financial_address || null,
+            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+          }
+        } else {
+          throw new Error(`Payment method ${paymentMethod} not supported for Stripe`)
+        }
+      } catch (stripeError) {
+        console.error('Stripe error:', stripeError)
+        
+        // Update purchase status to failed
+        await supabase
+          .from('credit_purchases')
+          .update({ status: 'failed' })
+          .eq('id', purchase.id)
+          
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro ao processar pagamento com Stripe',
+            details: stripeError.message
+          }), 
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
       }
+    } else {
+      return new Response(
+        JSON.stringify({ error: `Provedor de pagamento não suportado: ${paymentProvider}` }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
     
     // Update purchase with payment ID
@@ -199,7 +370,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unhandled error:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor' }), 
+      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

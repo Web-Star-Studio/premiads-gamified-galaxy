@@ -14,6 +14,7 @@ const AdvertiserNotifications = lazy(() => import("@/pages/advertiser/Notificati
 const AdvertiserSettings = lazy(() => import("@/pages/advertiser/SettingsPage"));
 const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"));
 const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
+const PaymentSuccessPage = lazy(() => import("@/pages/advertiser/PaymentSuccessPage"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -85,6 +86,13 @@ const AdvertiserRoutes = () => {
         <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <ModerationPage />
+          </Suspense>
+        </RouteGuard>
+      } />
+      <Route path="pagamento-sucesso" element={
+        <RouteGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <PaymentSuccessPage />
           </Suspense>
         </RouteGuard>
       } />

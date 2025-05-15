@@ -66,32 +66,8 @@ $$;
 -- Create RLS policies for credit_packages
 ALTER TABLE public.credit_packages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to active credit packages" 
-    ON public.credit_packages FOR SELECT 
-    USING (active = true);
-
-CREATE POLICY "Allow admins to manage credit packages" 
-    ON public.credit_packages FOR ALL 
-    USING (auth.uid() IN (
-        SELECT id FROM auth.users WHERE auth.users.raw_app_meta_data->>'role' = 'admin'
-    ));
-
 -- Create RLS policies for credit_purchases
 ALTER TABLE public.credit_purchases ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their own purchases" 
-    ON public.credit_purchases FOR SELECT 
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create their own purchases" 
-    ON public.credit_purchases FOR INSERT 
-    WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Admins can view all purchases" 
-    ON public.credit_purchases FOR SELECT 
-    USING (auth.uid() IN (
-        SELECT id FROM auth.users WHERE auth.users.raw_app_meta_data->>'role' = 'admin'
-    ));
 
 -- Insert default credit packages
 INSERT INTO public.credit_packages (base, bonus, price, validity_months, active)

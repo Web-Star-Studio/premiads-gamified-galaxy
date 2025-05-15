@@ -105,9 +105,14 @@ function useCreditPurchase() {
     mutationFn: async ({ packageId, customAmount, paymentProvider, paymentMethod }: PurchaseCreditsParams) => {
       const { data: sessionData } = await supabase.auth.getSession()
       const userId = sessionData?.session?.user?.id
+      const token = sessionData?.session?.access_token
       
       if (!userId) {
         throw new Error('Usuário não autenticado')
+      }
+      
+      if (!token) {
+        throw new Error('Token de autenticação não disponível')
       }
       
       // Call the purchase-credits edge function
@@ -117,6 +122,12 @@ function useCreditPurchase() {
         customAmount,
         paymentProvider,
         paymentMethod
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'apikey': supabase.supabaseKey
+        }
       })
       
       return response.data
@@ -149,12 +160,25 @@ function useCreditPurchase() {
       status: 'confirmed' | 'failed',
       provider: PaymentProvider
     }) => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData?.session?.access_token
+      
+      if (!token) {
+        throw new Error('Token de autenticação não disponível')
+      }
+      
       // Call the confirm-payment edge function
       const response = await axios.post('/api/confirm-payment', {
         purchase_id: purchaseId,
         payment_id: paymentId,
         status,
         provider
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'apikey': supabase.supabaseKey
+        }
       })
       
       return response.data

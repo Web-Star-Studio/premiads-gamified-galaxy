@@ -165,8 +165,8 @@ CREATE POLICY submissions_user_policy ON mission_submissions
             WHERE m.id = mission_id AND m.created_by = auth.uid()
         ) OR
         EXISTS (
-            SELECT 1 FROM auth.users u
-            WHERE u.id = auth.uid() AND u.user_metadata->>'user_type' IN ('admin', 'moderator')
+            SELECT 1 FROM profiles p
+            WHERE p.id = auth.uid() AND p.user_type IN ('admin', 'moderator')
         )
     );
 
@@ -176,8 +176,8 @@ CREATE POLICY tokens_user_policy ON user_tokens
     TO authenticated
     USING (user_id = auth.uid() OR
         EXISTS (
-            SELECT 1 FROM auth.users u
-            WHERE u.id = auth.uid() AND u.user_metadata->>'user_type' IN ('admin', 'moderator')
+            SELECT 1 FROM profiles p
+            WHERE p.id = auth.uid() AND p.user_type IN ('admin', 'moderator')
         )
     );
 
@@ -192,8 +192,8 @@ CREATE POLICY validation_logs_policy ON mission_validation_logs
             WHERE ms.id = submission_id AND ms.user_id = auth.uid()
         ) OR
         EXISTS (
-            SELECT 1 FROM auth.users u
-            WHERE u.id = auth.uid() AND u.user_metadata->>'user_type' IN ('admin', 'moderator')
+            SELECT 1 FROM profiles p
+            WHERE p.id = auth.uid() AND p.user_type IN ('admin', 'moderator')
         )
     );
 
@@ -207,7 +207,7 @@ CREATE POLICY rewards_user_policy ON mission_rewards
             WHERE m.id = mission_id AND m.created_by = auth.uid()
         ) OR
         EXISTS (
-            SELECT 1 FROM auth.users u
-            WHERE u.id = auth.uid() AND u.user_metadata->>'user_type' IN ('admin', 'moderator')
+            SELECT 1 FROM profiles p
+            WHERE p.id = auth.uid() AND p.user_type IN ('admin', 'moderator')
         )
     );
