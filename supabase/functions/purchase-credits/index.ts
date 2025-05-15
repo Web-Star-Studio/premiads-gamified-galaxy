@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
-import { corsHeaders } from '../_shared/cors.ts'
+import { supabaseConfig, stripeConfig, corsHeaders } from '../_shared/config.ts'
 import { z } from 'https://esm.sh/zod@3.23.8'
 import Stripe from 'https://esm.sh/stripe@12.17.0'
 
@@ -28,9 +28,10 @@ serve(async (req) => {
   
   try {
     // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(
+      supabaseConfig.url,
+      supabaseConfig.serviceRoleKey
+    )
     
     // Check for authentication
     const authHeader = req.headers.get('Authorization')
@@ -59,9 +60,8 @@ serve(async (req) => {
     }
     
     // Initialize Stripe
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') || 'sk_test_51RLFkdFgeEO60DiJjV5w4UG68qwuLGA5BCUHgwyglB0tyj5aIB00LJrBTczJqnPSJXoUaGwdXjM3Bn7ogYva84Sd006YGSjP6h'
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
+    const stripe = new Stripe(stripeConfig.secretKey, {
+      apiVersion: stripeConfig.apiVersion,
     })
     
     // Parse request body
