@@ -1,0 +1,162 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are an expert developer in TypeScript, React, Vite, React Router, Tailwind CSS, Radix UI, Shadcn UI, Zustand, React Query, and Zod.
+
+Key Principles
+- Write concise, technical responses with accurate TypeScript examples.
+- Use functional, declarative programming. Avoid classes.
+- Prefer iteration and modularization over duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Use lowercase with dashes for directories (e.g., components/game-card).
+- Favor named exports for components.
+- Use the Receive an Object, Return an Object (RORO) pattern.
+
+JavaScript/TypeScript
+- Use "function" keyword for pure functions. Omit semicolons.
+- Use TypeScript for all code. Prefer interfaces over types.
+- File structure: Exported component, subcomponents, helpers, static content, types.
+- Avoid unnecessary curly braces in conditional statements.
+- For single-line statements in conditionals, omit curly braces.
+- Use concise, one-line syntax for simple conditional statements (e.g., if (condition) doSomething()).
+
+Error Handling and Validation
+- Prioritize error handling and edge cases:
+  - Handle errors and edge cases at the beginning of functions.
+  - Use early returns for error conditions to avoid deeply nested if statements.
+  - Place the happy path last in the function for improved readability.
+  - Avoid unnecessary else statements; use if-return pattern instead.
+  - Use guard clauses to handle preconditions and invalid states early.
+  - Implement proper error logging and user-friendly error messages.
+  - Consider using custom error types or error factories for consistent error handling.
+  - Create reusable error boundary components to gracefully handle UI errors.
+
+React/Vite
+- Use functional components and TypeScript interfaces.
+- Use declarative JSX.
+- Use function, not const, for components.
+- Use Shadcn UI, Radix, and Tailwind CSS for components and styling.
+- Implement responsive design with Tailwind CSS.
+- Use mobile-first approach for responsive design.
+- Place static content and interfaces at file end.
+- Use content variables for static content outside render functions.
+- Minimize unnecessary renders with useMemo, useCallback, and React.memo.
+- Use Zod for form validation.
+- Wrap error-prone components in ErrorBoundary with fallback UI.
+- Use dynamic imports for code-splitting non-critical components.
+- Optimize images: WebP format, size data, lazy loading.
+- Implement custom hooks for reusable logic across components.
+- Organize components by feature or domain rather than by type.
+- Use lazy loading with React.lazy and Suspense for route-based code splitting.
+
+State Management and Data Fetching
+- Use React Context for state needed by multiple components within a limited scope.
+- Implement Zustand for global state management with type safety.
+- Use React Query for server state, caching, and data fetching.
+- Separate UI state from data state.
+- Create custom hooks for abstracting state management logic.
+- Implement optimistic updates for better user experience.
+- Properly handle loading, error, and success states.
+- Use debouncing and throttling for frequent state updates.
+- Implement local storage persistence for user preferences and session data.
+
+Key Conventions
+1. Rely on React Router for routing and navigation.
+2. Prioritize Web Vitals (LCP, CLS, FID).
+3. Follow performance best practices:
+  - Use code splitting to reduce initial bundle size.
+  - Implement virtualization for long lists (react-window).
+  - Memoize expensive calculations and renders.
+  - Optimize event handlers with debounce/throttle.
+4. Follow the project structure:
+  - src/components for reusable UI components.
+  - src/features for domain-specific code.
+  - src/hooks for custom hooks.
+  - src/utils for utility functions.
+  - src/pages for route components.
+  - src/assets for static assets.
+  - src/types for shared TypeScript interfaces.
+  - src/store for state management.
+5. Use npm/yarn scripts for development and build tasks.
+6. Favor composition over inheritance for component reuse.
+
+Naming Conventions
+- Booleans: Use auxiliary verbs such as 'does', 'has', 'is', and 'should' (e.g., isDisabled, hasError).
+- Filenames: Use lowercase with dash separators (e.g., game-card.tsx).
+- File extensions: Use .config.ts, .test.ts, .context.tsx, .type.ts, .hook.ts as appropriate.
+- Plural for collections, singular for individual items (e.g., users vs. user).
+- Consistent verb prefixes for actions (get, fetch, update, set, handle).
+
+Component Structure
+- Break down components into smaller parts with minimal props.
+- Use micro folder structure for complex components:
+  ```
+  /game-card
+    ├── index.ts           # Exports the main component
+    ├── game-card.tsx      # Main component
+    ├── game-card.test.tsx # Tests
+    ├── game-card-badge.tsx # Subcomponent
+    ├── game-card-actions.tsx # Subcomponent
+    └── use-game-card.hook.ts # Component-specific hook
+  ```
+- Use composition to build complex components.
+- Follow the order: component declaration, helpers, TypeScript types.
+- Extract repeated JSX patterns into reusable components.
+- Keep components focused on a single responsibility.
+
+Data Fetching and API Integration
+- Use React Query for data fetching, caching, and synchronization.
+- Create API service modules for organizing API calls.
+- Implement proper error handling for network requests.
+- Use TypeScript for API response types.
+- Centralize API configuration for easy maintenance.
+- Implement retry logic for transient failures.
+- Create custom hooks for common API operations.
+
+Styling
+- Use Tailwind CSS for styling, following the Utility First approach.
+- Utilize the Class Variance Authority (CVA) for managing component variants.
+- Extract common style patterns into component classes.
+- Use CSS variables for theme colors and design tokens.
+- Implement dark mode with Tailwind's dark variant.
+- Create a consistent spacing and sizing system.
+- Use responsive design principles and mobile-first approach.
+
+Testing
+- Implement unit tests for utility functions and hooks.
+- Use integration tests for complex components and pages.
+- Implement end-to-end tests for critical user flows.
+- Test components in isolation with React Testing Library.
+- Use Vitest for unit and integration tests.
+- Create test helpers for common testing patterns.
+- Mock external dependencies for predictable tests.
+
+Accessibility
+- Ensure interfaces are keyboard navigable.
+- Implement proper ARIA labels and roles for components.
+- Ensure color contrast ratios meet WCAG standards for readability.
+- Provide text alternatives for non-text content.
+- Support screen readers with proper HTML semantics.
+- Test with accessibility tools like axe.
+- Create accessible interactive components (modals, dropdowns, etc.).
+
+Performance Optimization
+- Implement code splitting with dynamic imports.
+- Use memoization to prevent unnecessary recalculations.
+- Optimize list rendering with virtualization.
+- Implement lazy loading for images and other assets.
+- Monitor and optimize bundle size.
+- Implement React.memo for expensive components.
+- Use useCallback for event handlers passed to child components.
+
+Documentation
+- Provide clear and concise comments for complex logic.
+- Use JSDoc comments for functions and components to improve IDE intellisense.
+- Keep the README files up-to-date with setup instructions and project overview.
+- Document component props and usage patterns.
+- Create a Storybook or similar documentation for UI components.
+
+Refer to React documentation for Component API, Hooks, and Performance optimization best practices.
+Follow Vite documentation for build optimizations and environment configuration.
