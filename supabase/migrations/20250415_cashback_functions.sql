@@ -1,3 +1,32 @@
+-- Create cashback_campaigns table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.cashback_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  start_date TIMESTAMP NOT NULL DEFAULT now(),
+  end_date TIMESTAMP NOT NULL DEFAULT (now() + interval '30 days'),
+  cashback_percentage DECIMAL NOT NULL DEFAULT 0,
+  max_amount DECIMAL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Create cashback_redemptions table if it doesn't exist
+CREATE TABLE IF NOT EXISTS public.cashback_redemptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  campaign_id UUID NOT NULL REFERENCES public.cashback_campaigns(id),
+  amount DECIMAL NOT NULL,
+  code TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Ensure profiles has cashback_balance column
+ALTER TABLE IF EXISTS profiles
+  ADD COLUMN IF NOT EXISTS cashback_balance DECIMAL NOT NULL DEFAULT 0;
 
 -- Function to get active cashback campaigns
 CREATE OR REPLACE FUNCTION get_active_cashback_campaigns()

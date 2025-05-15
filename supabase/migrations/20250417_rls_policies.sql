@@ -1,4 +1,3 @@
-
 -- Row Level Security (RLS) policies for the profiles table
 
 -- First, enable RLS on profiles table if not already enabled
@@ -49,6 +48,8 @@ FOR UPDATE
 USING (is_admin() = true);
 
 -- 5. Anunciantes can view inactive user profiles for moderation
+-- This policy already exists, so we're commenting it out
+/*
 CREATE POLICY "Anunciantes can view profiles for moderation"
 ON public.profiles
 FOR SELECT
@@ -58,6 +59,7 @@ USING (
     WHERE id = auth.uid() AND user_type = 'anunciante'
   )
 );
+*/
 
 -- Enable RLS on missions table
 ALTER TABLE IF EXISTS public.missions ENABLE ROW LEVEL SECURITY;
