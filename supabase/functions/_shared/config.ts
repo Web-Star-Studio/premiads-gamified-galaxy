@@ -28,7 +28,7 @@ export const supabaseConfig = {
  */
 export const stripeConfig = {
   secretKey: getEnv('STRIPE_SECRET_KEY'),
-  webhookSecret: getEnv('STRIPE_WEBHOOK_SECRET', 'whsec_test'),
+  webhookSecret: getEnv('STRIPE_WEBHOOK_SECRET', ''),
   apiVersion: '2023-10-16' as const,
 }
 

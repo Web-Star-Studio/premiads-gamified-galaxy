@@ -1,3 +1,4 @@
 # Arquivos para ignorar na detecção de segredos
 supabase/functions/confirm-payment/index.ts filter=secrets
-supabase/functions/purchase-credits/index.ts filter=secrets 
+supabase/functions/purchase-credits/index.ts filter=secrets
+supabase/functions/test-secrets.txt filter=secrets

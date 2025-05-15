@@ -4,7 +4,9 @@ Este diretório contém as funções Edge do Supabase para processar pagamentos 
 
 ## Configuração de Variáveis de Ambiente
 
-Para configurar as variáveis de ambiente necessárias, você precisa usar o CLI do Supabase:
+### Método 1: Usando o CLI do Supabase
+
+Para configurar as variáveis de ambiente necessárias usando o CLI do Supabase:
 
 ```bash
 # Instalar o CLI do Supabase (se ainda não tiver instalado)
@@ -14,9 +16,21 @@ npm install -g supabase
 supabase login
 
 # Configurar as variáveis de ambiente para o projeto
-supabase secrets set STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret
+supabase secrets set STRIPE_SECRET_KEY="sua_chave_secreta_do_stripe"
+supabase secrets set STRIPE_WEBHOOK_SECRET="sua_chave_secreta_de_webhook"
 ```
+
+### Método 2: Usando o Dashboard do Supabase
+
+Se tiver problemas com o CLI, você pode configurar as variáveis de ambiente manualmente no Dashboard do Supabase:
+
+1. Acesse o [Dashboard do Supabase](https://app.supabase.io)
+2. Selecione seu projeto
+3. Vá para "Settings" > "API"
+4. Role para baixo até "Environment Variables"
+5. Adicione as seguintes variáveis:
+   - `STRIPE_SECRET_KEY`: sua chave secreta do Stripe
+   - `STRIPE_WEBHOOK_SECRET`: sua chave secreta de webhook do Stripe
 
 ### Variáveis de Ambiente Necessárias
 

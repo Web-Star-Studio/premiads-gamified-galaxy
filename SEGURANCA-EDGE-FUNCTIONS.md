@@ -42,6 +42,8 @@ O GitHub está detectando chaves secretas em commits anteriores. Para resolver i
 
 Depois de resolver o problema com o GitHub, você precisa configurar os segredos no ambiente do Supabase:
 
+#### Método 1: Via CLI do Supabase
+
 1. Instale o CLI do Supabase (se ainda não tiver instalado):
    ```bash
    npm install -g supabase
@@ -61,12 +63,32 @@ Depois de resolver o problema com o GitHub, você precisa configurar os segredos
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
 
-5. Implante as funções Edge:
-   ```bash
-   supabase functions deploy --no-verify-jwt
-   ```
+#### Método 2: Via Dashboard do Supabase
 
-### 3. Configurar Webhooks do Stripe
+1. Acesse o [Dashboard do Supabase](https://app.supabase.io)
+2. Selecione seu projeto
+3. Vá para "Settings" > "API"
+4. Role para baixo até "Environment Variables"
+5. Adicione as seguintes variáveis:
+   - `STRIPE_SECRET_KEY`: sua chave secreta do Stripe
+   - `STRIPE_WEBHOOK_SECRET`: sua chave secreta de webhook do Stripe
+
+### 3. Implante as Funções Edge
+
+Após configurar os segredos, implante as funções Edge:
+
+```bash
+supabase functions deploy --no-verify-jwt
+```
+
+Ou implante funções específicas:
+
+```bash
+supabase functions deploy purchase-credits --no-verify-jwt
+supabase functions deploy confirm-payment --no-verify-jwt
+```
+
+### 4. Configurar Webhooks do Stripe
 
 Para que as confirmações de pagamento funcionem corretamente, configure o webhook do Stripe:
 
@@ -78,10 +100,7 @@ Para que as confirmações de pagamento funcionem corretamente, configure o webh
 3. Adicione os seguintes eventos:
    - `checkout.session.completed`
    - `payment_intent.payment_failed`
-4. Copie a chave de assinatura do webhook e configure-a como um segredo:
-   ```bash
-   supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-   ```
+4. Copie a chave de assinatura do webhook e configure-a como um segredo conforme as instruções acima
 
 ## Boas Práticas de Segurança
 
@@ -90,3 +109,4 @@ Para que as confirmações de pagamento funcionem corretamente, configure o webh
 - Implemente rotação regular de chaves
 - Mantenha as permissões do Supabase Service Role restritas ao necessário
 - Faça revisões de segurança regulares no código 
+- Utilize git-filters para evitar que segredos sejam acidentalmente commitados 
