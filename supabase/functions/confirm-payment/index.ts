@@ -65,67 +65,70 @@ serve(async (req) => {
         if (event.type === 'checkout.session.completed') {
           const session = event.data.object
           
+          console.log('Webhook: checkout.session.completed event received', {
+            sessionId: session.id,
+            paymentStatus: session.payment_status,
+            customerId: session.customer,
+            metadata: session.metadata
+          })
+          
           // Get purchase ID from metadata
           const purchaseId = session.metadata?.purchase_id
           
           if (!purchaseId) {
+            console.error('Webhook: No purchase_id found in session metadata', session)
             throw new Error('Purchase ID not found in session metadata')
           }
           
-          // Update purchase status
-          const { error: updateError } = await supabase
-            .from('credit_purchases')
-            .update({
-              status: 'confirmed',
-              updated_at: new Date().toISOString()
+          console.log(`Processing payment confirmation for purchase: ${purchaseId}`)
+          
+          // Delegate status update and credit increment to centralized function
+          const res = await fetch(`${supabaseConfig.url}/functions/v1/update-credit-purchase-status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseConfig.serviceRoleKey}`
+            },
+            body: JSON.stringify({ purchase_id: purchaseId, new_status: 'confirmed' })
+          })
+          const result = await res.json()
+          console.log('Central update result:', result)
+          if (!res.ok || !result.success) {
+            throw new Error(`Central update failed: ${result.error || 'unknown error'}`)
+          }
+        } else if (event.type === 'payment_intent.succeeded') {
+          const paymentIntent = event.data.object
+          
+          console.log('Webhook: payment_intent.succeeded event received', {
+            paymentIntentId: paymentIntent.id,
+            amount: paymentIntent.amount,
+            status: paymentIntent.status,
+            metadata: paymentIntent.metadata
+          })
+          
+          // Get purchase ID from metadata
+          const purchaseId = paymentIntent.metadata?.purchase_id
+          
+          if (!purchaseId) {
+            console.error('Webhook: No purchase_id found in payment intent metadata', paymentIntent)
+            return new Response(JSON.stringify({ received: true, warning: 'No purchase_id in metadata' }), { 
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             })
-            .eq('id', purchaseId)
-            .eq('status', 'pending')
-          
-          if (updateError) {
-            throw new Error(`Failed to update purchase: ${updateError.message}`)
           }
           
-          // Get purchase details
-          const { data: purchase, error: purchaseError } = await supabase
-            .from('credit_purchases')
-            .select('*')
-            .eq('id', purchaseId)
-            .single()
+          console.log(`Processing payment confirmation for purchase: ${purchaseId}`)
           
-          if (purchaseError || !purchase) {
-            throw new Error('Purchase not found')
-          }
-          
-          // Add credits to user's account
-          const { error: creditError } = await supabase.rpc(
-            'increment_user_credits',
-            { 
-              user_id: purchase.user_id, 
-              credits_to_add: purchase.total_credits 
-            }
-          )
-          
-          if (creditError) {
-            throw new Error(`Failed to add credits: ${creditError.message}`)
-          }
-          
-          // Add to activity log
-          try {
-            await supabase
-              .from('activity_log')
-              .insert({
-                user_id: purchase.user_id,
-                action: 'credit_purchase',
-                details: {
-                  credits: purchase.total_credits,
-                  price: purchase.price,
-                  payment_method: purchase.payment_method
-                }
-              })
-          } catch (logError) {
-            console.warn('Could not add to activity log:', logError)
-          }
+          // Delegate to centralized status updater
+          await fetch(`${supabaseConfig.url}/functions/v1/update-credit-purchase-status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseConfig.serviceRoleKey}`
+            },
+            body: JSON.stringify({ purchase_id: purchaseId, new_status: 'confirmed' })
+          })
+          return new Response(JSON.stringify({ received: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         } else if (event.type === 'payment_intent.payment_failed') {
           const paymentIntent = event.data.object
           

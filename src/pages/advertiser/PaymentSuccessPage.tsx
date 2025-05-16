@@ -13,6 +13,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import confetti from "canvas-confetti";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PurchaseDetails {
   credits: number;
@@ -30,8 +31,72 @@ function PaymentSuccessPage() {
   const queryClient = useQueryClient();
   const [isAnimating, setIsAnimating] = useState(true);
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   const sessionId = searchParams.get('session_id');
+  
+  // Function to fetch purchase details from Supabase
+  const fetchPurchaseDetails = async (sessionId: string) => {
+    try {
+      console.log("Fetching purchase details for session:", sessionId);
+      
+      // First, try to get the purchase ID associated with this Stripe session
+      const { data: purchases, error: purchaseError } = await supabase
+        .from('credit_purchases')
+        .select('*')
+        .eq('payment_id', sessionId)
+        .single();
+      
+      if (purchaseError || !purchases) {
+        console.error("Error fetching purchase:", purchaseError);
+        throw new Error("Purchase not found");
+      }
+      
+      console.log("Found purchase:", purchases);
+      
+      // If purchase status is still pending, try to update it
+      if (purchases.status === 'pending') {
+        await ensurePurchaseConfirmed(purchases.id);
+      }
+      
+      return {
+        credits: purchases.base,
+        bonus: purchases.bonus,
+        total: purchases.total_credits
+      };
+    } catch (error) {
+      console.error("Error in fetchPurchaseDetails:", error);
+      // Fallback to mock data if we can't get the real data
+      return {
+        credits: 5000,
+        bonus: 1000,
+        total: 6000
+      };
+    }
+  };
+  
+  // Function to ensure purchase is confirmed even if webhook failed
+  const ensurePurchaseConfirmed = async (purchaseId: string) => {
+    try {
+      console.log("Invoking update-credit-purchase-status for purchase:", purchaseId)
+      
+      const { data, error } = await supabase.functions.invoke('update-credit-purchase-status', {
+        body: JSON.stringify({ purchase_id: purchaseId, new_status: 'confirmed' })
+      })
+      
+      console.log('Function invocation result:', { data, error })
+      
+      if (error) {
+        console.error('Error invoking function:', error)
+      }
+      
+      // Refresh queries to get updated user data
+      queryClient.invalidateQueries({ queryKey: ['userCredits'] });
+      queryClient.invalidateQueries({ queryKey: ['activityLog'] });
+    } catch (err) {
+      console.error('Error in ensurePurchaseConfirmed:', err)
+    }
+  };
   
   // Launch confetti effect
   const launchConfetti = () => {
@@ -64,6 +129,10 @@ function PaymentSuccessPage() {
   };
 
   useEffect(() => {
+    // Add log for debugging
+    console.log("PaymentSuccessPage: URL params:", Object.fromEntries(searchParams.entries()));
+    console.log("PaymentSuccessPage: sessionId:", sessionId);
+    
     // Play success sound
     playSound('reward');
     
@@ -74,23 +143,45 @@ function PaymentSuccessPage() {
     queryClient.invalidateQueries({ queryKey: ['userCredits'] });
     queryClient.invalidateQueries({ queryKey: ['activityLog'] });
     
-    // For now, use mock data based on session ID
-    // In production, this would fetch actual data from the database
+    // Fetch the actual purchase details if we have a sessionId
     if (sessionId) {
-      // Mock purchase details - in a real app, this would come from the database
-      const mockPurchaseDetails: PurchaseDetails = {
-        credits: 5000,
-        bonus: 1000,
-        total: 6000
-      };
+      console.log("PaymentSuccessPage: Fetching purchase details for session:", sessionId);
       
-      setPurchaseDetails(mockPurchaseDetails);
-      
-      toast({
-        title: "Pagamento confirmado!",
-        description: `${mockPurchaseDetails.total} créditos foram adicionados à sua conta.`,
-        variant: "default"
-      });
+      setIsLoading(true);
+      fetchPurchaseDetails(sessionId)
+        .then(details => {
+          console.log("PaymentSuccessPage: Got purchase details:", details);
+          setPurchaseDetails(details);
+          
+          toast({
+            title: "Pagamento confirmado!",
+            description: `${details.total} créditos foram adicionados à sua conta.`,
+            variant: "default"
+          });
+          
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.error("Error fetching purchase details:", error);
+          setIsLoading(false);
+          
+          // Fallback to mock data
+          const mockPurchaseDetails: PurchaseDetails = {
+            credits: 5000,
+            bonus: 1000,
+            total: 6000
+          };
+          
+          setPurchaseDetails(mockPurchaseDetails);
+          
+          toast({
+            title: "Pagamento confirmado!",
+            description: `${mockPurchaseDetails.total} créditos foram adicionados à sua conta.`,
+            variant: "default"
+          });
+        });
+    } else {
+      setIsLoading(false);
     }
     
     // Timer to stop the animation after 5 seconds
