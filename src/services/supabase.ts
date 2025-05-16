@@ -263,64 +263,39 @@ export const missionService = {
     return submission;
   },
 
-  // Tokens de usuário
+  // Tokens de usuário (agora centralizados em profiles)
   getUserTokens: async (userId: string) => {
     const client = await getSupabaseClient();
-    const { data, error } = await client
-      .from('user_tokens')
-      .select('*')
-      .eq('user_id', userId)
+    // Busca créditos diretamente no perfil do usuário
+    const { data: profile, error: profileError } = await client
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
       .maybeSingle();
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data || { user_id: userId, total_tokens: 0, used_tokens: 0 };
+    if (profileError) throw profileError;
+    const total = Number(profile?.credits) || 0;
+    // Retorna no shape esperado para compatibilidade
+    return { user_id: userId, total_tokens: total, used_tokens: 0 };
   },
 
   addTokens: async (userId: string, amount: number) => {
     const client = await getSupabaseClient();
-    // Primeiro, tentar obter os tokens existentes
-    const { data: existingTokens, error: fetchError } = await client
-      .from('user_tokens')
-      .select('*')
-      .eq('user_id', userId)
+    // Atualiza o saldo de créditos no perfil
+    const { data: profileData, error: profileError } = await client
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
       .maybeSingle();
-    
-    if (fetchError) {
-      throw fetchError;
-    }
-    
-    if (existingTokens) {
-      // Atualizar tokens existentes
-      const { data, error } = await client
-        .from('user_tokens')
-        .update({ 
-          total_tokens: existingTokens.total_tokens + amount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    } else {
-      // Criar novo registro de tokens
-      const { data, error } = await client
-        .from('user_tokens')
-        .insert([{
-          user_id: userId,
-          total_tokens: amount,
-          used_tokens: 0
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
+    if (profileError) throw profileError;
+    const newTotal = (Number(profileData?.credits) || 0) + amount;
+    const { data, error } = await client
+      .from('profiles')
+      .update({ credits: newTotal, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select()
+      .single();
+    if (error) throw error;
+    return { user_id: userId, total_tokens: newTotal, used_tokens: 0 };
   },
 
   // Recompensas

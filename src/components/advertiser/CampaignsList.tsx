@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
@@ -6,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
-import { mockCampaigns, Campaign } from "./campaignData";
+import { useAdvertiserCampaigns } from '@/hooks/useAdvertiserCampaigns';
+import type { Mission } from '@/hooks/useMissionsTypes';
 
 interface CampaignsListProps {
   initialFilter?: string | null;
@@ -14,27 +14,30 @@ interface CampaignsListProps {
 
 const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => mockCampaigns); // Initialize once with mock data
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<Mission | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
   const { playSound } = useSounds();
   const { toast } = useToast();
+  const { campaigns: fetchedCampaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
+  // Ensure type matches expected Mission[] for downstream components
+  const campaigns = fetchedCampaigns as unknown as Mission[];
   
   // Set initial filter when prop changes
   useEffect(() => {
     setFilterStatus(initialFilter);
   }, [initialFilter]);
   
-  // Filter campaigns based on search term and status filter
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus ? campaign.status === filterStatus : true;
+  // Filter missions based on search term and status filter
+  const filteredCampaigns = campaigns.filter(m => {
+    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus ? m.status === filterStatus : true;
     return matchesSearch && matchesStatus;
   });
 
   const handleDelete = (id: number) => {
-    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
+    // Refresh list after delete
+    refreshCampaigns();
     playSound("error");
     toast({
       title: "Campanha removida",
@@ -56,31 +59,11 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       title: "Missão gerenciada",
       description: editingCampaign ? "Missão atualizada com sucesso!" : "Nova missão criada com sucesso!",
     });
-    
-    // Add logic here to add the campaign data to the campaigns list
-    if (editingCampaign) {
-      // Update existing campaign logic would go here
-    } else {
-      // Add new campaign logic would go here
-      // For now we'll just add a mock campaign with a new ID
-      const newId = campaigns.length > 0 
-        ? Math.max(...campaigns.map(c => c.id)) + 1 
-        : 1;
-        
-      const newCampaign: Campaign = {
-        id: newId,
-        title: `Nova Missão #${newId}`,
-        status: "pendente",
-        audience: "todos",
-        completions: 0,
-        reward: "50-100",
-        expires: "30/08/2025",
-      };
-      setCampaigns(prev => [...prev, newCampaign]);
-    }
+    // Refresh list to reflect changes
+    refreshCampaigns();
   };
   
-  const handleEdit = (campaign: Campaign) => {
+  const handleEdit = (campaign: Mission) => {
     setEditingCampaign(campaign);
     setShowCreateForm(true);
     playSound("pop");
@@ -96,6 +79,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   
   return (
     <div className="space-y-6">
+      {loading && <div>Carregando campanhas…</div>}
       {showCreateForm ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

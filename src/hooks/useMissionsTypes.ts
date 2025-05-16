@@ -177,21 +177,20 @@ export interface Mission {
   description: string;
   type: MissionType;
   requirements?: string | string[];
-  target_audience?: string;
   points: number;
   cost_in_tokens: number;
   status: "ativa" | "pendente" | "encerrada";
   created_by: string;
   created_at?: string;
   updated_at?: string;
-  expires_at?: string;
+  start_date?: string;
+  end_date?: string;
   streak_bonus?: boolean;
   streak_multiplier?: number;
-  start_date?: string;
-  target_filter?: {
-    audience: string;
-    [key: string]: any;
-  };
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
+  target_audience_gender?: string;
 }
 
 /**

@@ -76,9 +76,14 @@ export const useCampaignOperations = () => {
     setIsLoading(true);
     
     try {
-      // Verificar se o usuário tem tokens suficientes
-      const userTokens = await missionService.getUserTokens(currentUser.id);
-      const availableTokens = userTokens.total_tokens - userTokens.used_tokens;
+      // Verificar se o usuário tem tokens suficientes consultando o perfil
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      const availableTokens = Number(profileData?.credits) || 0;
       const cost = calculateTokenCost(formData.type, formData.audience);
       
       if (availableTokens < cost) {
@@ -90,29 +95,48 @@ export const useCampaignOperations = () => {
         return false;
       }
       
+      // Extrair filtros de idade e região/gênero do FormData
+      const ageRanges = formData.targetFilter?.age as string[] | undefined
+      let ageMin: number | undefined
+      let ageMax: number | undefined
+      if (ageRanges && ageRanges.length > 0) {
+        const [minStr, maxStr] = ageRanges[0].split('-')
+        ageMin = parseInt(minStr, 10)
+        ageMax = parseInt(maxStr, 10)
+      }
+      const regionFilter = formData.targetFilter?.region?.join(',')
+      const genderFilter = formData.targetFilter?.gender
+
       // Preparar dados da missão
       const mission: Partial<Mission> = {
         title: formData.title,
         description: formData.description,
-        requirements: Array.isArray(formData.requirements) 
-          ? formData.requirements.join('\n') 
+        requirements: Array.isArray(formData.requirements)
+          ? formData.requirements.join('\n')
           : formData.requirements,
         type: mapMissionType(formData.type) as MissionType,
-        target_audience: formData.audience,
-        points: formData.randomPoints 
-          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
-          : (formData.pointsValue || formData.pointsRange[0]),
+        points: formData.randomPoints
+          ? Math.floor(
+              Math.random() *
+                (formData.pointsRange[1] - formData.pointsRange[0] + 1)
+            ) + formData.pointsRange[0]
+          : formData.pointsValue || formData.pointsRange[0],
         created_by: currentUser.id,
         cost_in_tokens: cost,
-        status: 'pendente' as const, // Começa como pendente, admin pode aprovar para 'ativa'
-        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+        status: 'pendente' as const,
+        start_date: formData.startDate
+          ? new Date(formData.startDate).toISOString()
+          : undefined,
+        end_date: formData.endDate
+          ? new Date(formData.endDate).toISOString()
+          : undefined,
+        target_audience_age_min: ageMin,
+        target_audience_age_max: ageMax,
+        target_audience_region: regionFilter,
+        target_audience_gender: genderFilter,
         streak_bonus: formData.streakBonus,
-        streak_multiplier: formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
-        start_date: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
-        target_filter: {
-          audience: formData.audience,
-          // Adicionar outros filtros conforme necessário
-        }
+        streak_multiplier:
+          formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
       };
       
       // Criar missão no Supabase
@@ -168,27 +192,46 @@ export const useCampaignOperations = () => {
         return false;
       }
       
+      // Extrair filtros de idade e região/gênero do FormData
+      const ageRanges = formData.targetFilter?.age as string[] | undefined
+      let ageMin: number | undefined
+      let ageMax: number | undefined
+      if (ageRanges && ageRanges.length > 0) {
+        const [minStr, maxStr] = ageRanges[0].split('-')
+        ageMin = parseInt(minStr, 10)
+        ageMax = parseInt(maxStr, 10)
+      }
+      const regionFilter = formData.targetFilter?.region?.join(',')
+      const genderFilter = formData.targetFilter?.gender
+
       // Preparar dados da missão
       const updatedMission: Partial<Mission> = {
         title: formData.title,
         description: formData.description,
-        requirements: Array.isArray(formData.requirements) 
-          ? formData.requirements.join('\n') 
+        requirements: Array.isArray(formData.requirements)
+          ? formData.requirements.join('\n')
           : formData.requirements,
         type: mapMissionType(formData.type) as MissionType,
-        target_audience: formData.audience,
-        points: formData.randomPoints 
-          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
-          : (formData.pointsValue || formData.pointsRange[0]),
-        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+        points: formData.randomPoints
+          ? Math.floor(
+              Math.random() *
+                (formData.pointsRange[1] - formData.pointsRange[0] + 1)
+            ) + formData.pointsRange[0]
+          : formData.pointsValue || formData.pointsRange[0],
         updated_at: new Date().toISOString(),
+        start_date: formData.startDate
+          ? new Date(formData.startDate).toISOString()
+          : undefined,
+        end_date: formData.endDate
+          ? new Date(formData.endDate).toISOString()
+          : undefined,
+        target_audience_age_min: ageMin,
+        target_audience_age_max: ageMax,
+        target_audience_region: regionFilter,
+        target_audience_gender: genderFilter,
         streak_bonus: formData.streakBonus,
-        streak_multiplier: formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
-        start_date: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
-        target_filter: {
-          audience: formData.audience,
-          // Adicionar outros filtros conforme necessário
-        }
+        streak_multiplier:
+          formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
       };
       
       // Atualizar missão no Supabase

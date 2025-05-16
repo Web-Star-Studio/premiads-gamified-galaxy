@@ -52,11 +52,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   useEffect(() => {
     if (isEditing && editCampaign) {
       // Map campaign data to formData
-      // This is a simplified example, adjust according to actual data structure
       setFormData({
         ...initialFormData,
         title: editCampaign.title,
-        audience: editCampaign.audience,
+        audience: (editCampaign as any).target_audience || "",
         // Map other fields as needed
       });
     }
@@ -85,7 +84,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   };
 
   // Função para converter os dados do formulário para o formato de missão
-  const createMissionObject = async (): Promise<Mission> => {
+  const createMissionObject = async (): Promise<any> => {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
 
@@ -99,24 +98,44 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       ? formData.requirements 
       : formData.requirements?.join(', ') || "Sem requisitos específicos";
       
-    const mission: Mission = {
+    // Build the mission payload including new fields to match DB schema
+    const missionPayload = {
+      advertiser_id: userId,
       title: formData.title,
       description: formData.description || "Sem descrição",
-      requirements: requirements,
-      type: "social", // Tipo padrão, ajuste conforme necessário
+      requirements: Array.isArray(formData.requirements)
+        ? formData.requirements
+        : [formData.requirements],
+      points: pointsValue,
+      cost_in_tokens: pointsValue,
+      type: formData.type || "social",
+      business_type: formData.type || null,
+      status: "ativa",
+      start_date:
+        formData.startDate instanceof Date
+          ? formatDate(formData.startDate)
+          : formData.startDate,
+      end_date:
+        formData.endDate instanceof Date
+          ? formatDate(formData.endDate)
+          : formData.endDate,
+      is_active: true,
       target_audience: formData.audience || "todos",
-      points_range: {
-        min: formData.randomPoints ? pointsValue : formData.pointsRange[0],
-        max: formData.randomPoints ? pointsValue : formData.pointsRange[1]
-      },
-      created_by: userId,
-      cost_in_tokens: pointsValue, // Custo em tokens igual aos pontos
-      status: "ativa", // Já cria como ativa
-      expires_at: formatDate(formData.endDate instanceof Date ? formData.endDate : new Date()),
-      created_at: formatDate(new Date())
-    };
-
-    return mission;
+      target_audience_gender: formData.targetFilter?.gender || null,
+      target_audience_age_min:
+        formData.targetFilter?.age && formData.targetFilter.age.length > 0
+          ? parseInt((formData.targetFilter.age as string[])[0].split("-")[0], 10)
+          : null,
+      target_audience_age_max:
+        formData.targetFilter?.age && formData.targetFilter.age.length > 0
+          ? parseInt((formData.targetFilter.age as string[])[0].split("-")[1], 10)
+          : null,
+      target_audience_region:
+        formData.targetFilter?.region && formData.targetFilter.region.length > 0
+          ? (formData.targetFilter.region as string[]).join(",")
+          : null
+    }
+    return missionPayload
   };
   
   // Função para consumir os créditos do usuário

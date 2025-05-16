@@ -2,8 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { FormData } from "./types";
-import { supabase } from "@/integrations/supabase/client";
-import { missionService, UserTokens } from "@/services/supabase";
+import { useUserCredits } from '@/hooks/useUserCredits';
 import { Card, CardContent } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -20,8 +19,7 @@ interface RewardsStepProps {
  * Manages points, badges, and other reward options
  */
 const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
-  const [userCredits, setUserCredits] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const { availableCredits: userCredits, isLoading, error } = useUserCredits();
   const [randomPointValue, setRandomPointValue] = useState<number | null>(null);
   
   // Limites de pontuação baseados nos créditos disponíveis
@@ -29,37 +27,11 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const maxPoints = userCredits > 0 ? Math.min(200, userCredits) : 200;
   const pointsStep = 5;
 
-  // Buscar os créditos do usuário ao carregar o componente
+  // Inicializa e mantém créditos dinâmicos via store e real-time
   useEffect(() => {
-    const fetchUserCredits = async () => {
-      try {
-        setIsLoading(true);
-        // Obter usuário atual
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        
-        if (userId) {
-          // Buscar tokens do usuário
-          const userTokens = await missionService.getUserTokens(userId);
-          // Tratar o retorno como tipo UserTokens
-          const availableCredits = (userTokens as UserTokens).total_tokens - (userTokens as UserTokens).used_tokens;
-          setUserCredits(availableCredits);
-          
-          // Limitar os pontos máximos aos créditos disponíveis
-          if (formData.pointsRange[1] > availableCredits) {
-            updateFormData("pointsRange", [minPoints, Math.min(maxPoints, availableCredits)]);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao buscar créditos do usuário:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchUserCredits();
-  }, []);
-  
+    if (error) console.error('Erro ao carregar créditos:', error)
+  }, [error]);
+
   // Gerar pontuação aleatória quando a opção for ativada
   useEffect(() => {
     if (formData.randomPoints) {
