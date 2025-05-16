@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -32,11 +31,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { CreditsDisplay } from "@/components/credits/credits-display";
 
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { setOpen, state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -49,8 +49,7 @@ export const AdvertiserSidebar = () => {
   }, [isMobile, setOpen]);
   
   // Get user info from context or props
-  const userName = localStorage.getItem("userName") || "Anunciante";
-  const userCredits = parseInt(localStorage.getItem("userCredits") || "0");
+  const userName = user?.user_metadata?.name || localStorage.getItem("userName") || "Anunciante";
   
   // Get the first letter of the user name for the avatar fallback
   const userInitial = userName?.charAt(0) || "A";
@@ -135,7 +134,7 @@ export const AdvertiserSidebar = () => {
             <div className={cn("flex flex-col transition-opacity duration-200", 
               isCollapsed ? "hidden" : "")}>
               <span className="font-medium truncate">{userName}</span>
-              <span className="text-xs text-muted-foreground">{userCredits} créditos</span>
+              <CreditsDisplay className="text-xs text-muted-foreground" />
             </div>
           </div>
         </div>
@@ -190,7 +189,8 @@ export const AdvertiserSidebar = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Créditos</span>
                 <span className="text-sm text-neon-cyan flex items-center">
-                  <Wallet className="w-4 h-4 mr-1" /> {userCredits}
+                  <Wallet className="w-4 h-4 mr-1" />
+                  <CreditsDisplay showLabel={false} />
                 </span>
               </div>
             </div>

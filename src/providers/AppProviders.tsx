@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { UserProvider } from "@/context/UserContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { HelmetProvider } from "react-helmet-async";
+import { CreditsProvider } from "./credits-provider";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -14,10 +15,12 @@ export const AppProviders = ({ children }: { children: React.ReactNode }) => {
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <UserProvider>
-              {children}
-              <Toaster />
-            </UserProvider>
+            <CreditsProvider>
+              <UserProvider>
+                {children}
+                <Toaster />
+              </UserProvider>
+            </CreditsProvider>
           </AuthProvider>
         </QueryClientProvider>
       </BrowserRouter>

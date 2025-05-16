@@ -270,9 +270,9 @@ export const missionService = {
       .from('user_tokens')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     
-    if (error && error.code !== 'PGRST116') { // Ignora erro "não encontrado"
+    if (error) {
       throw error;
     }
     
@@ -286,9 +286,9 @@ export const missionService = {
       .from('user_tokens')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError) {
       throw fetchError;
     }
     

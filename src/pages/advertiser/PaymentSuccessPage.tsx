@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserCredits } from '@/hooks/useUserCredits';
 
 interface PurchaseDetails {
   credits: number;
@@ -28,6 +29,7 @@ function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const { refreshCredits } = useUserCredits();
   const queryClient = useQueryClient();
   const [isAnimating, setIsAnimating] = useState(true);
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
@@ -40,8 +42,8 @@ function PaymentSuccessPage() {
     try {
       console.log("Fetching purchase details for session:", sessionId);
       
-      // First, try to get the purchase ID associated with this Stripe session
-      const { data: purchases, error: purchaseError } = await supabase
+      // @ts-ignore: credit_purchases não existe no tipo Database
+      const { data: purchases, error: purchaseError } = await (supabase as any)
         .from('credit_purchases')
         .select('*')
         .eq('payment_id', sessionId)
@@ -149,9 +151,12 @@ function PaymentSuccessPage() {
       
       setIsLoading(true);
       fetchPurchaseDetails(sessionId)
-        .then(details => {
+        .then(async details => {
           console.log("PaymentSuccessPage: Got purchase details:", details);
           setPurchaseDetails(details);
+          
+          // Atualiza os créditos na store Zustand
+          await refreshCredits();
           
           toast({
             title: "Pagamento confirmado!",
@@ -164,6 +169,9 @@ function PaymentSuccessPage() {
         .catch(error => {
           console.error("Error fetching purchase details:", error);
           setIsLoading(false);
+          
+          // Mesmo em erro, tenta atualizar créditos
+          refreshCredits();
           
           // Fallback to mock data
           const mockPurchaseDetails: PurchaseDetails = {
