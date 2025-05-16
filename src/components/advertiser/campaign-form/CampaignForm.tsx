@@ -94,18 +94,19 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
 
     const pointsValue = calculateCampaignPoints();
     
-    const requirements = typeof formData.requirements === 'string' 
-      ? formData.requirements 
-      : formData.requirements?.join(', ') || "Sem requisitos específicos";
+    // Handle requirements properly - ensure it's an array for storage
+    const requirementsArray = Array.isArray(formData.requirements)
+      ? formData.requirements
+      : typeof formData.requirements === 'string'
+        ? [formData.requirements]
+        : ["Sem requisitos específicos"];
       
-    // Build the mission payload including new fields to match DB schema
+    // Build the mission payload including all fields needed for the DB schema
     const missionPayload = {
       advertiser_id: userId,
       title: formData.title,
       description: formData.description || "Sem descrição",
-      requirements: Array.isArray(formData.requirements)
-        ? formData.requirements
-        : [formData.requirements],
+      requirements: requirementsArray,
       points: pointsValue,
       cost_in_tokens: pointsValue,
       type: formData.type || "social",
@@ -133,7 +134,16 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       target_audience_region:
         formData.targetFilter?.region && formData.targetFilter.region.length > 0
           ? (formData.targetFilter.region as string[]).join(",")
-          : null
+          : null,
+      // Additional fields for rewards
+      has_badges: formData.hasBadges || false,
+      has_lootbox: formData.hasLootBox || false,
+      streak_bonus: formData.streakBonus || false,
+      streak_multiplier: formData.streakMultiplier || 1.0,
+      // For min purchase requirements (coupon campaigns)
+      min_purchase: formData.minPurchase || 0,
+      // Store target filter as JSON for more complex filtering
+      target_filter: formData.targetFilter || null
     }
     return missionPayload
   };

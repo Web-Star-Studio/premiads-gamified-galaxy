@@ -28,14 +28,20 @@ export interface Submission {
   missions?: {
     title: string;
   };
-  created_at: string;
+  submitted_at?: string;
+  updated_at: string;
   user?: {
     name?: string;
     avatar_url?: string;
   };
 }
 
-const ModerationContent = () => {
+// Props to trigger a manual refresh from parent
+interface ModerationContentProps {
+  refreshKey?: number
+}
+
+const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const [activeTab, setActiveTab] = useState<string>("pendentes");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -49,9 +55,9 @@ const ModerationContent = () => {
 
   // Mapear abas para status de submissão
   const tabToStatusMap: Record<string, string> = {
-    'pendentes': 'pendente',
-    'aprovadas': 'aprovado',
-    'rejeitadas': 'rejeitado',
+    'pendentes': 'pending',
+    'aprovadas': 'approved',
+    'rejeitadas': 'rejected',
     'segunda_instancia': 'segunda_instancia'
   };
 
@@ -62,14 +68,46 @@ const ModerationContent = () => {
     setIsLoading(true);
     
     try {
-      const fetchedSubmissions = await missionService.getSubmissions({
-        // Buscar submissões de missões criadas pelo anunciante atual
-        status: tabToStatusMap[activeTab]
-      });
+      // Primeiro, buscar missões criadas por este anunciante
+      const { data: missions, error: missionsError } = await missionService.supabase
+        .from('missions')
+        .select('id')
+        .eq('advertiser_id', currentUser.id);
+      
+      if (missionsError) throw missionsError;
+      
+      // Se não houver missões, não há submissões para mostrar
+      if (!missions || missions.length === 0) {
+        setSubmissions([]);
+        setFilteredSubmissions([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      const missionIds = missions.map(m => m.id);
+      
+      // Agora buscar as submissões para estas missões com base no status atual
+      let query = missionService.supabase
+        .from('mission_submissions')
+        .select('*, missions(title)')
+        .in('mission_id', missionIds);
+      
+      // Aplicar filtro de status se necessário
+      if (tabToStatusMap[activeTab]) {
+        query = query.eq('status', tabToStatusMap[activeTab]);
+      }
+      
+      // Ordenar por data de atualização (mais recentes primeiro)
+      const { data: fetchedSubmissions, error: submissionsError } = await query
+        .order('updated_at', { ascending: false });
+      
+      if (submissionsError) throw submissionsError;
+      
+      console.log(`Encontradas ${fetchedSubmissions?.length || 0} submissões para a aba ${activeTab}`);
       
       // Buscar detalhes dos usuários para as submissões
       const enhancedSubmissions = await Promise.all(
-        fetchedSubmissions.map(async (submission) => {
+        (fetchedSubmissions || []).map(async (submission) => {
           try {
             // Buscar informações do usuário
             const { data: userData } = await missionService.supabase
@@ -196,7 +234,9 @@ const ModerationContent = () => {
       const endDate = filterOptions.dateRange[1];
       
       filtered = filtered.filter((submission) => {
-        const submissionDate = new Date(submission.created_at);
+        // Use submitted_at if available, otherwise fall back to updated_at
+        const dateValue = submission.submitted_at || submission.updated_at;
+        const submissionDate = new Date(dateValue);
         return submissionDate >= startDate && submissionDate <= endDate;
       });
     }
@@ -204,10 +244,10 @@ const ModerationContent = () => {
     setFilteredSubmissions(filtered);
   };
 
-  // Ao mudar de aba, buscar submissões correspondentes
+  // Ao mudar de aba ou por refreshKey, buscar submissões correspondentes
   useEffect(() => {
     fetchSubmissions();
-  }, [activeTab, currentUser?.id]);
+  }, [activeTab, currentUser?.id, refreshKey]);
 
   // Ao mudar a pesquisa ou filtros, aplicar filtros
   useEffect(() => {

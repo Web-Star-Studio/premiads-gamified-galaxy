@@ -206,7 +206,7 @@ export const missionService = {
       query = query.eq('status', filters.status);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('updated_at', { ascending: false });
     
     if (error) throw error;
     return data;
@@ -232,35 +232,116 @@ export const missionService = {
     notes?: string
   ) => {
     const client = await getSupabaseClient();
-    // Iniciar uma transação para atualizar o status da submissão e criar um log
-    const { data: submission, error: submissionError } = await client
-      .from('mission_submissions')
-      .update({
-        status: result === 'aprovado' ? 'aprovado' : isAdmin ? 'descartado' : 'segunda_instancia',
-        validated_by: validatedBy,
-        admin_validated: isAdmin,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', submissionId)
-      .select()
-      .single();
     
-    if (submissionError) throw submissionError;
-    
-    // Criar log de validação
-    const { error: logError } = await client
-      .from('mission_validation_logs')
-      .insert([{
-        submission_id: submissionId,
-        validated_by: validatedBy,
-        is_admin: isAdmin,
-        result,
-        notes
-      }]);
-    
-    if (logError) throw logError;
-    
-    return submission;
+    try {
+      // Get submission details first to access mission_id and user_id
+      const { data: submissionData, error: getError } = await client
+        .from('mission_submissions')
+        .select('mission_id, user_id, status')
+        .eq('id', submissionId)
+        .single();
+        
+      if (getError) throw getError;
+      
+      // Map status based on result
+      let newStatus;
+      if (result === 'aprovado') {
+        newStatus = 'approved';
+      } else if (result === 'rejeitado') {
+        if (isAdmin) {
+          newStatus = 'rejected'; // Final rejection
+        } else {
+          newStatus = 'segunda_instancia'; // Pending second review
+        }
+      }
+      
+      console.log(`Atualizando submissão ${submissionId} para status: ${newStatus}`);
+      
+      // Update submission status
+      const { data: submission, error: submissionError } = await client
+        .from('mission_submissions')
+        .update({
+          status: newStatus,
+          validated_by: validatedBy,
+          admin_validated: isAdmin,
+          feedback: notes || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', submissionId)
+        .select()
+        .single();
+      
+      if (submissionError) throw submissionError;
+      
+      // Create validation log
+      const { error: logError } = await client
+        .from('mission_validation_logs')
+        .insert([{
+          submission_id: submissionId,
+          validated_by: validatedBy,
+          is_admin: isAdmin,
+          result,
+          notes
+        }]);
+      
+      if (logError) throw logError;
+      
+      // If approved, create reward and update user's points
+      if (result === 'aprovado') {
+        // Get mission details to determine point value
+        const { data: missionData, error: missionError } = await client
+          .from('missions')
+          .select('points')
+          .eq('id', submissionData.mission_id)
+          .single();
+          
+        if (missionError) throw missionError;
+        
+        const pointsToAward = missionData.points;
+        
+        // Create reward record
+        const { error: rewardError } = await client
+          .from('mission_rewards')
+          .insert([{
+            mission_id: submissionData.mission_id,
+            user_id: submissionData.user_id,
+            submission_id: submissionId,
+            points_earned: pointsToAward,
+            rewarded_at: new Date().toISOString()
+          }]);
+          
+        if (rewardError) throw rewardError;
+        
+        // Update user's points
+        const { data: userData, error: userError } = await client
+          .from('profiles')
+          .select('points')
+          .eq('id', submissionData.user_id)
+          .single();
+          
+        if (userError) throw userError;
+        
+        const currentPoints = userData.points || 0;
+        const newPointsTotal = currentPoints + pointsToAward;
+        
+        const { error: updateError } = await client
+          .from('profiles')
+          .update({ 
+            points: newPointsTotal,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', submissionData.user_id);
+          
+        if (updateError) throw updateError;
+        
+        console.log(`User ${submissionData.user_id} awarded ${pointsToAward} points for mission ${submissionData.mission_id}`);
+      }
+      
+      return submission;
+    } catch (error) {
+      console.error('Error validating submission:', error);
+      throw error;
+    }
   },
 
   // Tokens de usuário (agora centralizados em profiles)

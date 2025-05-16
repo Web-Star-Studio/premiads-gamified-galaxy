@@ -40,7 +40,9 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
     }
   };
   
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Data desconhecida';
+    
     try {
       return format(new Date(dateString), "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
     } catch (e) {
@@ -88,7 +90,7 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
             <div>
               <p className="font-medium">{submission.user?.name || 'Usuário'}</p>
               <p className="text-sm text-muted-foreground">
-                {formatDate(submission.created_at)}
+                {formatDate(submission.submitted_at || submission.updated_at)}
               </p>
             </div>
             
@@ -99,7 +101,7 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
           
           {renderProof()}
           
-          {submission.status === 'pendente' && (
+          {submission.status === 'pending' && (
             <div className="flex justify-end gap-2 mt-4">
               <Button 
                 variant="outline" 

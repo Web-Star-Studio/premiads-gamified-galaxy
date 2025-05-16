@@ -9,50 +9,89 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
   const { toast } = useToast();
   const { playSound } = useSounds();
 
-  // The submitMission function now properly accepts a status parameter
+  /**
+   * Submit a mission with evidence and optional attachments
+   * @param missionId - The ID of the mission
+   * @param submissionData - The submission data including content and files
+   * @param status - The status to set the mission to (in_progress or pending_approval)
+   * @returns Boolean indicating success
+   */
   const submitMission = async (
     missionId: string, 
     submissionData: any,
-    status: "in_progress" | "pending_approval" = "pending_approval" // Default to pending_approval if not specified
+    status: "in_progress" | "pending_approval" = "pending_approval"
   ) => {
     setSubmissionLoading(true);
     
     try {
-      // Get current user
+      console.log("Submitting mission:", { missionId, submissionData, status });
+      
+      // Check if user is authenticated
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session?.user?.id) {
-        console.error("No authenticated user found");
-        toast({
-          title: "Erro ao enviar missão",
-          description: "Você precisa estar logado para enviar uma missão",
-          variant: "destructive",
-        });
-        return false;
+        throw new Error("Usuário não autenticado");
       }
       
       const userId = sessionData.session.user.id;
       
-      console.log(`Submitting mission ${missionId} for user ${userId} with status ${status}`);
-      
-      // Check if a submission already exists for this mission and user
+      // Check if this user already has a submission for this mission
       const { data: existingSubmission, error: checkError } = await supabase
         .from("mission_submissions")
-        .select("*")
+        .select("id, status")
         .eq("mission_id", missionId)
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
       
-      if (checkError && checkError.code !== "PGRST116") { // PGRST116 means no rows returned
+      if (checkError) {
         console.error("Error checking existing submission:", checkError);
-        toast({
-          title: "Erro ao verificar missão",
-          description: "Não foi possível verificar se você já enviou esta missão",
-          variant: "destructive",
-        });
-        return false;
+        throw checkError;
       }
       
+      // Upload files if present
+      let fileUrls: string[] = [];
+      if (submissionData.files && submissionData.files.length > 0) {
+        // Upload each file to Supabase Storage
+        for (const file of submissionData.files) {
+          if (!(file instanceof File)) continue;
+          
+          const fileName = `${userId}/${missionId}/${Date.now()}_${file.name}`;
+          const { data: fileData, error: uploadError } = await supabase.storage
+            .from('mission-submissions')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            continue;
+          }
+          
+          // Get the public URL for the file
+          const { data: publicUrlData } = supabase.storage
+            .from('mission-submissions')
+            .getPublicUrl(fileData.path);
+            
+          fileUrls.push(publicUrlData.publicUrl);
+        }
+      }
+      
+      // Prepare final submission data with uploads
+      const finalSubmissionData = {
+        content: submissionData.content,
+        fileUrls: fileUrls,
+        ...submissionData,
+        submittedAt: new Date().toISOString()
+      };
+
+      // Map UI status to database status
+      const dbStatus = status === "in_progress" ? "in_progress" : "pending";
+
+      // For logging purposes
+      console.log(`Enviando submissão para missão ${missionId} com status: ${dbStatus}`);
+
+      // Update or create submission record
       let result;
       
       // If a submission already exists, update it
@@ -62,8 +101,8 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
         result = await supabase
           .from("mission_submissions")
           .update({
-            submission_data: submissionData,
-            status: status, // Use the provided status
+            submission_data: finalSubmissionData,
+            status: dbStatus,
             updated_at: new Date().toISOString()
           })
           .eq("id", existingSubmission.id);
@@ -76,8 +115,8 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
           .insert({
             mission_id: missionId,
             user_id: userId,
-            submission_data: submissionData,
-            status: status, // Use the provided status
+            submission_data: finalSubmissionData,
+            status: dbStatus,
             submitted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -95,12 +134,15 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       
       console.log("Mission submitted successfully");
       
+      // Play sound based on status
+      playSound(status === "pending_approval" ? "success" : "pop");
+      
       // Update missions in state
       setMissions(prevMissions => prevMissions.map(mission => {
         if (mission.id === missionId) {
           return {
             ...mission,
-            status: status === "in_progress" ? "in_progress" : "pending_approval",
+            status: dbStatus,
           };
         }
         return mission;
@@ -113,13 +155,12 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
           : "Sua missão foi enviada e está aguardando aprovação",
       });
       
-      playSound("success");
       return true;
     } catch (error: any) {
-      console.error("Unexpected error submitting mission:", error);
+      console.error("Error submitting mission:", error);
       toast({
         title: "Erro ao enviar missão",
-        description: error.message || "Ocorreu um erro inesperado ao enviar sua missão",
+        description: error.message || "Ocorreu um erro ao enviar sua missão",
         variant: "destructive",
       });
       return false;

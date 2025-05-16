@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -19,7 +18,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   const filterToStatus = {
     available: "available",
     in_progress: "in_progress",
-    pending: "pending_approval",
+    pending: "pending",
     completed: "completed"
   };
 

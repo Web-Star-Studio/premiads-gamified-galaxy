@@ -1,7 +1,6 @@
-
 import React from "react";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSounds } from "@/hooks/use-sounds";
 import { Mission } from "@/hooks/useMissions";
@@ -15,6 +14,14 @@ interface MissionsListProps {
 
 const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage }: MissionsListProps) => {
   const { playSound } = useSounds();
+
+  // Format the deadline date
+  const formatDeadline = (dateString?: string) => {
+    if (!dateString) return "Sem prazo";
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
 
   return (
     <div className="glass-panel p-4">
@@ -40,11 +47,25 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                   <h4 className="font-medium">{mission.title}</h4>
                   <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                 </div>
-                <Badge variant="secondary">{mission.points} pts</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge 
+                    variant="secondary" 
+                    className="flex items-center gap-1"
+                  >
+                    <Award className="w-3 h-3" />
+                    <span>{mission.points} pts</span>
+                  </Badge>
+                  
+                  {mission.has_badges && (
+                    <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30">
+                      Badge
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div className="flex items-center mt-2 text-xs text-gray-400">
                 <Clock className="w-3 h-3 mr-1" />
-                <span>Prazo: {mission.deadline ? new Date(mission.deadline).toLocaleDateString('pt-BR') : "Sem prazo"}</span>
+                <span>Prazo: {formatDeadline(mission.deadline)}</span>
               </div>
             </div>
           ))}

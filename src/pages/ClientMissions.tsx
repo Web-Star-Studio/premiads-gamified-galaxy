@@ -70,23 +70,26 @@ const ClientMissions = () => {
     playSound("pop");
   };
 
-  const handleSubmitMission = async (submissionData: any) => {
+  const handleSubmitMission = async (
+    submissionData: any,
+    status: "in_progress" | "pending_approval" = "pending_approval"
+  ) => {
     if (!selectedMission) return false;
-    
-    // If submission is null (cancel button pressed), just close the dialog
+
+    // Close dialog if action was cancelled
     if (submissionData === null) {
       setIsSubmissionOpen(false);
       return true;
     }
-    
-    // Submit the mission - use "in_progress" as the status
-    const success = await submitMission(selectedMission.id, submissionData, "in_progress");
-    
+
+    // Forward the status chosen in MissionDialog to the submitMission hook
+    const success = await submitMission(selectedMission.id, submissionData, status);
+
     if (success) {
       setSelectedMission(null);
       setIsSubmissionOpen(false);
     }
-    
+
     return success;
   };
 

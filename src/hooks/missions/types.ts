@@ -1,6 +1,10 @@
-
 // Mission types and status definitions
-export type MissionStatus = "available" | "in_progress" | "completed" | "pending_approval";
+export type MissionStatus =
+  | "available"
+  | "in_progress"
+  | "completed"
+  | "pending_approval"
+  | "pending"; // db string stored for pending submissions
 
 export interface Mission {
   id: string;
@@ -17,6 +21,15 @@ export interface Mission {
   target_audience_age_min?: number;
   target_audience_age_max?: number;
   target_audience_region?: string;
+  // Reward related fields
+  has_badges?: boolean;
+  has_lootbox?: boolean;
+  streak_bonus?: boolean;
+  streak_multiplier?: number;
+  // Target filter data
+  target_filter?: any;
+  // Min purchase for coupon campaigns
+  min_purchase?: number;
 }
 
 export interface UseMissionsOptions {

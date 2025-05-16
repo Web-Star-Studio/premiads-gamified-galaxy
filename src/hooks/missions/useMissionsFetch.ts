@@ -84,6 +84,9 @@ export const useMissionsFetch = () => {
                 : [String(mission.requirements)]
             : [];
 
+          // Use type assertion with any to access non-standard fields safely
+          const missionData: any = mission;
+
           return {
             id: mission.id,
             title: mission.title,
@@ -98,7 +101,16 @@ export const useMissionsFetch = () => {
             target_audience_gender: mission.target_audience_gender,
             target_audience_age_min: mission.target_audience_age_min,
             target_audience_age_max: mission.target_audience_age_max,
-            target_audience_region: mission.target_audience_region
+            target_audience_region: mission.target_audience_region,
+            // Include reward-related fields with safe access
+            has_badges: missionData.has_badges || false,
+            has_lootbox: missionData.has_lootbox || false,
+            streak_bonus: missionData.streak_bonus || false,
+            streak_multiplier: missionData.streak_multiplier || 1.0,
+            // Target filter with safe access
+            target_filter: missionData.target_filter || null,
+            // Min purchase amount with safe access
+            min_purchase: missionData.min_purchase || 0
           };
         });
 
