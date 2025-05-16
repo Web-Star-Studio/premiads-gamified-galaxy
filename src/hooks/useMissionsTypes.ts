@@ -185,6 +185,13 @@ export interface Mission {
   created_at?: string;
   updated_at?: string;
   expires_at?: string;
+  streak_bonus?: boolean;
+  streak_multiplier?: number;
+  start_date?: string;
+  target_filter?: {
+    audience: string;
+    [key: string]: any;
+  };
 }
 
 /**

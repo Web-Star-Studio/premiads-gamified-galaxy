@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { missionService, UserTokens } from "@/services/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Info } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface RewardsStepProps {
   /** Current form data */
@@ -80,6 +81,14 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
     }
   }, [formData.randomPoints, userCredits]);
 
+  // Handle streak multiplier changes
+  const handleStreakMultiplierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value) && value >= 1.0) {
+      updateFormData("streakMultiplier", Math.min(value, 3.0));
+    }
+  };
+
   return (
     <div className="space-y-6">
       {isLoading ? (
@@ -141,6 +150,49 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               aria-labelledby="random-points-label"
             />
           </div>
+
+          <div className="flex items-center justify-between px-1 py-2">
+            <div className="space-y-1">
+              <p className="text-sm font-medium" id="streak-bonus-label">Bônus de Sequência</p>
+              <p className="text-xs text-gray-400">
+                Ofereça pontos extras para usuários que completarem a missão em dias consecutivos
+              </p>
+            </div>
+            <Switch
+              id="streak-bonus"
+              checked={formData.streakBonus}
+              onCheckedChange={(checked) => {
+                updateFormData("streakBonus", checked);
+                if (checked && !formData.streakMultiplier) {
+                  updateFormData("streakMultiplier", 1.2);
+                }
+              }}
+              aria-labelledby="streak-bonus-label"
+            />
+          </div>
+
+          {formData.streakBonus && (
+            <div className="pl-6 pr-1 py-2 space-y-2 bg-galaxy-purple/10 rounded-md">
+              <label htmlFor="streak-multiplier" className="text-sm font-medium">
+                Multiplicador de Sequência
+              </label>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="streak-multiplier"
+                  type="number"
+                  min="1.0"
+                  max="3.0"
+                  step="0.1"
+                  value={formData.streakMultiplier || 1.2}
+                  onChange={handleStreakMultiplierChange}
+                  className="w-24 bg-gray-800 border-gray-700"
+                />
+                <span className="text-xs text-gray-400">
+                  (entre 1.0x e 3.0x, ex: 1.2 = 20% a mais de pontos)
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-1 py-2">
             <div className="space-y-1">

@@ -1,4 +1,3 @@
-
 import { Campaign } from "../campaignData";
 import { MissionType } from "@/hooks/useMissionsTypes";
 
@@ -16,6 +15,22 @@ export interface CampaignFormProps {
  * Target audience types
  */
 export type AudienceType = "todos" | "novos" | "nivel3";
+
+/**
+ * Target audience filter structure
+ */
+export interface TargetFilter {
+  /** Age ranges */
+  age?: string[];
+  /** Geographic regions */
+  region?: string[];
+  /** User interests */
+  interests?: string[];
+  /** User gender */
+  gender?: string;
+  /** Additional filter properties */
+  [key: string]: any;
+}
 
 /**
  * Form data structure for campaign creation/editing
@@ -45,10 +60,14 @@ export interface FormData {
   endDate: Date | string;
   /** Whether campaign has streak bonus */
   streakBonus: boolean;
+  /** Streak bonus multiplier (e.g. 1.2 = 20% bonus) */
+  streakMultiplier?: number;
   /** List of campaign requirements */
   requirements: string[] | string;
   /** Minimum purchase amount (for coupon campaigns) */
   minPurchase?: number;
+  /** Advanced target audience filters */
+  targetFilter?: TargetFilter;
 }
 
 /**
@@ -67,8 +86,15 @@ export const initialFormData: FormData = {
   startDate: "",
   endDate: "",
   streakBonus: false,
+  streakMultiplier: 1.2,
   requirements: [],
   minPurchase: 0,
+  targetFilter: {
+    age: [],
+    region: [],
+    interests: [],
+    gender: "all"
+  }
 };
 
 /**

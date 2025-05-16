@@ -156,6 +156,9 @@ export function useCampaignForm({ editCampaign, onClose }: UseCampaignFormProps)
       case 2:
         return formData.requirements.length > 0;
       case 3:
+        if (formData.streakBonus && (!formData.streakMultiplier || formData.streakMultiplier < 1.0)) {
+          return false;
+        }
         return true; // Rewards are optional
       case 4:
         return formData.startDate !== "" && 

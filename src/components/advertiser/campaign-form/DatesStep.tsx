@@ -115,6 +115,34 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
             formData.pointsRange[0] : `${formData.pointsRange[0]}-${formData.pointsRange[1]}`}</li>
           <li><span className="text-gray-400">Duração:</span> {startDateStr && endDateStr ? 
             `${startDateStr} até ${endDateStr}` : "Não definida"}</li>
+          {formData.streakBonus && (
+            <li><span className="text-gray-400">Bônus de Sequência:</span> 
+              {formData.streakMultiplier ? 
+                `${(formData.streakMultiplier * 100 - 100).toFixed(0)}% de pontos adicionais` : 
+                "Ativado"}  
+            </li>
+          )}
+          
+          {/* Display target audience filters if any are set */}
+          {formData.targetFilter && (
+            <li className="mt-1">
+              <span className="text-gray-400">Filtros de público:</span>
+              <ul className="ml-4 mt-1 space-y-1 list-disc">
+                {formData.targetFilter.age?.length > 0 && (
+                  <li>Faixa etária: {formData.targetFilter.age.join(', ')}</li>
+                )}
+                {formData.targetFilter.region?.length > 0 && (
+                  <li>Regiões: {formData.targetFilter.region.join(', ')}</li>
+                )}
+                {formData.targetFilter.interests?.length > 0 && (
+                  <li>Interesses: {formData.targetFilter.interests.join(', ')}</li>
+                )}
+                {formData.targetFilter.gender && formData.targetFilter.gender !== 'all' && (
+                  <li>Gênero: {formData.targetFilter.gender === 'male' ? 'Masculino' : 'Feminino'}</li>
+                )}
+              </ul>
+            </li>
+          )}
         </ul>
       </div>
     </div>

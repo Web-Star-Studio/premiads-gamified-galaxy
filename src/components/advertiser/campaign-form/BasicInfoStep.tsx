@@ -1,4 +1,3 @@
-
 import { memo } from "react";
 import { 
   FileText, 
@@ -8,7 +7,8 @@ import {
   Share, 
   Tag, 
   BarChart3, 
-  Star 
+  Star,
+  Users
 } from "lucide-react";
 import { FormData } from "./types";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,10 @@ import {
   missionTypeLabels, 
   missionTypeDescriptions 
 } from "@/hooks/useMissionsTypes";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface BasicInfoStepProps {
   /** Current form data */
@@ -70,6 +74,39 @@ const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
     { value: "novos", label: "Novos usuários" },
     { value: "nivel3", label: "Usuários nível 3 ou superior" }
   ];
+
+  // Enhanced audience targeting options
+  const ageRanges = [
+    { value: "18-24", label: "18-24 anos" },
+    { value: "25-34", label: "25-34 anos" },
+    { value: "35-44", label: "35-44 anos" },
+    { value: "45+", label: "45+ anos" }
+  ];
+
+  const regions = [
+    { value: "norte", label: "Norte" },
+    { value: "nordeste", label: "Nordeste" },
+    { value: "centro-oeste", label: "Centro-Oeste" },
+    { value: "sudeste", label: "Sudeste" },
+    { value: "sul", label: "Sul" }
+  ];
+
+  const interests = [
+    { value: "tecnologia", label: "Tecnologia" },
+    { value: "moda", label: "Moda" },
+    { value: "esportes", label: "Esportes" },
+    { value: "gastronomia", label: "Gastronomia" },
+    { value: "viagem", label: "Viagem" }
+  ];
+
+  // Handle audience filter changes
+  const handleAudienceFilterChange = (filterType: string, value: string | string[]) => {
+    const currentFilter = formData.targetFilter || {};
+    updateFormData("targetFilter", {
+      ...currentFilter,
+      [filterType]: value
+    });
+  };
   
   return (
     <div className="space-y-6">
@@ -168,6 +205,119 @@ const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
           </SelectContent>
         </Select>
       </div>
+
+      <Card className="bg-galaxy-darkPurple/50 border-galaxy-purple/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-neon-cyan" />
+            <h4 className="text-sm font-medium">Filtros Avançados de Público</h4>
+          </div>
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="age" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Faixa Etária</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {ageRanges.map((age) => (
+                    <div key={age.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`age-${age.value}`} 
+                        checked={(formData.targetFilter?.age as string[])?.includes(age.value)}
+                        onCheckedChange={(checked) => {
+                          const currentAges = (formData.targetFilter?.age as string[]) || [];
+                          const newAges = checked 
+                            ? [...currentAges, age.value]
+                            : currentAges.filter(a => a !== age.value);
+                          handleAudienceFilterChange('age', newAges);
+                        }}
+                      />
+                      <Label htmlFor={`age-${age.value}`} className="text-sm">
+                        {age.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="region" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Região</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {regions.map((region) => (
+                    <div key={region.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`region-${region.value}`} 
+                        checked={(formData.targetFilter?.region as string[])?.includes(region.value)}
+                        onCheckedChange={(checked) => {
+                          const currentRegions = (formData.targetFilter?.region as string[]) || [];
+                          const newRegions = checked 
+                            ? [...currentRegions, region.value]
+                            : currentRegions.filter(r => r !== region.value);
+                          handleAudienceFilterChange('region', newRegions);
+                        }}
+                      />
+                      <Label htmlFor={`region-${region.value}`} className="text-sm">
+                        {region.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="interests" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Interesses</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {interests.map((interest) => (
+                    <div key={interest.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`interest-${interest.value}`} 
+                        checked={(formData.targetFilter?.interests as string[])?.includes(interest.value)}
+                        onCheckedChange={(checked) => {
+                          const currentInterests = (formData.targetFilter?.interests as string[]) || [];
+                          const newInterests = checked 
+                            ? [...currentInterests, interest.value]
+                            : currentInterests.filter(i => i !== interest.value);
+                          handleAudienceFilterChange('interests', newInterests);
+                        }}
+                      />
+                      <Label htmlFor={`interest-${interest.value}`} className="text-sm">
+                        {interest.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="gender" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Gênero</AccordionTrigger>
+              <AccordionContent>
+                <RadioGroup 
+                  value={formData.targetFilter?.gender as string || "all"}
+                  onValueChange={(value) => handleAudienceFilterChange('gender', value)}
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="gender-all" />
+                    <Label htmlFor="gender-all" className="text-sm">Todos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="male" id="gender-male" />
+                    <Label htmlFor="gender-male" className="text-sm">Masculino</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="female" id="gender-female" />
+                    <Label htmlFor="gender-female" className="text-sm">Feminino</Label>
+                  </div>
+                </RadioGroup>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 };

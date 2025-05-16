@@ -91,7 +91,7 @@ export const useCampaignOperations = () => {
       }
       
       // Preparar dados da missão
-      const mission = {
+      const mission: Partial<Mission> = {
         title: formData.title,
         description: formData.description,
         requirements: Array.isArray(formData.requirements) 
@@ -105,11 +105,18 @@ export const useCampaignOperations = () => {
         created_by: currentUser.id,
         cost_in_tokens: cost,
         status: 'pendente' as const, // Começa como pendente, admin pode aprovar para 'ativa'
-        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined
+        expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
+        streak_bonus: formData.streakBonus,
+        streak_multiplier: formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
+        start_date: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+        target_filter: {
+          audience: formData.audience,
+          // Adicionar outros filtros conforme necessário
+        }
       };
       
       // Criar missão no Supabase
-      const createdMission = await missionService.createMission(mission);
+      const createdMission = await missionService.createMission(mission as Mission);
       
       toast({
         title: "Missão criada com sucesso",
@@ -162,7 +169,7 @@ export const useCampaignOperations = () => {
       }
       
       // Preparar dados da missão
-      const updatedMission = {
+      const updatedMission: Partial<Mission> = {
         title: formData.title,
         description: formData.description,
         requirements: Array.isArray(formData.requirements) 
@@ -174,7 +181,14 @@ export const useCampaignOperations = () => {
           ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
           : (formData.pointsValue || formData.pointsRange[0]),
         expires_at: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        streak_bonus: formData.streakBonus,
+        streak_multiplier: formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
+        start_date: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+        target_filter: {
+          audience: formData.audience,
+          // Adicionar outros filtros conforme necessário
+        }
       };
       
       // Atualizar missão no Supabase
