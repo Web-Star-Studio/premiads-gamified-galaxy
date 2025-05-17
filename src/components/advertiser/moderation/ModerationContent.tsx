@@ -152,62 +152,37 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     }
   };
 
-  // Aprovar uma submissão
-  const handleApproveSubmission = async (submissionId: string) => {
-    if (!currentUser?.id) return;
-    
+  // Aprovar ou rejeitar submissão
+  const handleVerdict = async (submissionId: string, result: 'aprovado' | 'rejeitado', notes?: string) => {
+    setIsLoading(true);
     try {
-      await missionService.validateSubmission(
+      const response = await missionService.validateSubmission({
         submissionId,
-        currentUser.id,
-        'aprovado',
-        false
-      );
-      
-      toast({
-        title: 'Submissão aprovada',
-        description: 'A submissão foi aprovada com sucesso!'
+        validatedBy: currentUser.id,
+        result,
+        isAdmin: false,
+        notes
       });
-      
-      // Atualizar lista de submissões
-      fetchSubmissions();
-    } catch (error) {
-      console.error('Erro ao aprovar submissão:', error);
-      toast({
-        title: 'Erro ao aprovar submissão',
-        description: 'Não foi possível aprovar esta submissão.',
-        variant: 'destructive'
-      });
-    }
-  };
 
-  // Rejeitar uma submissão
-  const handleRejectSubmission = async (submissionId: string, reason?: string) => {
-    if (!currentUser?.id) return;
-    
-    try {
-      await missionService.validateSubmission(
-        submissionId,
-        currentUser.id,
-        'rejeitado',
-        false,
-        reason
-      );
-      
-      toast({
-        title: 'Submissão rejeitada',
-        description: 'A submissão foi rejeitada e enviada para segunda validação.'
-      });
-      
-      // Atualizar lista de submissões
-      fetchSubmissions();
+      if (response && response.success) {
+        toast({
+          title: result === 'aprovado' ? 'Submissão aprovada' : 'Submissão rejeitada',
+          description: 'A submissão foi avaliada com sucesso.',
+          variant: result === 'aprovado' ? 'default' : 'destructive',
+        });
+        
+        // Invalidar cache e atualizar lista
+        await fetchSubmissions();
+      }
     } catch (error) {
-      console.error('Erro ao rejeitar submissão:', error);
+      console.error(`Erro ao ${result === 'aprovado' ? 'aprovar' : 'rejeitar'} submissão:`, error);
       toast({
-        title: 'Erro ao rejeitar submissão',
-        description: 'Não foi possível rejeitar esta submissão.',
-        variant: 'destructive'
+        title: 'Erro',
+        description: `Não foi possível ${result === 'aprovado' ? 'aprovar' : 'rejeitar'} a submissão.`,
+        variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -270,8 +245,8 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     return (
       <SubmissionsList 
         submissions={filteredSubmissions} 
-        onApprove={handleApproveSubmission}
-        onReject={handleRejectSubmission}
+        onApprove={(submissionId) => handleVerdict(submissionId, 'aprovado')}
+        onReject={(submissionId, notes) => handleVerdict(submissionId, 'rejeitado', notes)}
       />
     );
   };
