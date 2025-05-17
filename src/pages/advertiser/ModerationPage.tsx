@@ -1,4 +1,3 @@
-
 import { useUser } from "@/context/UserContext";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useState } from 'react'
@@ -11,7 +10,7 @@ import ModerationTest from "@/components/advertiser/moderation/ModerationTest";
 const ModerationPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { userName } = useUser();
-  // Controls refresh of submissions for moderation panel
+  // Controla refresh de submissões para o painel de moderação
   const [refreshKey, setRefreshKey] = useState(0)
 
   return (
@@ -26,11 +25,11 @@ const ModerationPage = () => {
           
           <div className="container px-4 py-8 mx-auto">
             <div className="mb-8">
-              {/* Test submission creation and diagnostics */}
+              {/* Diagnóstico e criação de submissão de teste */}
               <ModerationTest onRefresh={() => setRefreshKey(k => k + 1)} />
             </div>
             
-            {/* Real moderation panel that consumes the same refreshKey */}
+            {/* Painel de moderação real que consome o mesmo refreshKey */}
             <ModerationContent refreshKey={refreshKey} />
           </div>
         </SidebarInset>

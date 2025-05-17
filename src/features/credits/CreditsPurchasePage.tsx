@@ -5,7 +5,8 @@ import { useSounds } from '@/hooks/use-sounds'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { useCreditPurchase, CreditPackage } from './useCreditPurchase.hook'
+import { useCreditPurchase } from './useCreditPurchase.hook'
+import { CreditPackage } from './useCreditPurchase.hook'
 import { PaymentMethod, PaymentProvider } from '@/lib/payments'
 import {
   CreditPackageCard,
@@ -40,8 +41,7 @@ function CreditsPurchasePage() {
     isPaymentModalOpen,
     setIsPaymentModalOpen,
     selectedPackage,
-    setSelectedPackage,
-    validatePromoCode
+    setSelectedPackage
   } = useCreditPurchase()
   
   // When credit packages are loaded, select the default package (1000 credits)

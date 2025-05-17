@@ -1,4 +1,3 @@
-
 // UI hooks
 export { useIsMobile, useMediaQuery } from './use-mobile';
 export { useSounds } from './use-sounds';
@@ -21,7 +20,6 @@ export {
 export type { MissionType } from './useMissionsTypes';
 export { useReferrals } from './useReferrals';
 export { useCashbackMarketplace } from './cashback';
-export { useUserCredits } from './useUserCredits';
 
 // Mission-specific hooks
 export * from './missions/useMissionFilters';

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Edit, Eye, Trash, BarChart } from "lucide-react";
@@ -7,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface CampaignTableRowProps {
   campaign: Campaign;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   onEdit: (campaign: Campaign) => void;
 }
 
@@ -18,10 +19,10 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
       <TableCell>
         <CampaignStatusBadge status={campaign.status} />
       </TableCell>
-      <TableCell>{campaign.target_audience_region || '-'}</TableCell>
-      <TableCell className="text-right">-</TableCell>
-      <TableCell>{campaign.points} pts</TableCell>
-      <TableCell>{campaign.deadline || '-'}</TableCell>
+      <TableCell>{campaign.audience}</TableCell>
+      <TableCell className="text-right">{campaign.completions}</TableCell>
+      <TableCell>{campaign.reward}</TableCell>
+      <TableCell>{campaign.expires}</TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
           <Tooltip>

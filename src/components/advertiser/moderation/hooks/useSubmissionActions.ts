@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,39 +24,67 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       // Update submission status in database
       const { error } = await supabase
         .from("mission_submissions")
-        .update({ 
-          status: "approved",
-          review_stage: "finalized",
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: "approved" })
         .eq("id", submission.id);
         
       if (error) throw error;
       
-      // Call the reward_participant_for_submission function to distribute rewards
-      const { error: rewardError } = await supabase
-        .rpc('reward_participant_for_submission', {
-          submission_id: submission.id
-        });
-        
-      if (rewardError) {
-        console.error("Error rewarding participant:", rewardError);
-        throw rewardError;
-      }
-      
-      // Get mission details for notification
+      // Get mission details to determine reward amount
       const { data: missionData, error: missionError } = await supabase
         .from("missions")
-        .select("points, title, cost_in_tokens")
+        .select("points, title")
         .eq("id", submission.mission_id)
         .single();
         
       if (missionError) throw missionError;
       
+      // Create reward record
+      const { error: rewardError } = await supabase
+        .from("mission_rewards")
+        .insert({
+          user_id: submission.user_id,
+          mission_id: submission.mission_id,
+          submission_id: submission.id,
+          points_earned: missionData.points,
+          rewarded_at: new Date().toISOString()
+        });
+        
+      if (rewardError) throw rewardError;
+      
+      // Update user's points balance
+      const { data: userData, error: userError } = await supabase
+        .from("profiles")
+        .select("points")
+        .eq("id", submission.user_id)
+        .single();
+        
+      if (userError) throw userError;
+      
+      const currentPoints = userData.points || 0;
+      const newPoints = currentPoints + missionData.points;
+      
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ 
+          points: newPoints,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", submission.user_id);
+        
+      if (updateError) throw updateError;
+      
+      // Log notification (would be stored in a notifications table in a complete implementation)
+      console.log("User notification:", {
+        user_id: submission.user_id,
+        title: "Missão aprovada!",
+        message: `Sua submissão para a missão "${missionData.title}" foi aprovada! Você recebeu ${missionData.points} pontos.`,
+        type: "mission_approved",
+      });
+      
       playSound("reward");
       toast({
         title: "Submissão aprovada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${missionData.points} pontos e ${missionData.cost_in_tokens} tokens atribuídos.`,
+        description: `Submissão de ${submission.user_name} foi aprovada com sucesso! ${missionData.points} pontos atribuídos.`,
       });
       
       // Remove from list
@@ -88,8 +115,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         .from("mission_submissions")
         .update({ 
           status: "rejected",
-          feedback: reason || "Submissão não atende aos requisitos da missão",
-          updated_at: new Date().toISOString()
+          feedback: reason || "Submissão não atende aos requisitos da missão"
         })
         .eq("id", submission.id);
         
@@ -104,10 +130,18 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         
       if (missionError) throw missionError;
       
+      // Log notification (would be stored in a notifications table in a complete implementation)
+      console.log("User notification:", {
+        user_id: submission.user_id,
+        title: "Missão rejeitada",
+        message: `Sua submissão para a missão "${missionData.title}" foi rejeitada. Motivo: ${reason || "Não atende aos requisitos"}`,
+        type: "mission_rejected",
+      });
+      
       playSound("error");
       toast({
         title: "Submissão rejeitada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi rejeitada.`,
+        description: `Submissão de ${submission.user_name} foi rejeitada.`,
       });
       
       // Remove from list

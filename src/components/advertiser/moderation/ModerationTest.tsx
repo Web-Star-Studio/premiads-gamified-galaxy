@@ -1,312 +1,293 @@
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { missionService } from '@/services/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle } from 'lucide-react';
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { missionService } from "@/services/supabase";
-import { RotateCcw, ShieldAlert, Wrench, Info } from "lucide-react";
+/**
+ * Test component to help diagnose and test the moderation system
+ * This is a development-only component that should be removed in production
+ */
 
+// Props to notify parent to refresh the moderation panel
 interface ModerationTestProps {
-  onRefresh: () => void;
+  onRefresh?: () => void
 }
 
 const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
-  const [isCreating, setIsCreating] = useState(false);
-  const { toast } = useToast();
-  const { currentUser } = useAuth();
-  
-  // Cria uma submissão de teste para demonstrar o fluxo de moderação
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingTest, setIsCreatingTest] = useState(false);
+
+  // Função para verificar status dos estados
+  const checkStatusValues = async () => {
+    try {
+      // Verificar todos os status únicos usados na tabela
+      const { data: statusValues, error: statusError } = await supabase
+        .from('mission_submissions')
+        .select('status')
+        .not('status', 'is', null);
+        
+      if (statusError) throw statusError;
+      
+      // Extrair valores únicos
+      const uniqueStatuses = [...new Set(statusValues?.map(item => item.status))];
+      
+      return uniqueStatuses;
+    } catch (error) {
+      console.error("Erro ao verificar status:", error);
+      return [];
+    }
+  };
+
+  // Função principal que busca as submissões
+  const checkSubmissions = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      if (!userId) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Verificar status existentes
+      const statusValues = await checkStatusValues();
+      
+      // Buscar missões criadas pelo anunciante (campo created_by no DB)
+      const { data: missions, error: missionsError } = await supabase
+        .from('missions')
+        .select('id, title')
+        .eq('created_by', userId);
+      console.log('Test missions for advertiser (created_by):', missions);
+      
+      if (missionsError) throw missionsError;
+      
+      // Get any submissions for these missions
+      const missionIds = missions?.map(m => m.id) || [];
+      
+      if (missionIds.length > 0) {
+        const { data: submissions, error: subError } = await supabase
+          .from('mission_submissions')
+          .select('*, missions(title)')
+          .in('mission_id', missionIds);
+          
+        if (subError) throw subError;
+        
+        setResult({
+          yourMissions: missions || [],
+          submissions: submissions || [],
+          submissionSample: [],
+          statusValues
+        });
+      } else {
+        // Se não houver missões, não tente buscar submissões
+        setResult({
+          yourMissions: [],
+          submissions: [],
+          submissionSample: [],
+          statusValues
+        });
+      }
+      
+      // Buscar uma amostra geral de submissões, apenas se houver dados
+      try {
+        const { data: allSubmissions, error: allSubError } = await supabase
+          .from('mission_submissions')
+          .select('id, status, updated_at, submitted_at')
+          .limit(10);
+          
+        if (allSubError) throw allSubError;
+        
+        if (result) {
+          setResult(prev => ({
+            ...prev,
+            submissionSample: allSubmissions || []
+          }));
+        }
+      } catch (sampleError) {
+        console.log('Erro ao buscar amostra geral, ignorando:', sampleError);
+        // Não falhe completamente se apenas esta parte der erro
+      }
+      
+    } catch (error: any) {
+      console.error('Test error:', error);
+      setError(error.message || 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para criar uma submissão de teste
   const createTestSubmission = async () => {
-    if (!currentUser?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar autenticado para criar uma submissão de teste.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsCreating(true);
+    setIsCreatingTest(true);
     
     try {
-      // Busca as missões deste anunciante
-      const { data: missions, error: missionsError } = await missionService.supabase
-        .from('missions')
-        .select('id')
-        .eq('created_by', currentUser.id)
-        .limit(1);
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
       
-      if (missionsError) throw missionsError;
-      
-      if (!missions || missions.length === 0) {
-        toast({
-          title: "Sem missões",
-          description: "Você precisa criar pelo menos uma campanha antes de testar a moderação.",
-          variant: "destructive"
-        });
-        return;
+      if (!userId) {
+        throw new Error("Usuário não autenticado");
       }
       
-      // Cria uma submissão de teste
+      // Buscar uma missão criada pelo usuário
+      const { data: missions } = await supabase
+        .from('missions')
+        .select('id, title')
+        .eq('advertiser_id', userId)
+        .limit(1);
+      
+      if (!missions || missions.length === 0) {
+        throw new Error("Nenhuma missão encontrada. Crie uma missão primeiro.");
+      }
+      
       const missionId = missions[0].id;
-      const { data: submission, error: submissionError } = await missionService.supabase
+      
+      // Criar um usuário de teste se necessário
+      const testUserId = userId; // Usar o próprio anunciante como submissor para teste
+      
+      // Criar a submissão
+      const { data, error } = await supabase
         .from('mission_submissions')
         .insert({
           mission_id: missionId,
-          user_id: currentUser.id, // Usa o próprio anunciante como usuário para teste
+          user_id: testUserId,
           status: 'pending',
-          proof_text: 'Esta é uma submissão de teste para demonstrar o fluxo de moderação.',
-          submission_data: { test_data: true, message: 'Submissão para demonstração do fluxo de moderação.' },
+          submission_data: {
+            content: 'Esta é uma submissão de teste para diagnóstico',
+            timestamp: new Date().toISOString()
+          },
           submitted_at: new Date().toISOString(),
-          review_stage: 'first_review'
+          updated_at: new Date().toISOString()
         })
-        .select()
-        .single();
+        .select();
       
-      if (submissionError) throw submissionError;
+      if (error) throw error;
       
-      toast({
-        title: "Submissão de teste criada",
-        description: "Uma nova submissão de teste foi criada para você moderar.",
-      });
-      
-      // Notifica o componente pai para atualizar a lista
-      onRefresh();
-      
+      // Atualizar resultados e notificar painel de moderação
+      checkSubmissions();
+      onRefresh?.();
     } catch (error: any) {
-      console.error('Erro ao criar submissão de teste:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível criar a submissão de teste.",
-        variant: "destructive"
-      });
+      setError(error.message || 'Erro ao criar submissão de teste');
     } finally {
-      setIsCreating(false);
-    }
-  };
-  
-  // Cria uma submissão em segunda instância para demonstração
-  const createSecondInstanceTest = async () => {
-    if (!currentUser?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar autenticado para criar uma submissão de teste.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsCreating(true);
-    
-    try {
-      // Busca as missões deste anunciante
-      const { data: missions, error: missionsError } = await missionService.supabase
-        .from('missions')
-        .select('id')
-        .eq('created_by', currentUser.id)
-        .limit(1);
-      
-      if (missionsError) throw missionsError;
-      
-      if (!missions || missions.length === 0) {
-        toast({
-          title: "Sem missões",
-          description: "Você precisa criar pelo menos uma campanha antes de testar a moderação.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Cria uma submissão já em segunda instância
-      const missionId = missions[0].id;
-      const { data: submission, error: submissionError } = await missionService.supabase
-        .from('mission_submissions')
-        .insert({
-          mission_id: missionId,
-          user_id: currentUser.id,
-          status: 'second_instance_pending',
-          proof_text: 'Esta é uma submissão em segunda instância para demonstração.',
-          submission_data: { test_data: true, message: 'Demonstração de segunda instância.' },
-          submitted_at: new Date().toISOString(),
-          second_instance: true,
-          review_stage: 'second_instance',
-          feedback: 'Esta submissão foi rejeitada e enviada para segunda instância.'
-        })
-        .select()
-        .single();
-      
-      if (submissionError) throw submissionError;
-      
-      toast({
-        title: "Submissão em segunda instância criada",
-        description: "Uma submissão em segunda instância foi criada para demonstração.",
-      });
-      
-      // Notifica o componente pai para atualizar a lista
-      onRefresh();
-      
-    } catch (error: any) {
-      console.error('Erro ao criar submissão em segunda instância:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível criar a submissão de teste.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreating(false);
-    }
-  };
-  
-  // Cria uma submissão retornada do admin para o anunciante
-  const createReturnedToAdvertiser = async () => {
-    if (!currentUser?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar autenticado para criar uma submissão de teste.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsCreating(true);
-    
-    try {
-      // Busca as missões deste anunciante
-      const { data: missions, error: missionsError } = await missionService.supabase
-        .from('missions')
-        .select('id')
-        .eq('created_by', currentUser.id)
-        .limit(1);
-      
-      if (missionsError) throw missionsError;
-      
-      if (!missions || missions.length === 0) {
-        toast({
-          title: "Sem missões",
-          description: "Você precisa criar pelo menos uma campanha antes de testar a moderação.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Cria uma submissão retornada do admin para o anunciante
-      const missionId = missions[0].id;
-      const { data: submission, error: submissionError } = await missionService.supabase
-        .from('mission_submissions')
-        .insert({
-          mission_id: missionId,
-          user_id: currentUser.id,
-          status: 'returned_to_advertiser',
-          proof_text: 'Esta é uma submissão retornada do administrador para o anunciante.',
-          submission_data: { test_data: true, message: 'Demonstração de retorno ao anunciante.' },
-          submitted_at: new Date().toISOString(),
-          second_instance: true,
-          review_stage: 'advertiser',
-          second_instance_status: 'approved',
-          feedback: 'O administrador aprovou esta submissão em segunda instância e retornou para sua revisão final.'
-        })
-        .select()
-        .single();
-      
-      if (submissionError) throw submissionError;
-      
-      toast({
-        title: "Submissão retornada criada",
-        description: "Uma submissão retornada do admin para você foi criada para demonstração.",
-      });
-      
-      // Notifica o componente pai para atualizar a lista
-      onRefresh();
-      
-    } catch (error: any) {
-      console.error('Erro ao criar submissão retornada:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível criar a submissão de teste.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreating(false);
+      setIsCreatingTest(false);
     }
   };
 
   return (
-    <Card className="border-neon-pink/30 shadow-[0_0_15px_rgba(255,82,174,0.1)]">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-neon-pink" />
-          Ferramentas de Teste da Moderação
-        </CardTitle>
-        <CardDescription>
-          Crie submissões de teste para demonstrar o fluxo de moderação
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="info">
-            <AccordionTrigger>
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-neon-cyan" />
-                <span>Sobre o Fluxo de Moderação</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <Alert className="mb-4">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertTitle>Fluxo de Moderação com Segunda Instância</AlertTitle>
-                <AlertDescription className="mt-2">
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
-                    <li>Você (anunciante) recebe submissões "pending" para aprovar ou rejeitar</li>
-                    <li>Se você aprovar, o usuário recebe os pontos imediatamente</li>
-                    <li>Se você rejeitar, a submissão vai para "second_instance_pending" para revisão do administrador</li>
-                    <li>O administrador pode rejeitar definitivamente ou aprovar e retornar para você</li>
-                    <li>Submissões retornadas aparecem como "returned_to_advertiser" para sua decisão final</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <Button 
-            variant="outline" 
-            className="border-neon-cyan/30 hover:border-neon-cyan/50"
-            onClick={createTestSubmission}
-            disabled={isCreating}
-          >
-            Criar Submissão Pendente
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="border-neon-pink/30 hover:border-neon-pink/50"
-            onClick={createSecondInstanceTest}
-            disabled={isCreating}
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Criar Segunda Instância
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="border-amber-500/30 hover:border-amber-500/50"
-            onClick={createReturnedToAdvertiser}
-            disabled={isCreating}
-          >
-            Criar Retornada p/ Anunciante
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
+    <Card className="border-galaxy-purple bg-galaxy-darkPurple">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Diagnóstico do Sistema de Moderação</CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              onClick={checkSubmissions} 
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+            >
+              {isLoading ? 'Verificando...' : 'Verificar Submissões'}
+            </Button>
+            <Button
+              onClick={createTestSubmission}
+              disabled={isCreatingTest}
+              size="sm"
+            >
+              {isCreatingTest ? 'Criando...' : 'Criar Submissão de Teste'}
+            </Button>
+          </div>
         </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error && (
+          <div className="p-4 bg-red-900/30 border border-red-600 rounded-md">
+            <p className="text-red-400 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              {error}
+            </p>
+          </div>
+        )}
+        
+        {result?.statusValues && (
+          <div className="p-4 bg-blue-900/20 border border-blue-600/50 rounded-md">
+            <h3 className="text-lg font-medium mb-2">Status de Submissão Disponíveis</h3>
+            <div className="flex flex-wrap gap-2">
+              {result.statusValues.map((status: string, index: number) => (
+                <div 
+                  key={index} 
+                  className="px-3 py-1.5 rounded-full bg-blue-800/30 text-white text-sm"
+                >
+                  {status}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {result && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Suas Missões</h3>
+              {result.yourMissions.length === 0 ? (
+                <p className="text-sm text-gray-400">Nenhuma missão encontrada</p>
+              ) : (
+                <ul className="list-disc list-inside">
+                  {result.yourMissions.map((mission: any) => (
+                    <li key={mission.id} className="text-sm">{mission.title}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">Submissões de Suas Missões</h3>
+              {result.submissions.length === 0 ? (
+                <p className="text-sm text-gray-400">Nenhuma submissão encontrada</p>
+              ) : (
+                <ul className="list-disc list-inside">
+                  {result.submissions.map((sub: any) => (
+                    <li key={sub.id} className="text-sm">
+                      ID: {sub.id} | Missão: {sub.missions?.title} | Status: {sub.status}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">Amostra de Submissões (10)</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left p-2">ID</th>
+                    <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Updated At</th>
+                    <th className="text-left p-2">Submitted At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.submissionSample.map((sub: any) => (
+                    <tr key={sub.id} className="border-b border-gray-800">
+                      <td className="p-2">{sub.id.substring(0, 8)}...</td>
+                      <td className="p-2">{sub.status}</td>
+                      <td className="p-2">{new Date(sub.updated_at).toLocaleString()}</td>
+                      <td className="p-2">{sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 };
 
-export default ModerationTest;
+export default ModerationTest; 

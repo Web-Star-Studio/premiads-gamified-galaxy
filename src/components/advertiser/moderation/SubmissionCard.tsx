@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Check, X, Image, FileText, MoreHorizontal, RotateCcw } from "lucide-react";
+import { Check, X, Image, FileText, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Submission } from './ModerationContent';
 import { format } from 'date-fns';
@@ -75,19 +74,6 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
     
     return null;
   };
-
-  // Render status badge based on submission state
-  const renderStatusBadge = () => {
-    if (submission.second_instance) {
-      return <Badge variant="warning" className="ml-2">Segunda Instância</Badge>;
-    }
-    
-    if (submission.status === 'returned_to_advertiser') {
-      return <Badge variant="glow" className="ml-2">Retornado para Revisão</Badge>;
-    }
-    
-    return null;
-  };
   
   return (
     <div className="p-4 rounded-lg border border-galaxy-purple/50 bg-gradient-to-tr from-galaxy-dark/20 to-galaxy-darkPurple/30">
@@ -108,24 +94,14 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
               </p>
             </div>
             
-            <div className="flex items-center">
-              <Badge variant="outline" className="bg-galaxy-darker">
-                {submission.missions?.title || 'Missão'}
-              </Badge>
-              {renderStatusBadge()}
-            </div>
+            <Badge variant="outline" className="bg-galaxy-darker">
+              {submission.missions?.title || 'Missão'}
+            </Badge>
           </div>
           
           {renderProof()}
           
-          {submission.feedback && (
-            <div className="mt-3 p-3 bg-galaxy-darker/50 rounded-md border border-galaxy-purple/20">
-              <p className="text-xs text-muted-foreground mb-1">Feedback anterior:</p>
-              <p className="text-sm">{submission.feedback}</p>
-            </div>
-          )}
-          
-          {(submission.status === 'pending' || submission.status === 'returned_to_advertiser') && (
+          {submission.status === 'pending' && (
             <div className="flex justify-end gap-2 mt-4">
               <Button 
                 variant="outline" 
@@ -147,13 +123,6 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
               </Button>
             </div>
           )}
-
-          {submission.status === 'second_instance_pending' && (
-            <div className="flex items-center justify-center mt-4 p-3 bg-galaxy-darker/70 rounded-md border border-neon-pink/30">
-              <RotateCcw className="h-4 w-4 mr-2 text-neon-pink" />
-              <p className="text-sm">Em análise pela moderação</p>
-            </div>
-          )}
         </div>
       </div>
       
@@ -164,7 +133,6 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
             <DialogTitle>Rejeitar Submissão</DialogTitle>
             <DialogDescription>
               Informe o motivo da rejeição. Isso ajudará o usuário a entender por que sua submissão não foi aprovada.
-              {submission.second_instance ? " Esta submissão será enviada para revisão em segunda instância." : ""}
             </DialogDescription>
           </DialogHeader>
           
@@ -189,7 +157,7 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
               onClick={handleReject}
               disabled={isProcessing}
             >
-              {submission.second_instance ? "Enviar para Segunda Instância" : "Confirmar Rejeição"}
+              Confirmar Rejeição
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -9,5 +9,4 @@ export interface MissionSubmission {
   feedback?: string;
   status: 'pending' | 'approved' | 'rejected';
   submitted_at: string;
-  updated_at: string;
 }
