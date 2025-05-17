@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/services/supabase';
 
@@ -12,7 +13,7 @@ interface CreditsState {
   isLoading: boolean;
   error: string | null;
   
-  // Ações
+  // Actions
   fetchCredits: (userId: string) => Promise<void>;
   refreshCredits: (userId: string) => Promise<void>;
   setCredits: (credits: UserCredits) => void;
@@ -74,4 +75,4 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
   resetCredits: () => {
     set({ credits: initialState });
   }
-})); 
+}));

@@ -1,77 +1,66 @@
-import { supabase } from './supabase';
-import { useCreditsStore } from '@/store/useCreditsStore';
 
-let activeSubscription: any = null;
+import { supabase } from '@/integrations/supabase/client';
 
-// Função para emitir eventos quando os créditos são atualizados
-type CreditUpdateListener = (eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void;
-const listeners: CreditUpdateListener[] = [];
+type UpdateCallback = (eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void;
 
 /**
- * Serviço para gerenciar assinaturas em tempo real para atualizações de créditos
+ * Service to handle real-time updates for user credits
  */
 export const realtimeCreditsService = {
   /**
-   * Inicia uma assinatura para mudanças na tabela profiles para o usuário especificado
+   * List of callbacks to execute when credits are updated
    */
-  subscribeToUserCredits: async (userId: string) => {
-    // Cancela qualquer assinatura existente antes de criar uma nova
-    if (activeSubscription) {
-      await realtimeCreditsService.unsubscribe();
+  updateListeners: [] as UpdateCallback[],
+  
+  /**
+   * Subscribes to changes in a user's credits
+   * @param userId - The ID of the user to subscribe to
+   * @returns Promise that resolves when subscription is established
+   */
+  subscribeToUserCredits: async (userId: string): Promise<void> => {
+    if (!userId) {
+      console.warn('Cannot subscribe to credits: No user ID provided');
+      return;
     }
     
-    if (!userId) return;
-    
-    // Busca os créditos iniciais
-    await useCreditsStore.getState().fetchCredits(userId);
-    
-    // Estabelece uma nova assinatura
-    activeSubscription = supabase
-      .channel('user-credits-changes')
-      .on(
-        'postgres_changes',
+    // Subscribe to changes in the profiles table for this user
+    supabase
+      .channel('profile-credits-changes')
+      .on('postgres_changes', 
         {
-          event: '*', // Ouvir inserções, atualizações e exclusões
+          event: '*',
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${userId}`,
-        },
-        async (payload) => {
-          console.log('Atualização de créditos recebida:', payload);
+          filter: `id=eq.${userId}`
+        }, 
+        (payload) => {
+          // Notify all listeners of the update
+          realtimeCreditsService.updateListeners.forEach(callback => {
+            callback(payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE');
+          });
           
-          // Atualiza o estado global
-          await useCreditsStore.getState().refreshCredits(userId);
-          
-          // Notifica todos os ouvintes registrados sobre a mudança
-          const eventType = payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE';
-          listeners.forEach(listener => listener(eventType));
+          console.log('Credits updated:', payload.new?.credits);
         }
       )
       .subscribe();
     
-    return activeSubscription;
+    console.log(`Subscribed to credit updates for user ${userId}`);
   },
   
   /**
-   * Cancela a assinatura atual
+   * Adds a listener function to be called when credits are updated
+   * @param callback - Function to call when credits are updated
+   * @returns Unsubscribe function
    */
-  unsubscribe: async () => {
-    if (activeSubscription) {
-      await supabase.removeChannel(activeSubscription);
-      activeSubscription = null;
-    }
-  },
-
-  /**
-   * Registra um ouvinte para notificações de atualização de créditos
-   */
-  addUpdateListener: (listener: CreditUpdateListener) => {
-    listeners.push(listener);
+  addUpdateListener: (callback: UpdateCallback): (() => void) => {
+    realtimeCreditsService.updateListeners.push(callback);
+    
+    // Return unsubscribe function
     return () => {
-      const index = listeners.indexOf(listener);
+      const index = realtimeCreditsService.updateListeners.indexOf(callback);
       if (index !== -1) {
-        listeners.splice(index, 1);
+        realtimeCreditsService.updateListeners.splice(index, 1);
       }
     };
   }
-}; 
+};

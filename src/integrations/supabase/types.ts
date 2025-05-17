@@ -630,6 +630,30 @@ export type Database = {
         }
         Relationships: []
       }
+      token_attribution_logs: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_levels: {
         Row: {
           benefits: Json
@@ -671,6 +695,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_tokens_to_user: {
+        Args: { user_id: string; reward: number }
+        Returns: undefined
+      }
       delete_user_account: {
         Args: { target_user_id: string }
         Returns: boolean

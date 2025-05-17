@@ -6,6 +6,7 @@ DECLARE
   v_mission_id     uuid;
   v_user_id        uuid;
   v_points         integer;
+  v_tokens         integer;
   v_user_type      text;
 BEGIN
   -- 1. Check if already rewarded
@@ -41,13 +42,13 @@ BEGIN
 
   RAISE NOTICE 'User type: %', v_user_type;
 
-  -- 4. Get mission points
-  SELECT points
-    INTO v_points
+  -- 4. Get mission points and token reward
+  SELECT points, cost_in_tokens
+    INTO v_points, v_tokens
   FROM missions
   WHERE id = v_mission_id;
 
-  RAISE NOTICE 'Mission points: %', v_points;
+  RAISE NOTICE 'Mission points: %, tokens: %', v_points, v_tokens;
 
   -- 5. Update points and mission status regardless of user_type
   -- Remove user_type constraint to make sure points are awarded
@@ -55,6 +56,7 @@ BEGIN
   -- Update user points
   UPDATE profiles
   SET points = COALESCE(points,0) + v_points,
+      credits = COALESCE(credits,0) + v_tokens,
       updated_at = NOW()
   WHERE id = v_user_id;
 
@@ -85,6 +87,6 @@ BEGIN
       updated_at = NOW()
   WHERE id = submission_id;
 
-  RAISE NOTICE 'Usuário % recompensado com % pontos pela missão %', v_user_id, v_points, v_mission_id;
+  RAISE NOTICE 'Usuário % recompensado com % pontos e % tokens pela missão %', v_user_id, v_points, v_tokens, v_mission_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER; 
+$$ LANGUAGE plpgsql SECURITY DEFINER;
