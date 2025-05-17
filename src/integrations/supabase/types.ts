@@ -19,10 +19,12 @@ export type Database = {
           created_at: string | null
           description: string | null
           discount_percentage: number
+          end_date: string
           expires_at: string | null
           id: string
           is_active: boolean | null
           min_purchase: number | null
+          start_date: string
           title: string
           updated_at: string | null
         }
@@ -35,10 +37,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discount_percentage: number
+          end_date?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           min_purchase?: number | null
+          start_date?: string
           title: string
           updated_at?: string | null
         }
@@ -51,10 +55,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discount_percentage?: number
+          end_date?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           min_purchase?: number | null
+          start_date?: string
           title?: string
           updated_at?: string | null
         }
@@ -97,6 +103,95 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "cashback_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_packages: {
+        Row: {
+          active: boolean
+          base: number
+          bonus: number
+          created_at: string | null
+          id: string
+          price: number
+          updated_at: string | null
+          validity_months: number
+        }
+        Insert: {
+          active?: boolean
+          base: number
+          bonus?: number
+          created_at?: string | null
+          id?: string
+          price: number
+          updated_at?: string | null
+          validity_months?: number
+        }
+        Update: {
+          active?: boolean
+          base?: number
+          bonus?: number
+          created_at?: string | null
+          id?: string
+          price?: number
+          updated_at?: string | null
+          validity_months?: number
+        }
+        Relationships: []
+      }
+      credit_purchases: {
+        Row: {
+          base: number
+          bonus: number
+          created_at: string | null
+          id: string
+          package_id: string | null
+          payment_id: string | null
+          payment_method: string
+          payment_provider: string
+          price: number
+          status: string
+          total_credits: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          base: number
+          bonus?: number
+          created_at?: string | null
+          id?: string
+          package_id?: string | null
+          payment_id?: string | null
+          payment_method: string
+          payment_provider: string
+          price: number
+          status: string
+          total_credits: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          base?: number
+          bonus?: number
+          created_at?: string | null
+          id?: string
+          package_id?: string | null
+          payment_id?: string | null
+          payment_method?: string
+          payment_provider?: string
+          price?: number
+          status?: string
+          total_credits?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_purchases_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
             referencedColumns: ["id"]
           },
         ]
@@ -145,34 +240,49 @@ export type Database = {
       }
       mission_submissions: {
         Row: {
+          admin_validated: boolean | null
           feedback: string | null
           id: string
           mission_id: string | null
+          review_stage: string | null
+          second_instance: boolean | null
+          second_instance_status: string | null
           status: string | null
           submission_data: Json | null
           submitted_at: string | null
           updated_at: string | null
           user_id: string | null
+          validated_by: string | null
         }
         Insert: {
+          admin_validated?: boolean | null
           feedback?: string | null
           id?: string
           mission_id?: string | null
+          review_stage?: string | null
+          second_instance?: boolean | null
+          second_instance_status?: string | null
           status?: string | null
           submission_data?: Json | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
+          validated_by?: string | null
         }
         Update: {
+          admin_validated?: boolean | null
           feedback?: string | null
           id?: string
           mission_id?: string | null
+          review_stage?: string | null
+          second_instance?: boolean | null
+          second_instance_status?: string | null
           status?: string | null
           submission_data?: Json | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
+          validated_by?: string | null
         }
         Relationships: [
           {
@@ -231,16 +341,21 @@ export type Database = {
           created_by: string | null
           description: string | null
           end_date: string | null
+          expires_at: string | null
           id: string
           is_active: boolean | null
           points: number
           requirements: Json | null
           start_date: string | null
           status: string | null
+          streak_bonus: boolean
+          streak_multiplier: number | null
+          target_audience: string | null
           target_audience_age_max: number | null
           target_audience_age_min: number | null
           target_audience_gender: string | null
           target_audience_region: string | null
+          target_filter: Json
           title: string
           type: string
           updated_at: string | null
@@ -253,16 +368,21 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
           start_date?: string | null
           status?: string | null
+          streak_bonus?: boolean
+          streak_multiplier?: number | null
+          target_audience?: string | null
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
           target_audience_region?: string | null
+          target_filter?: Json
           title: string
           type: string
           updated_at?: string | null
@@ -275,16 +395,21 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_date?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
           start_date?: string | null
           status?: string | null
+          streak_bonus?: boolean
+          streak_multiplier?: number | null
+          target_audience?: string | null
           target_audience_age_max?: number | null
           target_audience_age_min?: number | null
           target_audience_gender?: string | null
           target_audience_region?: string | null
+          target_filter?: Json
           title?: string
           type?: string
           updated_at?: string | null
@@ -295,6 +420,7 @@ export type Database = {
         Row: {
           active: boolean | null
           avatar_url: string | null
+          cashback_balance: number
           created_at: string | null
           credits: number | null
           description: string | null
@@ -314,6 +440,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           avatar_url?: string | null
+          cashback_balance?: number
           created_at?: string | null
           credits?: number | null
           description?: string | null
@@ -333,6 +460,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           avatar_url?: string | null
+          cashback_balance?: number
           created_at?: string | null
           credits?: number | null
           description?: string | null
@@ -481,6 +609,51 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_customers: {
+        Row: {
+          created_at: string | null
+          id: string
+          stripe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          stripe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          stripe_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      token_attribution_logs: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_levels: {
         Row: {
           benefits: Json
@@ -517,49 +690,61 @@ export type Database = {
         }
         Relationships: []
       }
-      user_tokens: {
-        Row: {
-          created_at: string | null
-          id: string
-          total_tokens: number | null
-          updated_at: string | null
-          used_tokens: number | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          total_tokens?: number | null
-          updated_at?: string | null
-          used_tokens?: number | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          total_tokens?: number | null
-          updated_at?: string | null
-          used_tokens?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_tokens_to_user: {
+        Args: { user_id: string; reward: number }
+        Returns: undefined
+      }
       delete_user_account: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      get_active_cashback_campaigns: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          advertiser_id: string | null
+          advertiser_image: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          conditions: string | null
+          created_at: string | null
+          description: string | null
+          discount_percentage: number
+          end_date: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          min_purchase: number | null
+          start_date: string
+          title: string
+          updated_at: string | null
+        }[]
       }
       get_all_users: {
         Args: Record<PropertyKey, never>
         Returns: Json[]
       }
+      get_user_cashback_balance: {
+        Args: { user_id: string }
+        Returns: {
+          cashback_balance: number
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
+      }
+      increment: {
+        Args: { x: number; row_id: string; table_name: string }
+        Returns: undefined
+      }
+      increment_user_credits: {
+        Args: { user_id: string; credits_to_add: number }
+        Returns: undefined
       }
       is_admin: {
         Args: Record<PropertyKey, never>
@@ -568,6 +753,23 @@ export type Database = {
       is_admin_or_moderator: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      redeem_cashback: {
+        Args: { p_user_id: string; p_campaign_id: string; p_amount: number }
+        Returns: {
+          amount: number
+          campaign_id: string | null
+          code: string | null
+          created_at: string | null
+          id: string
+          redeemed_at: string | null
+          status: string | null
+          user_id: string | null
+        }[]
+      }
+      reward_participant_for_submission: {
+        Args: { submission_id: string }
+        Returns: undefined
       }
       update_user_status: {
         Args: { user_id: string; is_active: boolean }
@@ -582,10 +784,6 @@ export type Database = {
           p_notes?: string
         }
         Returns: undefined
-      }
-      reward_participant_for_submission: {
-        Args: { submission_id: string }
-        Returns: void
       }
     }
     Enums: {

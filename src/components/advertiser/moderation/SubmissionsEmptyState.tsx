@@ -1,35 +1,57 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Box, SearchX } from "lucide-react";
 
-export interface SubmissionsEmptyStateProps {
+import { AlertCircle, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+
+interface SubmissionsEmptyStateProps {
   activeTab: string;
 }
 
 const SubmissionsEmptyState = ({ activeTab }: SubmissionsEmptyStateProps) => {
-  const getMessage = () => {
+  // Define content based on active tab
+  const getContent = () => {
     switch (activeTab) {
       case 'pendentes':
-        return "Nenhuma submissão pendente encontrada.";
+        return {
+          icon: <AlertCircle className="w-12 h-12 text-gray-400" />,
+          title: "Nenhuma submissão pendente",
+          description: "Não há submissões aguardando sua revisão no momento."
+        };
       case 'aprovadas':
-        return "Nenhuma submissão aprovada encontrada.";
+        return {
+          icon: <CheckCircle2 className="w-12 h-12 text-gray-400" />,
+          title: "Nenhuma submissão aprovada",
+          description: "Você ainda não aprovou nenhuma submissão."
+        };
       case 'rejeitadas':
-        return "Nenhuma submissão rejeitada encontrada.";
+        return {
+          icon: <XCircle className="w-12 h-12 text-gray-400" />,
+          title: "Nenhuma submissão rejeitada",
+          description: "Você ainda não rejeitou nenhuma submissão definitivamente."
+        };
       case 'segunda_instancia':
-        return "Nenhuma submissão em segunda instância encontrada.";
+        return {
+          icon: <RotateCcw className="w-12 h-12 text-gray-400" />,
+          title: "Nenhuma submissão em segunda instância",
+          description: "Não há submissões em processo de revisão de segunda instância."
+        };
       default:
-        return "Nenhuma submissão encontrada.";
+        return {
+          icon: <AlertCircle className="w-12 h-12 text-gray-400" />,
+          title: "Nenhuma submissão encontrada",
+          description: "Não há submissões para exibir nesta categoria."
+        };
     }
   };
-
+  
+  const content = getContent();
+  
   return (
-    <Card className="border-galaxy-purple bg-galaxy-darkPurple">
-      <CardContent className="p-12 flex flex-col items-center justify-center text-center">
-        <SearchX className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-medium mb-2">{getMessage()}</h3>
-        <p className="text-muted-foreground max-w-md">
-          {activeTab === 'pendentes' 
-            ? "As submissões de usuários aparecerão aqui quando forem enviadas."
-            : "As submissões processadas aparecerão aqui à medida que forem moderadas."}
+    <Card className="border-galaxy-purple/30">
+      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+        {content.icon}
+        <h3 className="mt-4 text-xl font-semibold">{content.title}</h3>
+        <p className="mt-2 text-muted-foreground max-w-md">
+          {content.description}
         </p>
       </CardContent>
     </Card>

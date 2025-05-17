@@ -1,13 +1,13 @@
+
 import { useEffect, useState } from 'react';
 import { useCreditsStore } from '@/store/useCreditsStore';
-import { realtimeCreditsService } from '@/services/realtime-credits';
 import { useSounds } from '@/hooks/use-sounds';
 import { useAuth } from '@/hooks/useAuth';
+import { realtimeCreditsService } from '@/services/realtime-credits';
 
 /**
- * Hook personalizado para consumir e gerenciar os créditos do usuário atual
- * Fornece acesso ao saldo de créditos, status de carregamento e erros
- * Configura automaticamente assinaturas em tempo real para atualizações
+ * Hook for managing user credits with real-time updates
+ * @returns Object containing credit information and helper functions
  */
 export function useUserCredits() {
   const { user } = useAuth();
@@ -15,47 +15,40 @@ export function useUserCredits() {
   const { credits, isLoading, error, fetchCredits } = useCreditsStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Inicializa os créditos e configura assinatura em tempo real
+  // Fetch initial credits and set up real-time subscription
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    if (!user?.id) return;
     
+    // Fetch initial credits
     const initCredits = async () => {
-      if (!user?.id) return;
-      
-      // Busca os créditos iniciais
       await fetchCredits(user.id);
-      
-      // Configura a assinatura em tempo real
-      await realtimeCreditsService.subscribeToUserCredits(user.id);
-      
-      // Registra um listener para atualizações de créditos
-      unsubscribe = realtimeCreditsService.addUpdateListener((eventType) => {
-        // Reproduz um som quando créditos são adicionados ou atualizados
-        if (eventType === 'INSERT' || eventType === 'UPDATE') {
-          playSound('notification');
-        }
-      });
-      
       setIsInitialized(true);
     };
     
     initCredits();
     
-    // Cleanup: cancela assinaturas quando o componente é desmontado
+    // Set up real-time listener
+    const unsubscribeListener = realtimeCreditsService.addUpdateListener(() => {
+      // When credits are updated, play sound and refresh credits
+      playSound('reward');
+      fetchCredits(user.id);
+    });
+    
+    // Cleanup subscription on unmount
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubscribeListener();
     };
   }, [user?.id, fetchCredits, playSound]);
   
-  // Valores derivados para facilitar o uso
+  // Derived values for convenience
   const availableCredits = credits.availableTokens;
   const totalCredits = credits.totalTokens;
   const usedCredits = credits.usedTokens;
   
-  // Funções auxiliares
+  // Helper functions
   const hasEnoughCredits = (amount: number) => availableCredits >= amount;
   
-  // Força uma atualização manual dos créditos
+  // Force manual refresh of credits
   const refreshCredits = async () => {
     if (user?.id) {
       await fetchCredits(user.id);
@@ -63,19 +56,19 @@ export function useUserCredits() {
   };
 
   return {
-    // Valores
+    // Values
     credits,
     totalCredits,
     availableCredits,
     usedCredits,
     
-    // Estados
+    // States
     isLoading,
     isInitialized,
     error,
     
-    // Funções auxiliares
+    // Helper functions
     hasEnoughCredits,
     refreshCredits
   };
-} 
+}

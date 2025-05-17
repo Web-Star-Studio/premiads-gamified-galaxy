@@ -1,49 +1,83 @@
-import { MissionStatus } from "./missions/types";
 
-/**
- * Mission types available in the system
- */
-export type MissionType = 
-  | "form"    // Form filling missions
-  | "photo"   // Photo upload missions 
-  | "video"   // Video upload missions
-  | "checkin" // Location check-in missions
-  | "social"  // Social media sharing missions
-  | "coupon"  // Discount coupon missions
-  | "survey"  // Survey completion missions
-  | "review"; // Product/service review missions
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Available mission types with their translations
- */
-export const MISSION_TYPES: Record<MissionType, string> = {
-  form: "Formulário",
-  photo: "Foto",
-  video: "Vídeo",
-  checkin: "Check-in",
-  social: "Redes Sociais",
-  coupon: "Cupom de Desconto",
-  survey: "Pesquisa",
-  review: "Avaliação"
-};
+export type MissionType = 'form' | 'photo' | 'video' | 'checkin' | 'social' | 'coupon' | 'survey' | 'review';
 
-/**
- * Mission type descriptions
- */
-export const MISSION_TYPE_DESCRIPTIONS: Record<MissionType, string> = {
-  form: "Preencher um formulário",
-  photo: "Enviar uma foto",
-  video: "Enviar um vídeo",
-  checkin: "Fazer check-in em um local",
-  social: "Compartilhar nas redes sociais",
-  coupon: "Usar um cupom de desconto",
-  survey: "Responder a uma pesquisa",
-  review: "Deixar uma avaliação"
-};
+export interface MissionTypeDetails {
+  label: string;
+  description: string;
+  icon: string;
+}
 
-/**
- * Human-readable labels for mission types (for UI display)
- */
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  brand?: string;
+  type: MissionType;
+  points: number;
+  deadline?: string;
+  status: string;
+  requirements?: string[];
+  business_type?: string;
+  target_audience_gender?: string;
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
+  // Reward related fields
+  has_badges?: boolean;
+  has_lootbox?: boolean;
+  streak_bonus?: boolean;
+  streak_multiplier?: number;
+  // Target filter data
+  target_filter?: any;
+  // Min purchase for coupon campaigns
+  min_purchase?: number;
+  cost_in_tokens?: number;
+}
+
+export interface MissionSubmission {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar?: string;
+  mission_id: string;
+  mission_title: string;
+  submission_data: any;
+  feedback?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_at: string;
+  updated_at: string; // Adding this missing field
+  review_stage?: string;
+  second_instance?: boolean;
+}
+
+export interface UserTokens {
+  user_id: string;
+  total_tokens: number;
+  used_tokens: number;
+}
+
+export interface ValidationLog {
+  id: string;
+  submission_id: string;
+  validated_by: string;
+  is_admin: boolean;
+  result: string;
+  notes?: string;
+  created_at?: string;
+}
+
+export interface MissionReward {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  submission_id: string;
+  points_earned: number;
+  rewarded_at?: string;
+}
+
 export const missionTypeLabels: Record<MissionType, string> = {
   form: "Formulário",
   photo: "Foto",
@@ -55,9 +89,6 @@ export const missionTypeLabels: Record<MissionType, string> = {
   review: "Avaliação Online"
 };
 
-/**
- * Detailed descriptions for mission types (for campaign creation)
- */
 export const missionTypeDescriptions: Record<MissionType, string> = {
   form: "Solicite aos clientes que preencham um formulário no seu site ou outro local.",
   photo: "Peça aos clientes que tirem e enviem fotos de produtos, locais ou experiências.",
@@ -69,163 +100,40 @@ export const missionTypeDescriptions: Record<MissionType, string> = {
   review: "Clientes deixam avaliações genuínas em plataformas de reviews para seu negócio."
 };
 
-/**
- * Get a human-readable description for a mission type
- */
-export const getMissionTypeDescription = (type: MissionType): string => 
-  MISSION_TYPE_DESCRIPTIONS[type] || "";
-
-/**
- * Get icon for a mission type
- */
-export const getMissionIcon = (type: MissionType): string => {
-  const icons: Record<MissionType, string> = {
-    form: "form",
-    photo: "camera",
-    video: "videocam",
-    checkin: "location",
-    social: "share",
-    coupon: "card",
-    survey: "clipboard",
-    review: "star"
-  };
-  return icons[type] || "help";
+export const getMissionTypeDescription = (type: MissionType): string => {
+  return missionTypeDescriptions[type] || 'Descrição não disponível';
 };
 
-/**
- * Filter missions by type
- */
-export const filterMissionsByType = (missions: any[], type: MissionType | "all"): any[] => {
-  if (type === "all") return missions;
+export const getMissionIcon = (type: MissionType): string => {
+  // Replace with actual icon paths or components
+  return `/icons/${type}.svg`;
+};
+
+export const filterMissionsByType = (missions: any[], type: MissionType): any[] => {
   return missions.filter(mission => mission.type === type);
 };
 
-/**
- * Get mission difficulty level (1-3)
- */
-export const getMissionDifficulty = (mission: any): number => {
-  const pointsMap: Record<MissionType, number> = {
-    form: 1,
-    photo: 2,
-    video: 3,
-    checkin: 1,
-    social: 2,
-    coupon: 2,
-    survey: 2,
-    review: 2
-  };
-  
-  return pointsMap[mission.type as MissionType] || 1;
+export const getMissionDifficulty = (mission: any): string => {
+  // Implement logic to determine mission difficulty based on mission properties
+  return 'Fácil';
 };
 
-/**
- * Get estimated time to complete a mission (in minutes)
- */
-export const getEstimatedTime = (mission: any): number => {
-  const timeMap: Record<MissionType, number> = {
-    form: 5,
-    photo: 10,
-    video: 15,
-    checkin: 5,
-    social: 10,
-    coupon: 15,
-    survey: 10,
-    review: 10
-  };
-  
-  return timeMap[mission.type as MissionType] || 5;
+export const getEstimatedTime = (mission: any): string => {
+  // Implement logic to estimate time based on mission properties
+  return '30 minutos';
 };
 
-/**
- * Hook for using mission types with their labels
- */
 export const useMissionTypes = () => {
+  const [missionTypes, setMissionTypes] = useState<MissionType[]>(['form', 'photo', 'video', 'checkin', 'social', 'coupon', 'survey', 'review']);
+
+  useEffect(() => {
+    // Fetch mission types from database or API
+    // For now, use the hardcoded array above
+  }, []);
+
   return {
-    types: Object.keys(MISSION_TYPES) as MissionType[],
-    labels: MISSION_TYPES,
-    descriptions: MISSION_TYPE_DESCRIPTIONS,
-    getMissionTypeDescription,
-    getMissionIcon,
-    getMissionDifficulty,
-    getEstimatedTime
+    missionTypes,
   };
 };
 
-/**
- * Mission submission types
- */
-export interface MissionSubmission {
-  id: string;
-  mission_id: string;
-  user_id: string;
-  proof_url?: string[];
-  proof_text?: string;
-  status: "pendente" | "aprovado" | "rejeitado" | "segunda_instancia" | "descartado";
-  validated_by?: string;
-  admin_validated?: boolean;
-  feedback?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
- * Mission data structure
- */
-export interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  type: MissionType;
-  requirements?: string | string[];
-  points: number;
-  cost_in_tokens: number;
-  status: "ativa" | "pendente" | "encerrada";
-  created_by: string;
-  created_at?: string;
-  updated_at?: string;
-  start_date?: string;
-  end_date?: string;
-  streak_bonus?: boolean;
-  streak_multiplier?: number;
-  target_audience_age_min?: number;
-  target_audience_age_max?: number;
-  target_audience_region?: string;
-  target_audience_gender?: string;
-}
-
-/**
- * User tokens data structure
- */
-export interface UserTokens {
-  id?: string;
-  user_id: string;
-  total_tokens: number;
-  used_tokens: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
- * Mission validation log entry
- */
-export interface ValidationLog {
-  id?: string;
-  submission_id: string;
-  validated_by: string;
-  is_admin: boolean;
-  result: "aprovado" | "rejeitado";
-  notes?: string;
-  created_at?: string;
-}
-
-/**
- * Mission reward data structure
- */
-export interface MissionReward {
-  id?: string;
-  user_id: string;
-  mission_id: string;
-  submission_id: string;
-  points_earned: number;
-  rewarded_at?: string;
-}
+// Export the MissionType type to fix build errors
