@@ -224,177 +224,88 @@ export const missionService = {
     return data;
   },
 
-  /**
-   * Validates a mission submission by setting its status and other attributes.
-   */
-  async validateSubmission({
-    submissionId,
-    validatedBy,
-    result,
-    isAdmin = false,
-    notes = '',
-  }: {
-    submissionId: string;
-    validatedBy: string;
-    result: 'aprovado' | 'rejeitado' | 'segunda_instancia';
-    isAdmin?: boolean;
-    notes?: string;
-  }) {
-    console.log(`Validando submissão ${submissionId} com resultado: ${result}`);
-
+  validateSubmission: async (
+    submissionId: string, 
+    validatedBy: string, 
+    result: 'aprovado' | 'rejeitado', 
+    isAdmin: boolean = false,
+    notes?: string
+  ) => {
     const client = await getSupabaseClient();
-
+    
     try {
-      // Get submission info first
-      const { data: subInfo, error: subError } = await client
+      // Get submission details first to access mission_id and user_id
+      const { data: submissionData, error: getError } = await client
         .from('mission_submissions')
-        .select('mission_id,user_id,status')
+        .select('mission_id, user_id, status')
         .eq('id', submissionId)
         .single();
-
-      if (subError) throw subError;
+        
+      if (getError) throw getError;
       
-      console.log(`Submission info:`, subInfo);
-      
-      // Map result to status and other properties
+      // Build update payload based on actor and action
       const payload: Record<string, any> = {
-        validated_by: validatedBy,
         feedback: notes || null,
         updated_at: new Date().toISOString()
-      };
-
-      // Set status based on the result
-      if (result === 'aprovado') {
-        payload.status = 'approved';
-        payload.review_stage = 'finalized';
-      } else if (result === 'rejeitado') {
-        if (!isAdmin) {
-          payload.status = 'second_instance_pending';
-          payload.review_stage = 'second_instance';
-        } else {
-          payload.status = 'rejected';
-          payload.review_stage = 'finalized';
-        }
-      } else if (result === 'segunda_instancia') {
-        payload.status = 'second_instance_pending';
-        payload.review_stage = 'second_instance';
       }
-
-      console.log(`Atualizando submissão ${submissionId} para status: ${payload.status}`, payload);
-      
-      // Update the submission
-      const { data: submission, error: updateError } = await client
+      if (!isAdmin) {
+        // Advertiser first review
+        if (result === 'aprovado') {
+          payload.status = 'approved'
+          payload.review_stage = 'finalized'
+        } else {
+          payload.status = 'second_instance_pending'
+          payload.second_instance = true
+          payload.review_stage = 'second_instance'
+        }
+      } else {
+        // Admin second review
+        if (result === 'aprovado') {
+          payload.status = 'returned_to_advertiser'
+          payload.second_instance_status = 'approved'
+          payload.review_stage = 'first_review'
+        } else {
+          payload.status = 'rejected'
+          payload.second_instance_status = 'rejected'
+          payload.review_stage = 'finalized'
+        }
+      }
+      const { data: submission, error: submissionError } = await client
         .from('mission_submissions')
         .update(payload)
         .eq('id', submissionId)
         .select()
         .single();
-
-      if (updateError) throw updateError;
-
-      // Save to validation log
-      const validationLog = {
-        submission_id: submissionId,
-        validated_by: validatedBy,
-        result: result,
-        is_admin: isAdmin,
-        notes: notes || null,
-        created_at: new Date().toISOString()
-      };
-
+      
+      if (submissionError) throw submissionError;
+      
+      // Create validation log
       const { error: logError } = await client
         .from('mission_validation_logs')
-        .insert(validationLog);
-
+        .insert([{
+          submission_id: submissionId,
+          validated_by: validatedBy,
+          is_admin: isAdmin,
+          result,
+          notes
+        }]);
+      
       if (logError) throw logError;
 
-      // Se foi aprovado, tenta executar a atualização manualmente E chama o RPC
+      // Chama RPC seguro de recompensa ao participante quando status final for approved
       if (payload.status === 'approved') {
         try {
-          console.log('Submissão aprovada, atualizando pontos e status da missão...');
-          
-          // 1. Chama RPC de recompensa
-          await client.rpc('reward_participant_for_submission', { 
-            submission_id: submissionId 
-          });
-          console.log('RPC reward_participant_for_submission executado');
-          
-          // 2. Como fallback, faz manualmente caso a RPC falhe
-          const { data: missionData } = await client
-            .from('missions')
-            .select('points,id')
-            .eq('id', subInfo.mission_id)
-            .single();
-          
-          if (missionData?.points) {
-            // Atualiza o status da missão
-            await client
-              .from('missions')
-              .update({
-                status: 'ativa',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', subInfo.mission_id);
-            
-            // Atualiza os pontos do usuário - primeiro busca pontos atuais
-            // Primeiro busca os pontos atuais
-            const { data: profileData } = await client
-              .from('profiles')
-              .select('points')
-              .eq('id', subInfo.user_id)
-              .single();
-              
-            // Depois atualiza com os novos pontos
-            const currentPoints = profileData?.points || 0;
-            const newPoints = currentPoints + missionData.points;
-            
-            await client
-              .from('profiles')
-              .update({
-                points: newPoints,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', subInfo.user_id);
-              
-            console.log(`Pontos atualizados: ${currentPoints} -> ${newPoints}`);
-            
-            // Registra a recompensa
-            const existingReward = await client
-              .from('mission_rewards')
-              .select('id')
-              .eq('submission_id', submissionId)
-              .maybeSingle();
-            
-            if (!existingReward.data) {
-              await client
-                .from('mission_rewards')
-                .insert({
-                  user_id: subInfo.user_id,
-                  mission_id: subInfo.mission_id,
-                  submission_id: submissionId,
-                  points_earned: missionData.points,
-                  rewarded_at: new Date().toISOString()
-                });
-              
-              console.log(`Pontos (${missionData.points}) adicionados manualmente para o usuário ${subInfo.user_id}`);
-            }
-          }
-        } catch (err) {
-          console.error('Erro ao processar recompensa:', err);
-          // Continuamos mesmo com erro na recompensa
+          await client.rpc('reward_participant_for_submission', { submission_id: submissionId })
+          console.log('RPC reward_participant_for_submission chamado para', submissionId)
+        } catch (rpcErr) {
+          console.error('Erro ao chamar reward RPC:', rpcErr)
         }
       }
-
-      return { 
-        success: true, 
-        data: submission 
-      };
+      
+      return submission;
     } catch (error) {
       console.error('Error validating submission:', error);
-      return { 
-        success: false, 
-        error 
-      };
+      throw error;
     }
   },
 
