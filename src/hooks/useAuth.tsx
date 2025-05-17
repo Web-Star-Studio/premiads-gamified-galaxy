@@ -1,5 +1,4 @@
-
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "./useAuthSession";
 import { useAuthMethods } from "./useAuthMethods";
@@ -21,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, loading: sessionLoading } = useAuthSession();
+  const { user, loading: sessionLoading, setLoading: setSessionLoading } = useAuthSession();
   const { 
     loading: methodsLoading, 
     signIn: signInMethod, 
@@ -31,7 +30,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updatePassword: updatePasswordMethod
   } = useAuthMethods();
   
-  const isLoading = sessionLoading || methodsLoading;
+  // Fixed: If we're authenticated, don't show loading state after initial auth
+  // This prevents TOKEN_REFRESHED from causing infinite loading
+  const isLoading = user ? false : (sessionLoading || methodsLoading);
   
   // Adapt the return types to match the interface
   const signIn = async (credentials: SignInCredentials): Promise<void> => {
@@ -53,6 +54,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updatePassword = async (password: string): Promise<void> => {
     await updatePasswordMethod(password);
   };
+
+  // Force loading state to false when user is authenticated
+  useEffect(() => {
+    if (user && sessionLoading) {
+      setSessionLoading(false);
+    }
+  }, [user, sessionLoading, setSessionLoading]);
   
   return (
     <AuthContext.Provider

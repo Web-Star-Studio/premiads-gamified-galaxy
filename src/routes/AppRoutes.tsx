@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -36,20 +35,20 @@ const AppRoutes = () => {
     return "/auth"; // Default fallback
   };
 
-  // Don't render any routes until we've checked auth status
-  if (isLoading) {
+  // Show spinner only while loading auth state for unauthenticated users
+  if (isLoading && !isAuthenticated) {
     return <RouteLoadingSpinner />;
   }
 
   return (
     <ErrorBoundary>
       <Routes>
-        {/* Redirect root path for authenticated users */}
-        {shouldRedirect() && (
-          <Route 
-            index 
-            element={<Navigate to={getDashboardPath()} replace />} 
-          />
+        {/* Redirect "/" and "/auth" for authenticated users */}
+        {isAuthenticated && currentUser && (
+          <>
+            <Route path="/" element={<Navigate to={getDashboardPath()} replace />} />
+            <Route path="/auth" element={<Navigate to={getDashboardPath()} replace />} />
+          </>
         )}
         
         {/* Public routes with suspense loading */}
