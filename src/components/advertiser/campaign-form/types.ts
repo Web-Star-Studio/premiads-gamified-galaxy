@@ -133,3 +133,9 @@ export const audienceTypeLabels: Record<string, string> = {
   "novos": "Novos usuários",
   "nivel3": "Usuários nível 3 ou superior"
 };
+<<<<<<< HEAD
+=======
+
+// Export MissionType to fix build errors
+export type { MissionType };
+>>>>>>> 4f44861 (wip)
