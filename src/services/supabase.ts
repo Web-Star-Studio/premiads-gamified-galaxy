@@ -243,30 +243,36 @@ export const missionService = {
         
       if (getError) throw getError;
       
-      // Map status based on result
-      let newStatus;
-      if (result === 'aprovado') {
-        newStatus = 'approved';
-      } else if (result === 'rejeitado') {
-        if (isAdmin) {
-          newStatus = 'rejected'; // Final rejection
+      // Build update payload based on actor and action
+      const payload: Record<string, any> = {
+        feedback: notes || null,
+        updated_at: new Date().toISOString()
+      }
+      if (!isAdmin) {
+        // Advertiser first review
+        if (result === 'aprovado') {
+          payload.status = 'approved'
+          payload.review_stage = 'finalized'
         } else {
-          newStatus = 'segunda_instancia'; // Pending second review
+          payload.status = 'second_instance_pending'
+          payload.second_instance = true
+          payload.review_stage = 'second_instance'
+        }
+      } else {
+        // Admin second review
+        if (result === 'aprovado') {
+          payload.status = 'returned_to_advertiser'
+          payload.second_instance_status = 'approved'
+          payload.review_stage = 'first_review'
+        } else {
+          payload.status = 'rejected'
+          payload.second_instance_status = 'rejected'
+          payload.review_stage = 'finalized'
         }
       }
-      
-      console.log(`Atualizando submissão ${submissionId} para status: ${newStatus}`);
-      
-      // Update submission status
       const { data: submission, error: submissionError } = await client
         .from('mission_submissions')
-        .update({
-          status: newStatus,
-          validated_by: validatedBy,
-          admin_validated: isAdmin,
-          feedback: notes || null,
-          updated_at: new Date().toISOString()
-        })
+        .update(payload)
         .eq('id', submissionId)
         .select()
         .single();
@@ -285,56 +291,15 @@ export const missionService = {
         }]);
       
       if (logError) throw logError;
-      
-      // If approved, create reward and update user's points
-      if (result === 'aprovado') {
-        // Get mission details to determine point value
-        const { data: missionData, error: missionError } = await client
-          .from('missions')
-          .select('points')
-          .eq('id', submissionData.mission_id)
-          .single();
-          
-        if (missionError) throw missionError;
-        
-        const pointsToAward = missionData.points;
-        
-        // Create reward record
-        const { error: rewardError } = await client
-          .from('mission_rewards')
-          .insert([{
-            mission_id: submissionData.mission_id,
-            user_id: submissionData.user_id,
-            submission_id: submissionId,
-            points_earned: pointsToAward,
-            rewarded_at: new Date().toISOString()
-          }]);
-          
-        if (rewardError) throw rewardError;
-        
-        // Update user's points
-        const { data: userData, error: userError } = await client
-          .from('profiles')
-          .select('points')
-          .eq('id', submissionData.user_id)
-          .single();
-          
-        if (userError) throw userError;
-        
-        const currentPoints = userData.points || 0;
-        const newPointsTotal = currentPoints + pointsToAward;
-        
-        const { error: updateError } = await client
-          .from('profiles')
-          .update({ 
-            points: newPointsTotal,
-            updated_at: new Date().toISOString() 
-          })
-          .eq('id', submissionData.user_id);
-          
-        if (updateError) throw updateError;
-        
-        console.log(`User ${submissionData.user_id} awarded ${pointsToAward} points for mission ${submissionData.mission_id}`);
+
+      // Chama RPC seguro de recompensa ao participante quando status final for approved
+      if (payload.status === 'approved') {
+        try {
+          await client.rpc('reward_participant_for_submission', { submission_id: submissionId })
+          console.log('RPC reward_participant_for_submission chamado para', submissionId)
+        } catch (rpcErr) {
+          console.error('Erro ao chamar reward RPC:', rpcErr)
+        }
       }
       
       return submission;

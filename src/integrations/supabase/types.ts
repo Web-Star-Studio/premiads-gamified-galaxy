@@ -583,6 +583,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      reward_participant_for_submission: {
+        Args: { submission_id: string }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never

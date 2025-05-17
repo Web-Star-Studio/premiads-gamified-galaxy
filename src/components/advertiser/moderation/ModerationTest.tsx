@@ -59,12 +59,13 @@ const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
       // Verificar status existentes
       const statusValues = await checkStatusValues();
       
-      // Check for any missions created by this user
+      // Buscar missões criadas pelo anunciante (campo created_by no DB)
       const { data: missions, error: missionsError } = await supabase
         .from('missions')
         .select('id, title')
-        .eq('advertiser_id', userId);
-        
+        .eq('created_by', userId);
+      console.log('Test missions for advertiser (created_by):', missions);
+      
       if (missionsError) throw missionsError;
       
       // Get any submissions for these missions
