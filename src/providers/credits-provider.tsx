@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { realtimeCreditsService } from '@/services/realtime-credits';

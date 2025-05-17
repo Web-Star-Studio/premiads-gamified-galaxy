@@ -1,4 +1,3 @@
-
 import { Campaign } from "../campaignData";
 import { MissionType } from "@/hooks/useMissionsTypes";
 
@@ -134,6 +133,3 @@ export const audienceTypeLabels: Record<string, string> = {
   "novos": "Novos usuários",
   "nivel3": "Usuários nível 3 ou superior"
 };
-
-// Export MissionType to fix build errors
-export { MissionType };
