@@ -271,6 +271,7 @@ export const missionService = {
         if (!isAdmin) {
           payload.status = 'second_instance_pending';
           payload.review_stage = 'second_instance';
+          payload.second_instance = true;
         } else {
           payload.status = 'rejected';
           payload.review_stage = 'finalized';
@@ -278,6 +279,7 @@ export const missionService = {
       } else if (result === 'segunda_instancia') {
         payload.status = 'second_instance_pending';
         payload.review_stage = 'second_instance';
+        payload.second_instance = true;
       }
 
       console.log(`Atualizando submissão ${submissionId} para status: ${payload.status}`, payload);

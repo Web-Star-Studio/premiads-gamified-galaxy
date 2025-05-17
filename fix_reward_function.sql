@@ -1,3 +1,4 @@
+
 CREATE OR REPLACE FUNCTION reward_participant_for_submission(submission_id uuid)
 RETURNS void AS $$
 DECLARE
@@ -77,6 +78,12 @@ BEGIN
   SET status = 'ativa',
       updated_at = NOW()
   WHERE id = v_mission_id;
+
+  -- Update submission to indicate the reward was processed
+  UPDATE mission_submissions
+  SET review_stage = 'finalized',
+      updated_at = NOW()
+  WHERE id = submission_id;
 
   RAISE NOTICE 'Usuário % recompensado com % pontos pela missão %', v_user_id, v_points, v_mission_id;
 END;

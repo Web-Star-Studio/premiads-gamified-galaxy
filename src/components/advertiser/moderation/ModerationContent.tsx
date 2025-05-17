@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,10 @@ export interface Submission {
     name?: string;
     avatar_url?: string;
   };
+  second_instance?: boolean;
+  second_instance_status?: string;
+  review_stage?: string;
+  feedback?: string;
 }
 
 // Props to trigger a manual refresh from parent
