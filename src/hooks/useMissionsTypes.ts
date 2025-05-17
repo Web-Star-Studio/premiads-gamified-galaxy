@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -8,74 +7,6 @@ export interface MissionTypeDetails {
   label: string;
   description: string;
   icon: string;
-}
-
-export interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  brand?: string;
-  type: MissionType;
-  points: number;
-  deadline?: string;
-  status: string;
-  requirements?: string[];
-  business_type?: string;
-  target_audience_gender?: string;
-  target_audience_age_min?: number;
-  target_audience_age_max?: number;
-  target_audience_region?: string;
-  // Reward related fields
-  has_badges?: boolean;
-  has_lootbox?: boolean;
-  streak_bonus?: boolean;
-  streak_multiplier?: number;
-  // Target filter data
-  target_filter?: any;
-  // Min purchase for coupon campaigns
-  min_purchase?: number;
-  cost_in_tokens?: number;
-}
-
-export interface MissionSubmission {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_avatar?: string;
-  mission_id: string;
-  mission_title: string;
-  submission_data: any;
-  feedback?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submitted_at: string;
-  updated_at: string; // Adding this missing field
-  review_stage?: string;
-  second_instance?: boolean;
-}
-
-export interface UserTokens {
-  user_id: string;
-  total_tokens: number;
-  used_tokens: number;
-}
-
-export interface ValidationLog {
-  id: string;
-  submission_id: string;
-  validated_by: string;
-  is_admin: boolean;
-  result: string;
-  notes?: string;
-  created_at?: string;
-}
-
-export interface MissionReward {
-  id: string;
-  user_id: string;
-  mission_id: string;
-  submission_id: string;
-  points_earned: number;
-  rewarded_at?: string;
 }
 
 export const missionTypeLabels: Record<MissionType, string> = {
