@@ -53,12 +53,12 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
 
-  // Mapear abas para status de submissão
-  const tabToStatusMap: Record<string, string> = {
-    'pendentes': 'pending',
-    'aprovadas': 'approved',
-    'rejeitadas': 'rejected',
-    'segunda_instancia': 'segunda_instancia'
+  // Mapear abas para múltiplos status
+  const tabToStatusMap: Record<string, string[]> = {
+    pendentes: ['pending','in_progress','returned_to_advertiser'],
+    aprovadas: ['approved'],
+    rejeitadas: ['rejected'],
+    segunda_instancia: ['second_instance_pending']
   };
 
   // Buscar submissões
@@ -68,15 +68,18 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     setIsLoading(true);
     
     try {
-      // Primeiro, buscar missões criadas por este anunciante
+      // Buscar missões criadas por este anunciante (campo created_by no DB)
       const { data: missions, error: missionsError } = await missionService.supabase
         .from('missions')
         .select('id')
-        .eq('advertiser_id', currentUser.id);
+        .eq('created_by', currentUser.id);
+      console.log('Missions for advertiser (created_by):', missions);
       
       if (missionsError) throw missionsError;
       
       // Se não houver missões, não há submissões para mostrar
+      const missionIds = missions?.map(m => m.id) || []
+      console.log('Mission IDs:', missionIds);
       if (!missions || missions.length === 0) {
         setSubmissions([]);
         setFilteredSubmissions([]);
@@ -84,22 +87,22 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         return;
       }
       
-      const missionIds = missions.map(m => m.id);
-      
       // Agora buscar as submissões para estas missões com base no status atual
       let query = missionService.supabase
         .from('mission_submissions')
         .select('*, missions(title)')
         .in('mission_id', missionIds);
       
-      // Aplicar filtro de status se necessário
-      if (tabToStatusMap[activeTab]) {
-        query = query.eq('status', tabToStatusMap[activeTab]);
-      }
+      // Aplicar filtro de status por aba
+      const statuses = tabToStatusMap[activeTab]
+      if (statuses) query = query.in('status', statuses)
       
       // Ordenar por data de atualização (mais recentes primeiro)
       const { data: fetchedSubmissions, error: submissionsError } = await query
         .order('updated_at', { ascending: false });
+      
+      // Log raw fetched submissions for debugging
+      console.log('Fetched submissions from supabase:', fetchedSubmissions);
       
       if (submissionsError) throw submissionsError;
       
