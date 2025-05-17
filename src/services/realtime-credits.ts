@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 type UpdateCallback = (eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void;
@@ -7,6 +6,8 @@ type UpdateCallback = (eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void;
  * Service to handle real-time updates for user credits
  */
 export const realtimeCreditsService = {
+  // Current real-time channel for credits updates
+  channel: null as any,
   /**
    * List of callbacks to execute when credits are updated
    */
@@ -23,8 +24,14 @@ export const realtimeCreditsService = {
       return;
     }
     
+    // Unsubscribe existing channel if any
+    if (realtimeCreditsService.channel) {
+      await supabase.removeChannel(realtimeCreditsService.channel)
+      realtimeCreditsService.channel = null
+    }
+    
     // Subscribe to changes in the profiles table for this user
-    supabase
+    realtimeCreditsService.channel = supabase
       .channel('profile-credits-changes')
       .on('postgres_changes', 
         {
@@ -39,12 +46,22 @@ export const realtimeCreditsService = {
             callback(payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE');
           });
           
-          console.log('Credits updated:', payload.new?.credits);
+          console.log('Credits updated:', (payload.new as any)?.credits);
         }
       )
       .subscribe();
     
     console.log(`Subscribed to credit updates for user ${userId}`);
+  },
+  
+  /**
+   * Unsubscribe from real-time credits updates
+   */
+  unsubscribe: async (): Promise<void> => {
+    if (realtimeCreditsService.channel) {
+      await supabase.removeChannel(realtimeCreditsService.channel)
+      realtimeCreditsService.channel = null
+    }
   },
   
   /**
