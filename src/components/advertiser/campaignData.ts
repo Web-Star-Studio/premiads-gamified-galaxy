@@ -1,3 +1,4 @@
+
 import { Mission } from '@/hooks/useMissionsTypes';
 
 // Campaign is now an alias for the Mission type from the backend

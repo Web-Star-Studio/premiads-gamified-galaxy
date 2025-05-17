@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useCreditsStore } from '@/store/useCreditsStore';
 import { useSounds } from '@/hooks/use-sounds';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { realtimeCreditsService } from '@/services/realtime-credits';
 
 /**
  * Hook for managing user credits with real-time updates
@@ -17,46 +17,26 @@ export function useUserCredits() {
 
   // Fetch initial credits and set up real-time subscription
   useEffect(() => {
-    let subscription;
+    if (!user?.id) return;
     
+    // Fetch initial credits
     const initCredits = async () => {
-      if (!user?.id) return;
-      
-      // Fetch initial credits
       await fetchCredits(user.id);
-      
-      // Subscribe to profile changes (credits are stored in profiles table)
-      subscription = supabase
-        .channel('public:profiles')
-        .on('postgres_changes', 
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
-            filter: `id=eq.${user.id}`
-          }, 
-          (payload) => {
-            // When credits are updated, play sound and refresh credits
-            if (payload.new && payload.old) {
-              if (payload.new.credits > payload.old.credits) {
-                playSound('reward');
-              }
-              fetchCredits(user.id);
-            }
-          }
-        )
-        .subscribe();
-      
       setIsInitialized(true);
     };
     
     initCredits();
     
+    // Set up real-time listener
+    const unsubscribeListener = realtimeCreditsService.addUpdateListener(() => {
+      // When credits are updated, play sound and refresh credits
+      playSound('reward');
+      fetchCredits(user.id);
+    });
+    
     // Cleanup subscription on unmount
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
+      unsubscribeListener();
     };
   }, [user?.id, fetchCredits, playSound]);
   

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 type UpdateCallback = (eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void;
@@ -46,7 +47,12 @@ export const realtimeCreditsService = {
             callback(payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE');
           });
           
-          console.log('Credits updated:', (payload.new as any)?.credits);
+          // Safely access credits from payload
+          const newCredits = (payload.new && typeof payload.new === 'object' && 'credits' in payload.new) 
+            ? (payload.new as any).credits 
+            : undefined;
+            
+          console.log('Credits updated:', newCredits);
         }
       )
       .subscribe();

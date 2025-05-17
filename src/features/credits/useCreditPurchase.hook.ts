@@ -1,262 +1,102 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import axios from 'axios'
-import { supabase } from '@/integrations/supabase/client'
-import { useToast } from '@/hooks/use-toast'
-import { PaymentMethod, PaymentProvider } from '@/lib/payments'
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { useUserCredits } from '@/hooks/useUserCredits';
 
-export interface CreditPackage {
-  id: string
-  base: number
-  bonus: number
-  price: number
-  validityMonths: number
+interface PurchaseOptions {
+  amount: number;
+  paymentMethod: 'credit_card' | 'pix' | 'bank_transfer';
+  promoCode?: string;
 }
 
-interface PurchaseCreditsParams {
-  packageId?: string
-  customAmount?: number
-  paymentProvider: PaymentProvider
-  paymentMethod: PaymentMethod
-}
+export function useCreditPurchase() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { refreshCredits } = useUserCredits();
 
-// Type for credit packages from database
-interface DbCreditPackage {
-  id: string
-  base: number
-  bonus: number
-  price: number
-  validity_months: number
-  active: boolean
-  created_at: string
-  updated_at: string
-}
-
-/**
- * Hook for credit purchase operations
- */
-function useCreditPurchase() {
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null)
-  const [selectedPaymentProvider, setSelectedPaymentProvider] = useState<PaymentProvider | null>(null)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  // Fetch available credit packages
-  const { 
-    data: creditPackages, 
-    isLoading: isLoadingPackages,
-    error: packagesError 
-  } = useQuery({
-    queryKey: ['creditPackages'],
-    queryFn: async () => {
-      // Using any here to bypass type checking for the database schema
-      // In a real project, you'd use proper database types
-      const { data, error } = await supabase
-        .from('credit_packages')
-        .select('*')
-        .eq('active', true)
-        .order('base', { ascending: true }) as { data: DbCreditPackage[] | null, error: any }
-      
-      if (error) throw new Error(error.message)
-      if (!data) return []
-      
-      return data.map(pkg => ({
-        id: pkg.id,
-        base: pkg.base,
-        bonus: pkg.bonus,
-        price: pkg.price,
-        validityMonths: pkg.validity_months
-      }))
+  const purchaseCredits = async (options: PurchaseOptions) => {
+    if (!user?.id) {
+      setError('Usuário não autenticado');
+      return { success: false, error: 'Usuário não autenticado' };
     }
-  })
 
-  // Fetch user's current credits
-  const { 
-    data: userCredits,
-    isLoading: isLoadingCredits
-  } = useQuery({
-    queryKey: ['userCredits'],
-    queryFn: async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const userId = sessionData?.session?.user?.id
-      
-      if (!userId) return 0
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', userId)
-        .single()
-      
-      if (error) throw new Error(error.message)
-      
-      return data?.credits || 0
-    }
-  })
+    setIsLoading(true);
+    setError(null);
 
-  // Initiate credit purchase
-  const { 
-    mutate: purchaseCredits,
-    isPending: isPurchasing,
-    error: purchaseError
-  } = useMutation({
-    mutationFn: async ({ packageId, customAmount, paymentProvider, paymentMethod }: PurchaseCreditsParams) => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const userId = sessionData?.session?.user?.id
-      const token = sessionData?.session?.access_token
-      
-      if (!userId) {
-        throw new Error('Usuário não autenticado')
+    try {
+      // Get current session for authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error('Sessão expirada. Faça login novamente.');
       }
-      
-      if (!token) {
-        throw new Error('Token de autenticação não disponível')
-      }
-      
-      // Call the purchase-credits edge function
-      const response = await axios.post('/api/purchase-credits', {
-        userId,
-        packageId,
-        customAmount,
-        paymentProvider,
-        paymentMethod
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'apikey': supabase.supabaseKey
+
+      // Call the purchase API endpoint
+      const { data, error } = await supabase.functions.invoke('process-credit-purchase', {
+        body: {
+          userId: user.id,
+          amount: options.amount,
+          paymentMethod: options.paymentMethod,
+          promoCode: options.promoCode
         }
-      })
-      
-      return response.data
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Pagamento iniciado',
-        description: 'Aguardando confirmação do pagamento...'
-      })
-      
-      // Open payment URL in new tab if available
-      if (data.payment?.payment_url) {
-        window.open(data.payment.payment_url, '_blank')
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Erro ao iniciar pagamento',
-        description: error.message || 'Ocorreu um erro ao processar sua compra',
-        variant: 'destructive'
-      })
-    }
-  })
+      });
 
-  // Confirm payment (for testing/simulation purposes)
-  const { mutate: confirmPayment } = useMutation({
-    mutationFn: async ({ purchaseId, paymentId, status, provider }: { 
-      purchaseId: string,
-      paymentId: string,
-      status: 'confirmed' | 'failed',
-      provider: PaymentProvider
-    }) => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const token = sessionData?.session?.access_token
-      
-      if (!token) {
-        throw new Error('Token de autenticação não disponível')
-      }
-      
-      // Call the confirm-payment edge function
-      const response = await axios.post('/api/confirm-payment', {
-        purchase_id: purchaseId,
-        payment_id: paymentId,
-        status,
-        provider
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'apikey': supabase.supabaseKey
-        }
-      })
-      
-      return response.data
-    },
-    onSuccess: (data) => {
-      if (data.status === 'confirmed') {
-        toast({
-          title: 'Pagamento confirmado',
-          description: 'Seus créditos foram adicionados com sucesso!'
-        })
-      } else {
-        toast({
-          title: 'Pagamento falhou',
-          description: 'O pagamento não pôde ser processado',
-          variant: 'destructive'
-        })
-      }
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['userCredits'] })
-      queryClient.invalidateQueries({ queryKey: ['activityLog'] })
-      
-      // Close payment modal
-      setIsPaymentModalOpen(false)
-      setSelectedPackage(null)
-      setSelectedPaymentProvider(null)
-      setSelectedPaymentMethod(null)
-    },
-    onError: () => {
-      toast({
-        title: 'Erro na confirmação',
-        description: 'Não foi possível confirmar o pagamento',
-        variant: 'destructive'
-      })
-    }
-  })
+      if (error) throw error;
 
-  // Calculate credits for custom amount
-  function calculateCustomPackage(amount: number) {
-    if (!creditPackages || !creditPackages.length) return { base: amount, bonus: 0, total: amount }
-    
-    let bonus = 0
-    // Find the highest applicable bonus tier
-    for (const pkg of creditPackages) {
-      if (amount >= pkg.base) {
-        const bonusPercentage = pkg.bonus / pkg.base
-        bonus = Math.floor(amount * bonusPercentage)
-      }
+      // Refresh credits to show the updated balance
+      await refreshCredits();
+
+      toast({
+        title: 'Compra realizada com sucesso',
+        description: `${options.amount} créditos foram adicionados à sua conta.`,
+      });
+
+      return { success: true, data };
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao processar a compra de créditos';
+      setError(errorMessage);
+      
+      toast({
+        title: 'Erro na compra',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const validatePromoCode = async (code: string) => {
+    if (!code) return { valid: false, discount: 0 };
     
-    return {
-      base: amount,
-      bonus,
-      total: amount + bonus,
-      price: amount / 10 // 10 credits = R$1.00
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        body: { code }
+      });
+      
+      if (error) throw error;
+      
+      return { 
+        valid: data.valid, 
+        discount: data.discountPercentage || 0,
+        message: data.message
+      };
+    } catch (err) {
+      return { valid: false, discount: 0 };
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return {
-    creditPackages,
-    userCredits,
-    isLoadingPackages,
-    isLoadingCredits,
-    isPurchasing,
-    packagesError,
-    purchaseError,
     purchaseCredits,
-    confirmPayment,
-    calculateCustomPackage,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
-    selectedPackage,
-    setSelectedPackage,
-    selectedPaymentProvider,
-    setSelectedPaymentProvider,
-    selectedPaymentMethod,
-    setSelectedPaymentMethod
-  }
+    validatePromoCode,
+    isLoading,
+    error
+  };
 }
-
-export { useCreditPurchase } 
