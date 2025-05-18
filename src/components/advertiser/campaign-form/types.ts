@@ -1,5 +1,5 @@
-import { Campaign } from "../campaignData";
-import { MissionType } from "@/hooks/useMissionsTypes";
+
+import type { Mission, MissionType } from "@/hooks/useMissionsTypes";
 
 /**
  * Props for the CampaignForm component
@@ -8,7 +8,7 @@ export interface CampaignFormProps {
   /** Function called when form is closed or submitted */
   onClose: () => void;
   /** Optional campaign data for editing mode */
-  editCampaign?: Campaign | null;
+  editCampaign?: Mission | null;
 }
 
 /**
@@ -133,3 +133,5 @@ export const audienceTypeLabels: Record<string, string> = {
   "novos": "Novos usuários",
   "nivel3": "Usuários nível 3 ou superior"
 };
+
+export type { MissionType };

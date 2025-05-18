@@ -1,77 +1,112 @@
 
-import { MissionSubmission } from "@/types/missions";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Submission } from '../ModerationContent';
 
-// Determine submission type
-export const getSubmissionType = (submission: MissionSubmission): 'image' | 'text' | 'creative' | 'video' => {
-  const data = submission.submission_data;
+/**
+ * Format a date string to a user-friendly format
+ */
+export const getFormattedDate = (dateString?: string): string => {
+  if (!dateString) return 'Data desconhecida';
   
-  if (!data) return 'text';
-  
-  if (data.image_url || data.photos || data.photo_url) {
-    return 'image';
-  } else if (data.video_url) {
-    return 'video';
-  } else if (data.creative_content) {
-    return 'creative';
-  } else {
-    return 'text';
-  }
-};
-
-// Get submission content
-export const getSubmissionContent = (submission: MissionSubmission): string => {
-  const data = submission.submission_data;
-  const type = getSubmissionType(submission);
-  
-  if (!data) return 'Sem conteúdo disponível';
-  
-  switch (type) {
-    case 'image':
-      return data.image_url || data.photos?.[0] || data.photo_url || '';
-    case 'video':
-      return data.video_url || '';
-    case 'creative':
-      return data.creative_content || '';
-    case 'text':
-    default:
-      return data.text || data.feedback || data.answer || JSON.stringify(data);
-  }
-};
-
-// Get formatted date
-export const getFormattedDate = (dateString: string): string => {
   try {
-    return format(new Date(dateString), "dd 'de' MMMM, yyyy 'às' HH:mm", { locale: ptBR });
+    return format(parseISO(dateString), "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
   } catch (e) {
     return dateString;
   }
 };
 
-// Get the submission type label
-export const getTypeLabel = (submission: MissionSubmission): string => {
-  const type = getSubmissionType(submission);
+/**
+ * Get user initials from their name
+ */
+export const getUserInitials = (name: string): string => {
+  if (!name) return 'U';
   
-  switch (type) {
-    case 'image':
-      return 'Imagem';
-    case 'video':
-      return 'Vídeo';
-    case 'creative':
-      return 'Conteúdo Criativo';
-    case 'text':
-    default:
-      return 'Texto';
-  }
-};
-
-// Get user initials for avatar
-export const getUserInitials = (userName?: string): string => {
-  if (!userName) return '?';
-  
-  const nameParts = userName.split(' ');
+  const nameParts = name.split(' ');
   if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
   
   return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+};
+
+/**
+ * Determine the submission type based on its content
+ */
+export const getSubmissionType = (submission: Submission): 'image' | 'text' | 'video' | 'audio' => {
+  if (!submission) return 'text';
+  
+  // Check for proof_url first (direct property)
+  if (submission.proof_url && submission.proof_url.length > 0) {
+    const url = submission.proof_url[0].toLowerCase();
+    
+    if (url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.includes('image/')) {
+      return 'image';
+    }
+    
+    if (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov') || url.includes('video/')) {
+      return 'video';
+    }
+    
+    if (url.endsWith('.mp3') || url.endsWith('.wav') || url.includes('audio/')) {
+      return 'audio';
+    }
+  }
+  
+  // Check submission_data for media URLs
+  if (submission.submission_data) {
+    const data = submission.submission_data;
+    
+    if (data.image_url || data.photo_url || (data.photos && data.photos.length > 0)) {
+      return 'image';
+    }
+    
+    if (data.video_url) {
+      return 'video';
+    }
+    
+    if (data.audio_url) {
+      return 'audio';
+    }
+  }
+  
+  return 'text';
+};
+
+/**
+ * Extract the main content from a submission
+ */
+export const getSubmissionContent = (submission: Submission): string => {
+  if (!submission) return '';
+  
+  // Handle direct proof properties first
+  if (submission.proof_url && submission.proof_url.length > 0) {
+    return submission.proof_url[0];
+  }
+  
+  if (submission.proof_text) {
+    return submission.proof_text;
+  }
+  
+  // Handle submission_data
+  if (submission.submission_data) {
+    const data = submission.submission_data;
+    
+    // Try to extract media URLs
+    if (data.image_url) return data.image_url;
+    if (data.photo_url) return data.photo_url;
+    if (data.photos && data.photos.length > 0) return data.photos[0];
+    if (data.video_url) return data.video_url;
+    if (data.audio_url) return data.audio_url;
+    
+    // Try to extract text content
+    if (data.text) return data.text;
+    if (data.message) return data.message;
+    if (data.content) return data.content;
+    if (data.feedback) return data.feedback;
+    if (data.answer) return data.answer;
+    
+    // If we can't find anything specific, stringify the data
+    return JSON.stringify(data, null, 2);
+  }
+  
+  return 'Sem conteúdo disponível';
 };

@@ -1,5 +1,5 @@
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export type MissionType = 'form' | 'photo' | 'video' | 'checkin' | 'social' | 'coupon' | 'survey' | 'review';
 
@@ -8,6 +8,45 @@ export interface MissionTypeDetails {
   description: string;
   icon: string;
 }
+
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  brand?: string;
+  type: MissionType;
+  points: number;
+  deadline?: string;
+  status: MissionStatus;
+  requirements?: string[];
+  business_type?: string;
+  target_audience_gender?: string;
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
+  // Reward related fields
+  has_badges?: boolean;
+  has_lootbox?: boolean;
+  streak_bonus?: boolean;
+  streak_multiplier?: number;
+  // Target filter data
+  target_filter?: any;
+  // Min purchase for coupon campaigns
+  min_purchase?: number;
+  // Fields for compatibility with old campaign interface
+  audience?: string;
+  completions?: number;
+  reward?: string;
+  expires?: string;
+  cost_in_tokens?: number; // This is the amount of tokens rewarded to participants
+}
+
+export type MissionStatus =
+  | "available"
+  | "in_progress"
+  | "completed"
+  | "pending_approval"
+  | "pending"; // db string stored for pending submissions
 
 export const missionTypeLabels: Record<MissionType, string> = {
   form: "Formulário",
@@ -66,5 +105,3 @@ export const useMissionTypes = () => {
     missionTypes,
   };
 };
-
-// Export the MissionType type to fix build errors

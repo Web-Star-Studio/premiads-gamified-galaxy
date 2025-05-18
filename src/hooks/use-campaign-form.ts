@@ -1,183 +1,153 @@
-import { useState, useEffect, useCallback } from "react";
-import { Campaign } from "@/components/advertiser/campaignData";
-import { FormData, initialFormData, MissionType } from "@/components/advertiser/campaign-form/types";
-import { useToast } from "@/hooks/use-toast";
-import { useCampaignOperations } from "@/hooks/advertiser/useCampaignOperations";
 
-interface UseCampaignFormProps {
-  /** Campaign data for editing mode */
-  editCampaign?: Campaign | null;
-  /** Function called when form is closed or submitted */
-  onClose: () => void;
-}
+import { useState, useEffect } from 'react';
+import { FormData, initialFormData } from '@/components/advertiser/campaign-form/types';
+import { useUserCredits } from '@/hooks/useUserCredits';
+import { useToast } from '@/hooks/use-toast';
+import { Mission } from '@/hooks/useMissionsTypes';
 
-interface UseCampaignFormReturn {
-  /** Current step in the form wizard (1-4) */
-  step: number;
-  /** Current form data */
-  formData: FormData;
-  /** Set current step directly */
-  setStep: (step: number) => void;
-  /** Update a specific form field */
-  updateFormData: (field: string, value: any) => void;
-  /** Go to next step or submit form if on last step */
-  handleNext: () => void;
-  /** Go to previous step */
-  handleBack: () => void;
-  /** Submit form data */
-  handleSubmit: () => void;
-  /** Get title for current step */
-  getStepTitle: () => string;
-  /** Validate current step */
-  isCurrentStepValid: () => boolean;
-}
-
-/**
- * Custom hook to manage campaign form state and navigation
- * Handles form initialization, validation, and submission
- */
-export function useCampaignForm({ editCampaign, onClose }: UseCampaignFormProps): UseCampaignFormReturn {
-  const [step, setStep] = useState(1);
+export const useCampaignForm = (editCampaign?: Mission | null) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { availableCredits } = useUserCredits();
   const { toast } = useToast();
-  const { createCampaign, updateCampaign } = useCampaignOperations();
   
-  // Initialize form with campaign data if in edit mode
+  // Total number of form steps
+  const totalSteps = 4;
+  
+  // Load campaign data for editing
   useEffect(() => {
     if (editCampaign) {
-      try {
-        const pointsRange = editCampaign.reward.includes("-") 
-          ? editCampaign.reward.split("-").map(Number) 
-          : [parseInt(editCampaign.reward), parseInt(editCampaign.reward)];
-        
-        // Ensure points are valid numbers
-        if (pointsRange.some(isNaN)) {
-          throw new Error("Invalid points format in campaign data");
-        }
-        
-        setFormData({
-          ...initialFormData,
-          title: editCampaign.title,
-          audience: editCampaign.audience,
-          pointsRange: pointsRange as [number, number],
-          // Other fields would be populated here if available in campaign data
-        });
-      } catch (error) {
-        console.error("Error parsing campaign data:", error);
-        toast({
-          title: "Erro ao carregar dados da campanha",
-          description: "Não foi possível carregar alguns dados da campanha para edição.",
-          variant: "destructive",
-        });
-      }
-    }
-  }, [editCampaign, toast]);
-
-  /**
-   * Update a specific field in the form data
-   */
-  const updateFormData = useCallback((field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }, []);
-
-  /**
-   * Progress to next step or submit if on last step
-   */
-  const handleNext = useCallback(() => {
-    if (step < 4) {
-      setStep(step + 1);
-    } else {
-      handleSubmit();
-    }
-  }, [step]);
-
-  /**
-   * Return to previous step
-   */
-  const handleBack = useCallback(() => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  }, [step]);
-
-  /**
-   * Submit form data and close form
-   */
-  const handleSubmit = useCallback(async () => {
-    try {
-      let success;
-      
-      if (editCampaign) {
-        success = await updateCampaign(editCampaign.id.toString(), formData);
-      } else {
-        success = await createCampaign(formData);
-      }
-      
-      if (success) {
-        onClose();
-      }
-    } catch (error: any) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Erro ao salvar missão",
-        description: error.message || "Ocorreu um erro ao salvar os dados da missão.",
-        variant: "destructive",
+      // Map the campaign data to the form structure
+      setFormData({
+        ...initialFormData,
+        title: editCampaign.title,
+        type: editCampaign.type as any,
+        description: editCampaign.description || '',
+        audience: editCampaign.audience || editCampaign.target_audience || '',
+        pointsRange: [
+          editCampaign.points - 10,
+          editCampaign.points + 10
+        ],
+        randomPoints: false,
+        pointsValue: editCampaign.points,
+        hasBadges: editCampaign.has_badges || false,
+        hasLootBox: editCampaign.has_lootbox || false,
+        startDate: editCampaign.start_date ? new Date(editCampaign.start_date) : new Date(),
+        endDate: editCampaign.end_date ? new Date(editCampaign.end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        streakBonus: editCampaign.streak_bonus || false,
+        streakMultiplier: editCampaign.streak_multiplier || 1.2,
+        requirements: editCampaign.requirements as string[] || [],
+        minPurchase: editCampaign.min_purchase,
+        targetFilter: editCampaign.target_filter || initialFormData.targetFilter
       });
     }
-  }, [formData, editCampaign, onClose, toast, createCampaign, updateCampaign]);
-
-  /**
-   * Get the title for the current step
-   */
-  const getStepTitle = useCallback(() => {
-    if (editCampaign) return "Editar Missão";
-    
-    switch (step) {
-      case 1: return "Criar Nova Missão";
-      case 2: return "Definir Requisitos";
-      case 3: return "Definir Recompensas";
-      case 4: return "Configurar Datas";
-      default: return "";
+  }, [editCampaign]);
+  
+  // Update form data
+  const updateFormData = (updates: Partial<FormData>) => {
+    setFormData(prevData => ({
+      ...prevData,
+      ...updates
+    }));
+  };
+  
+  // Navigation
+  const goToNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prevStep => prevStep + 1);
     }
-  }, [step, editCampaign]);
-
-  /**
-   * Validate the current step
-   */
-  const isCurrentStepValid = useCallback(() => {
+  };
+  
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prevStep => prevStep - 1);
+    }
+  };
+  
+  // Validate step by step
+  const validateStep = (step: number): boolean => {
     switch (step) {
-      case 1:
-        return formData.title.trim().length >= 3 && 
-               formData.type !== "" && 
-               formData.audience !== "";
-      case 2:
-        return formData.requirements.length > 0;
-      case 3:
-        if (formData.streakBonus && (!formData.streakMultiplier || formData.streakMultiplier < 1.0)) {
+      case 1: // Basic Info
+        if (!formData.title || !formData.type || !formData.description) {
+          toast({
+            title: "Informações incompletas",
+            description: "Preencha todos os campos obrigatórios para continuar",
+            variant: "destructive",
+          });
           return false;
         }
-        return true; // Rewards are optional
-      case 4:
-        return formData.startDate !== "" && 
-               formData.endDate !== "" && 
-               formData.startDate <= formData.endDate;
+        return true;
+        
+      case 2: // Rewards
+        // Check if user has enough credits when creating a new campaign
+        if (!editCampaign) {
+          const cost = formData.pointsValue || formData.pointsRange[0];
+          if (cost > availableCredits) {
+            toast({
+              title: "Créditos insuficientes",
+              description: `Você precisa de ${cost} créditos para esta campanha, mas possui apenas ${availableCredits}`,
+              variant: "destructive",
+            });
+            return false;
+          }
+        }
+        return true;
+        
+      case 3: // Dates
+        if (!formData.startDate || !formData.endDate) {
+          toast({
+            title: "Datas não definidas",
+            description: "Defina as datas de início e fim da campanha",
+            variant: "destructive",
+          });
+          return false;
+        }
+        
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        
+        if (end <= start) {
+          toast({
+            title: "Datas inválidas",
+            description: "A data de término deve ser posterior à data de início",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+        
+      case 4: // Requirements
+        if (!formData.requirements || (Array.isArray(formData.requirements) && formData.requirements.length === 0)) {
+          toast({
+            title: "Requisitos não definidos",
+            description: "Adicione pelo menos um requisito para a campanha",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+        
       default:
-        return false;
+        return true;
     }
-  }, [step, formData]);
-
-  return {
-    step,
-    formData,
-    setStep,
-    updateFormData,
-    handleNext,
-    handleBack,
-    handleSubmit,
-    getStepTitle,
-    isCurrentStepValid
   };
-}
+  
+  // Handle step transition
+  const handleNextStep = () => {
+    if (validateStep(currentStep)) {
+      goToNextStep();
+    }
+  };
+  
+  return {
+    formData,
+    updateFormData,
+    currentStep,
+    totalSteps,
+    goToNextStep: handleNextStep,
+    goToPreviousStep,
+    isSubmitting,
+    setIsSubmitting
+  };
+};

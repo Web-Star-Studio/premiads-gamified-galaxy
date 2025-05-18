@@ -1,325 +1,183 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useSounds } from '@/hooks/use-sounds';
-import { FormData } from "@/components/advertiser/campaign-form/types";
-import { MissionType, Mission } from "@/hooks/useMissionsTypes";
+import { useNavigate } from 'react-router-dom';
+import { FormData } from '@/components/advertiser/campaign-form/types';
 import { useAuth } from '@/hooks/useAuth';
-import { missionService } from '@/services/supabase';
+import { Mission } from '@/hooks/useMissionsTypes';
 
-export const useCampaignOperations = () => {
-  const [isLoading, setIsLoading] = useState(false);
+const useCampaignOperations = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { playSound } = useSounds();
-  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  /**
-   * Mapeia os tipos de missão do formulário para os tipos usados no backend
-   */
-  const mapMissionType = (formType: string): string => {
-    const typeMap: Record<string, string> = {
-      'form': 'formulario',
-      'photo': 'foto',
-      'video': 'video',
-      'checkin': 'check-in',
-      'social': 'redes_sociais',
-      'coupon': 'cupom',
-      'survey': 'pesquisa',
-      'review': 'avaliacao'
-    };
-    
-    return typeMap[formType] || formType;
-  };
-
-  /**
-   * Calcula o custo em tokens com base no tipo de missão e público-alvo
-   */
-  const calculateTokenCost = (type: string, audience: string): number => {
-    // Valores base por tipo de missão
-    const baseCosts: Record<string, number> = {
-      'formulario': 10,
-      'foto': 15,
-      'video': 20,
-      'check-in': 12,
-      'redes_sociais': 15,
-      'cupom': 8,
-      'pesquisa': 15,
-      'avaliacao': 12
-    };
-    
-    // Multiplicadores por público
-    const audienceMultipliers: Record<string, number> = {
-      'todos': 1.0,
-      'premium': 1.5,
-      'beta': 1.2
-    };
-    
-    const baseTokens = baseCosts[mapMissionType(type)] || 10;
-    const multiplier = audienceMultipliers[audience] || 1.0;
-    
-    return Math.round(baseTokens * multiplier);
-  };
-
-  /**
-   * Criar uma nova campanha/missão
-   */
-  const createCampaign = async (formData: FormData): Promise<boolean> => {
-    if (!currentUser?.id) {
+  const createCampaign = async (formData: FormData) => {
+    if (!user) {
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar uma campanha.",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Você precisa estar logado para criar uma campanha',
+        variant: 'destructive',
       });
       return false;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
-      // Verificar se o usuário tem tokens suficientes consultando o perfil
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-      if (profileError) throw profileError;
-      const availableTokens = Number(profileData?.credits) || 0;
-      const cost = calculateTokenCost(formData.type, formData.audience);
-      
-      if (availableTokens < cost) {
-        toast({
-          title: "Tokens insuficientes",
-          description: `Você precisa de ${cost} tokens para criar esta campanha. Atualmente você tem ${availableTokens} tokens disponíveis.`,
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      // Extrair filtros de idade e região/gênero do FormData
-      const ageRanges = formData.targetFilter?.age as string[] | undefined
-      let ageMin: number | undefined
-      let ageMax: number | undefined
-      if (ageRanges && ageRanges.length > 0) {
-        const [minStr, maxStr] = ageRanges[0].split('-')
-        ageMin = parseInt(minStr, 10)
-        ageMax = parseInt(maxStr, 10)
-      }
-      const regionFilter = formData.targetFilter?.region?.join(',')
-      const genderFilter = formData.targetFilter?.gender
-
-      // Preparar dados da missão
-      const mission: Partial<Mission> = {
+      // Convert the formData to the expected mission format
+      const missionData = {
         title: formData.title,
         description: formData.description,
-        requirements: Array.isArray(formData.requirements)
-          ? formData.requirements.join('\n')
-          : formData.requirements,
-        type: mapMissionType(formData.type) as MissionType,
-        points: formData.randomPoints
-          ? Math.floor(
-              Math.random() *
-                (formData.pointsRange[1] - formData.pointsRange[0] + 1)
-            ) + formData.pointsRange[0]
-          : formData.pointsValue || formData.pointsRange[0],
-        created_by: currentUser.id,
-        cost_in_tokens: cost,
-        status: 'pendente' as const,
-        start_date: formData.startDate
-          ? new Date(formData.startDate).toISOString()
-          : undefined,
-        end_date: formData.endDate
-          ? new Date(formData.endDate).toISOString()
-          : undefined,
-        target_audience_age_min: ageMin,
-        target_audience_age_max: ageMax,
-        target_audience_region: regionFilter,
-        target_audience_gender: genderFilter,
+        type: formData.type,
+        target_audience: formData.audience,
+        requirements: Array.isArray(formData.requirements) 
+          ? formData.requirements 
+          : [formData.requirements], // Convert to array if it's a string
+        business_type: 'retail', // Default
+        target_audience_gender: formData.targetFilter?.gender || 'all',
+        target_audience_age_min: formData.targetFilter?.age?.[0] 
+          ? parseInt(formData.targetFilter.age[0]) 
+          : 18,
+        target_audience_age_max: formData.targetFilter?.age?.[1] 
+          ? parseInt(formData.targetFilter.age[1]) 
+          : 65,
+        target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        status: 'ativa',
+        has_badges: formData.hasBadges,
+        has_lootbox: formData.hasLootBox,
         streak_bonus: formData.streakBonus,
-        streak_multiplier:
-          formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
+        streak_multiplier: formData.streakMultiplier,
+        points: formData.randomPoints 
+          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
+          : formData.pointsValue || formData.pointsRange[0],
+        cost_in_tokens: formData.randomPoints 
+          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
+          : formData.pointsValue || formData.pointsRange[0],
+        target_filter: formData.targetFilter || {},
+        advertiser_id: user.id,
+        created_by: user.id
       };
       
-      // Criar missão no Supabase
-      const createdMission = await missionService.createMission(mission as Mission);
-      
-      toast({
-        title: "Missão criada com sucesso",
-        description: "Sua campanha foi criada e está aguardando aprovação.",
+      // Deduct tokens from advertiser's balance
+      const { error: deductError } = await supabase.rpc('deduct_credits_from_advertiser', {
+        p_advertiser_id: user.id, 
+        p_credits_to_deduct: missionData.cost_in_tokens
       });
       
-      return true;
-    } catch (error: any) {
-      console.error("Erro ao criar campanha:", error);
-      
-      toast({
-        title: "Erro ao criar campanha",
-        description: error.message || "Ocorreu um erro ao criar a campanha.",
-        variant: "destructive",
-      });
-      
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Atualizar uma campanha existente
-   */
-  const updateCampaign = async (campaignId: string, formData: FormData): Promise<boolean> => {
-    if (!currentUser?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para atualizar uma campanha.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Buscar missão existente
-      const existingMission = await missionService.getMissionById(campaignId);
-      
-      // Verificar permissão
-      if (existingMission.created_by !== currentUser.id) {
-        toast({
-          title: "Permissão negada",
-          description: "Você não tem permissão para editar esta campanha.",
-          variant: "destructive",
-        });
-        return false;
+      if (deductError) {
+        throw new Error(`Erro ao debitar tokens: ${deductError.message}`);
       }
       
-      // Extrair filtros de idade e região/gênero do FormData
-      const ageRanges = formData.targetFilter?.age as string[] | undefined
-      let ageMin: number | undefined
-      let ageMax: number | undefined
-      if (ageRanges && ageRanges.length > 0) {
-        const [minStr, maxStr] = ageRanges[0].split('-')
-        ageMin = parseInt(minStr, 10)
-        ageMax = parseInt(maxStr, 10)
-      }
-      const regionFilter = formData.targetFilter?.region?.join(',')
-      const genderFilter = formData.targetFilter?.gender
-
-      // Preparar dados da missão
-      const updatedMission: Partial<Mission> = {
-        title: formData.title,
-        description: formData.description,
-        requirements: Array.isArray(formData.requirements)
-          ? formData.requirements.join('\n')
-          : formData.requirements,
-        type: mapMissionType(formData.type) as MissionType,
-        points: formData.randomPoints
-          ? Math.floor(
-              Math.random() *
-                (formData.pointsRange[1] - formData.pointsRange[0] + 1)
-            ) + formData.pointsRange[0]
-          : formData.pointsValue || formData.pointsRange[0],
-        updated_at: new Date().toISOString(),
-        start_date: formData.startDate
-          ? new Date(formData.startDate).toISOString()
-          : undefined,
-        end_date: formData.endDate
-          ? new Date(formData.endDate).toISOString()
-          : undefined,
-        target_audience_age_min: ageMin,
-        target_audience_age_max: ageMax,
-        target_audience_region: regionFilter,
-        target_audience_gender: genderFilter,
-        streak_bonus: formData.streakBonus,
-        streak_multiplier:
-          formData.streakBonus ? formData.streakMultiplier || 1.2 : null,
-      };
-      
-      // Atualizar missão no Supabase
-      await supabase
+      // Insert the new mission
+      const { data, error } = await supabase
         .from('missions')
-        .update(updatedMission)
-        .eq('id', campaignId);
+        .insert(missionData)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
       
       toast({
-        title: "Campanha atualizada",
-        description: "As alterações foram salvas com sucesso.",
+        title: 'Campanha criada com sucesso',
+        description: 'Sua campanha foi criada e está pronta para ser publicada',
       });
       
       return true;
     } catch (error: any) {
-      console.error("Erro ao atualizar campanha:", error);
-      
+      console.error('Error creating campaign:', error);
       toast({
-        title: "Erro ao atualizar campanha",
-        description: error.message || "Ocorreu um erro ao atualizar a campanha.",
-        variant: "destructive",
+        title: 'Erro ao criar campanha',
+        description: error.message || 'Ocorreu um erro ao criar a campanha',
+        variant: 'destructive',
       });
-      
       return false;
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  /**
-   * Atualizar o status de uma campanha
-   */
-  const updateCampaignStatus = async (campaignId: string, status: 'ativa' | 'pendente' | 'encerrada'): Promise<boolean> => {
-    if (!currentUser?.id) {
+  const updateCampaign = async (campaignId: string, formData: FormData) => {
+    if (!user) {
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado para atualizar o status da campanha.",
-        variant: "destructive",
+        title: 'Erro',
+        description: 'Você precisa estar logado para editar uma campanha',
+        variant: 'destructive',
       });
       return false;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     
     try {
-      // Verificar permissão
-      const existingMission = await missionService.getMissionById(campaignId);
+      // Convert the formData to the expected mission format
+      const missionData = {
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        target_audience: formData.audience,
+        requirements: Array.isArray(formData.requirements) 
+          ? formData.requirements 
+          : [formData.requirements], // Convert to array if it's a string
+        business_type: 'retail', // Default
+        target_audience_gender: formData.targetFilter?.gender || 'all',
+        target_audience_age_min: formData.targetFilter?.age?.[0] 
+          ? parseInt(formData.targetFilter.age[0]) 
+          : 18,
+        target_audience_age_max: formData.targetFilter?.age?.[1] 
+          ? parseInt(formData.targetFilter.age[1]) 
+          : 65,
+        target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        has_badges: formData.hasBadges,
+        has_lootbox: formData.hasLootBox,
+        streak_bonus: formData.streakBonus,
+        streak_multiplier: formData.streakMultiplier,
+        target_filter: formData.targetFilter || {},
+        updated_at: new Date()
+      };
       
-      const isAdmin = currentUser?.user_metadata?.user_type === 'admin';
-      const isOwner = existingMission.created_by === currentUser.id;
+      const { data, error } = await supabase
+        .from('missions')
+        .update(missionData)
+        .eq('id', campaignId)
+        .select()
+        .single();
       
-      if (!isAdmin && !isOwner) {
-        toast({
-          title: "Permissão negada",
-          description: "Você não tem permissão para atualizar o status desta campanha.",
-          variant: "destructive",
-        });
-        return false;
+      if (error) {
+        throw error;
       }
       
-      // Atualizar status
-      await missionService.updateMissionStatus(campaignId, status);
-      
       toast({
-        title: "Status atualizado",
-        description: `A campanha agora está ${status}.`,
+        title: 'Campanha atualizada',
+        description: 'Sua campanha foi atualizada com sucesso',
       });
       
       return true;
     } catch (error: any) {
-      console.error("Erro ao atualizar status:", error);
-      
+      console.error('Error updating campaign:', error);
       toast({
-        title: "Erro ao atualizar status",
-        description: error.message || "Ocorreu um erro ao atualizar o status da campanha.",
-        variant: "destructive",
+        title: 'Erro ao atualizar campanha',
+        description: error.message || 'Ocorreu um erro ao atualizar a campanha',
+        variant: 'destructive',
       });
-      
       return false;
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return {
-    isLoading,
+    isSubmitting,
     createCampaign,
-    updateCampaign,
-    updateCampaignStatus
+    updateCampaign
   };
 };
+
+export default useCampaignOperations;

@@ -695,13 +695,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_points_to_user: {
+        Args: { p_user_id: string; p_points_to_add: number }
+        Returns: undefined
+      }
       add_tokens_to_user: {
         Args: { user_id: string; reward: number }
+        Returns: undefined
+      }
+      deduct_credits_from_advertiser: {
+        Args: { p_advertiser_id: string; p_credits_to_deduct: number }
         Returns: undefined
       }
       delete_user_account: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      finalize_submission: {
+        Args: {
+          p_submission_id: string
+          p_approver_id: string
+          p_decision: string
+          p_stage: string
+        }
+        Returns: Json
       }
       get_active_cashback_campaigns: {
         Args: Record<PropertyKey, never>

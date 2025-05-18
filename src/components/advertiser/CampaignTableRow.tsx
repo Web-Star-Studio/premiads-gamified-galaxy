@@ -5,24 +5,31 @@ import { Edit, Eye, Trash, BarChart } from "lucide-react";
 import CampaignStatusBadge from "./CampaignStatusBadge";
 import { Campaign } from "./campaignData";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Mission } from "@/hooks/useMissionsTypes"; 
 
 interface CampaignTableRowProps {
   campaign: Campaign;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   onEdit: (campaign: Campaign) => void;
 }
 
 const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps) => {
+  // Default values for Mission type properties that don't exist on Mission
+  const audience = campaign.audience || campaign.target_audience || 'Todos';
+  const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
+  const reward = campaign.reward || `${campaign.points} pontos`;
+  const expires = campaign.expires || (campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'N/A');
+
   return (
     <TableRow key={campaign.id}>
       <TableCell className="font-medium">{campaign.title}</TableCell>
       <TableCell>
         <CampaignStatusBadge status={campaign.status} />
       </TableCell>
-      <TableCell>{campaign.audience}</TableCell>
-      <TableCell className="text-right">{campaign.completions}</TableCell>
-      <TableCell>{campaign.reward}</TableCell>
-      <TableCell>{campaign.expires}</TableCell>
+      <TableCell>{audience}</TableCell>
+      <TableCell className="text-right">{completions}</TableCell>
+      <TableCell>{reward}</TableCell>
+      <TableCell>{expires}</TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
           <Tooltip>
