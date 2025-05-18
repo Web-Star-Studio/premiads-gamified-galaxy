@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import FilterPopover from "./components/FilterPopover";
 import { useAuth } from "@/hooks/useAuth";
 import { missionService } from "@/services/supabase";
+import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration'
 
 export interface FilterOptions {
   status: string[];
@@ -157,28 +157,24 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     }
   };
 
-  // Aprovar ou rejeitar submissão
-  const handleVerdict = async (submissionId: string, result: 'aprovado' | 'rejeitado', notes?: string) => {
-    setIsLoading(true);
+  // Aprovar ou rejeitar submissão usando fluxo modular
+  const handleVerdict = async (submission: Submission, result: 'aprovado' | 'rejeitado', notes?: string) => {
     try {
-      const response = await missionService.validateSubmission({
-        submissionId,
-        validatedBy: currentUser.id,
-        result,
-        isAdmin: false,
-        notes
+      await finalizeMissionSubmission({
+        submissionId: submission.id,
+        decision: result === 'aprovado' ? 'approve' : 'reject',
+        reviewerType: 'advertiser',
+        reviewStage: submission.status === 'returned_to_advertiser' ? 'second' : 'first'
       });
 
-      if (response && response.success) {
-        toast({
-          title: result === 'aprovado' ? 'Submissão aprovada' : 'Submissão rejeitada',
-          description: 'A submissão foi avaliada com sucesso.',
-          variant: result === 'aprovado' ? 'default' : 'destructive',
-        });
-        
-        // Invalidar cache e atualizar lista
-        await fetchSubmissions();
-      }
+      toast({
+        title: result === 'aprovado' ? 'Submissão aprovada' : 'Submissão rejeitada',
+        description: 'A submissão foi avaliada com sucesso.',
+        variant: result === 'aprovado' ? 'default' : 'destructive',
+      });
+
+      // Atualiza lista
+      await fetchSubmissions();
     } catch (error) {
       console.error(`Erro ao ${result === 'aprovado' ? 'aprovar' : 'rejeitar'} submissão:`, error);
       toast({
@@ -186,8 +182,6 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         description: `Não foi possível ${result === 'aprovado' ? 'aprovar' : 'rejeitar'} a submissão.`,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -248,10 +242,10 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     }
     
     return (
-      <SubmissionsList 
-        submissions={filteredSubmissions} 
-        onApprove={(submissionId) => handleVerdict(submissionId, 'aprovado')}
-        onReject={(submissionId, notes) => handleVerdict(submissionId, 'rejeitado', notes)}
+      <SubmissionsList
+        submissions={filteredSubmissions}
+        onApprove={(submission) => handleVerdict(submission, 'aprovado')}
+        onReject={(submission, notes) => handleVerdict(submission, 'rejeitado', notes)}
       />
     );
   };

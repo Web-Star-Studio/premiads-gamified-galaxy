@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import SubmissionCard from './SubmissionCard';
@@ -8,8 +7,8 @@ import { RotateCcw } from "lucide-react";
 
 export interface SubmissionsListProps {
   submissions: Submission[];
-  onApprove: (submissionId: string) => Promise<void>;
-  onReject: (submissionId: string, reason?: string) => Promise<void>;
+  onApprove: (submission: Submission) => Promise<void>;
+  onReject: (submission: Submission, reason?: string) => Promise<void>;
 }
 
 const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListProps) => {
@@ -45,8 +44,8 @@ const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListPr
                   <SubmissionCard 
                     key={submission.id}
                     submission={submission}
-                    onApprove={() => onApprove(submission.id)}
-                    onReject={(reason) => onReject(submission.id, reason)}
+                    onApprove={() => onApprove(submission)}
+                    onReject={(reason) => onReject(submission, reason)}
                   />
                 ))}
               </div>
@@ -69,8 +68,8 @@ const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListPr
                   <SubmissionCard 
                     key={submission.id}
                     submission={submission}
-                    onApprove={() => onApprove(submission.id)}
-                    onReject={(reason) => onReject(submission.id, reason)}
+                    onApprove={() => onApprove(submission)}
+                    onReject={(reason) => onReject(submission, reason)}
                   />
                 ))}
               </div>
@@ -92,8 +91,8 @@ const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListPr
                   <SubmissionCard 
                     key={submission.id}
                     submission={submission}
-                    onApprove={() => onApprove(submission.id)}
-                    onReject={(reason) => onReject(submission.id, reason)}
+                    onApprove={() => onApprove(submission)}
+                    onReject={(reason) => onReject(submission, reason)}
                   />
                 ))}
               </div>
@@ -114,8 +113,8 @@ const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListPr
                   <SubmissionCard 
                     key={submission.id}
                     submission={submission}
-                    onApprove={() => onApprove(submission.id)}
-                    onReject={(reason) => onReject(submission.id, reason)}
+                    onApprove={() => onApprove(submission)}
+                    onReject={(reason) => onReject(submission, reason)}
                   />
                 ))}
               </div>
