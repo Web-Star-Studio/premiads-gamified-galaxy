@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Helmet } from 'react-helmet-async';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -5,7 +6,7 @@ import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useUser } from "@/context/UserContext";
-import { CreditsPurchasePage } from "@/features/credits/CreditsPurchasePage";
+import CreditsPurchasePage from "@/features/credits/CreditsPurchasePage";
 import { CreditsStatus } from "@/components/credits/credits-status";
 
 const CreditsPage = () => {

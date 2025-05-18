@@ -1,101 +1,134 @@
 
-import { getSupabaseClient } from '@/services/supabase'
+import { supabase } from "@/integrations/supabase/client";
+import { Submission, Mission, User } from "@/hooks/useMissionsTypes";
 
-export interface FinalizeMissionSubmissionOpts {
-  submissionId: string
-  decision: 'approve' | 'reject'
-  reviewerType: 'advertiser' | 'admin'
-  reviewStage: 'first' | 'admin' | 'second'
+// Different validation stages
+export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
+
+// Result of the validation decision
+export type ValidationDecision = "approve" | "reject";
+
+// Submission status enum
+export type SubmissionStatus = "pending" | "approved" | "rejected" | "second_instance_pending" | "returned_to_advertiser";
+
+export interface ValidationResult {
+  success: boolean;
+  error?: string;
+  data?: any;
 }
 
-export async function finalizeMissionSubmission({ submissionId, decision, reviewerType, reviewStage }: FinalizeMissionSubmissionOpts): Promise<void> {
-  const client = await getSupabaseClient()
-  
+/**
+ * Finalizes a mission submission with approval or rejection
+ * 
+ * @param submissionId The ID of the submission
+ * @param approverId The ID of the approver (advertiser or admin)
+ * @param decision Whether to approve or reject
+ * @param stage The current stage of validation
+ * @returns A result object with success status and optional data
+ */
+export async function finalizeMissionSubmission(
+  submissionId: string,
+  approverId: string,
+  decision: ValidationDecision,
+  stage: ValidationStage
+): Promise<ValidationResult> {
   try {
-    // Map JavaScript stage names to SQL function parameter names
-    let dbStage: string
+    const { data, error } = await supabase.rpc('finalize_submission', {
+      p_submission_id: submissionId,
+      p_approver_id: approverId,
+      p_decision: decision,
+      p_stage: stage
+    });
     
-    if (reviewerType === 'advertiser' && reviewStage === 'first') {
-      dbStage = 'advertiser_first'
-    } else if (reviewerType === 'admin' && reviewStage === 'admin') {
-      dbStage = 'admin'
-    } else if (reviewerType === 'advertiser' && reviewStage === 'second') {
-      dbStage = 'advertiser_second'
-    } else {
-      throw new Error(`Fluxo inválido: ${reviewerType}/${reviewStage}`)
+    if (error) {
+      console.error("Error finalizing submission:", error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
     
-    // Call the finalize_submission function
-    const { data: result, error } = await client.rpc('finalize_submission', {
-      p_submission_id: submissionId,
-      p_approver_id: client.auth.getUser().then(res => res.data.user?.id),
-      p_decision: decision,
-      p_stage: dbStage
-    })
-    
-    if (error) throw error
-    
-    console.log('Submission finalized successfully:', result)
-    
-    return
-  } catch (error) {
-    console.error('Error finalizing submission:', error)
-    throw error
+    return {
+      success: true,
+      data
+    };
+  } catch (err: any) {
+    console.error("Exception finalizing submission:", err);
+    return {
+      success: false,
+      error: err.message || "An unknown error occurred"
+    };
   }
 }
 
-// Fallback functions that get called if the RPC fails
-export async function addPointsToParticipant(submissionId: string): Promise<void> {
-  const client = await getSupabaseClient()
-  
-  try {
-    // Call reward_participant_for_submission RPC which handles both points and tokens
-    const { error } = await client.rpc('reward_participant_for_submission', { 
-      submission_id: submissionId 
-    })
-    
-    if (error) throw error
-    console.log('Participant rewarded successfully via reward_participant_for_submission')
-  } catch (error) {
-    console.error('Error rewarding participant:', error)
-    throw error
-  }
-}
-
-// Update statuses in the database
-export async function updateMissionStatuses(submissionId: string, status: 'approved' | 'rejected'): Promise<void> {
-  const client = await getSupabaseClient()
-  const { data: sub, error } = await client
-    .from('mission_submissions')
-    .select('mission_id')
-    .eq('id', submissionId)
-    .single()
-  
-  if (error || !sub) throw error || new Error('Submission not found')
-  
-  const { error: updateError } = await client
+/**
+ * Get mission details by ID
+ */
+export async function getMissionById(missionId: string): Promise<Mission | null> {
+  const { data, error } = await supabase
     .from('missions')
-    .update({ 
-      status,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', sub.mission_id)
+    .select('*')
+    .eq('id', missionId)
+    .single();
   
-  if (updateError) throw updateError
+  if (error) {
+    console.error("Error fetching mission:", error);
+    return null;
+  }
+  
+  return data as Mission;
 }
 
-// Optional: Log moderation action
-export async function logModerationAction(submissionId: string, reviewerId: string, action: string, notes = ''): Promise<void> {
-  const client = await getSupabaseClient()
-  const { error } = await client
-    .from('mission_validation_logs')
-    .insert({ 
-      submission_id: submissionId, 
-      validated_by: reviewerId, 
-      is_admin: false, 
-      result: action, 
-      notes
-    })
+/**
+ * Get submission by ID
+ */
+export async function getSubmissionById(submissionId: string): Promise<Submission | null> {
+  const { data, error } = await supabase
+    .from('mission_submissions')
+    .select('*')
+    .eq('id', submissionId)
+    .single();
   
-  if (error) throw error
+  if (error) {
+    console.error("Error fetching submission:", error);
+    return null;
+  }
+  
+  return data as Submission;
+}
+
+/**
+ * Get a list of submissions for a specific mission
+ */
+export async function getSubmissionsForMission(missionId: string): Promise<Submission[]> {
+  const { data, error } = await supabase
+    .from('mission_submissions')
+    .select('*')
+    .eq('mission_id', missionId)
+    .order('submitted_at', { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching submissions:", error);
+    return [];
+  }
+  
+  return data as Submission[];
+}
+
+/**
+ * Get user profile by ID
+ */
+export async function getUserById(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
+  
+  return data as User;
 }

@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -47,4 +48,4 @@ export function PaymentSuccessHandler() {
   
   // Este componente não renderiza nada visualmente
   return null;
-} 
+}

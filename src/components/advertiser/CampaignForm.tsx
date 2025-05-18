@@ -46,13 +46,21 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInfoStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
+        return <BasicInfoStep 
+                formData={formData} 
+                updateFormData={(updates) => updateFormData(updates)} />;
       case 2:
-        return <RequirementsStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
+        return <RequirementsStep 
+                formData={formData} 
+                updateFormData={(updates) => updateFormData(updates)} />;
       case 3:
-        return <RewardsStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
+        return <RewardsStep 
+                formData={formData} 
+                updateFormData={(updates) => updateFormData(updates)} />;
       case 4:
-        return <DatesStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
+        return <DatesStep 
+                formData={formData} 
+                updateFormData={(updates) => updateFormData(updates)} />;
       default:
         return null;
     }

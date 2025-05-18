@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSounds } from "@/hooks/use-sounds";
@@ -35,7 +36,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => { // Changed parameter type from number to string
     // Refresh list after delete
     refreshCampaigns();
     playSound("error");
@@ -87,7 +88,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         >
           <CampaignForm 
             onClose={handleFormClose} 
-            editCampaign={editingCampaign}
+            editCampaign={editingCampaign as any}
           />
         </motion.div>
       ) : (

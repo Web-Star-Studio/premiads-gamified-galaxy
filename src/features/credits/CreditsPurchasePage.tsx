@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
@@ -6,12 +7,14 @@ import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import CreditPackageCard from "./components/CreditPackageCard";
-import CreditSlider from "./components/CreditSlider";
-import CreditSummary from "./components/CreditSummary";
-import PaymentMethodSelector from "./components/PaymentMethodSelector";
-import PaymentModal from "./components/PaymentModal";
-import useCreditPurchase from "./useCreditPurchase.hook"; // Fixed import
+import { 
+  CreditPackageCard, 
+  CreditSlider, 
+  CreditSummary, 
+  PaymentMethodSelector, 
+  PaymentModal 
+} from "./components";
+import useCreditPurchase from "./useCreditPurchase.hook";
 
 const CreditsPurchasePage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -69,9 +72,9 @@ const CreditsPurchasePage = () => {
                   {packages.map((pack) => (
                     <CreditPackageCard
                       key={pack.id}
-                      pack={pack}
-                      selected={selectedPackage?.id === pack.id}
-                      onClick={() => setSelectedPackage(pack)}
+                      pkg={pack}
+                      isSelected={selectedPackage?.id === pack.id}
+                      onSelect={() => setSelectedPackage(pack)}
                     />
                   ))}
                 </div>
@@ -85,17 +88,18 @@ const CreditsPurchasePage = () => {
                 />
                 <Separator className="my-4" />
                 <PaymentMethodSelector
-                  paymentMethod={paymentMethod}
-                  setPaymentMethod={setPaymentMethod}
+                  selectedProvider={paymentMethod === "stripe" ? "stripe" : "mercado_pago"}
+                  selectedMethod={paymentMethod === "stripe" ? "credit_card" : "pix"}
+                  onSelectProvider={(provider) => setPaymentMethod(provider === "stripe" ? "stripe" : "paypal")}
+                  onSelectMethod={() => {}}
                 />
                 {paymentError && (
-                  <p className="text-red-500 text-sm">{paymentError}</p>
+                  <p className="text-red-500 text-sm">{paymentError.message}</p>
                 )}
                 <Button
                   className="w-full"
                   onClick={() => setIsPaymentModalOpen(true)}
                   disabled={!selectedPackage || isLoading}
-                  isLoading={isLoading}
                 >
                   {isLoading ? "Processando..." : "Confirmar Pagamento"}
                 </Button>
@@ -109,9 +113,16 @@ const CreditsPurchasePage = () => {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         selectedPackage={selectedPackage}
-        paymentMethod={paymentMethod}
-        handlePayment={handlePayment}
-        isLoading={isLoading}
+        customPackage={selectedPackage ? {
+          base: selectedPackage.base,
+          bonus: selectedPackage.bonus,
+          total: selectedPackage.base + selectedPackage.bonus,
+          price: selectedPackage.price
+        } : undefined}
+        onPurchase={handlePayment}
+        isPurchasing={isLoading}
+        purchaseError={paymentError}
+        purchaseSuccess={false}
       />
     </div>
   );

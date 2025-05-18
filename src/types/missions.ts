@@ -45,3 +45,30 @@ export function toSubmission(submission: MissionSubmission): Submission {
     }
   };
 }
+
+// Add other mission-related types
+export interface UserTokens {
+  user_id: string;
+  total_tokens: number;
+  used_tokens: number;
+  updated_at: string;
+}
+
+export interface ValidationLog {
+  id: string;
+  submission_id: string;
+  validated_by: string;
+  is_admin: boolean;
+  result: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface MissionReward {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  submission_id: string;
+  points_earned: number;
+  rewarded_at: string;
+}

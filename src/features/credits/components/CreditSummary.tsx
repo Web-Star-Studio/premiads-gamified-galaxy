@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from '@/components/ui/card'
 import { CreditPackage } from '../useCreditPurchase.hook'
 import { InfoIcon } from 'lucide-react'
@@ -6,9 +7,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface CreditSummaryProps {
   selectedPackage: CreditPackage | null
   customPackage?: { base: number; bonus: number; total: number; price: number }
+  paymentMethod?: string
 }
 
-function CreditSummary({ selectedPackage, customPackage }: CreditSummaryProps) {
+export function CreditSummary({ selectedPackage, customPackage, paymentMethod }: CreditSummaryProps) {
   // Use either the selected package or custom package
   const pkg = customPackage || selectedPackage
   
@@ -102,5 +104,3 @@ function CreditSummary({ selectedPackage, customPackage }: CreditSummaryProps) {
     </Card>
   )
 }
-
-export { CreditSummary } 

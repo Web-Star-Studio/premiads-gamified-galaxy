@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -10,7 +11,7 @@ interface CreditPackageCardProps {
   onSelect: () => void
 }
 
-function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCardProps) {
+export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCardProps) {
   const { base, bonus, price } = pkg
   const total = base + bonus
   const bonusPercentage = bonus > 0 ? Math.round((bonus / base) * 100) : 0
@@ -65,5 +66,3 @@ function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCardProps
     </motion.div>
   )
 }
-
-export { CreditPackageCard } 
