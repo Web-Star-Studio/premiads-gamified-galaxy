@@ -3,9 +3,14 @@ import { useState, useEffect } from 'react';
 import { FormData, initialFormData } from '@/components/advertiser/campaign-form/types';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useToast } from '@/hooks/use-toast';
-import { Mission } from '@/hooks/useMissionsTypes';
+import { Campaign } from '@/components/advertiser/campaignData';
 
-export const useCampaignForm = (editCampaign?: Mission | null) => {
+interface UseCampaignFormProps {
+  editCampaign?: Campaign | null;
+  onClose: () => void;
+}
+
+export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,22 +29,22 @@ export const useCampaignForm = (editCampaign?: Mission | null) => {
         title: editCampaign.title,
         type: editCampaign.type as any,
         description: editCampaign.description || '',
-        audience: editCampaign.audience || editCampaign.target_audience || '',
+        audience: editCampaign.audience || (editCampaign as any).target_audience || '',
         pointsRange: [
           editCampaign.points - 10,
           editCampaign.points + 10
         ],
         randomPoints: false,
         pointsValue: editCampaign.points,
-        hasBadges: editCampaign.has_badges || false,
-        hasLootBox: editCampaign.has_lootbox || false,
-        startDate: editCampaign.start_date ? new Date(editCampaign.start_date) : new Date(),
-        endDate: editCampaign.end_date ? new Date(editCampaign.end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        streakBonus: editCampaign.streak_bonus || false,
-        streakMultiplier: editCampaign.streak_multiplier || 1.2,
-        requirements: editCampaign.requirements as string[] || [],
-        minPurchase: editCampaign.min_purchase,
-        targetFilter: editCampaign.target_filter || initialFormData.targetFilter
+        hasBadges: (editCampaign as any).has_badges || false,
+        hasLootBox: (editCampaign as any).has_lootbox || false,
+        startDate: (editCampaign as any).start_date ? new Date((editCampaign as any).start_date) : new Date(),
+        endDate: (editCampaign as any).end_date ? new Date((editCampaign as any).end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        streakBonus: (editCampaign as any).streak_bonus || false,
+        streakMultiplier: (editCampaign as any).streak_multiplier || 1.2,
+        requirements: (editCampaign as any).requirements as string[] || [],
+        minPurchase: (editCampaign as any).min_purchase,
+        targetFilter: (editCampaign as any).target_filter || initialFormData.targetFilter
       });
     }
   }, [editCampaign]);
@@ -52,7 +57,7 @@ export const useCampaignForm = (editCampaign?: Mission | null) => {
     }));
   };
   
-  // Navigation
+  // Navigation functions
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prevStep => prevStep + 1);
@@ -65,87 +70,12 @@ export const useCampaignForm = (editCampaign?: Mission | null) => {
     }
   };
   
-  // Validate step by step
-  const validateStep = (step: number): boolean => {
-    switch (step) {
-      case 1: // Basic Info
-        if (!formData.title || !formData.type || !formData.description) {
-          toast({
-            title: "Informações incompletas",
-            description: "Preencha todos os campos obrigatórios para continuar",
-            variant: "destructive",
-          });
-          return false;
-        }
-        return true;
-        
-      case 2: // Rewards
-        // Check if user has enough credits when creating a new campaign
-        if (!editCampaign) {
-          const cost = formData.pointsValue || formData.pointsRange[0];
-          if (cost > availableCredits) {
-            toast({
-              title: "Créditos insuficientes",
-              description: `Você precisa de ${cost} créditos para esta campanha, mas possui apenas ${availableCredits}`,
-              variant: "destructive",
-            });
-            return false;
-          }
-        }
-        return true;
-        
-      case 3: // Dates
-        if (!formData.startDate || !formData.endDate) {
-          toast({
-            title: "Datas não definidas",
-            description: "Defina as datas de início e fim da campanha",
-            variant: "destructive",
-          });
-          return false;
-        }
-        
-        const start = new Date(formData.startDate);
-        const end = new Date(formData.endDate);
-        
-        if (end <= start) {
-          toast({
-            title: "Datas inválidas",
-            description: "A data de término deve ser posterior à data de início",
-            variant: "destructive",
-          });
-          return false;
-        }
-        return true;
-        
-      case 4: // Requirements
-        if (!formData.requirements || (Array.isArray(formData.requirements) && formData.requirements.length === 0)) {
-          toast({
-            title: "Requisitos não definidos",
-            description: "Adicione pelo menos um requisito para a campanha",
-            variant: "destructive",
-          });
-          return false;
-        }
-        return true;
-        
-      default:
-        return true;
-    }
-  };
-  
-  // Handle step transition
-  const handleNextStep = () => {
-    if (validateStep(currentStep)) {
-      goToNextStep();
-    }
-  };
-  
   return {
     formData,
     updateFormData,
     currentStep,
     totalSteps,
-    goToNextStep: handleNextStep,
+    goToNextStep,
     goToPreviousStep,
     isSubmitting,
     setIsSubmitting

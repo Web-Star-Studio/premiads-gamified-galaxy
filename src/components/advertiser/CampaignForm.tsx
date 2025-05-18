@@ -19,16 +19,15 @@ interface CampaignFormProps {
 const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const { playSound } = useSounds();
   const {
-    step,
     formData,
     updateFormData,
-    handleNext,
-    handleBack,
-    handleSubmit,
-    getStepTitle,
-    isCurrentStepValid
+    currentStep,
+    totalSteps,
+    goToNextStep,
+    goToPreviousStep,
+    isSubmitting,
+    setIsSubmitting
   } = useCampaignForm({
-    editCampaign,
     onClose: () => {
       playSound('pop');
       onClose();
@@ -45,15 +44,15 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   
   // Render the appropriate step content
   const renderStepContent = () => {
-    switch (step) {
+    switch (currentStep) {
       case 1:
-        return <BasicInfoStep formData={formData} updateFormData={updateFormData} />;
+        return <BasicInfoStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
       case 2:
-        return <RequirementsStep formData={formData} updateFormData={updateFormData} />;
+        return <RequirementsStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
       case 3:
-        return <RewardsStep formData={formData} updateFormData={updateFormData} />;
+        return <RewardsStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
       case 4:
-        return <DatesStep formData={formData} updateFormData={updateFormData} />;
+        return <DatesStep formData={formData} updateFormData={(updates) => updateFormData(updates)} />;
       default:
         return null;
     }
@@ -63,8 +62,8 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     <Card className="bg-galaxy-darkPurple border-galaxy-purple">
       <CardHeader className="pb-4">
         <FormProgress 
-          step={step} 
-          title={steps[step - 1]} 
+          step={currentStep} 
+          title={steps[currentStep - 1]} 
         />
       </CardHeader>
       
@@ -74,12 +73,12 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       
       <CardFooter className="flex justify-between border-t border-galaxy-purple/20 pt-4">
         <FormNavigation 
-          step={step}
+          step={currentStep}
           totalSteps={steps.length}
-          handleBack={handleBack}
-          handleNext={handleNext}
+          handleBack={goToPreviousStep}
+          handleNext={goToNextStep}
           onClose={onClose}
-          isNextDisabled={!isCurrentStepValid()}
+          isNextDisabled={false}
         />
       </CardFooter>
     </Card>

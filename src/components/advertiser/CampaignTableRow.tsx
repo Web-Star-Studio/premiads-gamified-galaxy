@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Edit, Eye, Trash, BarChart } from "lucide-react";
@@ -9,16 +8,16 @@ import { Mission } from "@/hooks/useMissionsTypes";
 
 interface CampaignTableRowProps {
   campaign: Campaign;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void; // Changed from number to string
   onEdit: (campaign: Campaign) => void;
 }
 
 const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps) => {
   // Default values for Mission type properties that don't exist on Mission
-  const audience = campaign.audience || campaign.target_audience || 'Todos';
+  const audience = campaign.audience || (campaign as any).target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
   const reward = campaign.reward || `${campaign.points} pontos`;
-  const expires = campaign.expires || (campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'N/A');
+  const expires = campaign.expires || ((campaign as any).end_date ? new Date((campaign as any).end_date).toLocaleDateString() : 'N/A');
 
   return (
     <TableRow key={campaign.id}>

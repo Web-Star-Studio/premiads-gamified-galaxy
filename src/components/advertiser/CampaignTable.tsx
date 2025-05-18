@@ -5,7 +5,7 @@ import { Campaign } from "./campaignData";
 
 interface CampaignTableProps {
   campaigns: Campaign[];
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void; // Changed from number to string to match campaign.id type
   onEdit: (campaign: Campaign) => void;
 }
 

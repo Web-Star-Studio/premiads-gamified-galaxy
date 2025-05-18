@@ -7,6 +7,14 @@ import { FormData } from '@/components/advertiser/campaign-form/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Mission } from '@/hooks/useMissionsTypes';
 
+// Helper function to format dates as ISO strings
+const formatDate = (date: Date | string): string => {
+  if (date instanceof Date) {
+    return date.toISOString();
+  }
+  return date;
+};
+
 const useCampaignOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -26,7 +34,7 @@ const useCampaignOperations = () => {
     setIsSubmitting(true);
     
     try {
-      // Convert the formData to the expected mission format
+      // Convert the formData to the expected mission format and format dates
       const missionData = {
         title: formData.title,
         description: formData.description,
@@ -44,8 +52,8 @@ const useCampaignOperations = () => {
           ? parseInt(formData.targetFilter.age[1]) 
           : 65,
         target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
-        start_date: formData.startDate,
-        end_date: formData.endDate,
+        start_date: formatDate(formData.startDate),
+        end_date: formatDate(formData.endDate),
         status: 'ativa',
         has_badges: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
@@ -115,7 +123,7 @@ const useCampaignOperations = () => {
     setIsSubmitting(true);
     
     try {
-      // Convert the formData to the expected mission format
+      // Convert the formData to the expected mission format with formatted dates
       const missionData = {
         title: formData.title,
         description: formData.description,
@@ -133,14 +141,14 @@ const useCampaignOperations = () => {
           ? parseInt(formData.targetFilter.age[1]) 
           : 65,
         target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
-        start_date: formData.startDate,
-        end_date: formData.endDate,
+        start_date: formatDate(formData.startDate),
+        end_date: formatDate(formData.endDate),
         has_badges: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
         streak_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
         target_filter: formData.targetFilter || {},
-        updated_at: new Date()
+        updated_at: new Date().toISOString()
       };
       
       const { data, error } = await supabase

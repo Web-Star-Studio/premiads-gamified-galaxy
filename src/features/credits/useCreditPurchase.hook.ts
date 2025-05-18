@@ -1,102 +1,120 @@
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { loadStripe } from "@stripe/stripe-js";
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+// Initialize Stripe outside of the component
+let stripePromise: Promise<any> | null = null;
+const getStripe = async () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+    );
+  }
+  return stripePromise;
+};
 
-export interface CreditPackage {
-  id: string;
-  name?: string;
-  base: number;
-  bonus: number;
-  price: number;
-  active?: boolean;
-  description?: string;
-  validity_months?: number;
-}
-
-export interface PurchaseOptions {
-  packageId?: string;
-  amount?: number;
-  promoCode?: string;
-  paymentMethod: 'credit_card' | 'pix' | 'boleto';
-  customAmount?: boolean;
-}
-
-const useCreditPurchase = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [creditPackages, setCreditPackages] = useState<CreditPackage[]>([]);
-  const [userCredits, setUserCredits] = useState(0);
-  const [isLoadingPackages, setIsLoadingPackages] = useState(false);
-  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
-  const [isPurchasing, setIsPurchasing] = useState(false);
-  const [purchaseError, setPurchaseError] = useState('');
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
+// Define the hook
+export default function useCreditPurchase() {
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(
+    null
+  );
+  const [purchaseOptions, setPurchaseOptions] = useState<PurchaseOptions>({
+    paymentMethod: "stripe",
+    successUrl: `${window.location.origin}/credits/success`,
+    cancelUrl: `${window.location.origin}/credits/cancel`,
+  });
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  const calculateCustomPackage = (amount: number): CreditPackage => {
-    return {
-      id: 'custom',
-      base: amount,
-      bonus: Math.floor(amount * 0.1), // 10% bonus
-      price: amount * 0.5, // R$0.50 per credit
-    };
-  };
+  // Mutation to handle the Stripe checkout
+  const { mutate: createCheckout, isPending: isCreatingCheckout } =
+    useMutation({
+      mutationFn: async () => {
+        if (!selectedPackage) {
+          throw new Error("No credit package selected.");
+        }
 
-  const purchaseCredits = async (options: PurchaseOptions) => {
-    setIsPurchasing(true);
-    setPurchaseError('');
-    
-    try {
-      // Placeholder implementation
-      // In a real implementation, this would call a Supabase function or Edge Function
-      // to handle the payment process
-      
-      // Simulate a successful purchase
-      setTimeout(() => {
-        toast({
-          title: 'Compra realizada com sucesso',
-          description: 'Seus créditos foram adicionados à sua conta',
+        if (!user) {
+          throw new Error("User not authenticated.");
+        }
+
+        // Call the Supabase function to create a Stripe checkout session
+        const { data, error } = await supabase.functions.invoke(
+          "create-stripe-checkout-session",
+          {
+            body: {
+              priceId: selectedPackage.stripe_price_id,
+              successUrl: purchaseOptions.successUrl,
+              cancelUrl: purchaseOptions.cancelUrl,
+              userId: user.id,
+            },
+          }
+        );
+
+        if (error) {
+          console.error("Stripe checkout session creation error:", error);
+          throw new Error(
+            error.message || "Failed to create Stripe checkout session."
+          );
+        }
+
+        return data;
+      },
+      onSuccess: async (data: any) => {
+        // Redirect to Stripe checkout
+        const stripe = await getStripe();
+        const { error } = await stripe?.redirectToCheckout({
+          sessionId: data.sessionId,
         });
-      }, 2000);
-      
-      return { success: true, data: {} };
-    } catch (err: any) {
-      setPurchaseError(err.message || 'Erro ao processar pagamento');
-      return { success: false, error: err };
-    } finally {
-      setIsPurchasing(false);
-    }
-  };
 
-  const validatePromoCode = async (code: string) => {
-    try {
-      // Placeholder implementation
-      return { valid: false, message: 'Código promocional inválido ou expirado' };
-    } catch (error: any) {
-      return { valid: false, message: error.message || 'Erro ao validar código' };
-    }
+        if (error) {
+          console.error("Stripe redirection error:", error);
+          toast({
+            title: "Erro ao redirecionar para o Stripe",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      },
+      onError: (error: any) => {
+        console.error("Error creating checkout session:", error);
+        toast({
+          title: "Erro ao criar sessão de checkout",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+
+  // Function to handle initiating the purchase
+  const handlePurchase = () => {
+    createCheckout();
   };
 
   return {
-    purchaseCredits,
-    validatePromoCode,
-    isLoading,
-    error,
-    creditPackages,
-    userCredits,
-    isLoadingPackages,
-    isLoadingCredits,
-    isPurchasing,
-    purchaseError,
-    calculateCustomPackage,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
     selectedPackage,
-    setSelectedPackage
+    setSelectedPackage,
+    purchaseOptions,
+    setPurchaseOptions,
+    handlePurchase,
+    isCreatingCheckout,
   };
-};
+}
 
-export default useCreditPurchase;
-export type { CreditPackage, PurchaseOptions };
+export interface CreditPackage {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  credit: number;
+  stripe_price_id: string;
+}
+
+export interface PurchaseOptions {
+  paymentMethod: "stripe" | "paypal";
+  successUrl: string;
+  cancelUrl: string;
+}

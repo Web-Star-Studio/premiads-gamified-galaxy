@@ -10,7 +10,7 @@ export interface MissionSubmission {
   feedback?: string;
   status: 'pending' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser';
   submitted_at: string;
-  updated_at?: string;
+  updated_at: string; // Changed from optional to required to match Submission interface
   second_instance?: boolean;
   review_stage?: string;
   second_instance_status?: string;
@@ -28,14 +28,13 @@ export interface Submission extends MissionSubmission {
     avatar_url?: string;
     id: string;
   };
-  updated_at: string; // Make updated_at required for Submission but optional for MissionSubmission
 }
 
 // Utility function to convert MissionSubmission to Submission
 export function toSubmission(submission: MissionSubmission): Submission {
   return {
     ...submission,
-    updated_at: submission.updated_at || submission.submitted_at, // Ensure updated_at is always defined
+    updated_at: submission.updated_at || submission.submitted_at, // Fallback to submitted_at if updated_at is missing
     user: {
       name: submission.user_name,
       id: submission.user_id,
