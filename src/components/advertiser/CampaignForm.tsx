@@ -43,25 +43,32 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     "Datas"
   ];
   
+  // Helper to create a field update handler that matches the step component's expected function signature
+  const createFieldUpdateHandler = (stepUpdateFn: (updates: Partial<FormData>) => void) => {
+    return (field: string, value: any) => {
+      stepUpdateFn({ [field]: value });
+    };
+  };
+  
   // Render the appropriate step content
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return <BasicInfoStep 
                 formData={formData} 
-                updateFormData={updateFormData} />;
+                updateFormData={createFieldUpdateHandler(updateFormData)} />;
       case 2:
         return <RequirementsStep 
                 formData={formData} 
-                updateFormData={updateFormData} />;
+                updateFormData={createFieldUpdateHandler(updateFormData)} />;
       case 3:
         return <RewardsStep 
                 formData={formData} 
-                updateFormData={updateFormData} />;
+                updateFormData={createFieldUpdateHandler(updateFormData)} />;
       case 4:
         return <DatesStep 
                 formData={formData} 
-                updateFormData={updateFormData} />;
+                updateFormData={createFieldUpdateHandler(updateFormData)} />;
       default:
         return null;
     }

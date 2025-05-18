@@ -10,7 +10,7 @@ export interface MissionSubmission {
   feedback?: string;
   status: 'pending' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser';
   submitted_at: string;
-  updated_at: string; // Changed from optional to required to match Submission interface
+  updated_at: string; 
   second_instance?: boolean;
   review_stage?: string;
   second_instance_status?: string;

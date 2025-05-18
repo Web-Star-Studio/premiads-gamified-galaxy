@@ -6,17 +6,26 @@ import SubmissionsEmptyState from './SubmissionsEmptyState';
 import SubmissionsLoading from './SubmissionsLoading';
 import { useToast } from '@/hooks/use-toast';
 import { useMissionModeration } from '@/hooks/use-mission-moderation.hook';
-import { Submission, MissionSubmission } from '@/hooks/useMissionsTypes';
-import { toSubmission } from '@/types/missions';
+import { Submission, MissionSubmission } from '@/types/missions';
 
 interface ModerationContentProps {
   refreshKey: number;
+}
+
+interface FilterOptions {
+  status: string;
+  searchQuery: string;
+}
+
+export interface SubmissionsEmptyStateProps {
+  activeTab: string;
 }
 
 const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('pending'); 
   const { toast } = useToast();
   const { mutate: finalizeMissionSubmission, isPending: isProcessing } = useMissionModeration();
   
@@ -78,9 +87,9 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
           user_avatar: sub.user?.avatar_url,
           mission_title: sub.missions?.title || 'Missão',
           updated_at: sub.updated_at || sub.submitted_at,
-        }));
+        })) as Submission[];
         
-        setSubmissions(transformedSubmissions as Submission[]);
+        setSubmissions(transformedSubmissions);
       } catch (err: any) {
         console.error('Error fetching submissions:', err);
         setError(err);
@@ -113,7 +122,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         submissionId: submission.id,
         approverId,
         decision: 'approve',
-        stage: 'advertiser_first'
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
       // Remove this submission from the list
@@ -145,7 +154,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         submissionId: submission.id,
         approverId,
         decision: 'reject',
-        stage: 'advertiser_first'
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
       // Remove this submission from the list
@@ -168,7 +177,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   
   // Show empty state if no submissions
   if (submissions.length === 0) {
-    return <SubmissionsEmptyState />;
+    return <SubmissionsEmptyState activeTab={activeTab} />;
   }
   
   // Show list of submissions
@@ -177,9 +186,9 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       submissions={submissions}
       onApprove={handleApprove}
       onReject={handleReject}
-      isProcessing={isProcessing}
     />
   );
 };
 
+export type { Submission, FilterOptions };
 export default ModerationContent;

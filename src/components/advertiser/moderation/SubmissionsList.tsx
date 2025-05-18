@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import SubmissionCard from './SubmissionCard';
-import { Submission } from './ModerationContent';
+import { Submission } from '@/types/missions';
 import { Badge } from "@/components/ui/badge";
 import { RotateCcw } from "lucide-react";
 

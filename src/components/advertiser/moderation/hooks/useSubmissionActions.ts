@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { MissionSubmission, toSubmission } from "@/types/missions";
+import { MissionSubmission } from "@/hooks/useMissionsTypes";
 import { useMissionModeration } from "@/hooks/use-mission-moderation.hook";
 
 interface UseSubmissionActionsProps {
@@ -14,7 +14,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const { mutate: finalizeMission } = useMissionModeration();
+  const { mutate: finalizeMission, isPending } = useMissionModeration();
   
   /**
    * Handle submission approval and reward distribution
@@ -24,12 +24,22 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
     setProcessing(true);
     
     try {
-      // Use the enhanced mission moderation flow
+      // Get current user ID from session
+      const { data: session } = await supabase.auth.getSession();
+      const approverId = session?.session?.user?.id;
+      
+      if (!approverId) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      console.log(`Approving submission ${submission.id}, second instance: ${submission.second_instance}`);
+      
+      // Use the enhanced mission moderation flow with correct stage mapping
       await finalizeMission({
         submissionId: submission.id,
+        approverId,
         decision: 'approve',
-        reviewerType: 'advertiser',
-        reviewStage: submission.second_instance ? 'second' : 'first'
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
       // Get updated details for notification
@@ -70,12 +80,22 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
     setProcessing(true);
     
     try {
-      // Use the mission moderation flow
+      // Get current user ID from session
+      const { data: session } = await supabase.auth.getSession();
+      const approverId = session?.session?.user?.id;
+      
+      if (!approverId) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      console.log(`Rejecting submission ${submission.id}, second instance: ${submission.second_instance}`);
+      
+      // Use the mission moderation flow with correct stage mapping
       await finalizeMission({
         submissionId: submission.id,
+        approverId,
         decision: 'reject',
-        reviewerType: 'advertiser',
-        reviewStage: submission.second_instance ? 'second' : 'first'
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
       // Update feedback if provided
@@ -109,7 +129,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   };
 
   return {
-    processing,
+    processing: processing || isPending,
     handleApprove,
     handleReject
   };

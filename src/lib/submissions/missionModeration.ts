@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Mission, MissionSubmission, Submission, User } from "@/hooks/useMissionsTypes";
+import { Mission, MissionSubmission } from "@/hooks/useMissionsTypes";
 
 // Different validation stages
 export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
@@ -34,6 +33,8 @@ export async function finalizeMissionSubmission({
   stage
 }: FinalizeMissionSubmissionOpts): Promise<ValidationResult> {
   try {
+    console.log(`Finalizing submission ${submissionId} with decision ${decision} at stage ${stage}`);
+    
     const { data, error } = await supabase.rpc('finalize_submission', {
       p_submission_id: submissionId,
       p_approver_id: approverId,
@@ -48,6 +49,8 @@ export async function finalizeMissionSubmission({
         error: error.message
       };
     }
+    
+    console.log("Submission finalized successfully:", data);
     
     return {
       success: true,
@@ -83,7 +86,7 @@ export async function getMissionById(missionId: string): Promise<Mission | null>
 /**
  * Get submission by ID
  */
-export async function getSubmissionById(submissionId: string): Promise<Submission | null> {
+export async function getSubmissionById(submissionId: string): Promise<MissionSubmission | null> {
   const { data, error } = await supabase
     .from('mission_submissions')
     .select('*')
@@ -95,13 +98,13 @@ export async function getSubmissionById(submissionId: string): Promise<Submissio
     return null;
   }
   
-  return data as Submission;
+  return data as MissionSubmission;
 }
 
 /**
  * Get a list of submissions for a specific mission
  */
-export async function getSubmissionsForMission(missionId: string): Promise<Submission[]> {
+export async function getSubmissionsForMission(missionId: string): Promise<MissionSubmission[]> {
   const { data, error } = await supabase
     .from('mission_submissions')
     .select('*')
@@ -113,13 +116,13 @@ export async function getSubmissionsForMission(missionId: string): Promise<Submi
     return [];
   }
   
-  return data as Submission[];
+  return data as MissionSubmission[];
 }
 
 /**
  * Get user profile by ID
  */
-export async function getUserById(userId: string): Promise<User | null> {
+export async function getUserById(userId: string): Promise<any | null> {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -131,5 +134,5 @@ export async function getUserById(userId: string): Promise<User | null> {
     return null;
   }
   
-  return data as User;
+  return data;
 }

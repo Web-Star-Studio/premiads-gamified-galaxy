@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Check, X, Image, FileText, MoreHorizontal, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Submission } from './ModerationContent';
+import { Submission } from '@/types/missions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
