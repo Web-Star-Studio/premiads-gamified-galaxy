@@ -13,7 +13,7 @@ import {
   CreditSummary, 
   PaymentMethodSelector, 
   PaymentModal 
-} from "./components";
+} from "./index";
 import useCreditPurchase from "./useCreditPurchase.hook";
 
 const CreditsPurchasePage = () => {
@@ -64,6 +64,11 @@ const CreditsPurchasePage = () => {
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold">Escolha um pacote</h2>
                 <CreditSlider
+                  min={100}
+                  max={10000}
+                  step={100}
+                  value={selectedPackage ? selectedPackage.base + selectedPackage.bonus : 1000}
+                  onChange={() => {}}
                   packages={packages}
                   selectedPackage={selectedPackage}
                   setSelectedPackage={setSelectedPackage}

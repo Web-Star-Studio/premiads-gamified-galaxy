@@ -10,6 +10,7 @@ import RewardsStep from './campaign-form/RewardsStep';
 import DatesStep from './campaign-form/DatesStep';
 import { Campaign } from './campaignData';
 import { useSounds } from '@/hooks/use-sounds';
+import { FormData } from './campaign-form/types';
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -48,19 +49,19 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       case 1:
         return <BasicInfoStep 
                 formData={formData} 
-                updateFormData={(updates) => updateFormData(updates)} />;
+                updateFormData={updateFormData} />;
       case 2:
         return <RequirementsStep 
                 formData={formData} 
-                updateFormData={(updates) => updateFormData(updates)} />;
+                updateFormData={updateFormData} />;
       case 3:
         return <RewardsStep 
                 formData={formData} 
-                updateFormData={(updates) => updateFormData(updates)} />;
+                updateFormData={updateFormData} />;
       case 4:
         return <DatesStep 
                 formData={formData} 
-                updateFormData={(updates) => updateFormData(updates)} />;
+                updateFormData={updateFormData} />;
       default:
         return null;
     }

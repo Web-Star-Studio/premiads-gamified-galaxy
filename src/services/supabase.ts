@@ -38,64 +38,6 @@ export type {
   MissionReward
 };
 
-// Definição de tipos
-// export interface Mission {
-//   id?: string;
-//   title: string;
-//   description: string;
-//   requirements?: string;
-//   type: 'formulario' | 'foto' | 'video' | 'check-in' | 'redes_sociais' | 'cupom' | 'pesquisa' | 'avaliacao';
-//   target_audience?: string;
-//   points_range: { min: number; max: number };
-//   created_by: string;
-//   cost_in_tokens: number;
-//   status: 'ativa' | 'pendente' | 'encerrada';
-//   expires_at?: string;
-//   created_at?: string;
-//   updated_at?: string;
-// }
-
-// export interface MissionSubmission {
-//   id?: string;
-//   user_id: string;
-//   mission_id: string;
-//   proof_url?: string[];
-//   proof_text?: string;
-//   status: 'pendente' | 'aprovado' | 'rejeitado' | 'segunda_instancia' | 'descartado';
-//   validated_by?: string;
-//   admin_validated?: boolean;
-//   created_at?: string;
-//   updated_at?: string;
-// }
-
-// export interface UserTokens {
-//   id?: string;
-//   user_id: string;
-//   total_tokens: number;
-//   used_tokens: number;
-//   created_at?: string;
-//   updated_at?: string;
-// }
-
-// export interface ValidationLog {
-//   id?: string;
-//   submission_id: string;
-//   validated_by: string;
-//   is_admin: boolean;
-//   result: 'aprovado' | 'rejeitado';
-//   notes?: string;
-//   created_at?: string;
-// }
-
-// export interface MissionReward {
-//   id?: string;
-//   user_id: string;
-//   mission_id: string;
-//   submission_id: string;
-//   points_earned: number;
-//   rewarded_at?: string;
-// }
-
 // Serviço de missões - versão atualizada para usar getSupabaseClient
 export const missionService = {
   // Referência ao cliente Supabase para ser utilizada em outros componentes

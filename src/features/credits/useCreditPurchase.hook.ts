@@ -24,7 +24,7 @@ export interface CreditPackage {
   description: string;
   price: number;
   credit: number;
-  stripe_price_id: string;
+  stripe_price_id?: string;
   // Add extra properties needed by the components
   base: number;
   bonus: number;
@@ -74,7 +74,7 @@ export default function useCreditPurchase() {
           description: pkg.bonus > 0 ? `${pkg.bonus} bonus credits` : 'Basic package',
           price: pkg.price,
           credit: pkg.base + pkg.bonus,
-          stripe_price_id: pkg.stripe_price_id || '',
+          stripe_price_id: '', // We'll handle this separately since it doesn't exist in the DB
           base: pkg.base,
           bonus: pkg.bonus
         }));
@@ -110,7 +110,7 @@ export default function useCreditPurchase() {
           "create-stripe-checkout-session",
           {
             body: {
-              priceId: selectedPackage.stripe_price_id,
+              priceId: selectedPackage.stripe_price_id || "price_default",
               successUrl: purchaseOptions.successUrl,
               cancelUrl: purchaseOptions.cancelUrl,
               userId: user.id,

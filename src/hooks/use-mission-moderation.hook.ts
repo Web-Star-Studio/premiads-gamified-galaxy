@@ -9,8 +9,8 @@ export function useMissionModeration() {
   const { toast } = useToast()
   const { playSound } = useSounds()
 
-  return useMutation<void, Error, FinalizeMissionSubmissionOpts>({
-    mutationFn: (opts) => finalizeMissionSubmission(opts),
+  return useMutation({
+    mutationFn: (opts: FinalizeMissionSubmissionOpts) => finalizeMissionSubmission(opts),
     onSuccess: () => {
       // Invalidate both missions and submissions queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['missions'] })
@@ -23,7 +23,7 @@ export function useMissionModeration() {
         description: "A submissão foi processada e os pontos foram atribuídos corretamente.",
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       // Play error sound and show error toast
       playSound('error')
       toast({

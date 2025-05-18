@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Submission, Mission, User } from "@/hooks/useMissionsTypes";
+import { Mission, MissionSubmission, Submission, User } from "@/hooks/useMissionsTypes";
 
 // Different validation stages
 export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
@@ -17,21 +17,22 @@ export interface ValidationResult {
   data?: any;
 }
 
+export interface FinalizeMissionSubmissionOpts {
+  submissionId: string;
+  approverId: string;
+  decision: ValidationDecision;
+  stage: ValidationStage;
+}
+
 /**
  * Finalizes a mission submission with approval or rejection
- * 
- * @param submissionId The ID of the submission
- * @param approverId The ID of the approver (advertiser or admin)
- * @param decision Whether to approve or reject
- * @param stage The current stage of validation
- * @returns A result object with success status and optional data
  */
-export async function finalizeMissionSubmission(
-  submissionId: string,
-  approverId: string,
-  decision: ValidationDecision,
-  stage: ValidationStage
-): Promise<ValidationResult> {
+export async function finalizeMissionSubmission({
+  submissionId,
+  approverId,
+  decision,
+  stage
+}: FinalizeMissionSubmissionOpts): Promise<ValidationResult> {
   try {
     const { data, error } = await supabase.rpc('finalize_submission', {
       p_submission_id: submissionId,
