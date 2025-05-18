@@ -3,7 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { MissionSubmission } from "@/types/missions";
+import { MissionSubmission, toSubmission } from "@/types/missions";
+import { useMissionModeration } from "@/hooks/use-mission-moderation.hook";
 
 interface UseSubmissionActionsProps {
   onRemove: (submissionId: string) => void;
@@ -13,6 +14,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const { mutate: finalizeMission } = useMissionModeration();
   
   /**
    * Handle submission approval and reward distribution
@@ -22,30 +24,15 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
     setProcessing(true);
     
     try {
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ 
-          status: "approved",
-          review_stage: "finalized",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", submission.id);
-        
-      if (error) throw error;
+      // Use the enhanced mission moderation flow
+      await finalizeMission({
+        submissionId: submission.id,
+        decision: 'approve',
+        reviewerType: 'advertiser',
+        reviewStage: submission.second_instance ? 'second' : 'first'
+      });
       
-      // Call the reward_participant_for_submission function to distribute rewards
-      const { error: rewardError } = await supabase
-        .rpc('reward_participant_for_submission', {
-          submission_id: submission.id
-        });
-        
-      if (rewardError) {
-        console.error("Error rewarding participant:", rewardError);
-        throw rewardError;
-      }
-      
-      // Get mission details for notification
+      // Get updated details for notification
       const { data: missionData, error: missionError } = await supabase
         .from("missions")
         .select("points, title, cost_in_tokens")
@@ -83,26 +70,23 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
     setProcessing(true);
     
     try {
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ 
-          status: "rejected",
-          feedback: reason || "Submissão não atende aos requisitos da missão",
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", submission.id);
-        
-      if (error) throw error;
+      // Use the mission moderation flow
+      await finalizeMission({
+        submissionId: submission.id,
+        decision: 'reject',
+        reviewerType: 'advertiser',
+        reviewStage: submission.second_instance ? 'second' : 'first'
+      });
       
-      // Get mission details for notification
-      const { data: missionData, error: missionError } = await supabase
-        .from("missions")
-        .select("title")
-        .eq("id", submission.mission_id)
-        .single();
-        
-      if (missionError) throw missionError;
+      // Update feedback if provided
+      if (reason) {
+        await supabase
+          .from("mission_submissions")
+          .update({ 
+            feedback: reason
+          })
+          .eq("id", submission.id);
+      }
       
       playSound("error");
       toast({

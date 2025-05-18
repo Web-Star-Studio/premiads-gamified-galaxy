@@ -50,10 +50,10 @@ BEGIN
 
   RAISE NOTICE 'Mission points: %, tokens: %', v_points, v_tokens;
 
-  -- 5. Update points and mission status regardless of user_type
-  -- Remove user_type constraint to make sure points are awarded
+  -- 5. Update points and tokens regardless of user_type
+  -- Remove user_type constraint to make sure rewards are awarded
   
-  -- Update user points
+  -- Update user points and credits (tokens)
   UPDATE profiles
   SET points = COALESCE(points,0) + v_points,
       credits = COALESCE(credits,0) + v_tokens,

@@ -3,7 +3,7 @@ import { Calendar, MessageSquare, User, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MissionSubmission, Submission } from "@/types/missions";
+import { MissionSubmission, toSubmission } from "@/types/missions";
 import SubmissionStatusBadge from "./SubmissionStatusBadge";
 import { 
   getFormattedDate, 
@@ -31,10 +31,10 @@ const SubmissionPreviewDialog = ({
   onApprove,
   onReject
 }: SubmissionPreviewDialogProps) => {
-  // Cast to Submission type to ensure compatibility
-  const submissionWithDefaults = submission as unknown as Submission;
-  const submissionType = getSubmissionType(submissionWithDefaults);
-  const content = getSubmissionContent(submissionWithDefaults);
+  // Convert MissionSubmission to Submission to ensure compatibility
+  const fullSubmission = toSubmission(submission);
+  const submissionType = getSubmissionType(fullSubmission);
+  const content = getSubmissionContent(fullSubmission);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

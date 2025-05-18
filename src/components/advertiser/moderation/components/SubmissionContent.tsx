@@ -1,44 +1,52 @@
 
-import { Eye } from "lucide-react";
-import { MissionSubmission } from "@/types/missions";
+import { MissionSubmission, toSubmission } from "@/types/missions";
 import { getSubmissionContent, getSubmissionType } from "../utils/submissionUtils";
 
 interface SubmissionContentProps {
   submission: MissionSubmission;
-  onClick: () => void;
+  maxHeight?: number;
 }
 
-const SubmissionContent = ({ submission, onClick }: SubmissionContentProps) => {
-  const submissionType = getSubmissionType(submission);
-  const content = getSubmissionContent(submission);
+const SubmissionContent = ({ submission, maxHeight = 0 }: SubmissionContentProps) => {
+  // Convert to Submission to fix type compatibility
+  const fullSubmission = toSubmission(submission);
+  const type = getSubmissionType(fullSubmission);
+  const content = getSubmissionContent(fullSubmission);
   
-  if (submissionType === 'image') {
+  const style = maxHeight ? { maxHeight: `${maxHeight}px` } : {};
+  
+  // Render different content based on submission type
+  if (type === "image") {
     return (
-      <div 
-        className="h-36 sm:h-48 overflow-hidden rounded-md bg-gray-900 cursor-pointer relative group"
-        onClick={onClick}
-      >
+      <div className="flex items-center justify-center bg-black/20 rounded-lg overflow-hidden" style={style}>
         <img 
           src={content} 
           alt={`Submission by ${submission.user_name}`}
-          className="w-full h-full object-contain"
+          className="max-w-full max-h-full object-contain"
         />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-          <Eye className="w-8 h-8 text-white" />
-        </div>
       </div>
     );
   }
   
+  if (type === "video") {
+    return (
+      <div className="bg-black/20 rounded-lg overflow-hidden" style={style}>
+        <video 
+          src={content} 
+          controls 
+          className="w-full h-full"
+        />
+      </div>
+    );
+  }
+  
+  // Default to text display
   return (
     <div 
-      className="h-36 sm:h-48 overflow-hidden rounded-md bg-gray-900 p-3 cursor-pointer relative group"
-      onClick={onClick}
+      className="bg-black/20 rounded-lg p-4 overflow-auto fancy-scrollbar" 
+      style={style}
     >
-      <p className="text-sm line-clamp-5 sm:line-clamp-8">{content}</p>
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-        <Eye className="w-8 h-8 text-white" />
-      </div>
+      <p className="whitespace-pre-line">{content}</p>
     </div>
   );
 };

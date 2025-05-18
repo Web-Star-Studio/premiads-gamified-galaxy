@@ -16,7 +16,7 @@ export interface MissionSubmission {
   second_instance_status?: string;
 }
 
-// Add additional types to match what's in the database
+// Expanded Submission interface with additional properties needed for the UI components
 export interface Submission extends MissionSubmission {
   missions?: {
     title: string;
@@ -27,5 +27,22 @@ export interface Submission extends MissionSubmission {
     name: string;
     avatar_url?: string;
     id: string;
+  };
+  updated_at: string; // Make updated_at required for Submission but optional for MissionSubmission
+}
+
+// Utility function to convert MissionSubmission to Submission
+export function toSubmission(submission: MissionSubmission): Submission {
+  return {
+    ...submission,
+    updated_at: submission.updated_at || submission.submitted_at, // Ensure updated_at is always defined
+    user: {
+      name: submission.user_name,
+      id: submission.user_id,
+      avatar_url: submission.user_avatar
+    },
+    missions: {
+      title: submission.mission_title
+    }
   };
 }

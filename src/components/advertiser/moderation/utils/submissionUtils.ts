@@ -1,112 +1,125 @@
 
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Submission } from '../ModerationContent';
+import { Submission } from '@/types/missions';
 
 /**
- * Format a date string to a user-friendly format
+ * Format a date string for display
  */
-export const getFormattedDate = (dateString?: string): string => {
-  if (!dateString) return 'Data desconhecida';
-  
+export function getFormattedDate(dateString: string): string {
   try {
-    return format(parseISO(dateString), "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
-  } catch (e) {
+    const date = new Date(dateString);
+    return format(date, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR });
+  } catch (error) {
+    console.error("Error formatting date:", error);
     return dateString;
   }
-};
+}
 
 /**
- * Get user initials from their name
+ * Get the initials from a user name
  */
-export const getUserInitials = (name: string): string => {
-  if (!name) return 'U';
+export function getUserInitials(name?: string): string {
+  if (!name) return '?';
   
-  const nameParts = name.split(' ');
-  if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+  const names = name.split(' ').filter(n => n.length > 0);
   
-  return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
-};
+  if (names.length === 0) return '?';
+  if (names.length === 1) return names[0].charAt(0).toUpperCase();
+  
+  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+}
 
 /**
- * Determine the submission type based on its content
+ * Determine submission type based on content
  */
-export const getSubmissionType = (submission: Submission): 'image' | 'text' | 'video' | 'audio' => {
-  if (!submission) return 'text';
+export function getSubmissionType(submission: Submission): 'image' | 'text' | 'video' | 'audio' | 'creative' {
+  if (!submission || !submission.submission_data) return 'text';
   
-  // Check for proof_url first (direct property)
-  if (submission.proof_url && submission.proof_url.length > 0) {
-    const url = submission.proof_url[0].toLowerCase();
-    
-    if (url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.includes('image/')) {
-      return 'image';
-    }
-    
-    if (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov') || url.includes('video/')) {
-      return 'video';
-    }
-    
-    if (url.endsWith('.mp3') || url.endsWith('.wav') || url.includes('audio/')) {
-      return 'audio';
-    }
+  const data = submission.submission_data;
+  
+  if (data.image_url || data.photos || data.photo_url || data.images || data.fileUrls?.some(url => /\.(jpg|jpeg|png|gif|webp)$/i.test(url))) {
+    return 'image';
+  } else if (data.video_url || data.fileUrls?.some(url => /\.(mp4|webm|mov|avi)$/i.test(url))) {
+    return 'video';
+  } else if (data.audio_url || data.fileUrls?.some(url => /\.(mp3|wav|ogg)$/i.test(url))) {
+    return 'audio';
+  } else if (data.creative_content) {
+    return 'creative';
+  } else {
+    return 'text';
   }
-  
-  // Check submission_data for media URLs
-  if (submission.submission_data) {
-    const data = submission.submission_data;
-    
-    if (data.image_url || data.photo_url || (data.photos && data.photos.length > 0)) {
-      return 'image';
-    }
-    
-    if (data.video_url) {
-      return 'video';
-    }
-    
-    if (data.audio_url) {
-      return 'audio';
-    }
-  }
-  
-  return 'text';
-};
+}
 
 /**
- * Extract the main content from a submission
+ * Get type label for display
  */
-export const getSubmissionContent = (submission: Submission): string => {
-  if (!submission) return '';
-  
-  // Handle direct proof properties first
-  if (submission.proof_url && submission.proof_url.length > 0) {
-    return submission.proof_url[0];
+export function getTypeLabel(type: 'image' | 'text' | 'video' | 'audio' | 'creative'): string {
+  switch (type) {
+    case 'image': return 'Imagem';
+    case 'text': return 'Texto';
+    case 'video': return 'Vídeo';
+    case 'audio': return 'Áudio';
+    case 'creative': return 'Criativo';
+    default: return 'Conteúdo';
   }
+}
+
+/**
+ * Extract submission content for display
+ */
+export function getSubmissionContent(submission: Submission): string {
+  if (!submission || !submission.submission_data) return 'Sem conteúdo disponível';
   
-  if (submission.proof_text) {
-    return submission.proof_text;
+  const data = submission.submission_data;
+  const type = getSubmissionType(submission);
+  
+  switch (type) {
+    case 'image':
+      return data.image_url || 
+             (data.photos && data.photos[0]) || 
+             data.photo_url || 
+             (data.fileUrls && data.fileUrls.find(url => /\.(jpg|jpeg|png|gif|webp)$/i.test(url))) || 
+             '';
+    case 'video':
+      return data.video_url || 
+             (data.fileUrls && data.fileUrls.find(url => /\.(mp4|webm|mov|avi)$/i.test(url))) || 
+             '';
+    case 'audio':
+      return data.audio_url || 
+             (data.fileUrls && data.fileUrls.find(url => /\.(mp3|wav|ogg)$/i.test(url))) || 
+             '';
+    case 'creative':
+      return data.creative_content || '';
+    case 'text':
+    default:
+      return data.content || 
+             data.text || 
+             data.feedback || 
+             data.answer || 
+             JSON.stringify(data, null, 2);
   }
-  
-  // Handle submission_data
-  if (submission.submission_data) {
-    const data = submission.submission_data;
-    
-    // Try to extract media URLs
-    if (data.image_url) return data.image_url;
-    if (data.photo_url) return data.photo_url;
-    if (data.photos && data.photos.length > 0) return data.photos[0];
-    if (data.video_url) return data.video_url;
-    if (data.audio_url) return data.audio_url;
-    
-    // Try to extract text content
-    if (data.text) return data.text;
-    if (data.message) return data.message;
-    if (data.content) return data.content;
-    if (data.feedback) return data.feedback;
-    if (data.answer) return data.answer;
-    
-    // If we can't find anything specific, stringify the data
-    return JSON.stringify(data, null, 2);
+}
+
+/**
+ * Get status badge style
+ */
+export function getStatusStyle(status: string): { 
+  color: string; 
+  bgColor: string; 
+  text: string 
+} {
+  switch (status) {
+    case 'approved':
+      return { color: 'text-emerald-500', bgColor: 'bg-emerald-500/20', text: 'Aprovado' };
+    case 'rejected':
+      return { color: 'text-rose-500', bgColor: 'bg-rose-500/20', text: 'Rejeitado' };
+    case 'second_instance_pending':
+      return { color: 'text-amber-500', bgColor: 'bg-amber-500/20', text: 'Segunda instância' };
+    case 'returned_to_advertiser':
+      return { color: 'text-blue-500', bgColor: 'bg-blue-500/20', text: 'Retornou ao anunciante' };
+    case 'pending':
+    default:
+      return { color: 'text-blue-400', bgColor: 'bg-blue-400/20', text: 'Pendente' };
   }
-  
-  return 'Sem conteúdo disponível';
-};
+}
