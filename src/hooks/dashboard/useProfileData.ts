@@ -1,106 +1,59 @@
-
-import { useState, useEffect } from "react";
-import { useUser } from "@/context/UserContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useSounds } from "@/hooks/use-sounds";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, QueryKey } from "@tanstack/react-query";
+import { UserProfile } from "@/types/auth"; // Assuming UserProfile type exists from your project structure
+// import { Session } from "@supabase/supabase-js"; // Not directly used in function signatures now
 
-export const useProfileData = () => {
-  const { userName, setUserName } = useUser();
-  const { playSound } = useSounds();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState(0);
-  const [credits, setCredits] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [isProfileCompleted, setIsProfileCompleted] = useState(false);
-  const [profileData, setProfileData] = useState<any>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
+// Function to get the current session and user ID
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    console.error("Error getting session:", sessionError);
+    return null;
+  }
+  if (!session) {
+    return null;
+  }
+  return session.user.id;
+}
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          setPoints(0);
-          setCredits(0);
-          setStreak(0);
-          setIsProfileCompleted(false);
-          setLoading(false);
-          return;
-        }
-        
-        const userId = session.user.id;
-        
-        if (!userId) {
-          setPoints(0);
-          setCredits(0);
-          setStreak(0);
-          setIsProfileCompleted(false);
-          setLoading(false);
-          return;
-        }
-        
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .single();
-        
-        if (profileError) {
-          console.error("Profile error:", profileError);
-          setPoints(0);
-          setCredits(0);
-          setStreak(0);
-          setIsProfileCompleted(false);
-          setLoading(false);
-          return;
-        }
-        
-        if (profileData) {
-          setProfileData(profileData);
-          setPoints(profileData.points || 0);
-          setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
-          setIsProfileCompleted(profileData.profile_completed || false);
-          
-          if (profileData.full_name && !userName) {
-            setUserName(profileData.full_name);
-          }
-        }
-        
-        setStreak(0);
-        localStorage.setItem("lastActivity", Date.now().toString());
-      } catch (error: any) {
-        console.error("Error fetching user data:", error);
-        setPoints(0);
-        setCredits(0);
-        setStreak(0);
-        setIsProfileCompleted(false);
-      } finally {
-        setLoading(false);
-        playSound("chime");
-        
-        const lastActivity = localStorage.getItem("lastActivity");
-        if (lastActivity && Date.now() - parseInt(lastActivity) > 86400000) {
-          toast({
-            title: "Streak em risco!",
-            description: "Você está há mais de 24h sem atividade. Complete uma missão hoje!",
-          });
-        }
-      }
-    };
+// Function to fetch profile data
+async function fetchProfileDataByUserId(userId: string): Promise<UserProfile | null> {
+  // No need to check !userId here, as useQuery's 'enabled' option handles it
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, user_type, active, avatar_url, points, credits, profile_completed")
+    .eq("id", userId)
+    .single();
 
-    fetchUserData();
-  }, [userName, setUserName, playSound, toast]);
+  if (error) {
+    console.error("Error fetching profile data for user:", userId, error);
+    throw new Error(`Failed to fetch profile for user ${userId}: ${error.message}`);
+  }
+  return data as UserProfile;
+}
 
-  return {
-    loading,
-    points,
-    credits,
-    streak,
-    isProfileCompleted,
-    profileData,
-    authError
-  };
-};
+// Define QueryKey types for better type safety
+type CurrentUserIdKey = readonly ['currentUserId'];
+type ProfileQueryKey = readonly ['profile', string | undefined];
+
+/**
+ * Hook to fetch the current authenticated user's profile data using React Query.
+ */
+export function useProfileData() {
+  const { data: userId, isLoading: isLoadingUserId } = useQuery<string | null, Error, string | null, CurrentUserIdKey>({
+    queryKey: ['currentUserId'], 
+    queryFn: getCurrentUserId,
+    staleTime: Infinity, 
+    gcTime: Infinity,
+  });
+
+  return useQuery<UserProfile | null, Error, UserProfile | null, ProfileQueryKey>({
+    queryKey: ['profile', userId], 
+    queryFn: () => {
+      if (!userId) return Promise.resolve(null); 
+      return fetchProfileDataByUserId(userId!);
+    },
+    enabled: !!userId && !isLoadingUserId, 
+    staleTime: 1000 * 60 * 1, // 1 minute stale time
+  });
+}

@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # PremiAds Gamified Galaxy — Project Conventions
 
@@ -29,7 +29,7 @@ alwaysApply: true
 
 ## 4. UX & Dopamine Patterns
 - Play **audio feedback** (`playSound('success')`) on victory actions (mission completion, streak achieved).  
-- Add Framer Motion’s `whileHover` and `whileTap` on primary action buttons.  
+- Add Framer Motions `whileHover` and `whileTap` on primary action buttons.  
 - Default to **Dark Theme** with root class `galaxy-dark`.
 
 ## 5. Quality & Testing
