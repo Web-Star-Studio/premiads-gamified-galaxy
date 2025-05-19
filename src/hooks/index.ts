@@ -4,11 +4,8 @@ import { useToast } from "./use-toast";
 import { useUser } from "@/context/UserContext";
 import { useSounds } from "./use-sounds";
 import { useMissions } from "./useMissions";
-import { useRaffles } from "./useRaffles";
-import { useCashback } from "./useCashback";
 import { useMediaQuery } from "./use-mobile";
 import { useClientDashboard } from "./useClientDashboard";
-import { useClientProfile } from "./useClientProfile";
 import { useTheme } from "./use-theme";
 
 // Re-export all hooks
@@ -18,11 +15,8 @@ export {
   useSounds,
   useUser,
   useMissions,
-  useRaffles,
-  useCashback,
   useMediaQuery,
   useClientDashboard,
-  useClientProfile,
   useTheme
 };
 

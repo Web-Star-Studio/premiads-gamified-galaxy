@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { TreasureChest, Award, Gift, Calendar, Clock3 } from "lucide-react";
+import { Award, Gift, Calendar, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -114,7 +113,7 @@ const RewardsPage = () => {
               
               <div className="mt-4 md:mt-0">
                 <Button variant="outline" className="bg-galaxy-deepPurple/40 border-galaxy-purple/30">
-                  <TreasureChest className="mr-2 h-4 w-4" />
+                  <Award className="mr-2 h-4 w-4" />
                   Centro de Recompensas
                 </Button>
               </div>

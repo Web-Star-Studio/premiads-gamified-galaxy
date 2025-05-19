@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, TreasureChest, Bell } from 'lucide-react';
+import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, Award, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Sidebar, 
@@ -82,7 +82,7 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
                   asChild
                 >
                   <Link to="/cliente/recompensas">
-                    <TreasureChest />
+                    <Award />
                     <span>Recompensas</span>
                   </Link>
                 </SidebarMenuButton>

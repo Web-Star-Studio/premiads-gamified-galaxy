@@ -69,7 +69,8 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       toast({
         title: "Recompensa Revelada!",
         description: getRewardDescription(selectedLootBox),
-        variant: "reward"
+        variant: "default",
+        className: "bg-gradient-to-br from-purple-600/90 to-neon-pink/60 text-white border-neon-cyan"
       });
     }, 1500);
   };

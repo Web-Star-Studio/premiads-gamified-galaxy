@@ -39,7 +39,8 @@ export const useRewardAnimations = () => {
       toast({
         title: "Nova Conquista Desbloqueada!",
         description: `Você ganhou o badge: ${reward.badge_name || "Missão Completa"}`,
-        variant: "reward"
+        variant: "default",
+        className: "bg-gradient-to-br from-purple-600/90 to-neon-pink/60 text-white border-neon-cyan"
       });
     }
     
@@ -49,7 +50,8 @@ export const useRewardAnimations = () => {
       toast({
         title: "Loot Box Aberta!",
         description: `Você ganhou: ${rewardType} ${getRewardValueLabel(reward.loot_box_reward, reward.loot_box_amount)}`,
-        variant: "reward"
+        variant: "default",
+        className: "bg-gradient-to-br from-purple-600/90 to-neon-pink/60 text-white border-neon-cyan"
       });
     }
     

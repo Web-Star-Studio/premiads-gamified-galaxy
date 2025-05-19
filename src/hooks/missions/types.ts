@@ -26,10 +26,10 @@ export interface Mission {
   target_audience_age_min?: number;
   target_audience_age_max?: number;
   target_audience_region?: string;
-  // Reward related fields
-  has_badges?: boolean;
+  // Reward related fields - atualizados para corresponder ao banco de dados
+  has_badge?: boolean;
   has_lootbox?: boolean;
-  streak_bonus?: boolean;
+  sequence_bonus?: boolean;
   streak_multiplier?: number;
   // Target filter data
   target_filter?: any;

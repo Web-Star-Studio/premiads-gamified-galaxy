@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Calendar, Clock3, Award, Fire, Gem } from "lucide-react";
+import { Calendar, Clock3, Award, Flame, Gem } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
@@ -73,7 +73,7 @@ const DailyStreaksList: React.FC<DailyStreaksListProps> = ({ streaks }) => {
                   <h3 className="text-lg font-medium text-white flex items-center gap-2">
                     <span>{streak.missions.title}</span>
                     {isStreakActive(streak.last_completion_date) && (
-                      <Fire className="h-4 w-4 text-orange-400" />
+                      <Flame className="h-4 w-4 text-orange-400" />
                     )}
                   </h3>
                   
