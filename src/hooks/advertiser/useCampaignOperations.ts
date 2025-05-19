@@ -54,9 +54,10 @@ const useCampaignOperations = () => {
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
         status: 'ativa',
-        has_badges: formData.hasBadges,
+        // Using correct column names from the updated database schema
+        has_badge: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
-        streak_bonus: formData.streakBonus,
+        sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
         points: formData.randomPoints 
           ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
@@ -142,9 +143,10 @@ const useCampaignOperations = () => {
         target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
-        has_badges: formData.hasBadges,
+        // Using correct column names from the updated database schema
+        has_badge: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
-        streak_bonus: formData.streakBonus,
+        sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()

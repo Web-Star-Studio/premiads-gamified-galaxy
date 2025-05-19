@@ -1,13 +1,16 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { Mission } from "./types";
+import { useRewardAnimations, RewardDetails } from "@/utils/rewardAnimations";
 
 export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateAction<Mission[]>>) => {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const { showRewardNotification } = useRewardAnimations();
 
   /**
    * Submit a mission with evidence and optional attachments
@@ -93,10 +96,12 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
 
       // Update or create submission record
       let result;
+      let submissionId;
       
       // If a submission already exists, update it
       if (existingSubmission) {
         console.log("Updating existing submission:", existingSubmission.id);
+        submissionId = existingSubmission.id;
         
         result = await supabase
           .from("mission_submissions")
@@ -110,7 +115,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
         // Otherwise, create a new submission
         console.log("Creating new submission");
         
-        result = await supabase
+        const insertResult = await supabase
           .from("mission_submissions")
           .insert({
             mission_id: missionId,
@@ -119,7 +124,14 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
             status: dbStatus,
             submitted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          });
+          })
+          .select();
+          
+        result = insertResult;
+        
+        if (insertResult.data && insertResult.data.length > 0) {
+          submissionId = insertResult.data[0].id;
+        }
       }
       
       if (result.error) {
@@ -134,8 +146,37 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       
       console.log("Mission submitted successfully");
       
-      // Play sound based on status
-      playSound(status === "pending_approval" ? "success" : "pop");
+      // Process rewards if the submission is being submitted for approval
+      if (status === "pending_approval" && submissionId) {
+        try {
+          // Get mission details for reward processing
+          const { data: missionData } = await supabase
+            .from("missions")
+            .select("*")
+            .eq("id", missionId)
+            .single();
+            
+          // Show appropriate notification
+          if (missionData) {
+            const rewardDetails: RewardDetails = {
+              points: missionData.points || 0,
+              badge_earned: missionData.has_badge,
+              badge_name: missionData.title,
+              loot_box_reward: missionData.has_lootbox ? 'pending' : undefined
+            };
+            
+            showRewardNotification(rewardDetails);
+          } else {
+            playSound("success");
+          }
+        } catch (rewardError) {
+          console.error("Error processing rewards:", rewardError);
+          playSound("success");
+        }
+      } else {
+        // Play sound based on status
+        playSound(status === "pending_approval" ? "success" : "pop");
+      }
       
       // Update missions in state
       setMissions(prevMissions => prevMissions.map(mission => {

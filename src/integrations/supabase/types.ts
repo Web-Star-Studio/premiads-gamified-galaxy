@@ -196,6 +196,85 @@ export type Database = {
           },
         ]
       }
+      daily_streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_completion_date: string
+          max_streak: number
+          mission_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_completion_date: string
+          max_streak?: number
+          mission_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_completion_date?: string
+          max_streak?: number
+          mission_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_streaks_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loot_box_rewards: {
+        Row: {
+          awarded_at: string | null
+          created_at: string | null
+          id: string
+          mission_id: string
+          reward_amount: number
+          reward_type: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string | null
+          created_at?: string | null
+          id?: string
+          mission_id: string
+          reward_amount: number
+          reward_type: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string | null
+          created_at?: string | null
+          id?: string
+          mission_id?: string
+          reward_amount?: number
+          reward_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loot_box_rewards_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_rewards: {
         Row: {
           id: string
@@ -345,13 +424,16 @@ export type Database = {
           description: string | null
           end_date: string | null
           expires_at: string | null
+          has_badge: boolean | null
+          has_lootbox: boolean | null
           id: string
           is_active: boolean | null
           points: number
           requirements: Json | null
+          sequence_bonus: boolean | null
+          sequence_bonus_old: boolean
           start_date: string | null
           status: string | null
-          streak_bonus: boolean
           streak_multiplier: number | null
           target_audience: string | null
           target_audience_age_max: number | null
@@ -372,13 +454,16 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           expires_at?: string | null
+          has_badge?: boolean | null
+          has_lootbox?: boolean | null
           id?: string
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
+          sequence_bonus?: boolean | null
+          sequence_bonus_old?: boolean
           start_date?: string | null
           status?: string | null
-          streak_bonus?: boolean
           streak_multiplier?: number | null
           target_audience?: string | null
           target_audience_age_max?: number | null
@@ -399,13 +484,16 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           expires_at?: string | null
+          has_badge?: boolean | null
+          has_lootbox?: boolean | null
           id?: string
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
+          sequence_bonus?: boolean | null
+          sequence_bonus_old?: boolean
           start_date?: string | null
           status?: string | null
-          streak_bonus?: boolean
           streak_multiplier?: number | null
           target_audience?: string | null
           target_audience_age_max?: number | null
@@ -657,6 +745,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_description: string | null
+          badge_image_url: string | null
+          badge_name: string
+          created_at: string | null
+          earned_at: string | null
+          id: string
+          mission_id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_image_url?: string | null
+          badge_name: string
+          created_at?: string | null
+          earned_at?: string | null
+          id?: string
+          mission_id: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_image_url?: string | null
+          badge_name?: string
+          created_at?: string | null
+          earned_at?: string | null
+          id?: string
+          mission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_levels: {
         Row: {
           benefits: Json
@@ -773,6 +902,14 @@ export type Database = {
       is_admin_or_moderator: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      process_mission_rewards: {
+        Args: {
+          p_submission_id: string
+          p_user_id: string
+          p_mission_id: string
+        }
+        Returns: Json
       }
       redeem_cashback: {
         Args: { p_user_id: string; p_campaign_id: string; p_amount: number }

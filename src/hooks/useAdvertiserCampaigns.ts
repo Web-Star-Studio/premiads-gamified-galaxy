@@ -3,36 +3,13 @@ import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useSounds } from "@/hooks/use-sounds"
-
-interface AdvertiserCampaign {
-  id: string
-  title: string
-  description?: string
-  requirements?: any
-  type: string
-  points: number
-  cost_in_tokens: number
-  status: string
-  start_date?: string
-  end_date?: string
-  target_audience?: string
-  target_audience_gender?: string
-  target_audience_age_min?: number
-  target_audience_age_max?: number
-  target_audience_region?: string
-  // Additional fields for campaign management
-  completions?: number
-  expires?: string
-  audience?: string
-  reward?: string
-  [key: string]: any
-}
+import { Campaign } from "@/components/advertiser/campaignData"
 
 /**
  * Hook to fetch and subscribe to advertiser campaigns in real-time
  */
 export function useAdvertiserCampaigns() {
-  const [campaigns, setCampaigns] = useState<AdvertiserCampaign[]>([])
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const { toast } = useToast()
   const { playSound } = useSounds()
@@ -97,18 +74,23 @@ export function useAdvertiserCampaigns() {
           completions: completionsCount,
           expires: mission.end_date ? new Date(mission.end_date).toLocaleDateString() : 'N/A',
           reward: `${mission.points} pontos`,
+          // New reward feature fields with mapping for backwards compatibility
+          has_badge: mission.has_badge,
+          has_badges: mission.has_badge, // Legacy alias
+          has_lootbox: mission.has_lootbox,
+          sequence_bonus: mission.sequence_bonus,
+          streak_bonus: mission.sequence_bonus, // Legacy alias
+          streak_multiplier: mission.streak_multiplier,
           // Include all other fields
           target_audience: mission.target_audience,
           target_audience_gender: mission.target_audience_gender,
           target_audience_age_min: mission.target_audience_age_min,
           target_audience_age_max: mission.target_audience_age_max,
-          target_audience_region: mission.target_audience_region,
-          has_badges: mission.has_badges,
-          has_lootbox: mission.has_lootbox
+          target_audience_region: mission.target_audience_region
         }
       })
 
-      setCampaigns(processedCampaigns as AdvertiserCampaign[])
+      setCampaigns(processedCampaigns as Campaign[])
       playSound("chime")
     } catch (err: any) {
       console.error("Erro ao carregar campanhas:", err)

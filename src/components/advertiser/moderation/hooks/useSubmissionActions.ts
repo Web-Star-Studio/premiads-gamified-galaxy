@@ -34,6 +34,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       const stage: ValidationStage = submission.second_instance ? 'advertiser_second' : 'advertiser_first';
       console.log(`Approving submission ${submission.id} with stage ${stage}`);
 
+      // First, approve the submission using the existing finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
         approverId: approverUser.id,
@@ -45,6 +46,35 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         throw new Error(result.error || "Falha ao finalizar a submissão via RPC.");
       }
 
+      // Now process additional rewards using the new process_mission_rewards function
+      const { data: rewardResult, error: rewardError } = await supabase.rpc(
+        'process_mission_rewards',
+        {
+          p_submission_id: submission.id,
+          p_user_id: submission.user_id,
+          p_mission_id: submission.mission_id
+        }
+      );
+
+      if (rewardError) {
+        console.error("Error processing rewards:", rewardError);
+        // Continue anyway since the primary approval was successful
+      }
+
+      // Format reward information for toast message
+      let rewardInfo = "";
+      if (rewardResult) {
+        if (rewardResult.badge_earned) {
+          rewardInfo += " Badge concedido!";
+        }
+        if (rewardResult.loot_box_reward) {
+          rewardInfo += ` Loot box: ${rewardResult.loot_box_reward} (${rewardResult.loot_box_amount})!`;
+        }
+        if (rewardResult.streak_bonus > 0) {
+          rewardInfo += ` Bônus de sequência: +${rewardResult.streak_bonus} pontos!`;
+        }
+      }
+      
       // Get points awarded from the result
       const pointsAwarded = result.data?.points_awarded || 0;
       const tokensAwarded = result.data?.tokens_awarded || 0;
@@ -66,7 +96,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       playSound("reward");
       toast({
         title: "Submissão aprovada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${pointsAwarded} pontos e ${tokensAwarded} tokens atribuídos.`,
+        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${pointsAwarded} pontos e ${tokensAwarded} tokens atribuídos.${rewardInfo}`,
       });
       
       if (participantId) {
