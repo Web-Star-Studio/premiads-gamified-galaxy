@@ -1,4 +1,3 @@
-
 // Define mission types for consistency across the app
 export interface Mission {
   id: string;
@@ -89,4 +88,59 @@ export interface MissionReward {
   submission_id: string;
   points_earned: number;
   rewarded_at: string;
+}
+
+export const missionTypeLabels: Record<MissionType, string> = {
+  form: 'Formulário',
+  photo: 'Envio de Foto',
+  video: 'Envio de Vídeo',
+  checkin: 'Check-in Local',
+  social: 'Ação Social',
+  coupon: 'Uso de Cupom',
+  survey: 'Pesquisa',
+  review: 'Avaliação de Produto/Serviço'
+};
+
+export const missionTypeDescriptions: Record<MissionType, string> = {
+  form: 'Preencha um formulário com as informações solicitadas.',
+  photo: 'Envie uma foto conforme os requisitos da missão.',
+  video: 'Grave e envie um vídeo seguindo as diretrizes.',
+  checkin: 'Faça check-in em um local específico.',
+  social: 'Realize uma ação em suas redes sociais (curtir, compartilhar, comentar).',
+  coupon: 'Utilize um cupom de desconto em uma compra ou serviço.',
+  survey: 'Responda a uma pesquisa de opinião ou mercado.',
+  review: 'Escreva uma avaliação sobre um produto ou serviço.'
+};
+
+/**
+ * Determines mission difficulty based on points or other criteria.
+ * Placeholder logic: Adjust as needed.
+ */
+export function getMissionDifficulty(mission: Pick<Mission, 'points' | 'type' | 'requirements'>): string {
+  if (mission.points > 150) return 'Difícil';
+  if (mission.points > 75) return 'Médio';
+  return 'Fácil';
+}
+
+/**
+ * Estimates completion time for a mission.
+ * Placeholder logic: Adjust based on mission type and requirements.
+ */
+export function getEstimatedTime(mission: Pick<Mission, 'type' | 'requirements'>): string {
+  switch (mission.type) {
+    case 'form':
+    case 'survey':
+      return '5-10 min';
+    case 'photo':
+    case 'checkin':
+    case 'social':
+      return '2-5 min';
+    case 'video':
+    case 'review':
+      return '10-15 min';
+    case 'coupon':
+      return 'Varia conforme compra';
+    default:
+      return 'Não estimado';
+  }
 }
