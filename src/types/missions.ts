@@ -8,12 +8,14 @@ export interface MissionSubmission {
   mission_title: string;
   submission_data: any;
   feedback?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser';
+  status: 'pending' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser' | 'in_progress';
   submitted_at: string;
   updated_at: string; 
   second_instance?: boolean;
   review_stage?: string;
   second_instance_status?: string;
+  admin_validated?: boolean;
+  validated_by?: string;
 }
 
 // Expanded Submission interface with additional properties needed for the UI components
@@ -30,18 +32,29 @@ export interface Submission extends MissionSubmission {
   };
 }
 
-// Utility function to convert MissionSubmission to Submission
-export function toSubmission(submission: MissionSubmission): Submission {
+// Utility function to convert database submission to UI Submission
+export function toSubmission(submission: any): Submission {
+  // Handle case where submission might not have user_name or other required fields
+  const user_name = submission.user_name || 
+                    (submission.user?.full_name || submission.user?.name) || 
+                    "Usuário";
+  
+  const mission_title = submission.mission_title || 
+                       (submission.missions?.title) || 
+                       "Missão";
+                       
   return {
     ...submission,
-    updated_at: submission.updated_at || submission.submitted_at, // Fallback to submitted_at if updated_at is missing
+    user_name,
+    mission_title,
+    updated_at: submission.updated_at || submission.submitted_at,
     user: {
-      name: submission.user_name,
+      name: user_name,
       id: submission.user_id,
-      avatar_url: submission.user_avatar
+      avatar_url: submission.user_avatar || submission.user?.avatar_url
     },
     missions: {
-      title: submission.mission_title
+      title: mission_title
     }
   };
 }
@@ -70,5 +83,11 @@ export interface MissionReward {
   mission_id: string;
   submission_id: string;
   points_earned: number;
+  tokens_earned: number;
   rewarded_at: string;
+}
+
+export interface FilterOptions {
+  status: string;
+  searchQuery: string;
 }

@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Mission, MissionSubmission } from "@/hooks/useMissionsTypes";
+import { Mission, MissionSubmission } from "@/types/missions";
+import { toSubmission } from "@/types/missions";
 
 // Different validation stages
 export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
@@ -80,7 +82,16 @@ export async function getMissionById(missionId: string): Promise<Mission | null>
     return null;
   }
   
-  return data as Mission;
+  // Transform raw data to conform to Mission interface
+  const mission: Mission = {
+    ...data,
+    audience: data.target_audience,
+    reward: data.points,
+    expires: data.expires_at,
+    completions: 0 // Default value for compatibility
+  };
+  
+  return mission;
 }
 
 /**
@@ -89,7 +100,11 @@ export async function getMissionById(missionId: string): Promise<Mission | null>
 export async function getSubmissionById(submissionId: string): Promise<MissionSubmission | null> {
   const { data, error } = await supabase
     .from('mission_submissions')
-    .select('*')
+    .select(`
+      *,
+      missions:mission_id(title),
+      user:user_id(profiles(full_name, avatar_url))
+    `)
     .eq('id', submissionId)
     .single();
   
@@ -98,7 +113,17 @@ export async function getSubmissionById(submissionId: string): Promise<MissionSu
     return null;
   }
   
-  return data as MissionSubmission;
+  if (!data) return null;
+  
+  // Transform the raw data to match the MissionSubmission interface
+  const submission = toSubmission({
+    ...data,
+    user_name: data.user?.profiles?.[0]?.full_name || "Usuário",
+    user_avatar: data.user?.profiles?.[0]?.avatar_url,
+    mission_title: data.missions?.title || "Missão"
+  });
+  
+  return submission;
 }
 
 /**
@@ -107,7 +132,11 @@ export async function getSubmissionById(submissionId: string): Promise<MissionSu
 export async function getSubmissionsForMission(missionId: string): Promise<MissionSubmission[]> {
   const { data, error } = await supabase
     .from('mission_submissions')
-    .select('*')
+    .select(`
+      *,
+      missions:mission_id(title),
+      user:user_id(profiles(full_name, avatar_url))
+    `)
     .eq('mission_id', missionId)
     .order('submitted_at', { ascending: false });
   
@@ -116,7 +145,19 @@ export async function getSubmissionsForMission(missionId: string): Promise<Missi
     return [];
   }
   
-  return data as MissionSubmission[];
+  if (!data || data.length === 0) return [];
+  
+  // Transform the raw data to match the MissionSubmission[] interface
+  const submissions: MissionSubmission[] = data.map(item => {
+    return toSubmission({
+      ...item,
+      user_name: item.user?.profiles?.[0]?.full_name || "Usuário",
+      user_avatar: item.user?.profiles?.[0]?.avatar_url,
+      mission_title: item.missions?.title || "Missão"
+    });
+  });
+  
+  return submissions;
 }
 
 /**

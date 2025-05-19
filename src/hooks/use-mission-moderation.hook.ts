@@ -26,18 +26,28 @@ export function useMissionModeration() {
       // Log the response for debugging
       console.log('Mission moderation successful:', response);
       
-      // Invalidate both missions and submissions queries to refresh UI
+      // Invalidate multiple queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['missions'] })
       queryClient.invalidateQueries({ queryKey: ['mission_submissions'] })
+      
+      // If we have participant ID, invalidate their profile data
+      if (response.data?.participant_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['profile', response.data.participant_id] 
+        })
+      }
       
       // Play success sound and show toast with points info
       playSound('reward')
       
       const pointsAwarded = response.data?.points_awarded || 0;
       const tokensAwarded = response.data?.tokens_awarded || 0;
-      const pointsMessage = pointsAwarded > 0 
-        ? `${pointsAwarded} pontos e ${tokensAwarded} tokens foram atribuídos ao usuário.` 
-        : "A submissão foi processada com sucesso.";
+      
+      let pointsMessage = "A submissão foi processada com sucesso.";
+      
+      if (pointsAwarded > 0 || tokensAwarded > 0) {
+        pointsMessage = `${pointsAwarded} pontos e ${tokensAwarded} tokens foram atribuídos ao usuário.`;
+      }
         
       toast({
         title: "Submissão processada com sucesso",

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import SubmissionsList from './SubmissionsList';
@@ -5,7 +6,7 @@ import SubmissionsEmptyState from './SubmissionsEmptyState';
 import SubmissionsLoading from './SubmissionsLoading';
 import { useToast } from '@/hooks/use-toast';
 import { useMissionModeration } from '@/hooks/use-mission-moderation.hook';
-import { Submission, MissionSubmission } from '@/types/missions';
+import { Submission, toSubmission } from '@/types/missions';
 import { Button } from "@/components/ui/button";
 
 interface ModerationContentProps {
@@ -31,72 +32,102 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const { toast } = useToast();
   const { mutate: finalizeMissionSubmission, isPending: isProcessing } = useMissionModeration();
   
+  // Set up real-time listener for mission submissions
+  useEffect(() => {
+    // Subscribe to mission_submissions changes
+    const channel = supabase
+      .channel('public:mission_submissions')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'mission_submissions'
+      }, (payload) => {
+        console.log('Mission submission change detected:', payload);
+        // Refresh data when changes occur
+        fetchData();
+      })
+      .subscribe();
+      
+    // Clean up subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+  
   // Fetch missions and submissions
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Get user ID from session
-        const { data: session } = await supabase.auth.getSession();
-        const userId = session?.session?.user?.id;
-        
-        if (!userId) throw new Error('Usuário não autenticado');
-        
-        // Get all missions for this advertiser
-        const { data: missionsData, error: missionsError } = await supabase
-          .from('missions')
-          .select('id, title')
-          .eq('advertiser_id', userId);
-        if (missionsError) throw missionsError;
-        if (!missionsData || missionsData.length === 0) {
-          setMissions([])
-          setSubmissions([]);
-          setLoading(false);
-          return;
-        }
-        setMissions(missionsData)
-        const missionIds = missionsData.map(m => m.id);
-        
-        // Get submissions for selected mission(s)
-        let submissionsQuery = supabase
-          .from('mission_submissions')
-          .select(
-            `*, user:user_id(profiles(full_name, avatar_url)), missions:mission_id(title)`
-          );
-        if (selectedMissionId === 'all') {
-          submissionsQuery = submissionsQuery.in('mission_id', missionIds)
-        } else {
-          submissionsQuery = submissionsQuery.eq('mission_id', selectedMissionId)
-        }
-        submissionsQuery = submissionsQuery.eq('status', activeTab).order('submitted_at', { ascending: false })
-        const { data: submissionsData, error: submissionsError } = await submissionsQuery;
-        if (submissionsError) throw submissionsError;
-        
-        // Transform data to match the Submission interface
-        const transformedSubmissions = (submissionsData || []).map((sub: any) => ({
-          ...sub,
-          user_name: sub.user?.full_name || 'Usuário',
-          user_avatar: sub.user?.avatar_url,
-          mission_title: sub.missions?.title || 'Missão',
-          updated_at: sub.updated_at || sub.submitted_at,
-        })) as Submission[];
-        setSubmissions(transformedSubmissions);
-      } catch (err: any) {
-        console.error('Error fetching submissions:', err);
-        setError(err);
-        toast({
-          title: 'Erro ao carregar submissões',
-          description: err.message,
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
   }, [refreshKey, toast, activeTab, selectedMissionId]);
+  
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Get user ID from session
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      // Get all missions for this advertiser
+      const { data: missionsData, error: missionsError } = await supabase
+        .from('missions')
+        .select('id, title')
+        .eq('advertiser_id', userId);
+      if (missionsError) throw missionsError;
+      if (!missionsData || missionsData.length === 0) {
+        setMissions([])
+        setSubmissions([]);
+        setLoading(false);
+        return;
+      }
+      setMissions(missionsData)
+      const missionIds = missionsData.map(m => m.id);
+      
+      // Get submissions for selected mission(s)
+      let submissionsQuery = supabase
+        .from('mission_submissions')
+        .select(
+          `*, 
+          user:user_id(profiles(full_name, avatar_url)), 
+          missions:mission_id(title)`
+        );
+      if (selectedMissionId === 'all') {
+        submissionsQuery = submissionsQuery.in('mission_id', missionIds)
+      } else {
+        submissionsQuery = submissionsQuery.eq('mission_id', selectedMissionId)
+      }
+      
+      // Filter by status
+      submissionsQuery = submissionsQuery.eq('status', activeTab).order('submitted_at', { ascending: false })
+      const { data: submissionsData, error: submissionsError } = await submissionsQuery;
+      if (submissionsError) throw submissionsError;
+      
+      // Transform data to match the Submission interface
+      const transformedSubmissions = (submissionsData || []).map((sub: any) => {
+        return toSubmission({
+          ...sub,
+          user_name: sub.user?.profiles?.[0]?.full_name || 'Usuário',
+          user_avatar: sub.user?.profiles?.[0]?.avatar_url,
+          mission_title: sub.missions?.title || 'Missão',
+          updated_at: sub.updated_at || sub.submitted_at,
+        });
+      }) as Submission[];
+      
+      setSubmissions(transformedSubmissions);
+    } catch (err: any) {
+      console.error('Error fetching submissions:', err);
+      setError(err);
+      toast({
+        title: 'Erro ao carregar submissões',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
   
   const handleApprove = async (submission: Submission) => {
     if (!submission?.id) return;
@@ -148,6 +179,14 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         decision: 'reject',
         stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
+      
+      // If feedback is provided, update the submission
+      if (feedback) {
+        await supabase
+          .from('mission_submissions')
+          .update({ feedback })
+          .eq('id', submission.id);
+      }
       
       // Remove this submission from the list
       setSubmissions(prev => prev.filter(s => s.id !== submission.id));
@@ -233,5 +272,4 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   );
 };
 
-export type { Submission, FilterOptions };
 export default ModerationContent;

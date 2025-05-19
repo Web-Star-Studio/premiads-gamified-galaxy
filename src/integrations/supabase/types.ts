@@ -203,6 +203,7 @@ export type Database = {
           points_earned: number
           rewarded_at: string | null
           submission_id: string
+          tokens_earned: number
           user_id: string
         }
         Insert: {
@@ -211,6 +212,7 @@ export type Database = {
           points_earned?: number
           rewarded_at?: string | null
           submission_id: string
+          tokens_earned?: number
           user_id: string
         }
         Update: {
@@ -219,6 +221,7 @@ export type Database = {
           points_earned?: number
           rewarded_at?: string | null
           submission_id?: string
+          tokens_earned?: number
           user_id?: string
         }
         Relationships: [

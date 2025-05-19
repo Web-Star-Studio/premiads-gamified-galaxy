@@ -14,12 +14,11 @@ export interface SubmissionsListProps {
 
 const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListProps) => {
   // Group submissions by status type
-  const pendingSubmissions = submissions.filter(s => s.status === 'pending' || s.status === 'in_progress');
+  const pendingSubmissions = submissions.filter(s => s.status === 'pending');
   const returnedSubmissions = submissions.filter(s => s.status === 'returned_to_advertiser');
   const secondInstanceSubmissions = submissions.filter(s => s.status === 'second_instance_pending');
   const otherSubmissions = submissions.filter(s => 
     s.status !== 'pending' && 
-    s.status !== 'in_progress' && 
     s.status !== 'returned_to_advertiser' && 
     s.status !== 'second_instance_pending'
   );
