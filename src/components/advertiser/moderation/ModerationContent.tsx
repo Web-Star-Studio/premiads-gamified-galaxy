@@ -96,14 +96,10 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       console.log('Fetching submissions for mission IDs:', missionIds);
       console.log('Current active tab:', activeTab);
       
-      // Get submissions for selected mission(s)
+      // Fixed query - don't use nested select with user_id
       let submissionsQuery = supabase
         .from('mission_submissions')
-        .select(
-          `*, 
-          user:user_id(profiles(full_name, avatar_url)), 
-          missions:mission_id(title)`
-        );
+        .select('*');
         
       if (selectedMissionId === 'all') {
         submissionsQuery = submissionsQuery.in('mission_id', missionIds)
@@ -120,18 +116,55 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log('Submissions found:', submissionsData?.length || 0);
       
-      // Transform data to match the Submission interface
-      const transformedSubmissions = (submissionsData || []).map((sub: any) => {
-        return toSubmission({
-          ...sub,
-          user_name: sub.user?.profiles?.[0]?.full_name || 'Usuário',
-          user_avatar: sub.user?.profiles?.[0]?.avatar_url,
-          mission_title: sub.missions?.title || 'Missão',
-          updated_at: sub.updated_at || sub.submitted_at,
+      // Now fetch user profiles and mission titles separately
+      if (submissionsData && submissionsData.length > 0) {
+        // Get unique user IDs from submissions
+        const userIds = [...new Set(submissionsData.map(sub => sub.user_id))];
+        
+        // Fetch user profiles
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+          
+        if (profilesError) throw profilesError;
+        
+        // Create a map of mission IDs to titles
+        const missionTitlesMap = missionsData.reduce((acc, mission) => {
+          acc[mission.id] = mission.title;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        // Create a map of user IDs to profiles
+        const userProfilesMap = (profilesData || []).reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+        
+        // Transform submissions with user and mission data
+        const transformedSubmissions = submissionsData.map(sub => {
+          const userProfile = userProfilesMap[sub.user_id] || {};
+          
+          return toSubmission({
+            ...sub,
+            user_name: userProfile.full_name || 'Usuário',
+            user_avatar: userProfile.avatar_url,
+            mission_title: missionTitlesMap[sub.mission_id] || 'Missão',
+            user: {
+              name: userProfile.full_name || 'Usuário',
+              id: sub.user_id,
+              avatar_url: userProfile.avatar_url
+            },
+            missions: {
+              title: missionTitlesMap[sub.mission_id] || 'Missão'
+            }
+          });
         });
-      }) as Submission[];
-      
-      setSubmissions(transformedSubmissions);
+        
+        setSubmissions(transformedSubmissions);
+      } else {
+        setSubmissions([]);
+      }
     } catch (err: any) {
       console.error('Error fetching submissions:', err);
       setError(err);
@@ -168,14 +201,15 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log('Submission approved successfully:', data);
       
+      // Use safe access for potentially undefined properties
+      const pointsAwarded = typeof data === 'object' && data ? data.points_awarded || 0 : 0;
+      const tokensAwarded = typeof data === 'object' && data ? data.tokens_awarded || 0 : 0;
+      
       // Show success toast
       toast({
         title: "Submissão aprovada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${data.points_awarded} pontos e ${data.tokens_awarded} tokens atribuídos.`,
+        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${pointsAwarded} pontos e ${tokensAwarded} tokens atribuídos.`,
       });
-      
-      // Play sound effect
-      // This would require importing and using the useSounds hook
       
       // Refetch data
       fetchData();
