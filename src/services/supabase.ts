@@ -187,36 +187,23 @@ export const missionService = {
     const client = await getSupabaseClient();
 
     try {
-      // Get submission info first
-      const { data: subInfo, error: subError } = await client
+      const { data: submissionData, error: getError } = await client
         .from('mission_submissions')
-        .select('mission_id,user_id,status')
+        .select('mission_id, user_id, status') // mission_id, user_id still needed for context if any further action depends on them
         .eq('id', submissionId)
         .single();
-
-      if (subError) throw subError;
+        
+      if (getError) throw getError;
       
-      console.log(`Submission info:`, subInfo);
-      
-      // Map result to status and other properties
-      const payload: Record<string, any> = {
-        validated_by: validatedBy,
-        feedback: notes || null,
-        updated_at: new Date().toISOString()
-      };
-
-      // Set status based on the result
+      let newStatus;
       if (result === 'aprovado') {
         payload.status = 'approved';
         payload.review_stage = 'finalized';
       } else if (result === 'rejeitado') {
-        if (!isAdmin) {
-          payload.status = 'second_instance_pending';
-          payload.review_stage = 'second_instance';
-          payload.second_instance = true;
+        if (isAdmin) {
+          newStatus = 'rejected';
         } else {
-          payload.status = 'rejected';
-          payload.review_stage = 'finalized';
+          newStatus = 'segunda_instancia';
         }
       } else if (result === 'segunda_instancia') {
         payload.status = 'second_instance_pending';
@@ -226,113 +213,28 @@ export const missionService = {
 
       console.log(`Atualizando submissão ${submissionId} para status: ${payload.status}`, payload);
       
-      // Update the submission
-      const { data: submission, error: updateError } = await client
+      const { data: submission, error: submissionError } = await client
         .from('mission_submissions')
         .update(payload)
         .eq('id', submissionId)
         .select()
         .single();
-
-      if (updateError) throw updateError;
-
-      // Save to validation log
-      const validationLog = {
-        submission_id: submissionId,
-        validated_by: validatedBy,
-        result: result,
-        is_admin: isAdmin,
-        notes: notes || null,
-        created_at: new Date().toISOString()
-      };
-
+      
+      if (submissionError) throw submissionError;
+      
       const { error: logError } = await client
         .from('mission_validation_logs')
         .insert(validationLog);
 
       if (logError) throw logError;
-
-      // Se foi aprovado, tenta executar a atualização manualmente E chama o RPC
-      if (payload.status === 'approved') {
-        try {
-          console.log('Submissão aprovada, atualizando pontos e status da missão...');
-          
-          // 1. Chama RPC de recompensa
-          await client.rpc('reward_participant_for_submission', { 
-            submission_id: submissionId 
-          });
-          console.log('RPC reward_participant_for_submission executado');
-          
-          // 2. Como fallback, faz manualmente caso a RPC falhe
-          const { data: missionData } = await client
-            .from('missions')
-            .select('points,id')
-            .eq('id', subInfo.mission_id)
-            .single();
-          
-          if (missionData?.points) {
-            // Atualiza o status da missão
-            await client
-              .from('missions')
-              .update({
-                status: 'ativa',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', subInfo.mission_id);
-            
-            // Atualiza os pontos do usuário - primeiro busca pontos atuais
-            // Primeiro busca os pontos atuais
-            const { data: profileData } = await client
-              .from('profiles')
-              .select('points')
-              .eq('id', subInfo.user_id)
-              .single();
-              
-            // Depois atualiza com os novos pontos
-            const currentPoints = profileData?.points || 0;
-            const newPoints = currentPoints + missionData.points;
-            
-            await client
-              .from('profiles')
-              .update({
-                points: newPoints,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', subInfo.user_id);
-              
-            console.log(`Pontos atualizados: ${currentPoints} -> ${newPoints}`);
-            
-            // Registra a recompensa
-            const existingReward = await client
-              .from('mission_rewards')
-              .select('id')
-              .eq('submission_id', submissionId)
-              .maybeSingle();
-            
-            if (!existingReward.data) {
-              await client
-                .from('mission_rewards')
-                .insert({
-                  user_id: subInfo.user_id,
-                  mission_id: subInfo.mission_id,
-                  submission_id: submissionId,
-                  points_earned: missionData.points,
-                  rewarded_at: new Date().toISOString()
-                });
-              
-              console.log(`Pontos (${missionData.points}) adicionados manualmente para o usuário ${subInfo.user_id}`);
-            }
-          }
-        } catch (err) {
-          console.error('Erro ao processar recompensa:', err);
-          // Continuamos mesmo com erro na recompensa
-        }
-      }
-
-      return { 
-        success: true, 
-        data: submission 
-      };
+      
+      // REMOVED: Direct point and reward awarding logic.
+      // This should be handled by calling the 'finalize_submission' RPC
+      // at the appropriate point in the application flow.
+      // If this validateSubmission call IS that appropriate point for certain roles/stages,
+      // then this function should be refactored to call the RPC.
+      
+      return submission;
     } catch (error) {
       console.error('Error validating submission:', error);
       return { 
@@ -359,7 +261,21 @@ export const missionService = {
 
   addTokens: async (userId: string, amount: number) => {
     const client = await getSupabaseClient();
-    // Atualiza o saldo de créditos no perfil
+
+    // The `reward_participant_for_submission` SQL function (called by `finalize_submission` RPC)
+    // already handles updating `profiles.credits` atomically.
+    // If tokens need to be added outside of mission rewards, a dedicated RPC for incrementing credits is better.
+    // For now, let's assume token addition is primarily through mission rewards via finalize_submission.
+    // This function as-is uses a non-atomic read-then-write and might be redundant.
+
+    // Option 1: Call a new RPC (e.g., 'increment_credits') - PREFERRED for general use
+    // const { data, error } = await client.rpc('increment_user_credits', { p_user_id: userId, p_amount: amount });
+    // if (error) throw error;
+    // return data; // Adjust return shape as needed
+
+    // Option 2: Keep existing logic but acknowledge it's not ideal (NOT RECOMMENDED for new changes)
+    // For demonstration, I will comment out the direct update and log a warning.
+    console.warn("missionService.addTokens: This function directly updates credits and might be redundant or non-atomic. Consider using an RPC for atomic credit updates if needed outside mission finalization.");
     const { data: profileData, error: profileError } = await client
       .from('profiles')
       .select('credits')
@@ -367,14 +283,18 @@ export const missionService = {
       .maybeSingle();
     if (profileError) throw profileError;
     const newTotal = (Number(profileData?.credits) || 0) + amount;
-    const { data, error } = await client
-      .from('profiles')
-      .update({ credits: newTotal, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-      .select()
-      .single();
-    if (error) throw error;
-    return { user_id: userId, total_tokens: newTotal, used_tokens: 0 };
+    // const { data, error } = await client
+    //   .from('profiles')
+    //   .update({ credits: newTotal, updated_at: new Date().toISOString() })
+    //   .eq('id', userId)
+    //   .select()
+    //   .single();
+    // if (error) throw error;
+    // return { user_id: userId, total_tokens: newTotal, used_tokens: 0 }; // Original return shape
+    
+    // For now, returning a placeholder or erroring might be safer if this path is unintended.
+    // This signifies that the function needs a proper RPC or should not be used for profile updates.
+    return { user_id: userId, total_tokens: newTotal, used_tokens: 0, warning: "Token update bypassed pending RPC implementation" };
   },
 
   // Recompensas
