@@ -1,4 +1,3 @@
-
 import { AlertCircle, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -10,29 +9,35 @@ const SubmissionsEmptyState = ({ activeTab }: SubmissionsEmptyStateProps) => {
   // Define content based on active tab
   const getContent = () => {
     switch (activeTab) {
-      case 'pendentes':
+      case 'pending':
         return {
           icon: <AlertCircle className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão pendente",
           description: "Não há submissões aguardando sua revisão no momento."
         };
-      case 'aprovadas':
+      case 'approved':
         return {
           icon: <CheckCircle2 className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão aprovada",
           description: "Você ainda não aprovou nenhuma submissão."
         };
-      case 'rejeitadas':
+      case 'rejected':
         return {
           icon: <XCircle className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão rejeitada",
           description: "Você ainda não rejeitou nenhuma submissão definitivamente."
         };
-      case 'segunda_instancia':
+      case 'second_instance_pending':
         return {
           icon: <RotateCcw className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão em segunda instância",
-          description: "Não há submissões em processo de revisão de segunda instância."
+          description: "Não há submissões aguardando revisão de segunda instância pelo administrador."
+        };
+      case 'returned_to_advertiser':
+        return {
+          icon: <RotateCcw className="w-12 h-12 text-yellow-400" />,
+          title: "Nenhuma submissão retornada",
+          description: "Não há submissões retornadas pelo administrador para sua decisão final."
         };
       default:
         return {

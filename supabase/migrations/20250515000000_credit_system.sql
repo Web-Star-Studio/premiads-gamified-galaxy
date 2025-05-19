@@ -45,6 +45,9 @@ BEGIN
     END IF;
 END$$;
 
+-- Drop the function if it exists with the specific signature to avoid conflicts
+DROP FUNCTION IF EXISTS public.increment_user_credits(UUID, INTEGER);
+
 -- Create function to increment user credits
 CREATE OR REPLACE FUNCTION public.increment_user_credits(
     user_id UUID,

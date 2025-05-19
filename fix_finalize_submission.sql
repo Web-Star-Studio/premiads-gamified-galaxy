@@ -1,4 +1,3 @@
-
 -- Update the finalize_submission function to award both points AND tokens
 CREATE OR REPLACE FUNCTION public.finalize_submission(p_submission_id uuid, p_approver_id uuid, p_decision text, p_stage text)
 RETURNS jsonb
@@ -64,9 +63,8 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award points AND tokens to participant
-      PERFORM add_points_to_user(v_participant_id, v_points);
-      PERFORM add_tokens_to_user(v_participant_id, v_tokens);
+      -- Award points AND tokens to participant using the new unified function
+      PERFORM award_submission_rewards(p_submission_id, v_participant_id, v_mission_id, v_points, v_tokens);
       
       v_status := 'approved';
       
@@ -164,9 +162,8 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award both points AND tokens to participant
-      PERFORM add_points_to_user(v_participant_id, v_points);
-      PERFORM add_tokens_to_user(v_participant_id, v_tokens);
+      -- Award both points AND tokens to participant using the new unified function
+      PERFORM award_submission_rewards(p_submission_id, v_participant_id, v_mission_id, v_points, v_tokens);
       
       v_status := 'approved';
       
