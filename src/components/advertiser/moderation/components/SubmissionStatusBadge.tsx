@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { RotateCcw } from "lucide-react";
-import { Submission } from "../ModerationContent";
+import { Submission } from "@/types/missions";
 
 interface SubmissionStatusBadgeProps {
   submission: Submission;

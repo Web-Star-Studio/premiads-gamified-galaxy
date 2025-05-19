@@ -7,6 +7,7 @@ import SubmissionsLoading from './SubmissionsLoading';
 import { useToast } from '@/hooks/use-toast';
 import { Submission, toSubmission } from '@/types/missions';
 import { Button } from "@/components/ui/button";
+import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration';
 
 interface ModerationContentProps {
   refreshKey: number;
@@ -189,21 +190,23 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log(`Approving submission ${submission.id}, second instance: ${submission.second_instance}`);
       
-      // Call finalize_submission RPC directly
-      const { data, error } = await supabase.rpc('finalize_submission', {
-        p_submission_id: submission.id,
-        p_approver_id: approverId,
-        p_decision: 'approve',
-        p_stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+      // Use the finalizeMissionSubmission function
+      const result = await finalizeMissionSubmission({
+        submissionId: submission.id,
+        approverId: approverId,
+        decision: 'approve',
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
-      if (error) throw error;
+      if (!result.success || result.error) {
+        throw new Error(result.error || 'Erro ao aprovar submissão');
+      }
       
-      console.log('Submission approved successfully:', data);
+      console.log('Submission approved successfully:', result.data);
       
-      // Use safe access for potentially undefined properties
-      const pointsAwarded = typeof data === 'object' && data ? data.points_awarded || 0 : 0;
-      const tokensAwarded = typeof data === 'object' && data ? data.tokens_awarded || 0 : 0;
+      // Extract points and tokens awarded
+      const pointsAwarded = result.data?.points_awarded || 0;
+      const tokensAwarded = result.data?.tokens_awarded || 0;
       
       // Show success toast
       toast({
@@ -235,15 +238,17 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log(`Rejecting submission ${submission.id}, second instance: ${submission.second_instance}`);
       
-      // Call finalize_submission RPC directly
-      const { data, error } = await supabase.rpc('finalize_submission', {
-        p_submission_id: submission.id,
-        p_approver_id: approverId,
-        p_decision: 'reject',
-        p_stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+      // Use the finalizeMissionSubmission function
+      const result = await finalizeMissionSubmission({
+        submissionId: submission.id,
+        approverId: approverId,
+        decision: 'reject',
+        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
-      if (error) throw error;
+      if (!result.success || result.error) {
+        throw new Error(result.error || 'Erro ao rejeitar submissão');
+      }
       
       // If feedback is provided, update the submission
       if (feedback) {
@@ -253,7 +258,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
           .eq('id', submission.id);
       }
       
-      console.log('Submission rejected successfully:', data);
+      console.log('Submission rejected successfully:', result.data);
       
       // Show success toast
       toast({

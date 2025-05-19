@@ -1,19 +1,20 @@
+
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Edit, Eye, Trash, BarChart } from "lucide-react";
 import CampaignStatusBadge from "./CampaignStatusBadge";
 import { Campaign } from "./campaignData";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Mission } from "@/hooks/useMissionsTypes"; 
+import { Mission } from "@/hooks/missions/types"; 
 
 interface CampaignTableRowProps {
   campaign: Campaign;
-  onDelete: (id: string) => void; // Changed from number to string
+  onDelete: (id: string) => void; 
   onEdit: (campaign: Campaign) => void;
 }
 
 const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps) => {
-  // Default values for Mission type properties that don't exist on Mission
+  // Use optional chaining to safely access properties that might not exist
   const audience = campaign.audience || (campaign as any).target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
   const reward = campaign.reward || `${campaign.points} pontos`;

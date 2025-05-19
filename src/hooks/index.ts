@@ -10,13 +10,18 @@ export { useMissions } from './useMissions';
 export { 
   missionTypeLabels,
   missionTypeDescriptions,
-  getMissionTypeDescription, 
+  getMissionDifficulty,
+  getEstimatedTime
+} from './missions/types';
+
+// Import these from the correct location
+export {
+  getMissionTypeDescription,
   getMissionIcon,
   filterMissionsByType,
-  getMissionDifficulty,
-  getEstimatedTime,
   useMissionTypes
-} from './useMissionsTypes';
+} from './missions/types';
+
 // Re-export types with the correct syntax for isolatedModules
 export type { MissionType } from './useMissionsTypes';
 export { useReferrals } from './useReferrals';
