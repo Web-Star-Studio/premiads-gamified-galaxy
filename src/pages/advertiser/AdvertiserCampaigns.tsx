@@ -5,53 +5,63 @@ import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import CampaignsList from "@/components/advertiser/CampaignsList";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSounds } from "@/hooks/use-sounds";
-import { useNavigate } from "react-router-dom";
 import { BarChart3, LineChart, PieChart, TrendingUp, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
+import { useAdvertiserCampaigns } from "@/hooks/useAdvertiserCampaigns";
 
 const AdvertiserCampaigns = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { playSound } = useSounds();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("active");
   const { userName = "Desenvolvedor" } = useUser();
+  const { stats } = useAdvertiserCampaigns();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     playSound("pop");
   };
 
-  // Campaign stats summary
-  const stats = [
+  // Campaign stats mapped from the hook data
+  const statCards = [
     { 
       title: "Campanhas Ativas", 
-      value: "4", 
+      value: stats.activeCampaigns.toString(), 
       description: "campanhas em andamento", 
       icon: <TrendingUp className="h-4 w-4 text-green-400" /> 
     },
     { 
       title: "Total de Missões", 
-      value: "510", 
+      value: stats.totalCompletions.toString(), 
       description: "completadas neste mês", 
       icon: <BarChart3 className="h-4 w-4 text-blue-400" /> 
     },
     { 
       title: "Taxa de Conclusão", 
-      value: "78%", 
+      value: `${stats.completionRate}%`, 
       description: "média das campanhas", 
       icon: <PieChart className="h-4 w-4 text-purple-400" /> 
     },
     { 
       title: "Usuários Engajados", 
-      value: "286", 
+      value: stats.uniqueUsers.toString(), 
       description: "pessoas participantes", 
       icon: <Users className="h-4 w-4 text-pink-400" /> 
     },
   ];
+
+  // Map tab values to campaign filter values
+  const getFilterValue = (tabValue: string) => {
+    switch (tabValue) {
+      case "active": return "ativa";
+      case "pending": return "pendente";
+      case "completed": return "encerrada";
+      default: return null;
+    }
+  };
 
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -72,7 +82,7 @@ const AdvertiserCampaigns = () => {
             
             {/* Stats overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {stats.map((stat, index) => (
+              {statCards.map((stat, index) => (
                 <motion.div
                   key={stat.title}
                   initial={{ opacity: 0, y: 20 }}
@@ -117,15 +127,15 @@ const AdvertiserCampaigns = () => {
               </TabsList>
               
               <TabsContent value="active">
-                <CampaignsList initialFilter="ativa" />
+                <CampaignsList initialFilter={getFilterValue(activeTab)} />
               </TabsContent>
               
               <TabsContent value="pending">
-                <CampaignsList initialFilter="pendente" />
+                <CampaignsList initialFilter={getFilterValue(activeTab)} />
               </TabsContent>
               
               <TabsContent value="completed">
-                <CampaignsList initialFilter="encerrada" />
+                <CampaignsList initialFilter={getFilterValue(activeTab)} />
               </TabsContent>
             </Tabs>
           </div>

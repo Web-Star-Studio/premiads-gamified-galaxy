@@ -4,6 +4,8 @@ import { FormData, initialFormData } from '@/components/advertiser/campaign-form
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useToast } from '@/hooks/use-toast';
 import { Campaign } from '@/components/advertiser/campaignData';
+import useCampaignOperations from './advertiser/useCampaignOperations';
+import { useNavigate } from 'react-router-dom';
 
 interface UseCampaignFormProps {
   editCampaign?: Campaign | null;
@@ -16,6 +18,8 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { availableCredits } = useUserCredits();
   const { toast } = useToast();
+  const { createCampaign, updateCampaign, isSubmitting: isOperationSubmitting } = useCampaignOperations();
+  const navigate = useNavigate();
   
   // Total number of form steps
   const totalSteps = 4;
@@ -29,7 +33,7 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
         title: editCampaign.title,
         type: editCampaign.type as any,
         description: editCampaign.description || '',
-        audience: editCampaign.audience || (editCampaign as any).target_audience || '',
+        audience: editCampaign.target_audience || '',
         pointsRange: [
           editCampaign.points - 10,
           editCampaign.points + 10
@@ -57,10 +61,54 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
     }));
   };
   
+  // Handle form submission
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      let success;
+      
+      if (editCampaign) {
+        // Update existing campaign
+        success = await updateCampaign(editCampaign.id, formData);
+      } else {
+        // Create new campaign
+        success = await createCampaign(formData);
+      }
+      
+      if (success) {
+        toast({
+          title: editCampaign ? 'Campanha atualizada' : 'Campanha criada',
+          description: editCampaign 
+            ? 'Sua campanha foi atualizada com sucesso'
+            : 'Sua campanha foi criada com sucesso'
+        });
+        
+        // Redirect after success
+        setTimeout(() => {
+          navigate('/anunciante/campanhas');
+          onClose();
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Error submitting campaign:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao processar a campanha',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   // Navigation functions
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prevStep => prevStep + 1);
+    } else if (currentStep === totalSteps) {
+      // Submit the form when at the last step
+      handleSubmit();
     }
   };
   
@@ -70,6 +118,25 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
     }
   };
   
+  // Check if form is valid for submission
+  const isFormValid = (): boolean => {
+    // Basic validation for required fields
+    if (!formData.title || !formData.type) {
+      return false;
+    }
+    
+    if (!formData.startDate || !formData.endDate) {
+      return false;
+    }
+    
+    // Check if end date is after start date
+    if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+      return false;
+    }
+    
+    return true;
+  };
+  
   return {
     formData,
     updateFormData,
@@ -77,7 +144,9 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
     totalSteps,
     goToNextStep,
     goToPreviousStep,
-    isSubmitting,
-    setIsSubmitting
+    isSubmitting: isSubmitting || isOperationSubmitting,
+    setIsSubmitting,
+    isFormValid,
+    handleSubmit
   };
 };

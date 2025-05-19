@@ -5,7 +5,6 @@ import { Edit, Eye, Trash, BarChart } from "lucide-react";
 import CampaignStatusBadge from "./CampaignStatusBadge";
 import { Campaign } from "./campaignData";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Mission } from "@/hooks/missions/types"; 
 
 interface CampaignTableRowProps {
   campaign: Campaign;
@@ -14,11 +13,11 @@ interface CampaignTableRowProps {
 }
 
 const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps) => {
-  // Use optional chaining to safely access properties that might not exist
-  const audience = campaign.audience || (campaign as any).target_audience || 'Todos';
+  // Use properties from the campaign object with proper fallbacks
+  const audience = campaign.audience || campaign.target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
   const reward = campaign.reward || `${campaign.points} pontos`;
-  const expires = campaign.expires || ((campaign as any).end_date ? new Date((campaign as any).end_date).toLocaleDateString() : 'N/A');
+  const expires = campaign.expires || (campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'N/A');
 
   return (
     <TableRow key={campaign.id}>

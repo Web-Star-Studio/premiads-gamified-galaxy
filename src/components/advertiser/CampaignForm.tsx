@@ -11,6 +11,8 @@ import DatesStep from './campaign-form/DatesStep';
 import { Campaign } from './campaignData';
 import { useSounds } from '@/hooks/use-sounds';
 import { FormData } from './campaign-form/types';
+import { Button } from '@/components/ui/button';
+import { Save } from 'lucide-react';
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -27,8 +29,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     goToNextStep,
     goToPreviousStep,
     isSubmitting,
-    setIsSubmitting
+    handleSubmit,
+    isFormValid
   } = useCampaignForm({
+    editCampaign,
     onClose: () => {
       playSound('pop');
       onClose();
@@ -74,6 +78,8 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }
   };
   
+  const isLastStep = currentStep === totalSteps;
+  
   return (
     <Card className="bg-galaxy-darkPurple border-galaxy-purple">
       <CardHeader className="pb-4">
@@ -88,14 +94,34 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       </CardContent>
       
       <CardFooter className="flex justify-between border-t border-galaxy-purple/20 pt-4">
-        <FormNavigation 
-          step={currentStep}
-          totalSteps={steps.length}
-          handleBack={goToPreviousStep}
-          handleNext={goToNextStep}
-          onClose={onClose}
-          isNextDisabled={false}
-        />
+        {isLastStep ? (
+          <div className="flex w-full justify-between">
+            <Button
+              variant="outline"
+              onClick={goToPreviousStep}
+              disabled={isSubmitting}
+            >
+              Voltar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !isFormValid()}
+              className="gap-2"
+            >
+              {isSubmitting ? 'Processando...' : 'Concluir'}
+              {!isSubmitting && <Save className="h-4 w-4" />}
+            </Button>
+          </div>
+        ) : (
+          <FormNavigation 
+            step={currentStep}
+            totalSteps={steps.length}
+            handleBack={goToPreviousStep}
+            handleNext={goToNextStep}
+            onClose={onClose}
+            isNextDisabled={false}
+          />
+        )}
       </CardFooter>
     </Card>
   );

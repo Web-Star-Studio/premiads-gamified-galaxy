@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { FormData } from '@/components/advertiser/campaign-form/types';
 import { useAuth } from '@/hooks/useAuth';
-import { Mission } from '@/hooks/useMissionsTypes';
 
 // Helper function to format dates as ISO strings
 const formatDate = (date: Date | string): string => {

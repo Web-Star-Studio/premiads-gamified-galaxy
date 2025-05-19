@@ -7,7 +7,7 @@ import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
 import { useAdvertiserCampaigns } from '@/hooks/useAdvertiserCampaigns';
-import type { Mission } from '@/hooks/useMissionsTypes';
+import { supabase } from "@/integrations/supabase/client";
 
 interface CampaignsListProps {
   initialFilter?: string | null;
@@ -15,35 +15,50 @@ interface CampaignsListProps {
 
 const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<Mission | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
   const { playSound } = useSounds();
   const { toast } = useToast();
-  const { campaigns: fetchedCampaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
-  // Ensure type matches expected Mission[] for downstream components
-  const campaigns = fetchedCampaigns as unknown as Mission[];
+  const { campaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
   
   // Set initial filter when prop changes
   useEffect(() => {
     setFilterStatus(initialFilter);
   }, [initialFilter]);
   
-  // Filter missions based on search term and status filter
-  const filteredCampaigns = campaigns.filter(m => {
-    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus ? m.status === filterStatus : true;
+  // Filter campaigns based on search term and status filter
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const matchesSearch = campaign.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus ? campaign.status === filterStatus : true;
     return matchesSearch && matchesStatus;
   });
 
-  const handleDelete = (id: string) => { // Changed parameter type from number to string
-    // Refresh list after delete
-    refreshCampaigns();
-    playSound("error");
-    toast({
-      title: "Campanha removida",
-      description: `A campanha #${id} foi removida com sucesso`,
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      // Delete campaign from database
+      const { error } = await supabase
+        .from('missions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Refresh list after delete
+      refreshCampaigns();
+      playSound("error");
+      toast({
+        title: "Campanha removida",
+        description: `A campanha foi removida com sucesso`,
+      });
+    } catch (error: any) {
+      console.error("Erro ao remover campanha:", error);
+      toast({
+        title: "Erro ao remover campanha",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
   
   const handleCreateNew = () => {
@@ -56,15 +71,12 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     setShowCreateForm(false);
     setEditingCampaign(null);
     playSound("pop");
-    toast({
-      title: "Missão gerenciada",
-      description: editingCampaign ? "Missão atualizada com sucesso!" : "Nova missão criada com sucesso!",
-    });
+    
     // Refresh list to reflect changes
     refreshCampaigns();
   };
   
-  const handleEdit = (campaign: Mission) => {
+  const handleEdit = (campaign: any) => {
     setEditingCampaign(campaign);
     setShowCreateForm(true);
     playSound("pop");
@@ -80,15 +92,18 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   
   return (
     <div className="space-y-6">
-      {loading && <div>Carregando campanhas…</div>}
-      {showCreateForm ? (
+      {loading ? (
+        <div className="py-8 text-center text-gray-400">
+          <p>Carregando campanhas...</p>
+        </div>
+      ) : showCreateForm ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <CampaignForm 
             onClose={handleFormClose} 
-            editCampaign={editingCampaign as any}
+            editCampaign={editingCampaign}
           />
         </motion.div>
       ) : (
