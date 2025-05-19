@@ -6,6 +6,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { MissionSubmission } from "@/types/missions";
 import { useQueryClient } from "@tanstack/react-query";
 import { finalizeMissionSubmission, ValidationStage } from "@/lib/submissions/missionModeration";
+import { useRewardAnimations, RewardDetails } from "@/utils/rewardAnimations";
 
 interface UseSubmissionActionsProps {
   onRemove: (submissionId: string) => void;
@@ -16,6 +17,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
   const { toast } = useToast();
   const { playSound } = useSounds();
   const queryClient = useQueryClient();
+  const { showRewardNotification } = useRewardAnimations();
   
   /**
    * Handle submission approval and reward distribution
@@ -63,15 +65,35 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
 
       // Format reward information for toast message
       let rewardInfo = "";
-      if (rewardResult) {
-        if (rewardResult.badge_earned) {
+      const rewardResultObj = rewardResult as any;
+      
+      // Prepare reward details for notification
+      const rewardDetails: RewardDetails = {
+        points: result.data?.points_awarded || 0,
+      };
+      
+      if (rewardResultObj) {
+        if (rewardResultObj.badge_earned) {
           rewardInfo += " Badge concedido!";
+          rewardDetails.badge_earned = true;
+          rewardDetails.badge_name = submission.mission_title;
         }
-        if (rewardResult.loot_box_reward) {
-          rewardInfo += ` Loot box: ${rewardResult.loot_box_reward} (${rewardResult.loot_box_amount})!`;
+        
+        if (rewardResultObj.loot_box_reward) {
+          rewardInfo += ` Loot box: ${rewardResultObj.loot_box_reward} (${rewardResultObj.loot_box_amount})!`;
+          rewardDetails.loot_box_reward = rewardResultObj.loot_box_reward;
+          rewardDetails.loot_box_amount = rewardResultObj.loot_box_amount;
         }
-        if (rewardResult.streak_bonus > 0) {
-          rewardInfo += ` Bônus de sequência: +${rewardResult.streak_bonus} pontos!`;
+        
+        if (rewardResultObj.streak_bonus > 0) {
+          rewardInfo += ` Bônus de sequência: +${rewardResultObj.streak_bonus} pontos!`;
+          rewardDetails.streak_bonus = rewardResultObj.streak_bonus;
+          rewardDetails.current_streak = rewardResultObj.current_streak;
+        }
+        
+        // Display reward animation if there are special rewards
+        if (rewardResultObj.badge_earned || rewardResultObj.loot_box_reward || rewardResultObj.streak_bonus > 0) {
+          showRewardNotification(rewardDetails);
         }
       }
       
@@ -103,6 +125,8 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         // Invalidate queries related to the participant's profile to trigger UI updates
         queryClient.invalidateQueries({ queryKey: ['profile', participantId] });
         queryClient.invalidateQueries({ queryKey: ['mission_submissions'] });
+        queryClient.invalidateQueries({ queryKey: ['user_badges'] });
+        queryClient.invalidateQueries({ queryKey: ['loot_box_rewards'] });
       }
       
       onRemove(submission.id);

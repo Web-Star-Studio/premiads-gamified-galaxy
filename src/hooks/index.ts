@@ -1,44 +1,30 @@
 
-// UI hooks
-export { useIsMobile, useMediaQuery } from './use-mobile';
-export { useSounds } from './use-sounds';
-export { useToast } from './use-toast';
+import { useAuth } from "./useAuth";
+import { useToast } from "./use-toast";
+import { useUser } from "@/context/UserContext";
+import { useSounds } from "./use-sounds";
+import { useMissions } from "./useMissions";
+import { useRaffles } from "./useRaffles";
+import { useCashback } from "./useCashback";
+import { useMediaQuery } from "./use-mobile";
+import { useClientDashboard } from "./useClientDashboard";
+import { useClientProfile } from "./useClientProfile";
+import { useTheme } from "./use-theme";
 
-// Feature hooks
-export { useClientDashboard } from './useClientDashboard';
-export { useMissions } from './useMissions';
-export { 
-  missionTypeLabels,
-  missionTypeDescriptions,
-  getMissionDifficulty,
-  getEstimatedTime
-} from './missions/types';
-
-// Import these from the correct location
+// Re-export all hooks
 export {
-  getMissionTypeDescription,
-  getMissionIcon,
-  filterMissionsByType,
-  useMissionTypes
-} from './missions/types';
+  useAuth,
+  useToast,
+  useSounds,
+  useUser,
+  useMissions,
+  useRaffles,
+  useCashback,
+  useMediaQuery,
+  useClientDashboard,
+  useClientProfile,
+  useTheme
+};
 
-// Re-export types with the correct syntax for isolatedModules
-export type { MissionType } from './useMissionsTypes';
-export { useReferrals } from './useReferrals';
-export { useCashbackMarketplace } from './cashback';
-export { useUserCredits } from './useUserCredits';
-
-// Mission-specific hooks
-export * from './missions/useMissionFilters';
-export * from './missions/useMissionSubmit';
-export * from './missions/useMissionsFetch';
-export * from './missions/types';
-
-// Admin hooks
-export * from './admin';
-
-// Authentication hooks
-export { useAuth } from './useAuth';
-export { useAuthMethods } from './useAuthMethods';
-export { useAuthRedirection } from './useAuthRedirection';
-export { useAuthSession } from './useAuthSession';
+// Re-export types using 'export type'
+export type { Mission } from "./missions/types";

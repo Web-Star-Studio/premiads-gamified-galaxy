@@ -26,7 +26,6 @@ export interface Campaign {
   
   // Legacy fields for backward compatibility
   has_badges?: boolean; // Legacy field, use has_badge instead
-  has_lootbox?: boolean;
   streak_bonus?: boolean; // Legacy field, use sequence_bonus instead
   
   // Additional fields that might be needed

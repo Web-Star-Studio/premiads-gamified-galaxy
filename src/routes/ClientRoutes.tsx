@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -16,6 +17,7 @@ const Tour = lazy(() => import("@/pages/Tour"));
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Faq = lazy(() => import("@/pages/Faq"));
 const ClientNotifications = lazy(() => import("@/pages/client/ClientNotifications"));
+const RewardsPage = lazy(() => import("@/pages/client/RewardsPage"));
 
 const ClientRoutes = () => {
   return (
@@ -43,6 +45,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="sorteios" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -50,6 +53,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="indicacoes" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -57,6 +61,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="cashback" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -64,6 +69,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="suporte" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -71,6 +77,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="tour" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -78,6 +85,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="como-funciona" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -85,6 +93,7 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="faq" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
@@ -92,10 +101,19 @@ const ClientRoutes = () => {
           </Suspense>
         </RouteGuard>
       } />
+      
       <Route path="notificacoes" element={
         <RouteGuard>
           <Suspense fallback={<LoadingSpinner />}>
             <ClientNotifications />
+          </Suspense>
+        </RouteGuard>
+      } />
+      
+      <Route path="recompensas" element={
+        <RouteGuard>
+          <Suspense fallback={<LoadingSpinner />}>
+            <RewardsPage />
           </Suspense>
         </RouteGuard>
       } />

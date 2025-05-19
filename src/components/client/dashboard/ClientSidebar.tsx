@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut } from 'lucide-react';
+import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, TreasureChest, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Sidebar, 
@@ -78,12 +78,12 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
               
               <SidebarMenuItem>
                 <SidebarMenuButton 
-                  isActive={isActive('/cliente/perfil')}
+                  isActive={isActive('/cliente/recompensas')}
                   asChild
                 >
-                  <Link to="/cliente/perfil">
-                    <User />
-                    <span>Perfil</span>
+                  <Link to="/cliente/recompensas">
+                    <TreasureChest />
+                    <span>Recompensas</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -96,6 +96,30 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
                   <Link to="/cliente/sorteios">
                     <Gift />
                     <span>Sorteios</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/perfil')}
+                  asChild
+                >
+                  <Link to="/cliente/perfil">
+                    <User />
+                    <span>Perfil</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  isActive={isActive('/cliente/notificacoes')}
+                  asChild
+                >
+                  <Link to="/cliente/notificacoes">
+                    <Bell />
+                    <span>Notificações</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
