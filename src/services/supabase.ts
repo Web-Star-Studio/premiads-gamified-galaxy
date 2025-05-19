@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
@@ -7,7 +8,7 @@ import {
   UserTokens,
   ValidationLog,
   MissionReward
-} from '@/hooks/useMissionsTypes';
+} from '@/types/missions';
 
 // Inicialização lazy do cliente - usando a instância existente
 let supabaseInstance = supabaseClient;
@@ -195,32 +196,47 @@ export const missionService = {
         
       if (getError) throw getError;
       
+      // Create update payload
+      let updatePayload: any = {
+        validated_by: validatedBy,
+        updated_at: new Date().toISOString()
+      };
+      
       let newStatus;
       if (result === 'aprovado') {
-        payload.status = 'approved';
-        payload.review_stage = 'finalized';
+        updatePayload.status = 'approved';
+        updatePayload.review_stage = 'finalized';
       } else if (result === 'rejeitado') {
         if (isAdmin) {
-          newStatus = 'rejected';
+          updatePayload.status = 'rejected';
         } else {
-          newStatus = 'segunda_instancia';
+          updatePayload.status = 'second_instance_pending';
         }
       } else if (result === 'segunda_instancia') {
-        payload.status = 'second_instance_pending';
-        payload.review_stage = 'second_instance';
-        payload.second_instance = true;
+        updatePayload.status = 'second_instance_pending';
+        updatePayload.review_stage = 'second_instance';
+        updatePayload.second_instance = true;
       }
 
-      console.log(`Atualizando submissão ${submissionId} para status: ${payload.status}`, payload);
+      console.log(`Atualizando submissão ${submissionId} para status: ${updatePayload.status}`, updatePayload);
       
       const { data: submission, error: submissionError } = await client
         .from('mission_submissions')
-        .update(payload)
+        .update(updatePayload)
         .eq('id', submissionId)
         .select()
         .single();
       
       if (submissionError) throw submissionError;
+      
+      // Create validation log
+      const validationLog = {
+        submission_id: submissionId,
+        validated_by: validatedBy,
+        is_admin: isAdmin,
+        result: result,
+        notes: notes
+      };
       
       const { error: logError } = await client
         .from('mission_validation_logs')
@@ -269,7 +285,7 @@ export const missionService = {
     // This function as-is uses a non-atomic read-then-write and might be redundant.
 
     // Option 1: Call a new RPC (e.g., 'increment_credits') - PREFERRED for general use
-    // const { data, error } = await client.rpc('increment_user_credits', { p_user_id: userId, p_amount: amount });
+    // const { data, error } = await client.rpc('increment_user_credits', { user_id: userId, credits_to_add: amount });
     // if (error) throw error;
     // return data; // Adjust return shape as needed
 

@@ -5,7 +5,6 @@ import SubmissionsList from './SubmissionsList';
 import SubmissionsEmptyState from './SubmissionsEmptyState';
 import SubmissionsLoading from './SubmissionsLoading';
 import { useToast } from '@/hooks/use-toast';
-import { useMissionModeration } from '@/hooks/use-mission-moderation.hook';
 import { Submission, toSubmission } from '@/types/missions';
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +12,7 @@ interface ModerationContentProps {
   refreshKey: number;
 }
 
-interface FilterOptions {
+export interface FilterOptions {
   status: string;
   searchQuery: string;
 }
@@ -30,13 +29,14 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState<string>('pending'); 
   const { toast } = useToast();
-  const { mutate: finalizeMissionSubmission, isPending: isProcessing } = useMissionModeration();
   
   // Set up real-time listener for mission submissions
   useEffect(() => {
+    console.log('Setting up realtime channel for mission_submissions');
+    
     // Subscribe to mission_submissions changes
     const channel = supabase
-      .channel('public:mission_submissions')
+      .channel('mission-submissions-changes')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -50,6 +50,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
     // Clean up subscription
     return () => {
+      console.log('Cleaning up realtime channel');
       supabase.removeChannel(channel);
     };
   }, []);
@@ -57,7 +58,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   // Fetch missions and submissions
   useEffect(() => {
     fetchData();
-  }, [refreshKey, toast, activeTab, selectedMissionId]);
+  }, [refreshKey, activeTab, selectedMissionId]);
   
   const fetchData = async () => {
     setLoading(true);
@@ -70,20 +71,30 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       if (!userId) throw new Error('Usuário não autenticado');
       
-      // Get all missions for this advertiser
+      console.log('Fetching missions for user:', userId);
+      
+      // Get all missions for this advertiser using created_by field
       const { data: missionsData, error: missionsError } = await supabase
         .from('missions')
         .select('id, title')
-        .eq('advertiser_id', userId);
+        .eq('created_by', userId);
+        
       if (missionsError) throw missionsError;
+      
+      console.log('Missions found:', missionsData?.length || 0);
+      
       if (!missionsData || missionsData.length === 0) {
         setMissions([])
         setSubmissions([]);
         setLoading(false);
         return;
       }
+      
       setMissions(missionsData)
       const missionIds = missionsData.map(m => m.id);
+      
+      console.log('Fetching submissions for mission IDs:', missionIds);
+      console.log('Current active tab:', activeTab);
       
       // Get submissions for selected mission(s)
       let submissionsQuery = supabase
@@ -93,6 +104,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
           user:user_id(profiles(full_name, avatar_url)), 
           missions:mission_id(title)`
         );
+        
       if (selectedMissionId === 'all') {
         submissionsQuery = submissionsQuery.in('mission_id', missionIds)
       } else {
@@ -101,8 +113,12 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       // Filter by status
       submissionsQuery = submissionsQuery.eq('status', activeTab).order('submitted_at', { ascending: false })
+      
       const { data: submissionsData, error: submissionsError } = await submissionsQuery;
+      
       if (submissionsError) throw submissionsError;
+      
+      console.log('Submissions found:', submissionsData?.length || 0);
       
       // Transform data to match the Submission interface
       const transformedSubmissions = (submissionsData || []).map((sub: any) => {
@@ -130,10 +146,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   }
   
   const handleApprove = async (submission: Submission) => {
-    if (!submission?.id) return;
-    
     try {
-      // Get current user ID
       const { data: session } = await supabase.auth.getSession();
       const approverId = session?.session?.user?.id;
       
@@ -141,15 +154,31 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         throw new Error('Usuário não autenticado');
       }
       
-      finalizeMissionSubmission({
-        submissionId: submission.id,
-        approverId,
-        decision: 'approve',
-        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+      console.log(`Approving submission ${submission.id}, second instance: ${submission.second_instance}`);
+      
+      // Call finalize_submission RPC directly
+      const { data, error } = await supabase.rpc('finalize_submission', {
+        p_submission_id: submission.id,
+        p_approver_id: approverId,
+        p_decision: 'approve',
+        p_stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
       
-      // Remove this submission from the list
-      setSubmissions(prev => prev.filter(s => s.id !== submission.id));
+      if (error) throw error;
+      
+      console.log('Submission approved successfully:', data);
+      
+      // Show success toast
+      toast({
+        title: "Submissão aprovada",
+        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${data.points_awarded} pontos e ${data.tokens_awarded} tokens atribuídos.`,
+      });
+      
+      // Play sound effect
+      // This would require importing and using the useSounds hook
+      
+      // Refetch data
+      fetchData();
       
     } catch (err: any) {
       console.error('Error approving submission:', err);
@@ -162,10 +191,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   };
   
   const handleReject = async (submission: Submission, feedback: string = '') => {
-    if (!submission?.id) return;
-    
     try {
-      // Get current user ID
       const { data: session } = await supabase.auth.getSession();
       const approverId = session?.session?.user?.id;
       
@@ -173,12 +199,17 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         throw new Error('Usuário não autenticado');
       }
       
-      finalizeMissionSubmission({
-        submissionId: submission.id,
-        approverId,
-        decision: 'reject',
-        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+      console.log(`Rejecting submission ${submission.id}, second instance: ${submission.second_instance}`);
+      
+      // Call finalize_submission RPC directly
+      const { data, error } = await supabase.rpc('finalize_submission', {
+        p_submission_id: submission.id,
+        p_approver_id: approverId,
+        p_decision: 'reject',
+        p_stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
+      
+      if (error) throw error;
       
       // If feedback is provided, update the submission
       if (feedback) {
@@ -188,8 +219,16 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
           .eq('id', submission.id);
       }
       
-      // Remove this submission from the list
-      setSubmissions(prev => prev.filter(s => s.id !== submission.id));
+      console.log('Submission rejected successfully:', data);
+      
+      // Show success toast
+      toast({
+        title: "Submissão rejeitada",
+        description: `Submissão de ${submission.user_name || 'usuário'} foi rejeitada.`,
+      });
+      
+      // Refetch data
+      fetchData();
       
     } catch (err: any) {
       console.error('Error rejecting submission:', err);

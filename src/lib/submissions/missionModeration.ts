@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Mission, MissionSubmission } from "@/types/missions";
+import { MissionSubmission, Submission, Mission } from "@/types/missions";
 import { toSubmission } from "@/types/missions";
 
 // Different validation stages
@@ -82,16 +82,8 @@ export async function getMissionById(missionId: string): Promise<Mission | null>
     return null;
   }
   
-  // Transform raw data to conform to Mission interface
-  const mission: Mission = {
-    ...data,
-    audience: data.target_audience,
-    reward: data.points,
-    expires: data.expires_at,
-    completions: 0 // Default value for compatibility
-  };
-  
-  return mission;
+  // Return the raw mission data
+  return data as Mission;
 }
 
 /**
@@ -103,7 +95,7 @@ export async function getSubmissionById(submissionId: string): Promise<MissionSu
     .select(`
       *,
       missions:mission_id(title),
-      user:user_id(profiles(full_name, avatar_url))
+      user:user_id(id, full_name, avatar_url)
     `)
     .eq('id', submissionId)
     .single();
@@ -118,8 +110,8 @@ export async function getSubmissionById(submissionId: string): Promise<MissionSu
   // Transform the raw data to match the MissionSubmission interface
   const submission = toSubmission({
     ...data,
-    user_name: data.user?.profiles?.[0]?.full_name || "Usuário",
-    user_avatar: data.user?.profiles?.[0]?.avatar_url,
+    user_name: data.user?.full_name || "Usuário",
+    user_avatar: data.user?.avatar_url,
     mission_title: data.missions?.title || "Missão"
   });
   
@@ -135,7 +127,7 @@ export async function getSubmissionsForMission(missionId: string): Promise<Missi
     .select(`
       *,
       missions:mission_id(title),
-      user:user_id(profiles(full_name, avatar_url))
+      user:user_id(id, full_name, avatar_url)
     `)
     .eq('mission_id', missionId)
     .order('submitted_at', { ascending: false });
@@ -151,8 +143,8 @@ export async function getSubmissionsForMission(missionId: string): Promise<Missi
   const submissions: MissionSubmission[] = data.map(item => {
     return toSubmission({
       ...item,
-      user_name: item.user?.profiles?.[0]?.full_name || "Usuário",
-      user_avatar: item.user?.profiles?.[0]?.avatar_url,
+      user_name: item.user?.full_name || "Usuário",
+      user_avatar: item.user?.avatar_url,
       mission_title: item.missions?.title || "Missão"
     });
   });

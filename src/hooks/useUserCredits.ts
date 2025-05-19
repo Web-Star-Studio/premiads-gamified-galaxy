@@ -31,7 +31,7 @@ export function useUserCredits() {
       
       // Subscribe to profile changes (credits are stored in profiles table)
       subscription = supabase
-        .channel('profile-credits-changes')
+        .channel('public:profiles')
         .on('postgres_changes', 
           {
             event: 'UPDATE',
@@ -74,7 +74,7 @@ export function useUserCredits() {
         )
         .subscribe();
       
-      console.log('Subscribed to profile-credits-changes channel');
+      console.log('Subscribed to public:profiles channel');
       setIsInitialized(true);
     };
     
@@ -83,7 +83,7 @@ export function useUserCredits() {
     // Cleanup subscription on unmount
     return () => {
       if (subscription) {
-        console.log('Unsubscribing from profile-credits-changes channel');
+        console.log('Unsubscribing from public:profiles channel');
         supabase.removeChannel(subscription);
       }
     };
