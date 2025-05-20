@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Clock, Award } from "lucide-react";
+import { Clock, Award, Badge as BadgeIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSounds } from "@/hooks/use-sounds";
 import { Mission } from "@/hooks/useMissions";
@@ -58,8 +58,9 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                   </Badge>
                   
                   {mission.has_badge && (
-                    <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30">
-                      Badge
+                    <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30 flex items-center gap-1">
+                      <BadgeIcon className="w-3 h-3" />
+                      <span>Badge</span>
                     </Badge>
                   )}
                 </div>

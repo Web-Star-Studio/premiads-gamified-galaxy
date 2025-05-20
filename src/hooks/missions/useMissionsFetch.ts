@@ -88,6 +88,13 @@ export const useMissionsFetch = () => {
           // Use type assertion with any to access non-standard fields safely
           const missionData: any = mission;
 
+          // Log mission rewards data for debugging
+          console.log(`Mission ${mission.id} - ${mission.title} rewards:`, {
+            has_badge: mission.has_badge || false,
+            has_lootbox: mission.has_lootbox || false,
+            sequence_bonus: mission.sequence_bonus || false
+          });
+
           return {
             id: mission.id,
             title: mission.title,

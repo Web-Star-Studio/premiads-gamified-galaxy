@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -158,6 +157,13 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
             
           // Show appropriate notification
           if (missionData) {
+            console.log("Mission reward details:", {
+              points: missionData.points,
+              has_badge: missionData.has_badge,
+              has_lootbox: missionData.has_lootbox,
+              title: missionData.title
+            });
+            
             const rewardDetails: RewardDetails = {
               points: missionData.points || 0,
               badge_earned: missionData.has_badge,
@@ -183,7 +189,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
         if (mission.id === missionId) {
           return {
             ...mission,
-            status: dbStatus,
+            status: status === "in_progress" ? "in_progress" : "pending_approval",
           };
         }
         return mission;

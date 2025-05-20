@@ -56,7 +56,7 @@ const RewardsPage = () => {
         throw badgesError;
       }
       
-      console.log("Fetched badges:", badgesData?.length || 0);
+      console.log("Fetched badges:", badgesData?.length || 0, badgesData);
       setBadges(badgesData || []);
 
       // Fetch loot boxes with mission details
@@ -78,7 +78,7 @@ const RewardsPage = () => {
         throw lootBoxesError;
       }
       
-      console.log("Fetched loot boxes:", lootBoxesData?.length || 0);
+      console.log("Fetched loot boxes:", lootBoxesData?.length || 0, lootBoxesData);
       setLootBoxes(lootBoxesData || []);
 
       // Fetch daily streaks with mission details
@@ -100,7 +100,7 @@ const RewardsPage = () => {
         throw streaksError;
       }
       
-      console.log("Fetched daily streaks:", streaksData?.length || 0);
+      console.log("Fetched daily streaks:", streaksData?.length || 0, streaksData);
       setDailyStreaks(streaksData || []);
       
       // Play a sound if we have rewards
@@ -125,10 +125,12 @@ const RewardsPage = () => {
   useEffect(() => {
     fetchRewards();
     
-    // Set up a listener for location changes to refetch data
-    // This ensures data is updated when navigating back to this page
+    // Set up a refresh interval to check for new rewards
+    const refreshInterval = setInterval(fetchRewards, 30000); // Check every 30 seconds
+    
+    // Cleanup interval on unmount
     return () => {
-      // Cleanup if needed
+      clearInterval(refreshInterval);
     };
   }, [location.key, toast, playSound]);
 

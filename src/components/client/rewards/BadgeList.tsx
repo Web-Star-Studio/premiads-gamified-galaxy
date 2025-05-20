@@ -87,7 +87,7 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
                 <div className="flex items-center gap-4">
                   <div className="relative h-16 w-16 flex-shrink-0">
                     <Player
-                      src={getBadgeAnimation(badge)}
+                      src={badge.badge_image_url || getBadgeAnimation(badge)}
                       className="absolute inset-0"
                       autoplay
                       loop
@@ -132,7 +132,7 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
             <div className="flex flex-col items-center py-6">
               <div className="h-40 w-40 mb-6">
                 <Player
-                  src={getBadgeAnimation(selectedBadge)}
+                  src={selectedBadge.badge_image_url || getBadgeAnimation(selectedBadge)}
                   className="h-full w-full"
                   autoplay
                   loop
