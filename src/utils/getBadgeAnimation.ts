@@ -1,4 +1,3 @@
-
 // Map mission type to appropriate Lottie animation
 export const getBadgeAnimationForMissionType = (missionType?: string): string => {
   // Default animation if no type is provided
@@ -55,8 +54,19 @@ export const generateBadgeName = (missionTitle: string): string => {
 };
 
 // Generate a badge description based on mission title
-export const generateBadgeDescription = (missionTitle: string): string => {
-  if (!missionTitle) return "Badge earned for completing a mission";
+export const generateBadgeDescription = (missionTitle?: string): string => {
+  if (!missionTitle) return "Conquista especial desbloqueada por completar uma missão";
   
-  return `Badge earned for completing "${missionTitle}" mission`;
+  // Generate a slightly random description for variety
+  const templates = [
+    `Parabéns! Você completou a missão "${missionTitle}" com sucesso.`,
+    `Conquista desbloqueada por completar a missão "${missionTitle}".`,
+    `Badge especial concedido por sua excelência na missão "${missionTitle}".`,
+    `Sua dedicação na missão "${missionTitle}" foi reconhecida com esta badge.`,
+    `Esta badge celebra sua conquista na missão "${missionTitle}".`
+  ];
+  
+  // Pick a random template
+  const randomIndex = Math.floor(Math.random() * templates.length);
+  return templates[randomIndex];
 };

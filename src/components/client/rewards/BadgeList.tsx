@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Award, Calendar, Info } from "lucide-react";
 import { Player } from "@lottiefiles/react-lottie-player";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +43,32 @@ interface BadgeListProps {
 
 const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [previousBadgeCount, setPreviousBadgeCount] = useState(0);
+  const [newBadgeIds, setNewBadgeIds] = useState<string[]>([]);
   const { playSound } = useSounds();
+
+  // Track new badges when the list updates
+  useEffect(() => {
+    // If we have more badges than before, highlight the new ones
+    if (badges.length > previousBadgeCount) {
+      const currentIds = badges.map(badge => badge.id);
+      const previousIds = newBadgeIds;
+      
+      // Find new badge IDs
+      const newIds = currentIds.filter(id => !previousIds.includes(id));
+      
+      if (newIds.length > 0) {
+        // Play award sound
+        playSound('success');
+        
+        // Set new badge IDs for animation
+        setNewBadgeIds([...previousIds, ...newIds]);
+      }
+    }
+    
+    // Update previous count
+    setPreviousBadgeCount(badges.length);
+  }, [badges, previousBadgeCount, newBadgeIds, playSound]);
 
   const handleOpenBadge = (badge: Badge) => {
     setSelectedBadge(badge);
@@ -52,6 +76,9 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
   };
 
   const getBadgeAnimation = (badge: Badge): string => {
+    // Return the badge_image_url if it exists
+    if (badge.badge_image_url) return badge.badge_image_url;
+    
     // Logic to determine which animation to use based on badge info or mission type
     // For now, just returning a default animation
     
@@ -70,52 +97,82 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
     return BADGE_ANIMATIONS[missionType] || BADGE_ANIMATIONS.default;
   };
 
+  // Check if a badge is new
+  const isNewBadge = (badge: Badge): boolean => {
+    return newBadgeIds.includes(badge.id);
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {badges.map((badge) => (
-          <motion.div 
-            key={badge.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={() => handleOpenBadge(badge)}
-            className="cursor-pointer"
-          >
-            <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/20 hover:bg-galaxy-deepPurple/40 transition-all duration-300 overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-16 w-16 flex-shrink-0">
-                    <Player
-                      src={badge.badge_image_url || getBadgeAnimation(badge)}
-                      className="absolute inset-0"
-                      autoplay
-                      loop
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-white truncate">{badge.badge_name}</h3>
-                    <p className="text-sm text-gray-400 mt-1 truncate">
-                      {badge.badge_description || `Conquista pela missão "${badge.missions?.title || 'Desconhecida'}"`}
-                    </p>
+        <AnimatePresence>
+          {badges.map((badge) => (
+            <motion.div 
+              key={badge.id}
+              initial={{ opacity: 0, y: 20, scale: isNewBadge(badge) ? 0.5 : 1 }}
+              animate={{ 
+                opacity: 1, 
+                y: 0, 
+                scale: 1,
+                boxShadow: isNewBadge(badge) ? "0 0 15px 5px rgba(156, 39, 176, 0.7)" : "none"
+              }}
+              transition={{ 
+                duration: isNewBadge(badge) ? 0.8 : 0.3,
+                type: isNewBadge(badge) ? "spring" : "tween",
+                bounce: isNewBadge(badge) ? 0.5 : 0
+              }}
+              onClick={() => handleOpenBadge(badge)}
+              className="cursor-pointer relative"
+            >
+              {isNewBadge(badge) && (
+                <motion.div 
+                  className="absolute -top-2 -right-2 z-10 bg-neon-pink text-white text-xs rounded-full px-2 py-1 font-bold"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  NOVO!
+                </motion.div>
+              )}
+              <Card className={`border-galaxy-purple/30 ${
+                isNewBadge(badge) 
+                  ? 'bg-galaxy-deepPurple/40 border-neon-pink/70' 
+                  : 'bg-galaxy-deepPurple/20'
+              } hover:bg-galaxy-deepPurple/40 transition-all duration-300 overflow-hidden`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-16 w-16 flex-shrink-0">
+                      <Player
+                        src={badge.badge_image_url || getBadgeAnimation(badge)}
+                        className="absolute inset-0"
+                        autoplay
+                        loop
+                      />
+                    </div>
                     
-                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        {new Date(badge.earned_at).toLocaleDateString('pt-BR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-medium text-white truncate">{badge.badge_name}</h3>
+                      <p className="text-sm text-gray-400 mt-1 truncate">
+                        {badge.badge_description || `Conquista pela missão "${badge.missions?.title || 'Desconhecida'}"`}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          {new Date(badge.earned_at).toLocaleDateString('pt-BR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
       
       {/* Badge Details Dialog */}

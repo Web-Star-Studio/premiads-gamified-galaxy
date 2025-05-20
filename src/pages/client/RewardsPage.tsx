@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Award, Gift, Calendar, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,12 +124,54 @@ const RewardsPage = () => {
   useEffect(() => {
     fetchRewards();
     
+    // Set up a realtime subscription for badges
+    const badgesSubscription = supabase
+      .channel('user_badges_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_badges',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}` 
+        }, 
+        (payload) => {
+          console.log('Received badge update:', payload);
+          // Refresh rewards when a badge is added/updated
+          fetchRewards();
+          // Play a notification sound
+          playSound('reward');
+        }
+      )
+      .subscribe();
+    
+    // Set up a realtime subscription for loot boxes
+    const lootBoxesSubscription = supabase
+      .channel('loot_box_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'loot_box_rewards',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
+        }, 
+        (payload) => {
+          console.log('Received loot box update:', payload);
+          // Refresh rewards when a loot box is added
+          fetchRewards();
+          // Play a notification sound
+          playSound('reward');
+        }
+      )
+      .subscribe();
+    
     // Set up a refresh interval to check for new rewards
     const refreshInterval = setInterval(fetchRewards, 30000); // Check every 30 seconds
     
-    // Cleanup interval on unmount
+    // Cleanup interval and subscriptions on unmount
     return () => {
       clearInterval(refreshInterval);
+      badgesSubscription.unsubscribe();
+      lootBoxesSubscription.unsubscribe();
     };
   }, [location.key, toast, playSound]);
 

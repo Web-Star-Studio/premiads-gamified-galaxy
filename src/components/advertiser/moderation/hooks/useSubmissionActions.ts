@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +6,7 @@ import { MissionSubmission } from "@/types/missions";
 import { useQueryClient } from "@tanstack/react-query";
 import { finalizeMissionSubmission, ValidationStage } from "@/lib/submissions/missionModeration";
 import { useRewardAnimations, RewardDetails } from "@/utils/rewardAnimations";
+import { getBadgeAnimationForMissionType, generateBadgeDescription } from '@/utils/getBadgeAnimation'
 
 interface UseSubmissionActionsProps {
   onRemove: (submissionId: string) => void;
@@ -69,6 +69,43 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
           rewardInfo += " Badge concedido!";
           rewardDetails.badge_earned = true;
           rewardDetails.badge_name = submission.mission_title;
+          
+          // Create or update badge record with proper image URL and description
+          const { data: missionInfo } = await supabase
+            .from('missions')
+            .select('has_badge, type, title')
+            .eq('id', submission.mission_id)
+            .single()
+          if (missionInfo?.has_badge) {
+            const badgeName = missionInfo.title
+            const badgeDescription = generateBadgeDescription(missionInfo.title)
+            const badgeImageUrl = getBadgeAnimationForMissionType(missionInfo.type)
+            
+            const { data: existingBadge } = await supabase
+              .from('user_badges')
+              .select('id, badge_image_url')
+              .eq('user_id', submission.user_id)
+              .eq('mission_id', submission.mission_id)
+              .single()
+            
+            if (!existingBadge) {
+              await supabase.from('user_badges').insert({
+                user_id: submission.user_id,
+                mission_id: submission.mission_id,
+                badge_name: badgeName,
+                badge_description: badgeDescription,
+                badge_image_url: badgeImageUrl,
+                earned_at: new Date().toISOString()
+              })
+            } else if (!existingBadge.badge_image_url) {
+              await supabase.from('user_badges').update({
+                badge_name: badgeName,
+                badge_description: badgeDescription,
+                badge_image_url: badgeImageUrl
+              }).eq('id', existingBadge.id)
+            }
+            queryClient.invalidateQueries({ queryKey: ['user_badges'] })
+          }
         }
         
         if (rewardData.loot_box_reward) {
