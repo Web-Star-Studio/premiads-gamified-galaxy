@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -48,7 +47,8 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         throw new Error(result.error || "Falha ao finalizar a submissão via RPC.");
       }
 
-      // Now process additional rewards using the new process_mission_rewards function
+      // Now process additional rewards using the process_mission_rewards function
+      console.log("Processing additional rewards with process_mission_rewards RPC call");
       const { data: rewardResult, error: rewardError } = await supabase.rpc(
         'process_mission_rewards',
         {
@@ -60,7 +60,10 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
 
       if (rewardError) {
         console.error("Error processing rewards:", rewardError);
-        // Continue anyway since the primary approval was successful
+        // Log more details about the error
+        console.error("Error details:", rewardError.message, rewardError.details, rewardError.hint);
+      } else {
+        console.log("Reward processing succeeded:", rewardResult);
       }
 
       // Format reward information for toast message
@@ -73,6 +76,8 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       };
       
       if (rewardResultObj) {
+        console.log("Reward result details:", rewardResultObj);
+        
         if (rewardResultObj.badge_earned) {
           rewardInfo += " Badge concedido!";
           rewardDetails.badge_earned = true;
@@ -93,6 +98,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         
         // Display reward animation if there are special rewards
         if (rewardResultObj.badge_earned || rewardResultObj.loot_box_reward || rewardResultObj.streak_bonus > 0) {
+          console.log("Showing reward notification with details:", rewardDetails);
           showRewardNotification(rewardDetails);
         }
       }

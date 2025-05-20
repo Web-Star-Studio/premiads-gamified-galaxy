@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { FileText, Image, Camera, Share2, MapPin, Tag, Star, CheckCircle, Award, Trophy, Zap, ShieldCheck } from "lucide-react";
@@ -57,7 +58,7 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
                 </div>
               </div>
               
-              {mission.has_badges && (
+              {(mission.has_badge || mission.has_badges) && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neon-pink/20">
                     <Trophy className="w-4 h-4 text-neon-pink" />
@@ -68,7 +69,7 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
                 </div>
               )}
               
-              {mission.streak_bonus && (
+              {(mission.sequence_bonus || mission.streak_bonus) && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-neon-yellow/20">
                     <Zap className="w-4 h-4 text-neon-yellow" />
@@ -81,7 +82,7 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
                 </div>
               )}
               
-              {mission.has_lootbox && (
+              {(mission.has_lootbox) && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20">
                     <ShieldCheck className="w-4 h-4 text-purple-400" />
