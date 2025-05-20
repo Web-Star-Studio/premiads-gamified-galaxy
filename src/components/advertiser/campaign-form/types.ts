@@ -19,8 +19,10 @@ export interface FormData {
     age?: [string, string];
     gender?: string;
     region?: string[];
+    interests?: string[]; // Adding missing 'interests' property
   };
   badgeImageUrl?: string | null; // URL to stored badge image
+  minPurchase?: number; // Adding missing 'minPurchase' property
 }
 
 // Default initial values for campaign form
@@ -41,7 +43,9 @@ export const initialFormData: FormData = {
   targetFilter: {
     age: ["18", "65"],
     gender: "all",
-    region: []
+    region: [],
+    interests: [] // Initialize interests as empty array
   },
-  badgeImageUrl: null
+  badgeImageUrl: null,
+  minPurchase: 0 // Default value for minPurchase
 };
