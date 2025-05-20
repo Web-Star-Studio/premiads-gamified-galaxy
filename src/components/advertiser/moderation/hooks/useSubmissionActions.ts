@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +7,12 @@ import { MissionSubmission } from "@/types/missions";
 import { useQueryClient } from "@tanstack/react-query";
 import { finalizeMissionSubmission, ValidationStage } from "@/lib/submissions/missionModeration";
 import { useRewardAnimations, RewardDetails } from "@/utils/rewardAnimations";
-import { getBadgeAnimationForMissionType, generateBadgeDescription } from '@/utils/getBadgeAnimation';
+import { 
+  getBadgeAnimationForMissionType, 
+  generateBadgeDescription, 
+  generateBadgeName,
+  isLottieAnimation
+} from '@/utils/getBadgeAnimation';
 
 interface UseSubmissionActionsProps {
   onRemove: (submissionId: string) => void;
@@ -50,9 +56,6 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
 
       console.log("Submission approved successfully, result:", result.data);
       
-      // The process_mission_rewards function is now called internally by finalize_submission
-      // so we don't need a separate RPC call here
-      
       // Extract reward details from the result for notification
       let rewardInfo = "";
       const rewardData = result.data;
@@ -73,20 +76,28 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
           // Create or update badge record with proper image URL and description
           const { data: missionInfo } = await supabase
             .from('missions')
-            .select('has_badge, type, title')
+            .select('has_badge, type, title, badge_image_url')
             .eq('id', submission.mission_id)
-            .single()
+            .single();
+            
           if (missionInfo?.has_badge) {
-            const badgeName = missionInfo.title
-            const badgeDescription = generateBadgeDescription(missionInfo.title)
-            const badgeImageUrl = getBadgeAnimationForMissionType(missionInfo.type)
+            const badgeName = generateBadgeName(missionInfo.title);
+            const badgeDescription = generateBadgeDescription(missionInfo.title);
+            
+            // Use the mission's badge_image_url if it exists, otherwise generate one based on mission type
+            let badgeImageUrl = missionInfo.badge_image_url;
+            if (!badgeImageUrl) {
+              badgeImageUrl = getBadgeAnimationForMissionType(missionInfo.type);
+            }
+            
+            console.log(`Creating/updating badge with image URL: ${badgeImageUrl}`);
             
             const { data: existingBadge } = await supabase
               .from('user_badges')
               .select('id, badge_image_url')
               .eq('user_id', submission.user_id)
               .eq('mission_id', submission.mission_id)
-              .single()
+              .single();
             
             if (!existingBadge) {
               await supabase.from('user_badges').insert({
@@ -96,15 +107,20 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
                 badge_description: badgeDescription,
                 badge_image_url: badgeImageUrl,
                 earned_at: new Date().toISOString()
-              })
-            } else if (!existingBadge.badge_image_url) {
+              });
+              console.log("Created new badge record");
+            } else if (!existingBadge.badge_image_url || isLottieAnimation(existingBadge.badge_image_url)) {
+              // Update if badge exists but has no image or is using Lottie (which might be blocked)
               await supabase.from('user_badges').update({
                 badge_name: badgeName,
                 badge_description: badgeDescription,
                 badge_image_url: badgeImageUrl
-              }).eq('id', existingBadge.id)
+              }).eq('id', existingBadge.id);
+              console.log("Updated existing badge record");
             }
-            queryClient.invalidateQueries({ queryKey: ['user_badges'] })
+            
+            // Force refresh badge data
+            queryClient.invalidateQueries({ queryKey: ['user_badges'] });
           }
         }
         

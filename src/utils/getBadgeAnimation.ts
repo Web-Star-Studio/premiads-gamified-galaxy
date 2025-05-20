@@ -30,10 +30,21 @@ export const generateBadgeDescription = (missionTitle?: string): string => {
 
 // Get badge animation URL based on mission type
 export const getBadgeAnimationForMissionType = (missionType: string): string => {
-  if (!missionType) return "https://assets7.lottiefiles.com/private_files/lf30_bfzkfm07.json";
+  if (!missionType) return "/images/badges/default-badge.svg";
   
   const type = missionType.toLowerCase();
   
+  // Return SVG paths first as they're more likely to work
+  if (type.includes('photo')) return "/images/badges/photo-badge.svg";
+  if (type.includes('form')) return "/images/badges/form-badge.svg";
+  if (type.includes('video')) return "/images/badges/video-badge.svg";
+  if (type.includes('survey')) return "/images/badges/survey-badge.svg";
+  if (type.includes('review')) return "/images/badges/review-badge.svg";
+  if (type.includes('coupon')) return "/images/badges/coupon-badge.svg";
+  if (type.includes('social')) return "/images/badges/social-badge.svg";
+  if (type.includes('checkin') || type.includes('check-in')) return "/images/badges/checkin-badge.svg";
+  
+  // Fallback to Lottie animations if SVGs aren't available
   if (type.includes('photo')) return "https://assets10.lottiefiles.com/packages/lf20_qm8eqtyw.json";
   if (type.includes('form')) return "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json";
   if (type.includes('video')) return "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json";
@@ -43,6 +54,31 @@ export const getBadgeAnimationForMissionType = (missionType: string): string => 
   if (type.includes('social')) return "https://assets9.lottiefiles.com/packages/lf20_wloxwm9w.json";
   if (type.includes('checkin') || type.includes('check-in')) return "https://assets3.lottiefiles.com/packages/lf20_9yi1lpr7.json";
   
-  // Default animation
-  return "https://assets7.lottiefiles.com/private_files/lf30_bfzkfm07.json";
+  // Default badge
+  return "/images/badges/default-badge.svg";
+};
+
+// Check if URL is a Lottie animation file
+export const isLottieAnimation = (url: string | null): boolean => {
+  if (!url) return false;
+  return url.endsWith('.json') || url.includes('lottiefiles.com');
+};
+
+// Check if URL is an image file (SVG, PNG, JPG)
+export const isImageFile = (url: string | null): boolean => {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.endsWith('.svg') || 
+         lowerUrl.endsWith('.png') || 
+         lowerUrl.endsWith('.jpg') || 
+         lowerUrl.endsWith('.jpeg') ||
+         lowerUrl.startsWith('/images/');
+};
+
+// Get a fallback URL if the badge image cannot be loaded
+export const getFallbackBadgeUrl = (missionType?: string): string => {
+  // Default badge SVG
+  return missionType ? 
+    `/images/badges/${missionType.toLowerCase().replace(/[^a-z0-9]/g, '-')}-badge.svg` : 
+    "/images/badges/default-badge.svg";
 };

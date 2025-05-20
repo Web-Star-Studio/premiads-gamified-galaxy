@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSounds } from "@/hooks/use-sounds";
+import { Player } from "@lottiefiles/react-lottie-player";
+import { isLottieAnimation, isImageFile, getFallbackBadgeUrl } from "@/utils/getBadgeAnimation";
 
 interface Badge {
   id: string;
@@ -21,6 +23,7 @@ interface Badge {
   mission_id: string;
   missions: {
     title: string;
+    type?: string;
   };
 }
 
@@ -67,6 +70,58 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
     return newBadgeIds.includes(badge.id);
   };
 
+  // Handle badge image rendering based on URL type
+  const renderBadgeImage = (badge: Badge, large = false) => {
+    const url = badge.badge_image_url;
+    const size = large ? "h-40 w-40" : "h-16 w-16";
+    
+    if (!url) {
+      return <Award className={large ? "w-20 h-20 text-neon-pink" : "w-10 h-10 text-neon-pink"} />;
+    }
+    
+    if (isLottieAnimation(url)) {
+      // Render Lottie animation
+      return (
+        <Player 
+          src={url}
+          className={`w-full h-full object-contain`}
+          autoplay
+          loop
+          rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
+          onError={() => console.log(`Failed to load Lottie animation: ${url}`)}
+        />
+      );
+    } else if (isImageFile(url)) {
+      // Render static image (SVG/PNG/JPG)
+      return (
+        <img 
+          src={url}
+          alt={badge.badge_name}
+          className="w-full h-full object-contain transition-transform hover:scale-110"
+          onError={(e) => {
+            // If image fails to load, fallback to Award icon
+            console.log(`Failed to load image: ${url}, falling back to default`);
+            const target = e.target as HTMLImageElement;
+            const fallbackUrl = getFallbackBadgeUrl(badge.missions?.type);
+            
+            // Only try fallback once to avoid loops
+            if (!target.src.includes(fallbackUrl)) {
+              target.src = fallbackUrl;
+            } else {
+              // If fallback also fails, use null to trigger Award icon
+              target.src = "";
+              target.style.display = "none";
+              target.parentElement?.classList.add("fallback-badge");
+            }
+          }}
+        />
+      );
+    }
+    
+    // Default icon if URL is invalid or not recognized
+    return <Award className={large ? "w-20 h-20 text-neon-pink" : "w-10 h-10 text-neon-pink"} />;
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -106,16 +161,8 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
               } hover:bg-galaxy-deepPurple/40 transition-all duration-300 overflow-hidden`}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 flex-shrink-0 p-1 bg-galaxy-purple/20 rounded-full flex items-center justify-center">
-                      {badge.badge_image_url ? (
-                        <img 
-                          src={badge.badge_image_url} 
-                          alt={badge.badge_name}
-                          className="w-full h-full object-contain transition-transform hover:scale-110"
-                        />
-                      ) : (
-                        <Award className="w-10 h-10 text-neon-pink" />
-                      )}
+                    <div className="relative h-16 w-16 flex-shrink-0 p-1 bg-galaxy-purple/20 rounded-full flex items-center justify-center fallback-badge-container">
+                      {renderBadgeImage(badge)}
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -155,16 +202,8 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
             </DialogHeader>
             
             <div className="flex flex-col items-center py-6">
-              <div className="h-40 w-40 mb-6 flex items-center justify-center bg-galaxy-purple/20 rounded-full p-4">
-                {selectedBadge.badge_image_url ? (
-                  <img
-                    src={selectedBadge.badge_image_url}
-                    alt={selectedBadge.badge_name}
-                    className="max-h-full max-w-full object-contain drop-shadow-lg"
-                  />
-                ) : (
-                  <Award className="h-20 w-20 text-neon-pink" />
-                )}
+              <div className="h-40 w-40 mb-6 flex items-center justify-center bg-galaxy-purple/20 rounded-full p-4 fallback-badge-container">
+                {renderBadgeImage(selectedBadge, true)}
               </div>
               
               <div className="text-center max-w-sm">
