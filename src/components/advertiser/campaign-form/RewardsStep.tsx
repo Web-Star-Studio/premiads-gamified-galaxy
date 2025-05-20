@@ -1,11 +1,15 @@
+
 import { memo, useEffect, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { FormData } from "./types";
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { Card, CardContent } from "@/components/ui/card";
-import { Info } from "lucide-react";
+import { Info, Upload, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RewardsStepProps {
   /** Current form data */
@@ -21,6 +25,9 @@ interface RewardsStepProps {
 const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const { availableCredits: userCredits, isLoading, error } = useUserCredits();
   const [randomPointValue, setRandomPointValue] = useState<number | null>(null);
+  const [uploadingBadge, setUploadingBadge] = useState(false);
+  const [badgePreview, setBadgePreview] = useState<string | null>(formData.badgeImageUrl || null);
+  const { toast } = useToast();
   
   // Limites de pontuação baseados nos créditos disponíveis
   const minPoints = 10;
@@ -59,6 +66,77 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
     if (!isNaN(value) && value >= 1.0) {
       updateFormData("streakMultiplier", Math.min(value, 3.0));
     }
+  };
+
+  // Handle file upload
+  const handleBadgeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.includes('svg') && !file.type.includes('image/')) {
+      toast({
+        title: "Formato inválido",
+        description: "Por favor, envie apenas arquivos SVG ou imagens.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Show preview
+    const fileReader = new FileReader();
+    fileReader.onload = (e) => {
+      setBadgePreview(e.target?.result as string);
+    };
+    fileReader.readAsDataURL(file);
+
+    try {
+      setUploadingBadge(true);
+      
+      // Generate a unique filename 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      const fileName = `${user.id}/${Date.now()}_${file.name}`;
+      
+      // Upload the file
+      const { data, error } = await supabase.storage
+        .from('badges')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) throw error;
+      
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('badges')
+        .getPublicUrl(data.path);
+        
+      // Update form data with badge URL
+      updateFormData("badgeImageUrl", publicUrlData.publicUrl);
+      
+      toast({
+        title: "Badge enviado com sucesso",
+        description: "A imagem do badge foi salva."
+      });
+    } catch (error: any) {
+      console.error("Erro ao enviar badge:", error);
+      toast({
+        title: "Erro ao enviar badge",
+        description: error.message || "Ocorreu um erro ao enviar a imagem do badge",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingBadge(false);
+    }
+  };
+
+  // Remove badge image
+  const handleRemoveBadge = () => {
+    setBadgePreview(null);
+    updateFormData("badgeImageUrl", null);
   };
 
   return (
@@ -178,6 +256,54 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               aria-labelledby="badges-label"
             />
           </div>
+
+          {formData.hasBadges && (
+            <div className="pl-6 pr-1 py-2 space-y-3 bg-galaxy-purple/10 rounded-md">
+              <p className="text-sm font-medium">Imagem do Badge</p>
+              
+              {badgePreview ? (
+                <div className="relative w-24 h-24 mx-auto">
+                  <img 
+                    src={badgePreview} 
+                    alt="Preview do badge" 
+                    className="w-full h-full object-contain"
+                  />
+                  <Button 
+                    variant="destructive" 
+                    size="icon" 
+                    className="absolute -top-2 -right-2 h-6 w-6" 
+                    onClick={handleRemoveBadge}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-galaxy-purple/40 rounded-md p-4 text-center">
+                  <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                  <div className="mt-2">
+                    <label htmlFor="badge-upload" className="cursor-pointer text-neon-cyan hover:underline">
+                      Enviar imagem do badge
+                    </label>
+                    <input
+                      id="badge-upload"
+                      type="file"
+                      accept=".svg,image/*"
+                      className="sr-only"
+                      onChange={handleBadgeUpload}
+                      disabled={uploadingBadge}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      SVG recomendado (máx 500KB)
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-400">
+                O badge será exibido na galeria de conquistas do usuário. Use imagens de boa qualidade.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-1 py-2">
             <div className="space-y-1">

@@ -59,6 +59,7 @@ const useCampaignOperations = () => {
         has_lootbox: formData.hasLootBox,
         sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
+        badge_image_url: formData.badgeImageUrl, // Store badge image URL
         points: formData.randomPoints 
           ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
           : formData.pointsValue || formData.pointsRange[0],
@@ -148,6 +149,7 @@ const useCampaignOperations = () => {
         has_lootbox: formData.hasLootBox,
         sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
+        badge_image_url: formData.badgeImageUrl, // Store badge image URL
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()
       };

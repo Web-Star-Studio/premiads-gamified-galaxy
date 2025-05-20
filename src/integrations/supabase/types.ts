@@ -417,6 +417,7 @@ export type Database = {
       missions: {
         Row: {
           advertiser_id: string | null
+          badge_image_url: string | null
           business_type: string | null
           cost_in_tokens: number | null
           created_at: string | null
@@ -447,6 +448,7 @@ export type Database = {
         }
         Insert: {
           advertiser_id?: string | null
+          badge_image_url?: string | null
           business_type?: string | null
           cost_in_tokens?: number | null
           created_at?: string | null
@@ -477,6 +479,7 @@ export type Database = {
         }
         Update: {
           advertiser_id?: string | null
+          badge_image_url?: string | null
           business_type?: string | null
           cost_in_tokens?: number | null
           created_at?: string | null

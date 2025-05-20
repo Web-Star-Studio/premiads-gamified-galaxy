@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Award, Calendar, Info } from "lucide-react";
-import { Player } from "@lottiefiles/react-lottie-player";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -11,19 +11,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSounds } from "@/hooks/use-sounds";
-
-// Badge Lottie animations mapped to mission types
-const BADGE_ANIMATIONS: Record<string, string> = {
-  default: "https://assets7.lottiefiles.com/private_files/lf30_bfzkfm07.json", // Generic badge
-  form: "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json", // Form
-  photo: "https://assets10.lottiefiles.com/packages/lf20_qm8eqtyw.json", // Camera/Photo
-  social: "https://assets9.lottiefiles.com/packages/lf20_wloxwm9w.json", // Social
-  checkin: "https://assets3.lottiefiles.com/packages/lf20_9yi1lpr7.json", // Location
-  video: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json", // Video
-  survey: "https://assets7.lottiefiles.com/packages/lf20_kw2yp2rh.json", // Survey
-  review: "https://assets3.lottiefiles.com/packages/lf20_bnfvh5kf.json", // Stars/Review
-  coupon: "https://assets10.lottiefiles.com/packages/lf20_uomoou11.json", // Coupon/Ticket
-};
 
 interface Badge {
   id: string;
@@ -75,28 +62,6 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
     playSound("success");
   };
 
-  const getBadgeAnimation = (badge: Badge): string => {
-    // Return the badge_image_url if it exists
-    if (badge.badge_image_url) return badge.badge_image_url;
-    
-    // Logic to determine which animation to use based on badge info or mission type
-    // For now, just returning a default animation
-    
-    // Try to extract mission type from badge name or description
-    const missionType = 
-      badge.badge_description?.toLowerCase().includes("photo") ? "photo" :
-      badge.badge_description?.toLowerCase().includes("form") ? "form" :
-      badge.badge_description?.toLowerCase().includes("video") ? "video" :
-      badge.badge_description?.toLowerCase().includes("survey") ? "survey" :
-      badge.badge_description?.toLowerCase().includes("review") ? "review" :
-      badge.badge_description?.toLowerCase().includes("coupon") ? "coupon" :
-      badge.badge_description?.toLowerCase().includes("social") ? "social" :
-      badge.badge_description?.toLowerCase().includes("check-in") ? "checkin" :
-      "default";
-    
-    return BADGE_ANIMATIONS[missionType] || BADGE_ANIMATIONS.default;
-  };
-
   // Check if a badge is new
   const isNewBadge = (badge: Badge): boolean => {
     return newBadgeIds.includes(badge.id);
@@ -141,13 +106,16 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
               } hover:bg-galaxy-deepPurple/40 transition-all duration-300 overflow-hidden`}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 flex-shrink-0">
-                      <Player
-                        src={badge.badge_image_url || getBadgeAnimation(badge)}
-                        className="absolute inset-0"
-                        autoplay
-                        loop
-                      />
+                    <div className="relative h-16 w-16 flex-shrink-0 p-1 bg-galaxy-purple/20 rounded-full flex items-center justify-center">
+                      {badge.badge_image_url ? (
+                        <img 
+                          src={badge.badge_image_url} 
+                          alt={badge.badge_name}
+                          className="w-full h-full object-contain transition-transform hover:scale-110"
+                        />
+                      ) : (
+                        <Award className="w-10 h-10 text-neon-pink" />
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -187,13 +155,16 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
             </DialogHeader>
             
             <div className="flex flex-col items-center py-6">
-              <div className="h-40 w-40 mb-6">
-                <Player
-                  src={selectedBadge.badge_image_url || getBadgeAnimation(selectedBadge)}
-                  className="h-full w-full"
-                  autoplay
-                  loop
-                />
+              <div className="h-40 w-40 mb-6 flex items-center justify-center bg-galaxy-purple/20 rounded-full p-4">
+                {selectedBadge.badge_image_url ? (
+                  <img
+                    src={selectedBadge.badge_image_url}
+                    alt={selectedBadge.badge_name}
+                    className="max-h-full max-w-full object-contain drop-shadow-lg"
+                  />
+                ) : (
+                  <Award className="h-20 w-20 text-neon-pink" />
+                )}
               </div>
               
               <div className="text-center max-w-sm">
