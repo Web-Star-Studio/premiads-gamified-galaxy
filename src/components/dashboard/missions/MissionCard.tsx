@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Star, ZapIcon, LayersIcon, BadgeCheck, Gift, Check } from "lucide-react";
@@ -78,24 +77,24 @@ const MissionCard = ({
       <p className="mt-2 text-sm text-gray-300 line-clamp-2">{mission.description}</p>
       
       {/* Mission Points */}
-      <div className="mt-4 flex items-center gap-2">
-        <div className="flex h-8 items-center gap-1 rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white">
-          <Star className="h-4 w-4 text-yellow-400" />
-          <span>{mission.points} pontos</span>
+      <div className="mt-4 flex flex-col items-start sm:flex-row sm:items-center sm:flex-wrap gap-1">
+        <div className="flex h-8 items-center rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white flex-shrink-0 min-w-max">
+          <Star className="h-4 w-4 text-yellow-400 mr-1" />
+          <span className="whitespace-nowrap inline-block">{mission.points} pontos</span>
         </div>
         
         {/* Additional reward indicators */}
         {mission.has_badge && (
-          <div className="flex h-8 items-center gap-1 rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white">
-            <BadgeCheck className="h-4 w-4 text-neon-cyan" />
-            <span>Badge</span>
+          <div className="flex h-8 items-center rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white flex-shrink-0 min-w-max">
+            <BadgeCheck className="h-4 w-4 text-neon-cyan mr-1" />
+            <span className="whitespace-nowrap inline-block">Badge</span>
           </div>
         )}
         
         {mission.has_lootbox && (
-          <div className="flex h-8 items-center gap-1 rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white">
-            <Gift className="h-4 w-4 text-neon-pink" />
-            <span>Loot Box</span>
+          <div className="flex h-8 items-center rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white flex-shrink-0 min-w-max">
+            <Gift className="h-4 w-4 text-neon-pink mr-1" />
+            <span className="whitespace-nowrap inline-block">Loot Box</span>
           </div>
         )}
       </div>

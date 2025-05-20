@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -104,7 +103,7 @@ export const useMissionsFetch = () => {
             target_audience_age_max: mission.target_audience_age_max,
             target_audience_region: mission.target_audience_region,
             // Include reward-related fields with safe access
-            has_badges: missionData.has_badges || false,
+            has_badge: missionData.has_badge || false,
             has_lootbox: missionData.has_lootbox || false,
             streak_bonus: missionData.streak_bonus || false,
             streak_multiplier: missionData.streak_multiplier || 1.0,
