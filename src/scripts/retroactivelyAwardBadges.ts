@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function retroactivelyAwardBadges() {
   try {
     // Call the database function that processes badges for all approved submissions
+    // This will trigger a custom database function that we defined in the migration
     const { data, error } = await supabase.rpc('retroactively_award_badges');
     
     if (error) {

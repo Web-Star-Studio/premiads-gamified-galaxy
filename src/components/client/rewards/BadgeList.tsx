@@ -88,7 +88,6 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
           autoplay
           loop
           rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
-          onError={() => console.log(`Failed to load Lottie animation: ${url}`)}
         />
       );
     } else if (isImageFile(url)) {

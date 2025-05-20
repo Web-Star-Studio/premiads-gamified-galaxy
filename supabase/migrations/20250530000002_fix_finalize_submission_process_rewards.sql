@@ -585,17 +585,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('badges', 'badges', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow public read access to badge bucket
-INSERT INTO storage.policies (name, definition, bucket_id)
-VALUES (
-  'Public Read Access for Badges', 
-  '{"name":"Public Read Access for Badges","definition":{"bucket_id":"badges"},"allow_anonymous":true,"operation":"ALL"}', 
-  'badges'
-)
-ON CONFLICT (name, definition, bucket_id) DO NOTHING;
-
--- Enable realtime for the user_badges table if not already enabled
-ALTER PUBLICATION supabase_realtime ADD TABLE user_badges;
+-- Allow public read access to badge images
+CREATE POLICY "Public Read Access for Badges"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'badges');
 
 -- Grant badges bucket access to authenticated users
 CREATE POLICY "Allow authenticated users to upload badge images"
@@ -603,7 +597,5 @@ CREATE POLICY "Allow authenticated users to upload badge images"
   TO authenticated
   WITH CHECK (bucket_id = 'badges');
 
-CREATE POLICY "Allow public access to badge images"
-  ON storage.objects FOR SELECT
-  TO public
-  USING (bucket_id = 'badges');
+-- Enable realtime for the user_badges table if not already enabled
+ALTER PUBLICATION supabase_realtime ADD TABLE user_badges;
