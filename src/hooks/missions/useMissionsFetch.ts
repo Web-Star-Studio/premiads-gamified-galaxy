@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -105,7 +106,7 @@ export const useMissionsFetch = () => {
             // Include reward-related fields with safe access
             has_badge: missionData.has_badge || false,
             has_lootbox: missionData.has_lootbox || false,
-            streak_bonus: missionData.streak_bonus || false,
+            sequence_bonus: missionData.sequence_bonus || false,
             streak_multiplier: missionData.streak_multiplier || 1.0,
             // Target filter with safe access
             target_filter: missionData.target_filter || null,

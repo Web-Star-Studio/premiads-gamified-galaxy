@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Award, Gift, Calendar, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { Player } from "@lottiefiles/react-lottie-player";
 import BadgeList from "@/components/client/rewards/BadgeList";
 import LootBoxList from "@/components/client/rewards/LootBoxList";
 import DailyStreaksList from "@/components/client/rewards/DailyStreaksList";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const RewardsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -23,79 +25,120 @@ const RewardsPage = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    const fetchRewards = async () => {
-      setLoading(true);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Usuário não autenticado");
+  const fetchRewards = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
-        // Fetch badges
-        const { data: badgesData, error: badgesError } = await supabase
-          .from("user_badges")
-          .select(`
-            id,
-            badge_name,
-            badge_description,
-            badge_image_url,
-            earned_at,
-            mission_id,
-            missions:missions(title)
-          `)
-          .eq("user_id", user.id)
-          .order("earned_at", { ascending: false });
+      console.log("Fetching rewards data for user:", user.id);
+      
+      // Fetch badges with mission details
+      const { data: badgesData, error: badgesError } = await supabase
+        .from("user_badges")
+        .select(`
+          id,
+          badge_name,
+          badge_description,
+          badge_image_url,
+          earned_at,
+          mission_id,
+          missions:missions(title)
+        `)
+        .eq("user_id", user.id)
+        .order("earned_at", { ascending: false });
 
-        if (badgesError) throw badgesError;
-        setBadges(badgesData || []);
-
-        // Fetch loot boxes
-        const { data: lootBoxesData, error: lootBoxesError } = await supabase
-          .from("loot_box_rewards")
-          .select(`
-            id,
-            reward_type,
-            reward_amount,
-            awarded_at,
-            mission_id,
-            missions:missions(title)
-          `)
-          .eq("user_id", user.id)
-          .order("awarded_at", { ascending: false });
-
-        if (lootBoxesError) throw lootBoxesError;
-        setLootBoxes(lootBoxesData || []);
-
-        // Fetch daily streaks
-        const { data: streaksData, error: streaksError } = await supabase
-          .from("daily_streaks")
-          .select(`
-            id,
-            current_streak,
-            max_streak,
-            last_completion_date,
-            mission_id,
-            missions:missions(title, points, streak_multiplier)
-          `)
-          .eq("user_id", user.id)
-          .order("current_streak", { ascending: false });
-
-        if (streaksError) throw streaksError;
-        setDailyStreaks(streaksData || []);
-      } catch (error: any) {
-        console.error("Error fetching rewards:", error);
-        toast({
-          title: "Erro ao carregar recompensas",
-          description: error.message || "Ocorreu um erro ao buscar suas recompensas",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (badgesError) {
+        console.error("Error fetching badges:", badgesError);
+        throw badgesError;
       }
-    };
+      
+      console.log("Fetched badges:", badgesData?.length || 0);
+      setBadges(badgesData || []);
 
+      // Fetch loot boxes with mission details
+      const { data: lootBoxesData, error: lootBoxesError } = await supabase
+        .from("loot_box_rewards")
+        .select(`
+          id,
+          reward_type,
+          reward_amount,
+          awarded_at,
+          mission_id,
+          missions:missions(title)
+        `)
+        .eq("user_id", user.id)
+        .order("awarded_at", { ascending: false });
+
+      if (lootBoxesError) {
+        console.error("Error fetching loot boxes:", lootBoxesError);
+        throw lootBoxesError;
+      }
+      
+      console.log("Fetched loot boxes:", lootBoxesData?.length || 0);
+      setLootBoxes(lootBoxesData || []);
+
+      // Fetch daily streaks with mission details
+      const { data: streaksData, error: streaksError } = await supabase
+        .from("daily_streaks")
+        .select(`
+          id,
+          current_streak,
+          max_streak,
+          last_completion_date,
+          mission_id,
+          missions:missions(title, points, streak_multiplier)
+        `)
+        .eq("user_id", user.id)
+        .order("current_streak", { ascending: false });
+
+      if (streaksError) {
+        console.error("Error fetching streaks:", streaksError);
+        throw streaksError;
+      }
+      
+      console.log("Fetched daily streaks:", streaksData?.length || 0);
+      setDailyStreaks(streaksData || []);
+      
+      // Play a sound if we have rewards
+      if ((badgesData && badgesData.length > 0) || 
+          (lootBoxesData && lootBoxesData.length > 0) || 
+          (streaksData && streaksData.length > 0)) {
+        playSound("chime");
+      }
+    } catch (error: any) {
+      console.error("Error fetching rewards:", error);
+      toast({
+        title: "Erro ao carregar recompensas",
+        description: error.message || "Ocorreu um erro ao buscar suas recompensas",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch rewards when component mounts or when returning to this page
+  useEffect(() => {
     fetchRewards();
-  }, [toast]);
+    
+    // Set up a listener for location changes to refetch data
+    // This ensures data is updated when navigating back to this page
+    return () => {
+      // Cleanup if needed
+    };
+  }, [location.key, toast, playSound]);
+
+  const handleRefresh = () => {
+    fetchRewards();
+    toast({
+      title: "Atualizando recompensas",
+      description: "Buscando suas recompensas mais recentes...",
+    });
+  };
 
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -111,7 +154,15 @@ const RewardsPage = () => {
                 <p className="text-gray-400 mt-1">Conquistas, caixas de recompensa e sequências diárias</p>
               </div>
               
-              <div className="mt-4 md:mt-0">
+              <div className="mt-4 md:mt-0 flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleRefresh}
+                  className="bg-galaxy-deepPurple/40 border-galaxy-purple/30"
+                >
+                  <Clock3 className="mr-2 h-4 w-4" />
+                  Atualizar
+                </Button>
                 <Button variant="outline" className="bg-galaxy-deepPurple/40 border-galaxy-purple/30">
                   <Award className="mr-2 h-4 w-4" />
                   Centro de Recompensas

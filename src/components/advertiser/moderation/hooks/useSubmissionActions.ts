@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +36,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       const stage: ValidationStage = submission.second_instance ? 'advertiser_second' : 'advertiser_first';
       console.log(`Approving submission ${submission.id} with stage ${stage}`);
 
-      // First, approve the submission using the existing finalizeMissionSubmission function
+      // Approve the submission - process_mission_rewards is now called internally
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
         approverId: approverUser.id,
@@ -47,66 +48,52 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         throw new Error(result.error || "Falha ao finalizar a submissão via RPC.");
       }
 
-      // Now process additional rewards using the process_mission_rewards function
-      console.log("Processing additional rewards with process_mission_rewards RPC call");
-      const { data: rewardResult, error: rewardError } = await supabase.rpc(
-        'process_mission_rewards',
-        {
-          p_submission_id: submission.id,
-          p_user_id: submission.user_id,
-          p_mission_id: submission.mission_id
-        }
-      );
-
-      if (rewardError) {
-        console.error("Error processing rewards:", rewardError);
-        // Log more details about the error
-        console.error("Error details:", rewardError.message, rewardError.details, rewardError.hint);
-      } else {
-        console.log("Reward processing succeeded:", rewardResult);
-      }
-
-      // Format reward information for toast message
+      console.log("Submission approved successfully, result:", result.data);
+      
+      // The process_mission_rewards function is now called internally by finalize_submission
+      // so we don't need a separate RPC call here
+      
+      // Extract reward details from the result for notification
       let rewardInfo = "";
-      const rewardResultObj = rewardResult as any;
+      const rewardData = result.data;
       
       // Prepare reward details for notification
       const rewardDetails: RewardDetails = {
-        points: result.data?.points_awarded || 0,
+        points: rewardData?.points_awarded || 0,
       };
       
-      if (rewardResultObj) {
-        console.log("Reward result details:", rewardResultObj);
+      if (rewardData) {
+        console.log("Reward result details:", rewardData);
         
-        if (rewardResultObj.badge_earned) {
+        if (rewardData.badge_earned) {
           rewardInfo += " Badge concedido!";
           rewardDetails.badge_earned = true;
           rewardDetails.badge_name = submission.mission_title;
         }
         
-        if (rewardResultObj.loot_box_reward) {
-          rewardInfo += ` Loot box: ${rewardResultObj.loot_box_reward} (${rewardResultObj.loot_box_amount})!`;
-          rewardDetails.loot_box_reward = rewardResultObj.loot_box_reward;
-          rewardDetails.loot_box_amount = rewardResultObj.loot_box_amount;
+        if (rewardData.loot_box_reward) {
+          rewardInfo += ` Loot box: ${rewardData.loot_box_reward} (${rewardData.loot_box_amount})!`;
+          rewardDetails.loot_box_reward = rewardData.loot_box_reward;
+          rewardDetails.loot_box_amount = rewardData.loot_box_amount;
         }
         
-        if (rewardResultObj.streak_bonus > 0) {
-          rewardInfo += ` Bônus de sequência: +${rewardResultObj.streak_bonus} pontos!`;
-          rewardDetails.streak_bonus = rewardResultObj.streak_bonus;
-          rewardDetails.current_streak = rewardResultObj.current_streak;
+        if (rewardData.streak_bonus > 0) {
+          rewardInfo += ` Bônus de sequência: +${rewardData.streak_bonus} pontos!`;
+          rewardDetails.streak_bonus = rewardData.streak_bonus;
+          rewardDetails.current_streak = rewardData.current_streak;
         }
         
         // Display reward animation if there are special rewards
-        if (rewardResultObj.badge_earned || rewardResultObj.loot_box_reward || rewardResultObj.streak_bonus > 0) {
+        if (rewardData.badge_earned || rewardData.loot_box_reward || rewardData.streak_bonus > 0) {
           console.log("Showing reward notification with details:", rewardDetails);
           showRewardNotification(rewardDetails);
         }
       }
       
       // Get points awarded from the result
-      const pointsAwarded = result.data?.points_awarded || 0;
-      const tokensAwarded = result.data?.tokens_awarded || 0;
-      const participantId = result.data?.participant_id;
+      const pointsAwarded = rewardData?.points_awarded || 0;
+      const tokensAwarded = rewardData?.tokens_awarded || 0;
+      const participantId = rewardData?.participant_id;
 
       // Fetch mission title for the toast message
       let missionTitle = "esta missão"; 
@@ -128,11 +115,13 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       });
       
       if (participantId) {
-        // Invalidate queries related to the participant's profile to trigger UI updates
+        // Invalidate queries to ensure UI updates
         queryClient.invalidateQueries({ queryKey: ['profile', participantId] });
         queryClient.invalidateQueries({ queryKey: ['mission_submissions'] });
         queryClient.invalidateQueries({ queryKey: ['user_badges'] });
         queryClient.invalidateQueries({ queryKey: ['loot_box_rewards'] });
+        queryClient.invalidateQueries({ queryKey: ['recentRewards'] });
+        queryClient.invalidateQueries({ queryKey: ['daily_streaks'] });
       }
       
       onRemove(submission.id);
@@ -203,6 +192,9 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         title: "Submissão rejeitada",
         description: `Submissão de ${submission.user_name || 'usuário'} foi rejeitada.`,
       });
+      
+      // Invalidate queries to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: ['mission_submissions'] });
       
       onRemove(submission.id);
     } catch (error: any) {

@@ -1,3 +1,4 @@
+
 import { useQuery, QueryKey } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,7 +19,7 @@ interface MissionData {
   title: string
 }
 
-// Reflects the actual columns in mission_rewards (no tokens_earned)
+// Reflects the actual columns in mission_rewards (with tokens_earned)
 interface FetchedReward {
   id: string
   rewarded_at: string
@@ -169,4 +170,4 @@ export function RecentRewardsSection() {
   );
 }
 
-export default RecentRewardsSection; 
+export default RecentRewardsSection;

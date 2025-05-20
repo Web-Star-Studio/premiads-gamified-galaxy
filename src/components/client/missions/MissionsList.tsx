@@ -57,7 +57,7 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                     <span>{mission.points} pts</span>
                   </Badge>
                   
-                  {(mission.has_badge || mission.has_badges) && (
+                  {mission.has_badge && (
                     <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30">
                       Badge
                     </Badge>

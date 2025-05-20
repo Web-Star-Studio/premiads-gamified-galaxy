@@ -1,4 +1,5 @@
--- Update the finalize_submission function to award both points AND tokens
+
+-- Update the finalize_submission function to call process_mission_rewards internally
 CREATE OR REPLACE FUNCTION public.finalize_submission(p_submission_id uuid, p_approver_id uuid, p_decision text, p_stage text)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -12,6 +13,8 @@ DECLARE
   v_status TEXT;
   v_request_id UUID;
   v_result JSONB;
+  v_reward_result JSONB;
+  v_already_rewarded BOOLEAN;
 BEGIN
   -- Get submission details
   SELECT 
@@ -34,6 +37,12 @@ BEGIN
   FROM missions 
   WHERE id = v_mission_id;
   
+  -- Check if reward has already been given to avoid duplicates
+  SELECT EXISTS(
+    SELECT 1 FROM mission_rewards 
+    WHERE submission_id = p_submission_id
+  ) INTO v_already_rewarded;
+  
   -- Get request ID if exists
   SELECT id INTO v_request_id 
   FROM missions_requests 
@@ -50,7 +59,8 @@ BEGIN
         status = 'approved',
         review_stage = 'finalized',
         validated_by = p_approver_id,
-        admin_validated = FALSE
+        admin_validated = FALSE,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -63,8 +73,46 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award points AND tokens to participant using the new unified function
-      PERFORM award_submission_rewards(p_submission_id, v_participant_id, v_mission_id, v_points, v_tokens);
+      -- Award points AND tokens to participant if not already rewarded
+      IF NOT v_already_rewarded THEN
+        -- Add points to user
+        UPDATE profiles
+        SET 
+          points = COALESCE(points, 0) + v_points,
+          credits = COALESCE(credits, 0) + v_tokens,
+          updated_at = NOW()
+        WHERE id = v_participant_id;
+        
+        -- Record the reward
+        INSERT INTO mission_rewards (
+          user_id, 
+          mission_id, 
+          submission_id, 
+          points_earned,
+          tokens_earned,
+          rewarded_at
+        ) VALUES (
+          v_participant_id,
+          v_mission_id,
+          p_submission_id,
+          v_points,
+          v_tokens,
+          NOW()
+        );
+        
+        -- Process additional rewards (badges, loot boxes, streaks)
+        BEGIN
+          SELECT process_mission_rewards(
+            p_submission_id, 
+            v_participant_id, 
+            v_mission_id
+          ) INTO v_reward_result;
+          
+          RAISE NOTICE 'Processed additional rewards: %', v_reward_result;
+        EXCEPTION WHEN OTHERS THEN
+          RAISE WARNING 'Error processing additional rewards: %', SQLERRM;
+        END;
+      END IF;
       
       v_status := 'approved';
       
@@ -75,7 +123,8 @@ BEGIN
         status = 'second_instance_pending',
         review_stage = 'admin',
         second_instance = TRUE,
-        validated_by = p_approver_id
+        validated_by = p_approver_id,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -100,7 +149,8 @@ BEGIN
         second_instance_status = 'approved',
         review_stage = 'returned_to_advertiser',
         admin_validated = TRUE,
-        validated_by = p_approver_id
+        validated_by = p_approver_id,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -123,7 +173,8 @@ BEGIN
         status = 'rejected',
         review_stage = 'completed',
         admin_validated = TRUE,
-        validated_by = p_approver_id
+        validated_by = p_approver_id,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -148,7 +199,8 @@ BEGIN
         status = 'approved',
         second_instance_status = 'approved',
         review_stage = 'completed',
-        validated_by = p_approver_id
+        validated_by = p_approver_id,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -162,8 +214,46 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award both points AND tokens to participant using the new unified function
-      PERFORM award_submission_rewards(p_submission_id, v_participant_id, v_mission_id, v_points, v_tokens);
+      -- Award both points AND tokens to participant if not already rewarded
+      IF NOT v_already_rewarded THEN
+        -- Add points to user
+        UPDATE profiles
+        SET 
+          points = COALESCE(points, 0) + v_points,
+          credits = COALESCE(credits, 0) + v_tokens,
+          updated_at = NOW()
+        WHERE id = v_participant_id;
+        
+        -- Record the reward
+        INSERT INTO mission_rewards (
+          user_id, 
+          mission_id, 
+          submission_id, 
+          points_earned,
+          tokens_earned,
+          rewarded_at
+        ) VALUES (
+          v_participant_id,
+          v_mission_id,
+          p_submission_id,
+          v_points,
+          v_tokens,
+          NOW()
+        );
+        
+        -- Process additional rewards (badges, loot boxes, streaks)
+        BEGIN
+          SELECT process_mission_rewards(
+            p_submission_id, 
+            v_participant_id, 
+            v_mission_id
+          ) INTO v_reward_result;
+          
+          RAISE NOTICE 'Processed additional rewards: %', v_reward_result;
+        EXCEPTION WHEN OTHERS THEN
+          RAISE WARNING 'Error processing additional rewards: %', SQLERRM;
+        END;
+      END IF;
       
       v_status := 'approved';
       
@@ -174,7 +264,8 @@ BEGIN
         status = 'rejected',
         second_instance_status = 'rejected',
         review_stage = 'completed',
-        validated_by = p_approver_id
+        validated_by = p_approver_id,
+        updated_at = NOW()
       WHERE id = p_submission_id;
       
       -- Update request if exists
@@ -194,15 +285,20 @@ BEGIN
     RAISE EXCEPTION 'Invalid stage: %', p_stage;
   END IF;
   
-  -- Return result with tokens information
+  -- Return result with tokens information and additional rewards
   v_result := jsonb_build_object(
     'status', v_status,
     'submission_id', p_submission_id,
     'participant_id', v_participant_id,
     'mission_id', v_mission_id,
-    'points_awarded', CASE WHEN v_status = 'approved' THEN v_points ELSE 0 END,
-    'tokens_awarded', CASE WHEN v_status = 'approved' THEN v_tokens ELSE 0 END
+    'points_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_points ELSE 0 END,
+    'tokens_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_tokens ELSE 0 END
   );
+  
+  -- Merge additional rewards information if available
+  IF v_reward_result IS NOT NULL THEN
+    v_result := v_result || v_reward_result;
+  END IF;
   
   RETURN v_result;
 END;
