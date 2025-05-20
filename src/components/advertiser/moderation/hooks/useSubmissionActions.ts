@@ -6,7 +6,7 @@ import { MissionSubmission } from "@/types/missions";
 import { useQueryClient } from "@tanstack/react-query";
 import { finalizeMissionSubmission, ValidationStage } from "@/lib/submissions/missionModeration";
 import { useRewardAnimations, RewardDetails } from "@/utils/rewardAnimations";
-import { getBadgeAnimationForMissionType, generateBadgeDescription } from '@/utils/getBadgeAnimation'
+import { getBadgeAnimationForMissionType, generateBadgeDescription } from '@/utils/getBadgeAnimation';
 
 interface UseSubmissionActionsProps {
   onRemove: (submissionId: string) => void;
