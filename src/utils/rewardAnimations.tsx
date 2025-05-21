@@ -1,4 +1,3 @@
-
 import { Player } from "@lottiefiles/react-lottie-player";
 import { toast } from "sonner";
 import React from "react";
@@ -60,8 +59,8 @@ export const useRewardAnimations = () => {
         <Player
           src={animationUrl}
           className="h-12 w-12"
-          autoplay
-          loop
+          autoplay={true}
+          loop={true}
         />
       ),
       className: "bg-gray-900 border border-neon-cyan/30 shadow-[0_0_15px_rgba(0,255,231,0.15)]",

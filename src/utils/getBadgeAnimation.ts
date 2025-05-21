@@ -1,4 +1,3 @@
-
 export const getBadgeAnimationForMissionType = (missionType: string): string => {
   // First try with SVG paths (prefer these over Lottie)
   if (missionType.includes('photo')) return '/images/badges/photo-badge.svg';
@@ -46,4 +45,27 @@ export const generateBadgeDescription = (missionTitle: string): string => {
 export const isLottieAnimation = (url?: string): boolean => {
   if (!url) return false;
   return url.includes('.json') || url.includes('lottiefiles.com');
+};
+
+export const isImageFile = (url?: string): boolean => {
+  if (!url) return false;
+  return url.endsWith('.svg') || url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp');
+};
+
+export const getFallbackBadgeUrl = (missionType?: string): string => {
+  // Fallback to static image based on mission type
+  if (missionType) {
+    if (missionType.includes('photo')) return '/images/badges/photo-badge.svg';
+    if (missionType.includes('form')) return '/images/badges/form-badge.svg';
+    if (missionType.includes('video')) return '/images/badges/video-badge.svg';
+    if (missionType.includes('survey')) return '/images/badges/survey-badge.svg';
+    if (missionType.includes('review')) return '/images/badges/review-badge.svg';
+    if (missionType.includes('coupon')) return '/images/badges/coupon-badge.svg';
+    if (missionType.includes('social')) return '/images/badges/social-badge.svg';
+    if (missionType.includes('checkin') || missionType.includes('check-in')) 
+      return '/images/badges/checkin-badge.svg';
+  }
+  
+  // Default fallback
+  return '/images/badges/default-badge.svg';
 };
