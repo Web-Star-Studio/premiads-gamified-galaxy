@@ -10,19 +10,30 @@ interface CheckboxGroupProps {
   children: React.ReactNode;
 }
 
+// Create the context
+const CheckboxGroupContext = React.createContext<{
+  value: string[];
+  onValueChange: (value: string[]) => void;
+}>({
+  value: [],
+  onValueChange: () => undefined,
+});
+
+// Hook to use the context
+export const useCheckboxGroupContext = () => {
+  const context = React.useContext(CheckboxGroupContext);
+  
+  if (!context) {
+    throw new Error("Checkbox must be used within a CheckboxGroup");
+  }
+  
+  return context;
+};
+
 export const CheckboxGroup = React.forwardRef<
   HTMLDivElement,
   CheckboxGroupProps
 >(({ value, onValueChange, className, children, ...props }, ref) => {
-  // Context to share the checkbox group state
-  const CheckboxGroupContext = React.createContext<{
-    value: string[];
-    onValueChange: (value: string[]) => void;
-  }>({
-    value: [],
-    onValueChange: () => undefined,
-  });
-
   return (
     <CheckboxGroupContext.Provider value={{ value, onValueChange }}>
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
@@ -32,22 +43,3 @@ export const CheckboxGroup = React.forwardRef<
   );
 });
 CheckboxGroup.displayName = "CheckboxGroup";
-
-// Export the context for use in child components
-export const useCheckboxGroupContext = () => {
-  const context = React.useContext(
-    React.createContext<{
-      value: string[];
-      onValueChange: (value: string[]) => void;
-    }>({
-      value: [],
-      onValueChange: () => undefined,
-    })
-  );
-  
-  if (!context) {
-    throw new Error("Checkbox must be used within a CheckboxGroup");
-  }
-  
-  return context;
-};

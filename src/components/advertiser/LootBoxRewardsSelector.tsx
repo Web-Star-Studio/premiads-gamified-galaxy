@@ -1,10 +1,10 @@
 
 import React from "react";
-import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Award, DollarSign, TrendingUp, Repeat, Ticket } from "lucide-react";
+import { CheckboxGroup, useCheckboxGroupContext } from "@/components/ui/checkbox-group";
 
 export type LootBoxRewardType = 
   | "credit_bonus" 
@@ -66,6 +66,32 @@ const rewardOptions: RewardOption[] = [
   }
 ];
 
+// Custom checkbox item that uses the group context
+const CheckboxItem = ({ id, value, children }: { id: string, value: string, children: React.ReactNode }) => {
+  const { value: groupValue, onValueChange } = useCheckboxGroupContext();
+  
+  const handleCheckedChange = (checked: boolean) => {
+    if (checked) {
+      onValueChange([...groupValue, value]);
+    } else {
+      onValueChange(groupValue.filter(v => v !== value));
+    }
+  };
+
+  return (
+    <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/40 transition-colors">
+      <Checkbox 
+        id={id}
+        checked={groupValue.includes(value)}
+        onCheckedChange={handleCheckedChange}
+        value={value}
+        className="mt-1"
+      />
+      {children}
+    </div>
+  );
+};
+
 const LootBoxRewardsSelector: React.FC<LootBoxRewardsSelectorProps> = ({ 
   isOpen, 
   selectedRewards, 
@@ -88,15 +114,11 @@ const LootBoxRewardsSelector: React.FC<LootBoxRewardsSelectorProps> = ({
           className="space-y-3"
         >
           {rewardOptions.map(option => (
-            <div 
-              key={option.id} 
-              className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/40 transition-colors"
+            <CheckboxItem 
+              key={option.id}
+              id={`reward-${option.id}`}
+              value={option.id}
             >
-              <Checkbox 
-                id={`reward-${option.id}`} 
-                value={option.id} 
-                className="mt-1"
-              />
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-800/60 flex items-center justify-center">
                   {option.icon}
@@ -113,7 +135,7 @@ const LootBoxRewardsSelector: React.FC<LootBoxRewardsSelectorProps> = ({
                   </p>
                 </div>
               </div>
-            </div>
+            </CheckboxItem>
           ))}
         </CheckboxGroup>
       </CardContent>
