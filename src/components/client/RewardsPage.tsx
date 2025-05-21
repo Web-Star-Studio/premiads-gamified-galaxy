@@ -9,11 +9,13 @@ import { useBadges } from "@/hooks/cliente/useBadges";
 import { BadgeList } from "@/components/badges/BadgeList";
 import { LootBoxList } from "@/components/lootbox/LootBoxList";
 import { useLootBoxRewards } from "@/lib/submissions/useLootBoxRewards";
+import { useUserCredits } from "@/hooks/useUserCredits";
 
 export const RewardsPage = () => {
   const [activeTab, setActiveTab] = useState("badges");
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { refreshCredits } = useUserCredits();
   
   const { badges, loading: badgesLoading } = useBadges(userId);
   const { 
@@ -37,6 +39,8 @@ export const RewardsPage = () => {
 
   const handleLootBoxClaimed = (rewardId: string) => {
     markLootBoxAsClaimed(rewardId);
+    // Refresh user credits to show updated balance
+    refreshCredits();
   };
 
   return (

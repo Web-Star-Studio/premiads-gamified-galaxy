@@ -850,6 +850,10 @@ export type Database = {
         Args: { user_id: string; reward: number }
         Returns: undefined
       }
+      claim_loot_box_reward: {
+        Args: { p_loot_box_id: string }
+        Returns: Json
+      }
       deduct_credits_from_advertiser: {
         Args: { p_advertiser_id: string; p_credits_to_deduct: number }
         Returns: undefined

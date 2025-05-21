@@ -8,6 +8,7 @@ import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import { LootBoxReward, LootBoxReveal } from "./LootBoxReveal";
 import { supabase } from "@/integrations/supabase/client";
+import { useRewardAnimations } from "@/utils/rewardAnimations";
 
 interface LootBoxListProps {
   lootBoxes: LootBoxReward[];
@@ -22,8 +23,10 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
 }) => {
   const [selectedLootBox, setSelectedLootBox] = useState<LootBoxReward | null>(null);
   const [showingReward, setShowingReward] = useState(false);
+  const [claimingReward, setClaimingReward] = useState(false);
   const { playSound } = useSounds();
   const { toast } = useToast();
+  const { showRewardNotification } = useRewardAnimations();
 
   const handleOpenLootBox = (lootBox: LootBoxReward) => {
     setSelectedLootBox(lootBox);
@@ -33,15 +36,42 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
 
   const handleClaimReward = async (rewardId: string) => {
     try {
-      // Update the loot box as claimed in the database
-      const { error } = await supabase
-        .from('loot_box_rewards')
-        .update({ is_claimed: true })
-        .eq('id', rewardId);
+      if (claimingReward) return; // Prevent double-clicking
+      setClaimingReward(true);
+      
+      // Call the RPC function to claim the reward
+      const { data, error } = await supabase
+        .rpc('claim_loot_box_reward', { p_loot_box_id: rewardId });
         
       if (error) throw error;
       
-      // Call the callback if provided
+      if (!data.success) {
+        if (data.code === 'ALREADY_CLAIMED') {
+          toast({
+            title: "Recompensa já reivindicada",
+            description: "Esta recompensa já foi reivindicada anteriormente.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.message || 'Não foi possível reivindicar a recompensa');
+        }
+        setClaimingReward(false);
+        return;
+      }
+      
+      // Show notification with details of what changed
+      let notificationTitle = "Recompensa recebida!";
+      let notificationDescription = "";
+      
+      if (data.points_difference > 0) {
+        notificationDescription = `Você recebeu ${data.points_difference} pontos de experiência!`;
+      } else if (data.credits_difference > 0) {
+        notificationDescription = `Você recebeu ${data.credits_difference} créditos!`;
+      } else {
+        notificationDescription = "A recompensa foi adicionada à sua conta.";
+      }
+      
+      // Call the callback if provided to update local state
       if (onLootBoxClaimed) {
         onLootBoxClaimed(rewardId);
       }
@@ -54,14 +84,29 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
       playSound("reward");
       
       toast({
-        title: "Recompensa recebida!",
-        description: "A recompensa foi adicionada à sua conta.",
+        title: notificationTitle,
+        description: notificationDescription,
         variant: "default",
         className: "bg-gradient-to-br from-purple-600/90 to-neon-pink/60 text-white border-neon-cyan"
       });
       
-      // Close dialog
-      setSelectedLootBox(null);
+      // Show reward notification with animation based on reward type
+      if (selectedLootBox) {
+        showRewardNotification({
+          points: data.points_difference || 0,
+          loot_box_reward: selectedLootBox.reward_type,
+          loot_box_amount: selectedLootBox.reward_amount,
+          loot_box_display_name: selectedLootBox.display_name,
+          loot_box_description: notificationDescription
+        });
+      }
+      
+      // Close dialog after a short delay
+      setTimeout(() => {
+        setSelectedLootBox(null);
+        setClaimingReward(false);
+      }, 1500);
+      
     } catch (err: any) {
       console.error("Error claiming reward:", err);
       toast({
@@ -69,6 +114,7 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
         description: err.message || "Ocorreu um erro ao receber sua recompensa",
         variant: "destructive",
       });
+      setClaimingReward(false);
     }
   };
 
@@ -94,10 +140,10 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => handleOpenLootBox(lootBox)}
-            className="cursor-pointer"
+            onClick={() => !lootBox.is_claimed && handleOpenLootBox(lootBox)}
+            className={lootBox.is_claimed ? "cursor-default" : "cursor-pointer"}
           >
-            <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/20 hover:bg-galaxy-deepPurple/40 transition-all duration-300 overflow-hidden">
+            <Card className={`border-galaxy-purple/30 bg-galaxy-deepPurple/20 transition-all duration-300 overflow-hidden ${!lootBox.is_claimed ? "hover:bg-galaxy-deepPurple/40" : "opacity-80"}`}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
@@ -129,6 +175,11 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
                           day: 'numeric'
                         })}
                       </span>
+                      {lootBox.is_claimed && (
+                        <span className="ml-1 px-1.5 py-0.5 text-xs bg-green-500/20 text-green-300 rounded-sm">
+                          Reivindicada
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -140,10 +191,11 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
       
       {/* LootBox Reveal Dialog */}
       <LootBoxReveal 
-        isOpen={!!selectedLootBox}
+        isOpen={!!selectedLootBox && !claimingReward}
         onClose={() => setSelectedLootBox(null)}
         reward={selectedLootBox}
         onClaim={handleClaimReward}
+        isClaimingReward={claimingReward}
       />
     </>
   );
