@@ -23,6 +23,7 @@ export interface FormData {
   };
   badgeImageUrl?: string | null; // URL to stored badge image
   minPurchase?: number; // Adding missing 'minPurchase' property
+  selectedLootBoxRewards?: string[]; // Array of selected loot box reward types
 }
 
 // Default initial values for campaign form
@@ -47,5 +48,6 @@ export const initialFormData: FormData = {
     interests: [] // Initialize interests as empty array
   },
   badgeImageUrl: null,
-  minPurchase: 0 // Default value for minPurchase
+  minPurchase: 0, // Default value for minPurchase
+  selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket']
 };

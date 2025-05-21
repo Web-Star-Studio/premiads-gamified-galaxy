@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MissionRewardsStep from "../MissionRewardsStep";
+import { LootBoxRewardType } from "../LootBoxRewardsSelector";
 
 interface RewardsStepProps {
   /** Current form data */
@@ -137,6 +139,11 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const handleRemoveBadge = () => {
     setBadgePreview(null);
     updateFormData("badgeImageUrl", null);
+  };
+
+  // Handle loot box rewards selection
+  const handleLootBoxRewardsChange = (rewards: LootBoxRewardType[]) => {
+    updateFormData("selectedLootBoxRewards", rewards);
   };
 
   return (
@@ -317,6 +324,19 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               aria-labelledby="lootbox-label"
             />
           </div>
+
+          {formData.hasLootBox && (
+            <MissionRewardsStep
+              hasBadge={formData.hasBadges}
+              onHasBadgeChange={(value) => updateFormData("hasBadges", value)}
+              hasLootBox={formData.hasLootBox}
+              onHasLootBoxChange={(value) => updateFormData("hasLootBox", value)}
+              sequenceBonus={formData.streakBonus}
+              onSequenceBonusChange={(value) => updateFormData("streakBonus", value)}
+              selectedLootBoxRewards={formData.selectedLootBoxRewards || []}
+              onSelectedLootBoxRewardsChange={handleLootBoxRewardsChange}
+            />
+          )}
         </>
       )}
     </div>
