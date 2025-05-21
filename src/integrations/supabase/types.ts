@@ -241,7 +241,10 @@ export type Database = {
         Row: {
           awarded_at: string | null
           created_at: string | null
+          description: string | null
+          display_name: string | null
           id: string
+          is_claimed: boolean | null
           mission_id: string
           reward_amount: number
           reward_type: string
@@ -250,7 +253,10 @@ export type Database = {
         Insert: {
           awarded_at?: string | null
           created_at?: string | null
+          description?: string | null
+          display_name?: string | null
           id?: string
+          is_claimed?: boolean | null
           mission_id: string
           reward_amount: number
           reward_type: string
@@ -259,7 +265,10 @@ export type Database = {
         Update: {
           awarded_at?: string | null
           created_at?: string | null
+          description?: string | null
+          display_name?: string | null
           id?: string
+          is_claimed?: boolean | null
           mission_id?: string
           reward_amount?: number
           reward_type?: string
@@ -431,6 +440,7 @@ export type Database = {
           is_active: boolean | null
           points: number
           requirements: Json | null
+          selected_lootbox_rewards: string[] | null
           sequence_bonus: boolean | null
           sequence_bonus_old: boolean
           start_date: string | null
@@ -462,6 +472,7 @@ export type Database = {
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
+          selected_lootbox_rewards?: string[] | null
           sequence_bonus?: boolean | null
           sequence_bonus_old?: boolean
           start_date?: string | null
@@ -493,6 +504,7 @@ export type Database = {
           is_active?: boolean | null
           points?: number
           requirements?: Json | null
+          selected_lootbox_rewards?: string[] | null
           sequence_bonus?: boolean | null
           sequence_bonus_old?: boolean
           start_date?: string | null
