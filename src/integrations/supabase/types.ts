@@ -927,6 +927,10 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      retroactively_award_badges: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       reward_participant_for_submission: {
         Args: { submission_id: string }
         Returns: undefined

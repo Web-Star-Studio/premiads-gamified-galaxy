@@ -7,6 +7,7 @@ import { Check, X, Image, FileText, PenTool, Play, ChevronLeft, ChevronRight, Al
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { finalizeMissionSubmission } from "@/lib/submissions/missionModeration";
 
 interface Submission {
   id: string;
@@ -182,14 +183,24 @@ const SubmissionsApproval = () => {
     setProcessing(true);
     try {
       const submission = submissions[currentIndex];
+      const { data: sessionData } = await supabase.auth.getSession();
+      const approverId = sessionData?.session?.user?.id;
       
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ status: "approved" })
-        .eq("id", submission.id);
-        
-      if (error) throw error;
+      if (!approverId) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Usar a função finalizeMissionSubmission para aprovar a submissão
+      const result = await finalizeMissionSubmission({
+        submissionId: submission.id,
+        approverId,
+        decision: 'approve',
+        stage: 'advertiser_first'
+      });
+      
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao aprovar submissão");
+      }
       
       // Remove from local state
       const newSubmissions = [...submissions];
@@ -224,14 +235,24 @@ const SubmissionsApproval = () => {
     setProcessing(true);
     try {
       const submission = submissions[currentIndex];
+      const { data: sessionData } = await supabase.auth.getSession();
+      const approverId = sessionData?.session?.user?.id;
       
-      // Update submission status in database
-      const { error } = await supabase
-        .from("mission_submissions")
-        .update({ status: "rejected" })
-        .eq("id", submission.id);
-        
-      if (error) throw error;
+      if (!approverId) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Usar a função finalizeMissionSubmission para rejeitar a submissão
+      const result = await finalizeMissionSubmission({
+        submissionId: submission.id,
+        approverId,
+        decision: 'reject',
+        stage: 'advertiser_first'
+      });
+      
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao rejeitar submissão");
+      }
       
       // Remove from local state
       const newSubmissions = [...submissions];
