@@ -45,15 +45,23 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
         
       if (error) throw error;
       
-      if (!data.success) {
-        if (data.code === 'ALREADY_CLAIMED') {
+      const typedData = data as {
+        success: boolean;
+        code?: string;
+        message?: string;
+        points_difference?: number;
+        credits_difference?: number;
+      };
+      
+      if (!typedData.success) {
+        if (typedData.code === 'ALREADY_CLAIMED') {
           toast({
             title: "Recompensa já reivindicada",
             description: "Esta recompensa já foi reivindicada anteriormente.",
             variant: "destructive",
           });
         } else {
-          throw new Error(data.message || 'Não foi possível reivindicar a recompensa');
+          throw new Error(typedData.message || 'Não foi possível reivindicar a recompensa');
         }
         setClaimingReward(false);
         return;
@@ -63,10 +71,10 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
       let notificationTitle = "Recompensa recebida!";
       let notificationDescription = "";
       
-      if (data.points_difference > 0) {
-        notificationDescription = `Você recebeu ${data.points_difference} pontos de experiência!`;
-      } else if (data.credits_difference > 0) {
-        notificationDescription = `Você recebeu ${data.credits_difference} créditos!`;
+      if (typedData.points_difference && typedData.points_difference > 0) {
+        notificationDescription = `Você recebeu ${typedData.points_difference} pontos de experiência!`;
+      } else if (typedData.credits_difference && typedData.credits_difference > 0) {
+        notificationDescription = `Você recebeu ${typedData.credits_difference} créditos!`;
       } else {
         notificationDescription = "A recompensa foi adicionada à sua conta.";
       }
@@ -93,7 +101,7 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
       // Show reward notification with animation based on reward type
       if (selectedLootBox) {
         showRewardNotification({
-          points: data.points_difference || 0,
+          points: typedData.points_difference || 0,
           loot_box_reward: selectedLootBox.reward_type,
           loot_box_amount: selectedLootBox.reward_amount,
           loot_box_display_name: selectedLootBox.display_name,

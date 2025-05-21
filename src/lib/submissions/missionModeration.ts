@@ -11,6 +11,19 @@ interface SubmissionDecisionParams {
   feedback?: string;
 }
 
+interface FinalizationResult {
+  status: string;
+  badge_earned: boolean;
+  badge_id: string;
+  badge_image_url: string;
+  loot_box_reward: string;
+  loot_box_amount: number;
+  loot_box_display_name: string;
+  loot_box_description: string;
+  streak_bonus: number;
+  current_streak: number;
+}
+
 export const finalizeMissionSubmission = async ({
   submissionId,
   approverId,
@@ -56,19 +69,21 @@ export const finalizeMissionSubmission = async ({
     // Process the result
     console.log("Finalize submission result:", data);
     
+    const typedData = data as FinalizationResult;
+    
     return { 
       success: true, 
-      status: data.status,
+      status: typedData.status,
       rewardDetails: {
-        badgeEarned: data.badge_earned,
-        badgeId: data.badge_id,
-        badgeImageUrl: data.badge_image_url,
-        lootBoxReward: data.loot_box_reward,
-        lootBoxAmount: data.loot_box_amount,
-        lootBoxDisplayName: data.loot_box_display_name,
-        lootBoxDescription: data.loot_box_description,
-        streakBonus: data.streak_bonus,
-        currentStreak: data.current_streak
+        badgeEarned: typedData.badge_earned,
+        badgeId: typedData.badge_id,
+        badgeImageUrl: typedData.badge_image_url,
+        lootBoxReward: typedData.loot_box_reward,
+        lootBoxAmount: typedData.loot_box_amount,
+        lootBoxDisplayName: typedData.loot_box_display_name,
+        lootBoxDescription: typedData.loot_box_description,
+        streakBonus: typedData.streak_bonus,
+        currentStreak: typedData.current_streak
       }
     };
   } catch (error: any) {

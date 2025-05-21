@@ -92,15 +92,23 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
         
       if (error) throw error;
       
-      if (!data.success) {
-        if (data.code === 'ALREADY_CLAIMED') {
+      const typedData = data as {
+        success: boolean;
+        code?: string;
+        message?: string;
+        points_difference?: number;
+        credits_difference?: number;
+      };
+      
+      if (!typedData.success) {
+        if (typedData.code === 'ALREADY_CLAIMED') {
           toast({
             title: "Recompensa já reivindicada",
             description: "Esta recompensa já foi reivindicada anteriormente.",
             variant: "destructive",
           });
         } else {
-          throw new Error(data.message || 'Não foi possível reivindicar a recompensa');
+          throw new Error(typedData.message || 'Não foi possível reivindicar a recompensa');
         }
         setIsClaimingReward(false);
         return;
@@ -117,10 +125,10 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       
       // Show a descriptive toast with the reward details
       let description = getRewardDescription(selectedLootBox);
-      if (data.points_difference > 0) {
-        description = `Você recebeu ${data.points_difference} pontos de experiência!`;
-      } else if (data.credits_difference > 0) {
-        description = `Você recebeu ${data.credits_difference} créditos!`;
+      if (typedData.points_difference && typedData.points_difference > 0) {
+        description = `Você recebeu ${typedData.points_difference} pontos de experiência!`;
+      } else if (typedData.credits_difference && typedData.credits_difference > 0) {
+        description = `Você recebeu ${typedData.credits_difference} créditos!`;
       }
       
       toast({
@@ -132,7 +140,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       
       // Show reward notification with animation
       showRewardNotification({
-        points: data.points_difference || 0,
+        points: typedData.points_difference || 0,
         loot_box_reward: selectedLootBox.reward_type,
         loot_box_amount: selectedLootBox.reward_amount,
         loot_box_display_name: getRewardLabel(selectedLootBox.reward_type),

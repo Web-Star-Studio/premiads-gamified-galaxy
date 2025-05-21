@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { RequirementsStep } from "./MissionRequirementsStep";
 import { TargetingStep } from "./MissionTargetingStep";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
-import { useRouter } from "next/router";
+import { useNavigate } from "react-router-dom";
 import { createMission } from "@/lib/submissions/missionCreation";
 import { MissionRewardsStep } from "./MissionRewardsStep";
 import { LootBoxRewardType } from "./LootBoxRewardsSelector";
@@ -48,7 +47,7 @@ export const MissionForm = () => {
 
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleNext = () => {
     // Validate current step
@@ -121,7 +120,7 @@ export const MissionForm = () => {
         });
         playSound("success");
         setTimeout(() => {
-          router.push("/anunciante/missoes");
+          navigate("/anunciante/missoes");
         }, 1500);
       } else {
         throw new Error(result.error);
