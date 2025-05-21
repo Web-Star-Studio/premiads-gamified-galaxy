@@ -1,233 +1,110 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { Player } from "@lottiefiles/react-lottie-player";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Sparkles, X } from "lucide-react";
-import { useSounds } from "@/hooks/use-sounds";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Gift } from "lucide-react";
 
 export interface LootBoxReward {
   id: string;
+  user_id: string;
+  mission_id: string;
   reward_type: string;
   reward_amount: number;
-  display_name: string;
-  description: string;
   awarded_at: string;
+  created_at?: string;
+  description?: string;
+  display_name?: string;
+  missions?: {
+    title: string;
+  };
   is_claimed?: boolean;
 }
 
 interface LootBoxRevealProps {
-  reward: LootBoxReward;
   isOpen: boolean;
   onClose: () => void;
-  onClaim?: (rewardId: string) => Promise<void>;
+  reward: LootBoxReward | null;
+  onClaim: (rewardId: string) => void;
 }
 
-export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({
-  reward,
-  isOpen,
-  onClose,
-  onClaim
-}) => {
-  const [stage, setStage] = useState<'closed' | 'opening' | 'reveal'>('closed');
-  const [claimed, setClaimed] = useState(reward.is_claimed || false);
-  const { playSound } = useSounds();
+const ANIMATIONS: Record<string, string> = {
+  credit_bonus: "https://assets5.lottiefiles.com/packages/lf20_rkfesiwm.json",
+  random_badge: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json",
+  multiplier: "https://assets2.lottiefiles.com/packages/lf20_npi0slet.json",
+  level_up: "https://assets3.lottiefiles.com/packages/lf20_zkgnnlia.json",
+  daily_streak_bonus: "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json",
+  raffle_ticket: "https://assets10.lottiefiles.com/packages/lf20_uomoou11.json",
+  default: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json"
+};
 
-  useEffect(() => {
-    if (isOpen && stage === 'closed') {
-      setTimeout(() => {
-        setStage('opening');
-        playSound('chime');
-      }, 500);
-    }
-  }, [isOpen, stage, playSound]);
+const getRewardDescription = (reward: LootBoxReward): string => {
+  return reward.description || `Recompensa: ${reward.reward_type}`;
+};
 
-  const handleOpenBox = () => {
-    playSound('reward');
-    setStage('reveal');
-  };
+const getDisplayName = (reward: LootBoxReward): string => {
+  return reward.display_name || reward.reward_type;
+};
 
-  const handleClaimReward = async () => {
-    if (onClaim && !claimed) {
-      await onClaim(reward.id);
-      setClaimed(true);
-      playSound('success');
-    }
-  };
+const getAnimation = (rewardType: string): string => {
+  return ANIMATIONS[rewardType] || ANIMATIONS.default;
+};
 
-  // Helper for getting appropriate icon
-  const getRewardIcon = () => {
-    switch (reward.reward_type) {
-      case 'credit_bonus':
-        return '💰';
-      case 'random_badge':
-        return '🏅';
-      case 'multiplier':
-        return '✨';
-      case 'level_up':
-        return '⬆️';
-      case 'daily_streak_bonus':
-        return '🔥';
-      case 'raffle_ticket':
-        return '🎫';
-      default:
-        return '🎁';
-    }
-  };
-
-  // Helper for getting appropriate color
-  const getRewardColor = () => {
-    switch (reward.reward_type) {
-      case 'credit_bonus':
-        return 'from-yellow-500 to-amber-600';
-      case 'random_badge':
-        return 'from-purple-500 to-indigo-600';
-      case 'multiplier':
-        return 'from-green-500 to-emerald-600';
-      case 'level_up':
-        return 'from-blue-500 to-cyan-600';
-      case 'daily_streak_bonus':
-        return 'from-orange-500 to-red-600';
-      case 'raffle_ticket':
-        return 'from-pink-500 to-rose-600';
-      default:
-        return 'from-neon-cyan to-neon-pink';
+export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({ isOpen, onClose, reward, onClaim }) => {
+  const handleClaim = () => {
+    if (reward) {
+      onClaim(reward.id);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md p-0 overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-neon-cyan/30">
-        <div className="absolute top-4 right-4 z-50">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 rounded-full"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-xl font-bold text-center mb-2">
-            {stage === 'reveal' ? reward.display_name : 'Loot Box Misteriosa'}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-galaxy-deepPurple/95 border-galaxy-purple/30 text-white">
+        <DialogHeader>
+          <DialogTitle className="text-xl text-center">
+            {reward ? getDisplayName(reward) : "Loot Box"}
           </DialogTitle>
-        </div>
-
-        <div className="p-6 flex flex-col items-center justify-center min-h-[350px]">
-          <AnimatePresence mode="wait">
-            {stage === 'closed' && (
-              <motion.div
-                key="closed"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="flex flex-col items-center"
-              >
-                <div className="text-center text-gray-400 text-sm mb-4">
-                  Preparando sua recompensa...
-                </div>
-                <div className="w-16 h-16 border-4 border-t-neon-cyan border-gray-700 rounded-full animate-spin"></div>
-              </motion.div>
-            )}
-
-            {stage === 'opening' && (
-              <motion.div
-                key="opening"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="flex flex-col items-center"
-              >
-                <div className="relative mb-8">
-                  <motion.div
-                    animate={{ 
-                      y: [0, -10, 0],
-                      rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  >
-                    <Gift className="w-32 h-32 text-neon-cyan" />
-                  </motion.div>
-                  <motion.div
-                    className="absolute inset-0 opacity-50"
-                    animate={{ 
-                      scale: [1, 1.2, 1],
-                      opacity: [0.3, 0.6, 0.3]
-                    }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity
-                    }}
-                  >
-                    <Sparkles className="w-32 h-32 text-neon-pink" />
-                  </motion.div>
-                </div>
-                <Button
-                  onClick={handleOpenBox}
-                  className="bg-gradient-to-r from-neon-cyan to-neon-pink hover:from-neon-cyan/90 hover:to-neon-pink/90 text-white px-8 py-2 rounded-full shadow-glow"
-                >
-                  Abrir Loot Box
-                </Button>
-              </motion.div>
-            )}
-
-            {stage === 'reveal' && (
-              <motion.div
-                key="reveal"
-                initial={{ scale: 0.8, opacity: 0, rotateY: 180 }}
-                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                className="flex flex-col items-center text-center"
-              >
-                <motion.div
-                  className={`w-32 h-32 rounded-full bg-gradient-to-br ${getRewardColor()} flex items-center justify-center mb-6 shadow-glow`}
-                  animate={{ 
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                  }}
-                >
-                  <span className="text-6xl">{getRewardIcon()}</span>
-                </motion.div>
-                
-                <h3 className="text-2xl font-bold mb-2">
-                  {reward.display_name}
-                </h3>
-                
-                <p className="text-gray-300 mb-6">
-                  {reward.description}
+          <DialogDescription className="text-gray-400 text-center">
+            {reward ? "Recompensa desbloqueada" : "Carregando sua recompensa..."}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="flex flex-col items-center py-6">
+          <div className="h-40 w-40 mb-6">
+            <Player
+              src={reward ? getAnimation(reward.reward_type) : ANIMATIONS.default}
+              className="h-full w-full"
+              autoplay
+              loop
+            />
+          </div>
+          
+          <div className="text-center max-w-sm">
+            {reward ? (
+              <div>
+                <p className="text-white text-xl font-bold mb-2">
+                  {getRewardDescription(reward)}
                 </p>
-                
-                {reward.reward_amount && (
-                  <div className="text-neon-cyan text-xl font-bold mb-6">
-                    {reward.reward_type === 'multiplier' 
-                      ? `${reward.reward_amount}x` 
-                      : `+${reward.reward_amount}`}
-                  </div>
-                )}
-
-                {onClaim && (
-                  <Button
-                    onClick={handleClaimReward}
-                    className={`transition-all ${claimed 
-                      ? 'bg-gray-700 text-gray-300' 
-                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'}`}
-                    disabled={claimed}
-                  >
-                    {claimed ? 'Recompensa Coletada' : 'Coletar Recompensa'}
-                  </Button>
-                )}
-              </motion.div>
+                <p className="text-gray-400">
+                  Esta recompensa foi aplicada à sua conta.
+                </p>
+              </div>
+            ) : (
+              <p className="text-white">
+                Carregando sua recompensa surpresa...
+              </p>
             )}
-          </AnimatePresence>
+            
+            {reward && !reward.is_claimed && (
+              <Button 
+                onClick={handleClaim}
+                className="mt-6 w-full bg-gradient-to-r from-neon-pink to-neon-cyan hover:opacity-90"
+              >
+                <Gift className="mr-2 h-4 w-4" />
+                Receber Recompensa
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

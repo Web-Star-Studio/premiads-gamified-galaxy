@@ -1,11 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
+
 interface SubmissionDecisionParams {
   submissionId: string;
   approverId: string;
   decision: "approve" | "reject";
-  stage: "advertiser_first" | "admin" | "advertiser_second";
+  stage: ValidationStage;
   feedback?: string;
 }
 

@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { CheckboxGroup } from "@/components/ui/checkbox-group";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Gift, Coins, Award, TrendingUp, Repeat, Ticket } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Sparkles, Award, DollarSign, TrendingUp, Repeat, Ticket } from "lucide-react";
 
 export type LootBoxRewardType = 
   | "credit_bonus" 
@@ -15,154 +14,110 @@ export type LootBoxRewardType =
   | "daily_streak_bonus" 
   | "raffle_ticket";
 
-interface LootBoxRewardOption {
-  id: LootBoxRewardType;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-const REWARD_OPTIONS: LootBoxRewardOption[] = [
-  {
-    id: "credit_bonus",
-    label: "Bônus de Créditos",
-    description: "O participante ganha 500 créditos extras",
-    icon: <Coins className="h-5 w-5 text-yellow-500" />
-  },
-  {
-    id: "random_badge",
-    label: "Badge Aleatória",
-    description: "O participante ganha uma badge exclusiva aleatória",
-    icon: <Award className="h-5 w-5 text-purple-500" />
-  },
-  {
-    id: "multiplier",
-    label: "Multiplicador de Créditos",
-    description: "Os créditos do participante são multiplicados por 1.5x",
-    icon: <TrendingUp className="h-5 w-5 text-green-500" />
-  },
-  {
-    id: "level_up",
-    label: "Level Up Instantâneo",
-    description: "O participante ganha pontos suficientes para subir de nível",
-    icon: <TrendingUp className="h-5 w-5 text-blue-500" />
-  },
-  {
-    id: "daily_streak_bonus",
-    label: "Bônus de Sequência",
-    description: "A sequência diária do participante é incrementada em +1",
-    icon: <Repeat className="h-5 w-5 text-orange-500" />
-  },
-  {
-    id: "raffle_ticket",
-    label: "Ticket de Sorteio",
-    description: "O participante ganha um número para o próximo sorteio",
-    icon: <Ticket className="h-5 w-5 text-pink-500" />
-  }
-];
-
 interface LootBoxRewardsSelectorProps {
   isOpen: boolean;
   selectedRewards: LootBoxRewardType[];
   onChange: (rewards: LootBoxRewardType[]) => void;
 }
 
-export const LootBoxRewardsSelector: React.FC<LootBoxRewardsSelectorProps> = ({
-  isOpen,
-  selectedRewards,
-  onChange
+interface RewardOption {
+  id: LootBoxRewardType;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const rewardOptions: RewardOption[] = [
+  {
+    id: "credit_bonus",
+    label: "Bônus de Créditos (+500)",
+    description: "O participante recebe 500 créditos extras",
+    icon: <Sparkles className="h-4 w-4 text-yellow-400" />
+  },
+  {
+    id: "random_badge",
+    label: "Badge Aleatória",
+    description: "Uma badge aleatória de outro desafio",
+    icon: <Award className="h-4 w-4 text-neon-cyan" />
+  },
+  {
+    id: "multiplier",
+    label: "Multiplicador de Créditos (1.5x)",
+    description: "Multiplica os créditos atuais por 1.5",
+    icon: <DollarSign className="h-4 w-4 text-green-400" />
+  },
+  {
+    id: "level_up",
+    label: "Level Up Instantâneo",
+    description: "Pontos de experiência para subir de nível",
+    icon: <TrendingUp className="h-4 w-4 text-neon-pink" />
+  },
+  {
+    id: "daily_streak_bonus",
+    label: "Bônus de Sequência Diária",
+    description: "+1 na sequência atual para o usuário",
+    icon: <Repeat className="h-4 w-4 text-purple-400" />
+  },
+  {
+    id: "raffle_ticket",
+    label: "Ticket para Sorteio",
+    description: "Um número para o próximo sorteio",
+    icon: <Ticket className="h-4 w-4 text-blue-400" />
+  }
+];
+
+const LootBoxRewardsSelector: React.FC<LootBoxRewardsSelectorProps> = ({ 
+  isOpen, 
+  selectedRewards, 
+  onChange 
 }) => {
-  const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(isOpen);
-
-  const handleRewardToggle = (rewardId: LootBoxRewardType) => {
-    if (selectedRewards.includes(rewardId)) {
-      onChange(selectedRewards.filter(id => id !== rewardId));
-    } else {
-      onChange([...selectedRewards, rewardId]);
-    }
-  };
-
-  const handleSelectAll = () => {
-    onChange(REWARD_OPTIONS.map(option => option.id));
-  };
-
-  const handleClearAll = () => {
-    onChange([]);
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="space-y-2 rounded-md border border-border p-4 bg-card/50">
-      <Collapsible
-        open={isCollapsibleOpen}
-        onOpenChange={setIsCollapsibleOpen}
-        className="space-y-2"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Gift className="h-5 w-5 text-neon-cyan" />
-            <h4 className="text-sm font-medium">Recompensas da Loot Box</h4>
-            <Badge 
-              variant="outline" 
-              className="text-xs bg-muted/50"
+    <Card className="border-neon-cyan/20 bg-gray-900/60">
+      <CardHeader>
+        <CardTitle className="text-lg font-medium">Recompensas Possíveis na Loot Box</CardTitle>
+        <CardDescription>
+          Selecione quais recompensas podem ser sorteadas quando o usuário completar esta missão
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <CheckboxGroup 
+          value={selectedRewards} 
+          onValueChange={(values) => onChange(values as LootBoxRewardType[])}
+          className="space-y-3"
+        >
+          {rewardOptions.map(option => (
+            <div 
+              key={option.id} 
+              className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/40 transition-colors"
             >
-              {selectedRewards.length} selecionadas
-            </Badge>
-          </div>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-9 p-0">
-              {isCollapsibleOpen ? 
-                <ChevronUp className="h-4 w-4" /> : 
-                <ChevronDown className="h-4 w-4" />
-              }
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-
-        <CollapsibleContent className="space-y-4">
-          <div className="flex flex-wrap gap-4 mt-2">
-            {REWARD_OPTIONS.map((option) => (
-              <div key={option.id} className="flex items-start space-x-2 basis-[calc(50%-0.5rem)]">
-                <Checkbox
-                  id={`reward-${option.id}`}
-                  checked={selectedRewards.includes(option.id)}
-                  onCheckedChange={() => handleRewardToggle(option.id)}
-                  className="mt-1"
-                />
-                <div className="space-y-1">
+              <Checkbox 
+                id={`reward-${option.id}`} 
+                value={option.id} 
+                className="mt-1"
+              />
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-800/60 flex items-center justify-center">
+                  {option.icon}
+                </div>
+                <div>
                   <Label 
                     htmlFor={`reward-${option.id}`}
-                    className="flex items-center gap-1.5 font-medium"
+                    className="font-medium text-white"
                   >
-                    {option.icon}
                     {option.label}
                   </Label>
-                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {option.description}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleClearAll}
-              className="text-xs h-8"
-            >
-              Limpar
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSelectAll}
-              className="text-xs h-8"
-            >
-              Selecionar todos
-            </Button>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
+            </div>
+          ))}
+        </CheckboxGroup>
+      </CardContent>
+    </Card>
   );
 };
 

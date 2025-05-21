@@ -202,16 +202,12 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         throw new Error(result.error || 'Erro ao aprovar submissão');
       }
       
-      console.log('Submission approved successfully:', result.data);
-      
-      // Extract points and tokens awarded
-      const pointsAwarded = result.data?.points_awarded || 0;
-      const tokensAwarded = result.data?.tokens_awarded || 0;
+      console.log('Submission approved successfully:', result);
       
       // Show success toast
       toast({
         title: "Submissão aprovada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${pointsAwarded} pontos e ${tokensAwarded} tokens atribuídos.`,
+        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso!`,
       });
       
       // Refetch data
@@ -258,7 +254,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
           .eq('id', submission.id);
       }
       
-      console.log('Submission rejected successfully:', result.data);
+      console.log('Submission rejected successfully:', result);
       
       // Show success toast
       toast({

@@ -54,24 +54,24 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         throw new Error(result.error || "Falha ao finalizar a submissão via RPC.");
       }
 
-      console.log("Submission approved successfully, result:", result.data);
+      console.log("Submission approved successfully, result:", result);
       
       // Extract reward details from the result for notification
       let rewardInfo = "";
-      const rewardData = result.data;
+      const rewardDetails = result.rewardDetails;
       
       // Prepare reward details for notification
-      const rewardDetails: RewardDetails = {
-        points: rewardData?.points_awarded || 0,
+      const rewardDetailsForAnimation: RewardDetails = {
+        points: 0,
       };
       
-      if (rewardData) {
-        console.log("Reward result details:", rewardData);
+      if (rewardDetails) {
+        console.log("Reward result details:", rewardDetails);
         
-        if (rewardData.badge_earned) {
+        if (rewardDetails.badgeEarned) {
           rewardInfo += " Badge concedido!";
-          rewardDetails.badge_earned = true;
-          rewardDetails.badge_name = submission.mission_title;
+          rewardDetailsForAnimation.badge_earned = true;
+          rewardDetailsForAnimation.badge_name = submission.mission_title;
           
           // Create or update badge record with proper image URL and description
           const { data: missionInfo } = await supabase
@@ -124,30 +124,25 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
           }
         }
         
-        if (rewardData.loot_box_reward) {
-          rewardInfo += ` Loot box: ${rewardData.loot_box_reward} (${rewardData.loot_box_amount})!`;
-          rewardDetails.loot_box_reward = rewardData.loot_box_reward;
-          rewardDetails.loot_box_amount = rewardData.loot_box_amount;
+        if (rewardDetails.lootBoxReward) {
+          rewardInfo += ` Loot box: ${rewardDetails.lootBoxReward} (${rewardDetails.lootBoxAmount})!`;
+          rewardDetailsForAnimation.loot_box_reward = rewardDetails.lootBoxReward;
+          rewardDetailsForAnimation.loot_box_amount = rewardDetails.lootBoxAmount;
         }
         
-        if (rewardData.streak_bonus > 0) {
-          rewardInfo += ` Bônus de sequência: +${rewardData.streak_bonus} pontos!`;
-          rewardDetails.streak_bonus = rewardData.streak_bonus;
-          rewardDetails.current_streak = rewardData.current_streak;
+        if (rewardDetails.streakBonus > 0) {
+          rewardInfo += ` Bônus de sequência: +${rewardDetails.streakBonus} pontos!`;
+          rewardDetailsForAnimation.streak_bonus = rewardDetails.streakBonus;
+          rewardDetailsForAnimation.current_streak = rewardDetails.currentStreak;
         }
         
         // Display reward animation if there are special rewards
-        if (rewardData.badge_earned || rewardData.loot_box_reward || rewardData.streak_bonus > 0) {
-          console.log("Showing reward notification with details:", rewardDetails);
-          showRewardNotification(rewardDetails);
+        if (rewardDetails.badgeEarned || rewardDetails.lootBoxReward || rewardDetails.streakBonus > 0) {
+          console.log("Showing reward notification with details:", rewardDetailsForAnimation);
+          showRewardNotification(rewardDetailsForAnimation);
         }
       }
       
-      // Get points awarded from the result
-      const pointsAwarded = rewardData?.points_awarded || 0;
-      const tokensAwarded = rewardData?.tokens_awarded || 0;
-      const participantId = rewardData?.participant_id;
-
       // Fetch mission title for the toast message
       let missionTitle = "esta missão"; 
       if (submission.mission_id) {
@@ -164,18 +159,15 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
       playSound("reward");
       toast({
         title: "Submissão aprovada",
-        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso! ${pointsAwarded} pontos e ${tokensAwarded} tokens atribuídos.${rewardInfo}`,
+        description: `Submissão de ${submission.user_name || 'usuário'} foi aprovada com sucesso!${rewardInfo}`,
       });
       
-      if (participantId) {
-        // Invalidate queries to ensure UI updates
-        queryClient.invalidateQueries({ queryKey: ['profile', participantId] });
-        queryClient.invalidateQueries({ queryKey: ['mission_submissions'] });
-        queryClient.invalidateQueries({ queryKey: ['user_badges'] });
-        queryClient.invalidateQueries({ queryKey: ['loot_box_rewards'] });
-        queryClient.invalidateQueries({ queryKey: ['recentRewards'] });
-        queryClient.invalidateQueries({ queryKey: ['daily_streaks'] });
-      }
+      // Invalidate queries to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: ['mission_submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['user_badges'] });
+      queryClient.invalidateQueries({ queryKey: ['loot_box_rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['recentRewards'] });
+      queryClient.invalidateQueries({ queryKey: ['daily_streaks'] });
       
       onRemove(submission.id);
     } catch (error: any) {

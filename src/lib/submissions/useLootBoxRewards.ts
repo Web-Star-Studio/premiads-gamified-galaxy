@@ -20,13 +20,28 @@ export const useLootBoxRewards = (userId?: string | null) => {
     try {
       const { data, error } = await supabase
         .from("loot_box_rewards")
-        .select("*")
+        .select("*, missions(title)")
         .eq("user_id", userId)
         .order("awarded_at", { ascending: false });
 
       if (error) throw error;
 
-      setLootBoxes(data || []);
+      // Convert the data to LootBoxReward format
+      const formattedData = data?.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        mission_id: item.mission_id,
+        reward_type: item.reward_type,
+        reward_amount: item.reward_amount,
+        description: item.description,
+        display_name: item.display_name,
+        awarded_at: item.awarded_at,
+        created_at: item.created_at,
+        missions: item.missions,
+        is_claimed: item.is_claimed || false
+      })) || [];
+
+      setLootBoxes(formattedData);
     } catch (err: any) {
       console.error("Error fetching loot box rewards:", err);
       toast({
