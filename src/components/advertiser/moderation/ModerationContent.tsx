@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import SubmissionsList from './SubmissionsList';
@@ -8,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Submission, toSubmission } from '@/types/missions';
 import { Button } from "@/components/ui/button";
 import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 interface ModerationContentProps {
   refreshKey: number;
@@ -279,18 +279,17 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     <div>
       {/* Mission filter dropdown */}
       <div className="mb-4">
-        <label htmlFor="missionSelect" className="sr-only">Selecione Missão</label>
-        <select
-          id="missionSelect"
-          value={selectedMissionId}
-          onChange={e => setSelectedMissionId(e.target.value)}
-          className="px-3 py-2 rounded-md bg-galaxy-dark border border-galaxy-purple text-white"
-        >
-          <option value="all">Todas as Missões</option>
-          {missions.map(m => (
-            <option key={m.id} value={m.id}>{m.title}</option>
-          ))}
-        </select>
+        <Select aria-label="Selecione Missão" value={selectedMissionId} onValueChange={setSelectedMissionId}>
+          <SelectTrigger className="flex h-10 w-full max-w-full items-center justify-between rounded-md border border-galaxy-purple bg-galaxy-dark px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-galaxy-purple focus:ring-offset-2">
+            <SelectValue placeholder="Todas as Missões" />
+          </SelectTrigger>
+          <SelectContent className="w-[var(--radix-select-trigger-width)] bg-galaxy-dark border border-galaxy-purple text-white">
+            <SelectItem value="all">Todas as Missões</SelectItem>
+            {missions.map(m => (
+              <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {/* Status tabs */}
       <div className="mb-4 flex space-x-2">
