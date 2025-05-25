@@ -20,7 +20,17 @@ export const getSupabaseConfig = async () => {
   try {
     // Chama Edge Function get-config para obter keys (inclui Stripe)
     const functionUrl = import.meta.env.VITE_FUNCTION_URL || `${DEFAULT_URL}/functions/v1/get-config`
-    const resp = await fetch(functionUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+    
+    // Adiciona headers de autorização necessários
+    const resp = await fetch(functionUrl, { 
+      method: 'GET', 
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEFAULT_KEY}`,
+        'apikey': DEFAULT_KEY
+      } 
+    })
+    
     if (!resp.ok) throw new Error(`Falha ao obter config: ${resp.statusText}`)
     const { supabaseUrl, supabaseAnonKey, stripePublishableKey } = await resp.json()
     configCache = { supabaseUrl, supabaseAnonKey, stripePublishableKey }
