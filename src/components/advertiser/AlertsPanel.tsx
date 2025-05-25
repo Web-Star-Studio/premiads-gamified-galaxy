@@ -1,10 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, DollarSign, TrendingUp, Users, AlertTriangle, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSounds } from "@/hooks/use-sounds";
 
 const AlertsPanel = () => {
+  const { playSound } = useSounds();
   const [alerts, setAlerts] = useState([
     {
       id: 1,
@@ -45,58 +46,72 @@ const AlertsPanel = () => {
   ]);
   
   const dismissAlert = (id: number) => {
+    playSound?.("pop");
     setAlerts(alerts.filter(alert => alert.id !== id));
   };
   
   return (
-    <Card className="transition-all duration-300 hover:shadow-[0_0_15px_rgba(155,135,245,0.2)]">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Bell className="w-5 h-5 text-neon-pink" />
-          Alertas Inteligentes
-        </CardTitle>
-        <span className="text-sm font-normal text-gray-400">
-          {alerts.length} {alerts.length === 1 ? 'alerta' : 'alertas'}
-        </span>
-      </CardHeader>
-      <CardContent>
-        {alerts.length > 0 ? (
-          <div className="space-y-3">
-            {alerts.map((alert, index) => (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className={`relative p-3 border rounded-md ${alert.color}`}
-              >
-                <div className="flex gap-3">
-                  <div className="mt-0.5">{alert.icon}</div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <h4 className="text-sm font-medium">{alert.title}</h4>
-                      <span className="text-xs text-gray-400">{alert.timestamp}</span>
-                    </div>
-                    <p className="text-xs mt-1">{alert.message}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => dismissAlert(alert.id)}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-white"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <Card className="transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,0,200,0.2)]">
+        <CardHeader className="p-5 pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg font-bold">
+            <Bell className="w-5 h-5 text-neon-pink" />
+            Alertas Inteligentes
+          </CardTitle>
+          <span className="text-sm font-medium px-2 py-1 rounded-full bg-neon-pink/10 text-neon-pink">
+            {alerts.length} {alerts.length === 1 ? 'alerta' : 'alertas'}
+          </span>
+        </CardHeader>
+        <CardContent className="p-5 pt-1">
+          {alerts.length > 0 ? (
+            <div className="space-y-3">
+              {alerts.map((alert, index) => (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  tabIndex={0}
+                  className={`relative p-4 pl-3 border rounded-lg flex items-stretch group ${alert.color} border-l-4 transition-shadow focus-within:shadow-[0_0_0_3px_#FF00C8] hover:shadow-[0_0_0_3px_#FF00C8] outline-none ` +
+                    (alert.type === 'credit' ? 'border-l-yellow-400 ' : '') +
+                    (alert.type === 'engagement' ? 'border-l-green-400 ' : '') +
+                    (alert.type === 'retention' ? 'border-l-red-400 ' : '') +
+                    (alert.type === 'users' ? 'border-l-cyan-400 ' : '')
+                  }
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <Bell className="w-10 h-10 mx-auto mb-3 text-gray-500 opacity-50" />
-            <p className="text-sm text-gray-400">Nenhum alerta ativo no momento</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                  <div className="flex gap-3 w-full">
+                    <div className="mt-0.5 bg-gray-800/50 p-2 rounded-md">{alert.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-medium">{alert.title}</h4>
+                        <span className="text-xs text-gray-400 bg-gray-800/30 px-2 py-0.5 rounded-full">{alert.timestamp}</span>
+                      </div>
+                      <p className="text-xs mt-1 leading-relaxed text-gray-300">{alert.message}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => dismissAlert(alert.id)}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/50 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-10 text-center">
+              <Bell className="w-12 h-12 mx-auto mb-4 text-gray-500 opacity-50" />
+              <p className="text-sm font-medium text-gray-400">Nenhum alerta ativo no momento</p>
+              <p className="text-xs text-gray-500 mt-1">Você será notificado quando houver novidades importantes</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 

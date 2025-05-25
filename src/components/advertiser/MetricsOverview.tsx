@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { PieChart, BarChart2, Users, TrendingUp, Clock } from "lucide-react";
@@ -51,30 +50,38 @@ const MetricsOverview = () => {
       value: metrics?.missionsCompleted || 0,
       icon: BarChart2,
       colorClass: "text-neon-cyan",
+      bgClass: "bg-neon-cyan/10",
+      borderClass: "border-neon-cyan/30"
     },
     {
       title: "Usuários Ativos",
       value: metrics?.uniqueUsers || 0,
       icon: Users,
       colorClass: "text-neon-pink",
+      bgClass: "bg-neon-pink/10",
+      borderClass: "border-neon-pink/30"
     },
     {
       title: "ROI Médio",
       value: "3.7x",
       icon: TrendingUp,
-      colorClass: "text-neon-cyan",
+      colorClass: "text-emerald-400",
+      bgClass: "bg-emerald-400/10",
+      borderClass: "border-emerald-400/30"
     },
     {
       title: "Tempo Médio",
       value: `${metrics?.averageTime || 0}min`,
       icon: Clock,
-      colorClass: "text-neon-pink",
+      colorClass: "text-amber-400",
+      bgClass: "bg-amber-400/10",
+      borderClass: "border-amber-400/30"
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between mb-3">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-24" />
@@ -100,38 +107,47 @@ const MetricsOverview = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-3"
+      className="space-y-4"
     >
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-bold font-heading">Visão Geral</h2>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30">
           <span>Últimos 30 dias</span>
-          <PieChart className="w-4 h-4" />
+          <PieChart className="w-4 h-4 text-neon-cyan" />
         </div>
       </div>
       
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metricsData.map((metric, index) => (
-          <Card 
+          <motion.div
             key={metric.title}
-            className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(155,135,245,0.3)]"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 * index }}
           >
-            <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-              <metric.icon className={`w-4 h-4 ${metric.colorClass}`} />
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <div className="text-2xl font-bold">
-                <motion.span
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  {metric.value}
-                </motion.span>
-              </div>
-            </CardContent>
-          </Card>
+            <Card 
+              className={`relative overflow-hidden transition-all duration-300 hover:shadow-[0_0_15px_rgba(155,135,245,0.3)] border ${metric.borderClass}`}
+            >
+              <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+                <div className={`p-2 rounded-md ${metric.bgClass}`}>
+                  <metric.icon className={`w-4 h-4 ${metric.colorClass}`} />
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 pt-2">
+                <div className="text-2xl font-bold">
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + 0.1 * index }}
+                    className={metric.colorClass}
+                  >
+                    {metric.value}
+                  </motion.span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
     </motion.div>

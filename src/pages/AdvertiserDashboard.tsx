@@ -1,20 +1,22 @@
-
 import React, { useEffect, useState } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import LoadingState from "@/components/advertiser/dashboard/LoadingState";
 import NotificationBanner from "@/components/advertiser/dashboard/NotificationBanner";
-import DashboardTabs from "@/components/advertiser/dashboard/DashboardTabs";
+import MetricsOverview from "@/components/advertiser/MetricsOverview";
+import TopUsers from "@/components/advertiser/TopUsers";
+import EngagementCharts from "@/components/advertiser/EngagementCharts";
+import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import DashboardHeader from "@/components/advertiser/DashboardHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useSounds } from "@/hooks/use-sounds";
+import { motion } from "framer-motion";
 
 const AdvertiserDashboard = () => {
   const { playSound } = useSounds();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
   const [credits, setCredits] = useState(5000);
   const [pendingSubmissions, setPendingSubmissions] = useState(3);
   const [userName, setUserName] = useState("Desenvolvedor");
@@ -34,11 +36,6 @@ const AdvertiserDashboard = () => {
     
     return () => clearTimeout(loadTimer);
   }, [playSound]);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    playSound("pop");
-  };
 
   if (loading) {
     return <LoadingState />;
@@ -60,15 +57,28 @@ const AdvertiserDashboard = () => {
             <div className="mt-6">
               <NotificationBanner 
                 pendingSubmissions={pendingSubmissions} 
-                onViewClick={() => setActiveTab("finance")} 
+                onViewClick={() => console.log("View pending submissions")} 
               />
             </div>
             
-            <DashboardTabs 
-              activeTab={activeTab} 
-              onTabChange={handleTabChange} 
-              credits={credits} 
-            />
+            <div className="mt-8 space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="grid grid-cols-1 gap-8 lg:grid-cols-3"
+              >
+                <div className="lg:col-span-2 flex flex-col gap-8 w-full">
+                  <MetricsOverview />
+                  <EngagementCharts />
+                  <AlertsPanel />
+                </div>
+                
+                <div className="space-y-8">
+                  <TopUsers />
+                </div>
+              </motion.div>
+            </div>
           </div>
         </SidebarInset>
       </div>
