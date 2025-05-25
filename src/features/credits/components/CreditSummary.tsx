@@ -1,106 +1,76 @@
-
-import { Card, CardContent } from '@/components/ui/card'
-import { CreditPackage } from '../useCreditPurchase.hook'
-import { InfoIcon } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Clock, CreditCard, SparklesIcon, Zap } from "lucide-react";
+import { CreditPackage } from "../useCreditPurchase.hook";
 
 interface CreditSummaryProps {
-  selectedPackage: CreditPackage | null
-  customPackage?: { base: number; bonus: number; total: number; price: number }
-  paymentMethod?: string
+  selectedPackage: CreditPackage | null;
+  paymentMethod?: "stripe" | "paypal";
 }
 
-export function CreditSummary({ selectedPackage, customPackage, paymentMethod }: CreditSummaryProps) {
-  // Use either the selected package or custom package
-  const pkg = customPackage || selectedPackage
-  
-  if (!pkg) return null
-  
-  const { base, bonus, price } = pkg
-  const total = base + bonus
-  const pricePerCredit = price / total
-  
+export function CreditSummary({ selectedPackage, paymentMethod }: CreditSummaryProps) {
+  if (!selectedPackage) return null;
+
+  const { base, bonus, price } = selectedPackage;
+  const totalCredits = base + bonus;
+  const pricePerCredit = price / totalCredits;
+  const formattedPrice = (price / 10).toFixed(2).replace(".", ",");
+  const formattedPricePerCredit = (price / 10 / totalCredits).toFixed(3).replace(".", ",");
+
   return (
-    <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/20">
-      <CardContent className="p-4">
-        <h3 className="text-lg font-medium mb-4">Resumo</h3>
-        
-        <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <span className="text-base font-medium">Resumo</span>
+        <div className="text-right">
+          <span className="text-lg font-bold text-neon-pink">R$ {formattedPrice}</span>
+          <p className="text-xs text-gray-400">Valor total</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-300 flex items-center">
+            <CreditCard className="w-4 h-4 mr-2 text-purple-400" />
+            Créditos base
+          </span>
+          <span className="font-medium">{base.toLocaleString()}</span>
+        </div>
+
+        {bonus > 0 && (
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Créditos base</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="w-3.5 h-3.5 text-gray-500 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple">
-                    <p className="text-xs">Quantidade base de créditos</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <span className="font-medium">{base.toLocaleString()}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Bônus</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="w-3.5 h-3.5 text-gray-500 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple">
-                    <p className="text-xs">Créditos extras incluídos no pacote</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+            <span className="text-sm text-neon-pink flex items-center">
+              <SparklesIcon className="w-4 h-4 mr-2" />
+              Bônus
+            </span>
             <span className="font-medium text-neon-pink">+{bonus.toLocaleString()}</span>
           </div>
-          
-          <div className="border-t border-gray-700 my-2 pt-2"></div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Total de créditos</span>
-            </div>
-            <span className="font-medium">{total.toLocaleString()}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Valor total</span>
-            </div>
-            <span className="font-medium">R$ {price.toFixed(2).replace('.', ',')}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Preço por crédito</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="w-3.5 h-3.5 text-gray-500 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple">
-                    <p className="text-xs">Valor dividido pelo total de créditos</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <span className="font-medium">R$ {pricePerCredit.toFixed(3).replace('.', ',')}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-400">Validade</span>
-            </div>
-            <span className="font-medium">12 meses</span>
-          </div>
+        )}
+
+        <div className="flex justify-between items-center pt-1 border-t border-gray-700">
+          <span className="text-sm text-gray-300">Total de créditos</span>
+          <span className="font-medium">{totalCredits.toLocaleString()}</span>
         </div>
-      </CardContent>
-    </Card>
-  )
+
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-300 flex items-center">
+            <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+            Preço por crédito
+          </span>
+          <span className="text-sm">R$ {formattedPricePerCredit}</span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-300 flex items-center">
+            <Clock className="w-4 h-4 mr-2 text-blue-400" />
+            Validade
+          </span>
+          <span className="text-sm">12 meses</span>
+        </div>
+      </div>
+
+      <div className="pt-3 border-t border-gray-700">
+        <div className="text-xs text-gray-400">
+          Os créditos serão adicionados à sua conta imediatamente após a confirmação do pagamento.
+        </div>
+      </div>
+    </div>
+  );
 }

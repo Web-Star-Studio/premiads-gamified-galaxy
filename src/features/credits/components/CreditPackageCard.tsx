@@ -1,8 +1,7 @@
-
 import { Card } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { Check } from 'lucide-react'
+import { Check, Sparkles, TrendingUp } from 'lucide-react'
 import { CreditPackage } from '../useCreditPurchase.hook'
 
 interface CreditPackageCardProps {
@@ -16,11 +15,16 @@ export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCa
   const total = base + bonus
   const bonusPercentage = bonus > 0 ? Math.round((bonus / base) * 100) : 0
   
+  // Calculate value indicator (price per credit)
+  const pricePerCredit = price / total
+  const valueIndicator = pricePerCredit <= 0.09 ? 'MELHOR VALOR' : ''
+  
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       onClick={onSelect}
+      className="h-full"
     >
       <Card 
         className={cn(
@@ -31,8 +35,15 @@ export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCa
         )}
       >
         {bonusPercentage > 0 && (
-          <div className="absolute -top-3 -right-3 bg-neon-pink text-white text-xs font-bold px-2 py-1 rounded-md">
-            +{bonusPercentage}%
+          <div className="absolute -top-3 -right-3 bg-neon-pink text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg">
+            +{bonusPercentage}% BÔNUS
+          </div>
+        )}
+        
+        {valueIndicator && (
+          <div className="absolute -top-3 -left-3 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg">
+            <TrendingUp className="w-3 h-3" />
+            {valueIndicator}
           </div>
         )}
         
@@ -42,24 +53,25 @@ export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCa
           </div>
         )}
         
-        <div className="text-center mb-2">
+        <div className="text-center mb-3 mt-2">
           <div className="text-2xl font-bold">{base.toLocaleString()}</div>
           <div className="text-sm text-gray-400">créditos</div>
         </div>
         
         {bonus > 0 && (
-          <div className="bg-neon-pink/20 rounded-md px-3 py-1 mb-3 text-center">
+          <div className="bg-neon-pink/20 rounded-md px-3 py-1.5 mb-3 text-center flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-neon-pink" />
             <div className="text-sm font-medium text-neon-pink">+{bonus.toLocaleString()} bônus</div>
           </div>
         )}
         
-        <div className="text-center mt-auto">
-          <div className="text-lg font-bold">R$ {price.toFixed(2).replace('.', ',')}</div>
-          <div className="text-xs text-gray-400">
+        <div className="text-center mt-auto w-full">
+          <div className="text-lg font-bold">R$ {(price / 10).toFixed(2).replace('.', ',')}</div>
+          <div className="text-xs text-gray-400 mt-1">
             {total.toLocaleString()} créditos no total
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            R$ {(price / total).toFixed(3).replace('.', ',')} por crédito
+            R$ {(price / 10 / total).toFixed(3).replace('.', ',')} por crédito
           </div>
         </div>
       </Card>

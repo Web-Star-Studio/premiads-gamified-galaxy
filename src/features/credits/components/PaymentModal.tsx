@@ -38,6 +38,17 @@ function PaymentModal({
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   
+  // Create a compatible package when using customPackage
+  const packageForSummary = customPackage && !selectedPackage ? {
+    id: 'custom',
+    name: `${customPackage.base} Credits`,
+    description: customPackage.bonus > 0 ? `${customPackage.bonus} bonus credits` : 'Custom package',
+    price: customPackage.price,
+    credit: customPackage.total,
+    base: customPackage.base,
+    bonus: customPackage.bonus
+  } : selectedPackage;
+  
   const handlePurchase = () => {
     if (selectedProvider && selectedMethod) {
       onPurchase(selectedProvider, selectedMethod)
@@ -99,12 +110,14 @@ function PaymentModal({
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              <div className="grid gap-6">
+              <div className="bg-galaxy-deepPurple/30 border border-galaxy-purple/30 rounded-lg p-4">
                 <CreditSummary 
-                  selectedPackage={selectedPackage}
-                  customPackage={customPackage}
+                  selectedPackage={packageForSummary}
+                  paymentMethod={selectedProvider === 'stripe' ? 'stripe' : 'paypal'}
                 />
-                
+              </div>
+              
+              <div className="bg-galaxy-deepPurple/30 border border-galaxy-purple/30 rounded-lg p-4">
                 <PaymentMethodSelector
                   selectedProvider={selectedProvider}
                   selectedMethod={selectedMethod}
@@ -117,7 +130,7 @@ function PaymentModal({
                 <Button
                   onClick={handlePurchase}
                   disabled={!canPurchase}
-                  className="bg-gradient-to-r from-purple-600/60 to-pink-500/60 hover:from-purple-600/80 hover:to-pink-500/80"
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
                 >
                   {isPurchasing ? (
                     <>

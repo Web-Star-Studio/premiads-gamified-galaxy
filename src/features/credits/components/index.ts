@@ -1,5 +1,5 @@
 export { CreditPackageCard } from './CreditPackageCard'
-export { CreditSlider } from './CreditSlider'
 export { CreditSummary } from './CreditSummary'
+export { CreditSlider } from './CreditSlider'
 export { PaymentMethodSelector } from './PaymentMethodSelector'
 export { PaymentModal } from './PaymentModal' 
