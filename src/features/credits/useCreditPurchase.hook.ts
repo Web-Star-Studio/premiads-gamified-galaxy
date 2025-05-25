@@ -1,18 +1,19 @@
-
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { loadStripe } from "@stripe/stripe-js";
+import { getSupabaseConfig } from '@/services/config';
 
 // Initialize Stripe outside of the component
 let stripePromise: Promise<any> | null = null;
 const getStripe = async () => {
   if (!stripePromise) {
-    stripePromise = loadStripe(
-      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
-    );
+    // Busca chave pública via Edge Function get-config
+    const { stripePublishableKey } = await getSupabaseConfig();
+    if (!stripePublishableKey) throw new Error('Chave pública do Stripe não definida');
+    stripePromise = loadStripe(stripePublishableKey);
   }
   return stripePromise;
 };
@@ -93,84 +94,84 @@ export default function useCreditPurchase() {
     fetchPackages();
   }, [selectedPackage]);
 
-  // Mutation to handle the Stripe checkout
-  const { mutate: createCheckout, isPending: isCreatingCheckout } =
+  // Mutation to handle credit purchase via Edge Function
+  const { mutate: createPurchase, isPending: isCreatingPurchase } =
     useMutation({
-      mutationFn: async () => {
-        if (!selectedPackage) {
-          throw new Error("No credit package selected.");
-        }
+      mutationFn: async ({ provider, method }: { provider: 'mercado_pago' | 'stripe'; method: 'pix' | 'credit_card' | 'boleto' | 'debit' }) => {
+        if (!selectedPackage) throw new Error('Nenhum pacote selecionado.')
+        if (!user) throw new Error('Usuário não autenticado.')
 
-        if (!user) {
-          throw new Error("User not authenticated.");
-        }
-
-        // Call the Supabase function to create a Stripe checkout session
         const { data, error } = await supabase.functions.invoke(
-          "create-stripe-checkout-session",
+          'purchase-credits',
           {
             body: {
-              priceId: selectedPackage.stripe_price_id || "price_default",
-              successUrl: purchaseOptions.successUrl,
-              cancelUrl: purchaseOptions.cancelUrl,
               userId: user.id,
+              packageId: selectedPackage.id,
+              paymentProvider: provider,
+              paymentMethod: method,
             },
           }
-        );
+        )
 
         if (error) {
-          console.error("Stripe checkout session creation error:", error);
-          throw new Error(
-            error.message || "Failed to create Stripe checkout session."
-          );
+          console.error('Erro ao iniciar compra:', error)
+          throw new Error(error.message || 'Falha ao iniciar compra.')
         }
 
-        return data;
+        return data
       },
       onSuccess: async (data: any) => {
-        // Redirect to Stripe checkout
-        const stripe = await getStripe();
-        const { error } = await stripe?.redirectToCheckout({
-          sessionId: data.sessionId,
-        });
+        // Para Stripe, redireciona via Stripe.js
+        if (data.payment?.session_id) {
+          const stripe = await getStripe()
+          const { error } = await stripe?.redirectToCheckout({ sessionId: data.payment.session_id })
 
-        if (error) {
-          console.error("Stripe redirection error:", error);
-          toast({
-            title: "Erro ao redirecionar para o Stripe",
-            description: error.message,
-            variant: "destructive",
-          });
+          if (error) {
+            console.error('Erro ao redirecionar Stripe:', error)
+            toast({
+              title: 'Erro ao redirecionar para o Stripe',
+              description: error.message,
+              variant: 'destructive',
+            })
+          }
+        } else if (data.payment?.payment_url) {
+          // Outros provedores ou PIX
+          window.location.href = data.payment.payment_url
         }
       },
       onError: (error: any) => {
-        console.error("Error creating checkout session:", error);
+        console.error('Erro ao iniciar compra:', error)
         toast({
-          title: "Erro ao criar sessão de checkout",
+          title: 'Erro ao iniciar compra',
           description: error.message,
-          variant: "destructive",
-        });
+          variant: 'destructive',
+        })
       },
-    });
+    })
 
-  // Function to handle initiating the purchase
-  const handlePurchase = () => {
-    createCheckout();
-  };
+  // Função para disparar a compra
+  const handlePurchase = (
+    provider: 'mercado_pago' | 'stripe',
+    method: 'pix' | 'credit_card' | 'boleto' | 'debit'
+  ) => {
+    createPurchase({ provider, method })
+  }
   
-  // Function to handle payment confirmation
-  const handlePayment = () => {
-    setIsLoading(true);
-    setPaymentError(null);
-    
+  // Function to handle payment confirmation from UI
+  const handlePayment = (
+    provider: 'mercado_pago' | 'stripe',
+    method: 'pix' | 'credit_card' | 'boleto' | 'debit'
+  ) => {
+    setIsLoading(true)
+    setPaymentError(null)
     try {
-      handlePurchase();
+      handlePurchase(provider, method)
     } catch (error: any) {
-      setPaymentError(error);
+      setPaymentError(error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
   
   // Reset state 
   const resetState = () => {
@@ -185,7 +186,7 @@ export default function useCreditPurchase() {
     purchaseOptions,
     setPurchaseOptions,
     handlePurchase,
-    isCreatingCheckout,
+    isCreatingPurchase,
     // Additional properties needed by components
     packages,
     paymentMethod,

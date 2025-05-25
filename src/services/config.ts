@@ -1,7 +1,8 @@
 // Serviço para obter as configurações do Supabase da Edge Function
 
 // Cache das configurações para não ficar fazendo chamadas repetitivas
-let configCache: { supabaseUrl: string; supabaseAnonKey: string } | null = null;
+interface SupabaseConfig { supabaseUrl: string; supabaseAnonKey: string; stripePublishableKey?: string }
+let configCache: SupabaseConfig | null = null;
 
 // Valores diretos para evitar problemas de CORS
 const SUPABASE_URL = "https://zfryjwaeojccskfiibtq.supabase.co";
@@ -14,18 +15,16 @@ const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 // Função para obter as configurações
 export const getSupabaseConfig = async () => {
   // Se já tivermos as configurações em cache, retornamos elas
-  if (configCache) {
-    return configCache;
-  }
+  if (configCache) return configCache;
 
   try {
-    // MUDANÇA: Usar os valores diretamente ao invés de chamar a Edge Function
-    // Isso resolve problemas de CORS durante o desenvolvimento
-    configCache = {
-      supabaseUrl: DEFAULT_URL,
-      supabaseAnonKey: DEFAULT_KEY
-    };
-    return configCache;
+    // Chama Edge Function get-config para obter keys (inclui Stripe)
+    const functionUrl = import.meta.env.VITE_FUNCTION_URL || `${DEFAULT_URL}/functions/v1/get-config`
+    const resp = await fetch(functionUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+    if (!resp.ok) throw new Error(`Falha ao obter config: ${resp.statusText}`)
+    const { supabaseUrl, supabaseAnonKey, stripePublishableKey } = await resp.json()
+    configCache = { supabaseUrl, supabaseAnonKey, stripePublishableKey }
+    return configCache
 
     /* Código original comentado para referência futura
     // URL da Edge Function do Supabase
@@ -75,6 +74,7 @@ export const getSupabaseConfig = async () => {
     configCache = {
       supabaseUrl: DEFAULT_URL,
       supabaseAnonKey: DEFAULT_KEY
+      // stripePublishableKey permanecerá undefined aqui
     };
     return configCache;
   }

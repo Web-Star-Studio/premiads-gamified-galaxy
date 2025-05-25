@@ -68,14 +68,11 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }));
   };
   
-  // Função para calcular a pontuação final da campanha
+  /** Calculate final points based on manual or random selection */
   const calculateCampaignPoints = (): number => {
-    if (formData.randomPoints && formData.pointsValue !== undefined) {
-      return formData.pointsValue;
-    } else {
-      // Usar a média dos pontos mínimos e máximos se não for aleatório
-      return Math.floor((formData.pointsRange[0] + formData.pointsRange[1]) / 2);
-    }
+    if (formData.randomPoints && formData.pointsValue !== undefined) return formData.pointsValue
+    // Manual points selection
+    return formData.pointsValue || 0
   };
 
   // Função para formatar a data

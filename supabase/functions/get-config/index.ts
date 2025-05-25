@@ -1,6 +1,7 @@
 // Retorna as configurações necessárias para o frontend
 // Apenas a chave anon é retornada por questões de segurança
-// @deno-types="https://deno.land/std@0.168.0/http/server.ts"
+// @deno-types="https://deno.land/std@0.177.0/http/server.d.ts"
+// @ts-ignore
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 import { corsHeaders } from '../_shared/cors.ts';
@@ -26,6 +27,7 @@ serve(async (req) => {
     // Obtém as variáveis de ambiente
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const stripePublishableKey = Deno.env.get('STRIPE_PUBLISHABLE_KEY');
     
     if (!supabaseUrl || !supabaseAnonKey) {
       return new Response(
@@ -36,7 +38,7 @@ serve(async (req) => {
 
     // Retorna as configurações
     return new Response(
-      JSON.stringify({ supabaseUrl, supabaseAnonKey }),
+      JSON.stringify({ supabaseUrl, supabaseAnonKey, stripePublishableKey }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {

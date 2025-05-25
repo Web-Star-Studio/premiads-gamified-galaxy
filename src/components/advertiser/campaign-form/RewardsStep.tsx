@@ -1,4 +1,3 @@
-
 import { memo, useEffect, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -33,7 +32,8 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   
   // Limites de pontuação baseados nos créditos disponíveis
   const minPoints = 10;
-  const maxPoints = userCredits > 0 ? Math.min(200, userCredits) : 200;
+  // Máximo de pontos proporcional aos créditos disponíveis
+  const maxPoints = userCredits;
   const pointsStep = 5;
 
   // Inicializa e mantém créditos dinâmicos via store e real-time
@@ -58,7 +58,6 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
       updateFormData("pointsValue", randomValue);
     } else {
       setRandomPointValue(null);
-      updateFormData("pointsValue", formData.pointsRange[0]);
     }
   }, [formData.randomPoints, userCredits]);
 
@@ -168,27 +167,42 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="points-slider" className="text-sm font-medium">Pontos</label>
-              <div className="text-sm">
-                <span className="mr-3 text-neon-cyan" aria-live="polite">
-                  {formData.randomPoints 
-                    ? randomPointValue || "Calculando..." 
-                    : `${formData.pointsRange[0]} - ${formData.pointsRange[1]}`}
-                </span>
+              <div className="flex items-center space-x-3">
+                {formData.randomPoints
+                  ? <span className="text-sm text-neon-cyan" aria-live="polite">{randomPointValue || "Calculando..."}</span>
+                  : <>
+                      <span className="text-sm text-neon-cyan">{formData.pointsValue}</span>
+                      <Input
+                        id="points-input"
+                        type="number"
+                        min={minPoints}
+                        max={maxPoints}
+                        step={pointsStep}
+                        value={formData.pointsValue}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10)
+                          if (!isNaN(val))
+                            updateFormData("pointsValue", Math.min(Math.max(val, minPoints), maxPoints))
+                        }}
+                        className="w-24 bg-gray-800 border-gray-700 focus:border-neon-cyan text-right"
+                        disabled={formData.randomPoints || userCredits === 0}
+                      />
+                    </>}
               </div>
             </div>
             <Slider
               id="points-slider"
-              defaultValue={formData.pointsRange}
+              value={[formData.pointsValue]}
               min={minPoints}
               max={maxPoints}
               step={pointsStep}
               disabled={formData.randomPoints || userCredits === 0}
-              onValueChange={(value) => updateFormData("pointsRange", value)}
+              onValueChange={(value) => updateFormData("pointsValue", value[0])}
               className="py-4"
               aria-valuemin={minPoints}
               aria-valuemax={maxPoints}
-              aria-valuenow={formData.pointsRange[1]}
-              aria-valuetext={`${formData.pointsRange[0]} a ${formData.pointsRange[1]} pontos`}
+              aria-valuenow={formData.pointsValue}
+              aria-valuetext={`${formData.pointsValue} pontos`}
             />
           </div>
 

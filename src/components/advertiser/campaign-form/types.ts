@@ -31,7 +31,7 @@ export interface FormData {
 export const initialFormData: FormData = {
   title: '',
   description: '',
-  type: 'form',
+  type: '',
   audience: 'all',
   requirements: '',
   startDate: new Date(),
@@ -42,6 +42,7 @@ export const initialFormData: FormData = {
   streakMultiplier: 1.2,
   randomPoints: false,
   pointsRange: [10, 50],
+  pointsValue: 10, // initial manual points value
   targetFilter: {
     age: ["18", "65"],
     gender: "all",
