@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Define form schema
@@ -15,6 +14,10 @@ export const profileFormSchema = z.object({
   householdSize: z.string().optional(),
   educationLevel: z.string().optional(),
   sustainabilityInterest: z.string().optional(),
+  instagramUrl: z.string().url().optional().or(z.literal('').optional()),
+  tiktokUrl: z.string().url().optional().or(z.literal('').optional()),
+  youtubeUrl: z.string().url().optional().or(z.literal('').optional()),
+  twitterUrl: z.string().url().optional().or(z.literal('').optional()),
 });
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;

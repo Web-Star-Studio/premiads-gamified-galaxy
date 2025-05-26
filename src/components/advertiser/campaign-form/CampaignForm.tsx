@@ -134,7 +134,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
           : null,
       // Additional fields for rewards
       has_badges: formData.hasBadges || false,
-      has_lootbox: formData.hasLootBox || false,
+      has_extra_prize: formData.hasLootBox || false,
+      extra_prize_name: formData.extraPrizeName || null,
+      extra_prize_description: formData.extraPrizeDescription || null,
+      extra_prize_image_url: formData.extraPrizeImageUrl || null,
       streak_bonus: formData.streakBonus || false,
       streak_multiplier: formData.streakMultiplier || 1.0,
       // For min purchase requirements (coupon campaigns)

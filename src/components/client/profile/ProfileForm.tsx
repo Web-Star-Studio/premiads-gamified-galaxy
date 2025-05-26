@@ -1,10 +1,10 @@
-
 import { motion } from "framer-motion";
 import { Form } from "@/components/ui/form";
 import { useProfileForm } from "./hooks/useProfileForm";
 import { ProfileHeader } from "./sections/ProfileHeader";
 import { BasicInfoSection } from "./sections/BasicInfoSection";
 import { AdditionalInfoSection } from "./sections/AdditionalInfoSection";
+import { SocialLinksSection } from "./sections/SocialLinksSection";
 import { FormFooter } from "./sections/FormFooter";
 
 const ProfileForm = () => {
@@ -29,6 +29,11 @@ const ProfileForm = () => {
           <div className="border-t border-galaxy-purple/20 pt-6">
             <h3 className="text-lg font-bold mb-4">Informações Adicionais</h3>
             <AdditionalInfoSection form={form} />
+          </div>
+          
+          <div className="border-t border-galaxy-purple/20 pt-6">
+            <h3 className="text-lg font-bold mb-4">Redes Sociais</h3>
+            <SocialLinksSection form={form} />
           </div>
           
           <FormFooter loading={loading} />

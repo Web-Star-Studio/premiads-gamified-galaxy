@@ -11,6 +11,8 @@ export interface FormData {
   endDate: Date | string;
   hasBadges: boolean;
   hasLootBox: boolean;
+  /** Extra prize (formerly loot box) enable flag */
+  hasExtraPrize?: boolean;
   streakBonus: boolean;
   streakMultiplier: number;
   randomPoints: boolean;
@@ -23,6 +25,9 @@ export interface FormData {
     interests?: string[]; // Adding missing 'interests' property
   };
   badgeImageUrl?: string | null; // URL to stored badge image
+  extraPrizeName?: string;
+  extraPrizeDescription?: string;
+  extraPrizeImageUrl?: string | null;
   minPurchase?: number; // Adding missing 'minPurchase' property
   selectedLootBoxRewards?: LootBoxRewardType[]; // Array of selected loot box reward types
 }
@@ -38,6 +43,7 @@ export const initialFormData: FormData = {
   endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
   hasBadges: false,
   hasLootBox: false,
+  hasExtraPrize: false,
   streakBonus: false,
   streakMultiplier: 1.2,
   randomPoints: false,
@@ -50,6 +56,9 @@ export const initialFormData: FormData = {
     interests: [] // Initialize interests as empty array
   },
   badgeImageUrl: null,
+  extraPrizeName: '',
+  extraPrizeDescription: '',
+  extraPrizeImageUrl: null,
   minPurchase: 0, // Default value for minPurchase
   selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'] as LootBoxRewardType[]
 };

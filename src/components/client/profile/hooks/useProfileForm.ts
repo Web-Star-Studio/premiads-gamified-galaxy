@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +30,10 @@ export function useProfileForm() {
       householdSize: undefined,
       educationLevel: undefined,
       sustainabilityInterest: undefined,
+      instagramUrl: '',
+      tiktokUrl: '',
+      youtubeUrl: '',
+      twitterUrl: '',
     },
   });
 

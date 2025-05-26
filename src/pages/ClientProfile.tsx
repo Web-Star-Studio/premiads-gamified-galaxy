@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft, ChevronRight } from "lucide-react";
@@ -25,6 +24,10 @@ const personalInfoSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
   location: z.string().optional(),
+  instagramUrl: z.string().url().optional().or(z.literal('').optional()),
+  tiktokUrl: z.string().url().optional().or(z.literal('').optional()),
+  youtubeUrl: z.string().url().optional().or(z.literal('').optional()),
+  twitterUrl: z.string().url().optional().or(z.literal('').optional()),
 });
 
 const preferenceSchema = z.object({
@@ -49,6 +52,10 @@ const ClientProfile = () => {
       email: "usuario@example.com", // Placeholder
       phone: "",
       location: "",
+      instagramUrl: '',
+      tiktokUrl: '',
+      youtubeUrl: '',
+      twitterUrl: '',
     },
   });
 
@@ -62,18 +69,55 @@ const ClientProfile = () => {
     },
   });
 
-  const handlePersonalInfoSubmit = (values: z.infer<typeof personalInfoSchema>) => {
+  const handlePersonalInfoSubmit = async (values: z.infer<typeof personalInfoSchema>) => {
     setLoading(true);
-    // Simulate API call with timeout
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) throw new Error('Sessão não encontrada');
+
+      const userId = session.user.id;
+
+      // Obter dados atuais
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('profile_data')
+        .eq('id', userId)
+        .single();
+
+      const updatedProfileData = {
+        ...((currentProfile?.profile_data as Record<string, any>) || {}),
+        personalInfo: {
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          location: values.location,
+          instagramUrl: values.instagramUrl,
+          tiktokUrl: values.tiktokUrl,
+          youtubeUrl: values.youtubeUrl,
+          twitterUrl: values.twitterUrl,
+        }
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          profile_data: updatedProfileData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
       setUserName(values.fullName);
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações pessoais foram atualizadas com sucesso!",
-      });
-      playSound("chime");
-    }, 800);
+      toast({ title: 'Perfil atualizado', description: 'Informações salvas com sucesso!' });
+      playSound('chime');
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
+      playSound('error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePreferencesSubmit = (values: z.infer<typeof preferenceSchema>) => {
@@ -258,6 +302,61 @@ const ClientProfile = () => {
                             className="pl-10"
                             {...personalInfoForm.register("location")}
                           />
+                        </div>
+                      </div>
+
+                      {/* Redes Sociais */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Instagram */}
+                        <div className="space-y-2">
+                          <Label htmlFor="instagramUrl">Instagram</Label>
+                          <div className="relative">
+                            <Input
+                              id="instagramUrl"
+                              placeholder="https://instagram.com/usuario"
+                              className="pl-3"
+                              {...personalInfoForm.register("instagramUrl")}
+                            />
+                          </div>
+                        </div>
+
+                        {/* TikTok */}
+                        <div className="space-y-2">
+                          <Label htmlFor="tiktokUrl">TikTok</Label>
+                          <div className="relative">
+                            <Input
+                              id="tiktokUrl"
+                              placeholder="https://www.tiktok.com/@usuario"
+                              className="pl-3"
+                              {...personalInfoForm.register("tiktokUrl")}
+                            />
+                          </div>
+                        </div>
+
+                        {/* YouTube */}
+                        <div className="space-y-2">
+                          <Label htmlFor="youtubeUrl">YouTube</Label>
+                          <div className="relative">
+                            <Input
+                              id="youtubeUrl"
+                              placeholder="https://www.youtube.com/@canal"
+                              className="pl-3"
+                              {...personalInfoForm.register("youtubeUrl")}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Twitter */}
+                        <div className="space-y-2">
+                          <Label htmlFor="twitterUrl">Twitter / X</Label>
+                          <div className="relative">
+                            <Input
+                              id="twitterUrl"
+                              placeholder="https://twitter.com/usuario"
+                              className="pl-3"
+                              {...personalInfoForm.register("twitterUrl")}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
