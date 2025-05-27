@@ -23,7 +23,8 @@ import {
   LogOut,
   BellRing,
   BadgePlus,
-  Shield
+  Shield,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,6 +81,11 @@ export const AdvertiserSidebar = () => {
       title: "Análises",
       url: "/anunciante/analises",
       icon: BarChart3,
+    },
+    {
+      title: "CRM",
+      url: "/anunciante/crm",
+      icon: Users,
     },
     {
       title: "Créditos",
