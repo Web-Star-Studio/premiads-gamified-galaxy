@@ -73,11 +73,6 @@ export const AdvertiserSidebar = () => {
       icon: Wallet,
     },
     {
-      title: "Nova Campanha",
-      url: "/anunciante/nova-campanha",
-      icon: BadgePlus,
-    },
-    {
       title: "Moderação",
       url: "/anunciante/moderacao",
       icon: Shield,
