@@ -68,6 +68,11 @@ export const AdvertiserSidebar = () => {
       icon: FileText,
     },
     {
+      title: "Cashbacks",
+      url: "/anunciante/cashbacks",
+      icon: Wallet,
+    },
+    {
       title: "Nova Campanha",
       url: "/anunciante/nova-campanha",
       icon: BadgePlus,

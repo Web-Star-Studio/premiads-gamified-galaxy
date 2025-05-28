@@ -7,6 +7,7 @@ import RouteGuard from "@/components/auth/RouteGuard";
 // Lazy load advertiser pages
 const AdvertiserDashboard = lazy(() => import("@/pages/AdvertiserDashboard"));
 const AdvertiserCampaigns = lazy(() => import("@/pages/advertiser/AdvertiserCampaigns"));
+const AdvertiserCashbacksPage = lazy(() => import("@/pages/anunciante/cashbacks"));
 const AdvertiserNewCampaign = lazy(() => import("@/pages/advertiser/NewCampaign"));
 const AdvertiserAnalytics = lazy(() => import("@/pages/advertiser/AnalyticsPage"));
 const AdvertiserCredits = lazy(() => import("@/pages/advertiser/CreditsPage"));
@@ -37,6 +38,14 @@ const AdvertiserRoutes = () => {
         <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserCampaigns />
+          </Suspense>
+        </RouteGuard>
+      } />
+      
+      <Route path="cashbacks" element={
+        <RouteGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <AdvertiserCashbacksPage />
           </Suspense>
         </RouteGuard>
       } />

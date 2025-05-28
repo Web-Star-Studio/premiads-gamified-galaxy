@@ -1,6 +1,5 @@
-
-import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
-import { mockCashbackCampaigns, mockUserCashback, createMockRedemption } from './mockData';
+import { supabase } from '@/integrations/supabase/client'
+import type { CashbackCampaign, CashbackRedemption } from '@/types/cashback'
 
 export interface FetchCashbackResult {
   campaigns: CashbackCampaign[];
@@ -8,70 +7,53 @@ export interface FetchCashbackResult {
 }
 
 /**
- * Fetches active cashback campaigns using mock data
- * This will be replaced with actual Supabase calls when integrated
+ * Fetches active cashback campaigns from Supabase
  */
 export const fetchCashbackCampaigns = async (): Promise<CashbackCampaign[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  try {
-    // Return mock data
-    console.log("Fetching cashback campaigns (mock data)");
-    return mockCashbackCampaigns.filter(campaign => campaign.is_active);
-  } catch (error) {
-    console.error("Error fetching cashback campaigns:", error);
-    return [];
-  }
-};
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('cashback_campaigns')
+    .select('*')
+    .eq('is_active', true)
+    .gte('end_date', now)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as CashbackCampaign[]
+}
 
 /**
- * Fetches the user's cashback balance using mock data
- * This will be replaced with actual Supabase calls when integrated
+ * Fetches the user's cashback balance from profiles table
  */
 export const fetchUserCashbackBalance = async (): Promise<number> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  try {
-    console.log("Fetching user cashback balance (mock data)");
-    return mockUserCashback;
-  } catch (error) {
-    console.error("Error fetching user cashback balance:", error);
-    return 0;
-  }
-};
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('cashback_balance')
+    .single()
+  if (error) throw error
+  return data?.cashback_balance ?? 0
+}
 
 /**
- * Redeems cashback for a specific campaign using mock data
- * This will be replaced with actual Supabase calls when integrated
+ * Redeems cashback via Supabase RPC function
  */
 export const redeemCashback = async (
-  campaignId: string, 
+  campaignId: string,
   amount: number
-): Promise<CashbackRedemption | null> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  try {
-    // Check if campaign exists
-    const campaign = mockCashbackCampaigns.find(c => c.id === campaignId);
-    if (!campaign) {
-      throw new Error('Campanha não encontrada.');
-    }
-    
-    // Verify balance (using mock data)
-    if (mockUserCashback < amount) {
-      throw new Error('Saldo insuficiente para realizar este resgate.');
-    }
-    
-    // Create mock redemption
-    const redemption = createMockRedemption(campaignId, amount);
-    
-    console.log("Cashback redeemed (mock):", redemption);
-    return redemption;
-  } catch (error: any) {
-    console.error("Error redeeming cashback:", error);
-    throw error;
-  }
-};
+): Promise<CashbackRedemption> => {
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabase.auth.getSession()
+  if (sessionError || !session) throw new Error('Autenticação necessária')
+  const userId = session.user.id
+
+  const { data, error } = await supabase.rpc('redeem_cashback', {
+    p_user_id: userId,
+    p_campaign_id: campaignId,
+    p_amount: amount
+  })
+  if (error) throw error
+  // RPC returns array of redemption objects
+  const redemption = (data as any[])[0] as CashbackRedemption
+  return redemption
+}

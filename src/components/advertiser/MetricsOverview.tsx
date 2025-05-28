@@ -14,31 +14,55 @@ const MetricsOverview = () => {
       
       if (!userId) throw new Error("User not authenticated");
       
+      // ----- 1️⃣ Fetch missions authored by the current advertiser -----
+      const { data: missions } = await supabase
+        .from("missions")
+        .select("id, status")
+        .eq("advertiser_id", userId)
+
+      const totalMissions = missions?.length ?? 0
+      const validatedMissions = missions?.filter(m => m.status === "validada").length ?? 0
+
+      // ----- 2️⃣ Fetch participations linked to those missions (unique mission_id) -----
+      let initiatedMissions = 0
+      if (totalMissions > 0) {
+        const missionIds = missions!.map(m => m.id)
+        const { data: submissions } = await supabase
+          .from("mission_submissions")
+          .select("mission_id")
+          .in("mission_id", missionIds)
+
+        initiatedMissions = submissions ? new Set(submissions.map(s => s.mission_id)).size : 0
+      }
+
+      // ----- 3️⃣ Fetch completed missions & active users for legacy metrics -----
       const [
         { count: completedMissions },
         { count: activeUsers },
-        averageCompletionTime,
       ] = await Promise.all([
-        // Get completed missions count
         supabase
           .from("mission_submissions")
           .select("*", { count: "exact", head: true })
           .eq("status", "approved"),
-          
-        // Get unique users count
         supabase
           .from("mission_submissions")
           .select("user_id", { count: "exact", head: true })
           .eq("status", "approved"),
-          
-        // Get average completion time (mock for now, needs complex query)
-        Promise.resolve({ data: { average: 12 } }),
-      ]);
+      ])
+
+      const completionRate = totalMissions === 0
+        ? "0%"
+        : `${Math.round((validatedMissions / totalMissions) * 100)}%`
+
+      const initiationRate = totalMissions === 0
+        ? "0%"
+        : `${Math.round((initiatedMissions / totalMissions) * 100)}%`
 
       return {
         missionsCompleted: completedMissions || 0,
         uniqueUsers: activeUsers || 0,
-        averageTime: averageCompletionTime.data.average,
+        completionRate,
+        initiationRate,
       };
     },
     refetchInterval: 30000,
@@ -62,20 +86,20 @@ const MetricsOverview = () => {
       borderClass: "border-neon-pink/30"
     },
     {
-      title: "ROI Médio",
-      value: "3.7x",
+      title: "Taxa de Conclusão",
+      value: metrics?.completionRate ?? "0%",
       icon: TrendingUp,
       colorClass: "text-emerald-400",
       bgClass: "bg-emerald-400/10",
-      borderClass: "border-emerald-400/30"
+      borderClass: "border-emerald-400/30",
     },
     {
-      title: "Tempo Médio",
-      value: `${metrics?.averageTime || 0}min`,
+      title: "Taxa de Missões Iniciadas",
+      value: metrics?.initiationRate ?? "0%",
       icon: Clock,
       colorClass: "text-amber-400",
       bgClass: "bg-amber-400/10",
-      borderClass: "border-amber-400/30"
+      borderClass: "border-amber-400/30",
     },
   ];
 
