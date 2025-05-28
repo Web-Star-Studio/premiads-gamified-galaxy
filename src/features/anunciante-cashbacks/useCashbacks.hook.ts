@@ -33,7 +33,7 @@ function useCashbacks(advertiserId: string) {
         .eq('advertiser_id', advertiserId)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data as CashbackCampaign[]
+      return data as unknown as CashbackCampaign[]
     },
     enabled: Boolean(advertiserId)
   })
@@ -49,13 +49,14 @@ function useCashbacks(advertiserId: string) {
             ...rest,
             min_purchase: minimum_purchase,
             advertiser_id: advertiserId,
-            is_active: true
+            is_active: true,
+            expires_at: rest.end_date
           }
         ])
         .select()
         .single()
       if (error) throw error
-      return data as CashbackCampaign
+      return data as unknown as CashbackCampaign
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cashbacks', advertiserId] })
   })
@@ -64,9 +65,9 @@ function useCashbacks(advertiserId: string) {
   const updateMutation = useMutation({
     mutationFn: async (input: Partial<CashbackCampaign> & { id: string }) => {
       const { id, minimum_purchase, ...rest } = input as any
-      const updateData = minimum_purchase !== undefined
-        ? { ...rest, min_purchase: minimum_purchase }
-        : rest
+      const updateData: any = { ...rest }
+      if (minimum_purchase !== undefined) updateData.min_purchase = minimum_purchase
+      if (rest.end_date) updateData.expires_at = rest.end_date
       const { data, error } = await supabase
         .from(TABLE)
         .update(updateData)
@@ -74,7 +75,7 @@ function useCashbacks(advertiserId: string) {
         .select()
         .single()
       if (error) throw error
-      return data as CashbackCampaign
+      return data as unknown as CashbackCampaign
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cashbacks', advertiserId] })
   })
