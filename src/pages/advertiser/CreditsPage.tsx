@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Helmet } from 'react-helmet-async';
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -16,8 +15,8 @@ const CreditsPage = () => {
   return (
     <>
       <Helmet>
-        <title>Gerenciamento de Créditos | PremiAds</title>
-        <meta name="description" content="Compre e gerencie seus créditos para campanhas publicitárias" />
+        <title>Gerenciamento de Rifas | PremiAds</title>
+        <meta name="description" content="Compre e gerencie suas Rifas para campanhas publicitárias" />
       </Helmet>
       
       <SidebarProvider defaultOpen={!isMobile}>
@@ -25,8 +24,8 @@ const CreditsPage = () => {
           <AdvertiserSidebar />
           <SidebarInset className="overflow-y-auto pb-20">
             <AdvertiserHeader 
-              title="Gerenciamento de Créditos" 
-              description="Compre e gerencie seus créditos para campanhas"
+              title="Gerenciamento de Rifas" 
+              description="Compre e gerencie suas Rifas para campanhas"
               userName={userName}
             />
             

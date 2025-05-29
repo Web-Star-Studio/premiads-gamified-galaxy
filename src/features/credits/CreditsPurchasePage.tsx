@@ -15,6 +15,8 @@ import {
   PaymentModal 
 } from "./index";
 import useCreditPurchase from "./useCreditPurchase.hook";
+import { usePurchaseRifas } from "@/hooks/usePurchaseRifas.hook";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const CreditsPurchasePage = () => {
@@ -27,13 +29,10 @@ const CreditsPurchasePage = () => {
     setSelectedPackage,
     paymentMethod,
     setPaymentMethod,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
-    handlePayment,
-    isLoading,
-    paymentError,
     resetState,
   } = useCreditPurchase();
+  const { purchaseRifas, isLoading: isPurchasing, error: purchaseError } = usePurchaseRifas();
+  const { user: authUser } = useAuthSession();
 
   const [customCredits, setCustomCredits] = useState<number>(500);
   const [useCustomAmount, setUseCustomAmount] = useState(false);
@@ -100,7 +99,7 @@ const CreditsPurchasePage = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold">Comprar Créditos</h1>
+            <h1 className="text-2xl font-bold">Comprar Rifas</h1>
           </div>
 
           <motion.div
@@ -123,7 +122,7 @@ const CreditsPurchasePage = () => {
                       <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
                         <div className="space-y-1 text-xs">
                           <p className="font-medium text-sm">Conversão de valores</p>
-                          <p>10 créditos = R$1,00</p>
+                          <p>1 Rifa = R$5,00</p>
                           <p>Cada crédito vale R$0,10</p>
                           <p className="text-gray-400 mt-1">Créditos são usados para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
                         </div>
@@ -219,16 +218,18 @@ const CreditsPurchasePage = () => {
                   />
                 </div>
                 
-                {paymentError && (
-                  <p className="text-red-500 text-sm">{paymentError.message}</p>
-                )}
-                
                 <Button
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
-                  onClick={() => setIsPaymentModalOpen(true)}
-                  disabled={!selectedPackage || isLoading}
+                  onClick={() => purchaseRifas({
+                    userId: authUser?.id!,
+                    packageId: selectedPackage?.id!,
+                    customRifas: useCustomAmount ? customCredits : undefined,
+                    paymentProvider: 'stripe',
+                    paymentMethod: paymentMethod === 'stripe' ? 'credit_card' : 'pix'
+                  })}
+                  disabled={!selectedPackage || isPurchasing}
                 >
-                  {isLoading ? (
+                  {isPurchasing ? (
                     <>
                       <div className="w-4 h-4 mr-2 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                       Processando...
@@ -236,7 +237,7 @@ const CreditsPurchasePage = () => {
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4 mr-2" />
-                      Confirmar Pagamento
+                      Comprar Rifas
                     </>
                   )}
                 </Button>
@@ -245,22 +246,6 @@ const CreditsPurchasePage = () => {
           </motion.div>
         </div>
       </div>
-
-      <PaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        selectedPackage={selectedPackage}
-        customPackage={selectedPackage ? {
-          base: selectedPackage.base,
-          bonus: selectedPackage.bonus,
-          total: selectedPackage.base + selectedPackage.bonus,
-          price: selectedPackage.price
-        } : undefined}
-        onPurchase={handlePayment}
-        isPurchasing={isLoading}
-        purchaseError={paymentError}
-        purchaseSuccess={false}
-      />
     </div>
   );
 };
