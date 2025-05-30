@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
 import { supabaseConfig, stripeConfig, corsHeaders } from '../_shared/config.ts'
@@ -100,7 +101,7 @@ serve(async (req) => {
     if (packageId) {
       // Fetch existing package
       const { data: pkg, error: pkgError } = await supabase
-        .from('credit_packages')
+        .from('rifa_packages')
         .select('*')
         .eq('id', packageId)
         .eq('active', true)
@@ -121,10 +122,10 @@ serve(async (req) => {
       // Calculate custom package
       // Find the appropriate bonus tier based on amount
       const { data: packages, error: pkgsError } = await supabase
-        .from('credit_packages')
+        .from('rifa_packages')
         .select('*')
         .eq('active', true)
-        .order('base', { ascending: true })
+        .order('rifas_amount', { ascending: true })
       
       if (pkgsError || !packages || packages.length === 0) {
         return new Response(
@@ -139,9 +140,9 @@ serve(async (req) => {
       // Find the appropriate bonus tier
       let bonus = 0
       for (const pkg of packages) {
-        if (customAmount >= pkg.base) {
+        if (customAmount >= pkg.rifas_amount) {
           // Calculate bonus percentage
-          const bonusPercentage = pkg.bonus / pkg.base
+          const bonusPercentage = pkg.bonus / pkg.rifas_amount
           bonus = Math.floor(customAmount * bonusPercentage)
         }
       }
@@ -151,7 +152,7 @@ serve(async (req) => {
       
       packageData = {
         id: null,
-        base: customAmount,
+        rifas_amount: customAmount,
         bonus,
         price,
         validity_months: 12,
@@ -168,13 +169,13 @@ serve(async (req) => {
     
     // Create purchase record (pending)
     const { data: purchase, error: purchaseError } = await supabase
-      .from('credit_purchases')
+      .from('rifa_purchases')
       .insert({
         user_id: userId,
-        package_id: packageData.id,
-        base: packageData.base,
+        rifa_package_id: packageData.id,
+        base: packageData.rifas_amount,
         bonus: packageData.bonus,
-        total_credits: packageData.base + packageData.bonus,
+        total_rifas: packageData.rifas_amount + packageData.bonus,
         price: packageData.price,
         status: 'pending',
         payment_method: paymentMethod,
@@ -265,7 +266,7 @@ serve(async (req) => {
                 price_data: {
                   currency: 'brl',
                   product_data: {
-                    name: `${packageData.base} créditos + ${packageData.bonus} bônus`,
+                    name: `${packageData.rifas_amount} créditos + ${packageData.bonus} bônus`,
                     description: 'Créditos para sua conta PremiAds',
                   },
                   unit_amount: Math.round(packageData.price * 100), // Stripe uses cents
@@ -317,7 +318,7 @@ serve(async (req) => {
         
         // Update purchase status to failed
         await supabase
-          .from('credit_purchases')
+          .from('rifa_purchases')
           .update({ status: 'failed' })
           .eq('id', purchase.id)
           
@@ -344,7 +345,7 @@ serve(async (req) => {
     
     // Update purchase with payment ID
     await supabase
-      .from('credit_purchases')
+      .from('rifa_purchases')
       .update({ payment_id: paymentData.payment_id })
       .eq('id', purchase.id)
     
@@ -355,9 +356,9 @@ serve(async (req) => {
         purchase_id: purchase.id,
         payment: paymentData,
         package: {
-          base: packageData.base,
+          base: packageData.rifas_amount,
           bonus: packageData.bonus,
-          total: packageData.base + packageData.bonus,
+          total: packageData.rifas_amount + packageData.bonus,
           price: packageData.price,
         }
       }),

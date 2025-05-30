@@ -1,0 +1,11 @@
+{
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_example",
+      "metadata": {
+        "rifa_purchase_id": "<PURCHASE_ID>"
+      }
+    }
+  }
+} 

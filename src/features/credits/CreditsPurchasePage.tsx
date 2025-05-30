@@ -154,10 +154,10 @@ const CreditsPurchasePage = () => {
                           onChange={handleCustomCreditsChange}
                           min={100}
                           step={100}
-                          className="bg-galaxy-darkPurple border-galaxy-purple/50"
+                          className="bg-galaxy-darkPurple border-galaxy-purple/50 text-white"
                         />
                       </div>
-                      <span className="text-sm text-gray-400 whitespace-nowrap">créditos</span>
+                      <span className="text-sm text-gray-400 whitespace-nowrap">rifas</span>
                     </div>
                     <CreditSlider
                       min={100}

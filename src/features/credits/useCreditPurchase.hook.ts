@@ -60,8 +60,9 @@ export default function useCreditPurchase() {
     // Fetch credit packages
     const fetchPackages = async () => {
       try {
-        const { data, error } = await supabase
-          .from('credit_packages')
+        const db = supabase as any;
+        const { data, error } = await db
+          .from('rifa_packages')
           .select('*')
           .eq('active', true)
           .order('price', { ascending: true });
@@ -69,15 +70,15 @@ export default function useCreditPurchase() {
         if (error) throw error;
         
         // Transform data to match the CreditPackage interface
-        const formattedPackages = data.map(pkg => ({
+        const formattedPackages = (data as any[]).map((pkg: any) => ({
           id: pkg.id,
-          name: `${pkg.base} Credits`,
-          description: pkg.bonus > 0 ? `${pkg.bonus} bonus credits` : 'Basic package',
+          name: `${pkg.rifas_amount} Rifas`,
+          description: pkg.rifas_bonus > 0 ? `${pkg.rifas_bonus} Rifas bônus` : 'Pacote básico',
           price: pkg.price,
-          credit: pkg.base + pkg.bonus,
-          stripe_price_id: '', // We'll handle this separately since it doesn't exist in the DB
-          base: pkg.base,
-          bonus: pkg.bonus
+          credit: pkg.rifas_amount + pkg.rifas_bonus,
+          stripe_price_id: '',
+          base: pkg.rifas_amount,
+          bonus: pkg.rifas_bonus
         }));
         
         setPackages(formattedPackages);

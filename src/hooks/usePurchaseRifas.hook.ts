@@ -17,9 +17,21 @@ export function usePurchaseRifas() {
   async function purchaseRifas(request: PurchaseRifasRequest) {
     setLoading(true)
     setError(null)
-    const res = await supabase.functions.invoke('purchase-rifas', {
+    // Get current user session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError || !sessionData.session) {
+      setLoading(false)
+      setError('Usuário não autenticado')
+      return
+    }
+    const token = sessionData.session.access_token
+    // Invoke Edge Function purchase-credits with user token
+    const res = await supabase.functions.invoke('purchase-credits', {
       body: JSON.stringify(request),
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
     })
     setLoading(false)
     if (res.error) {
@@ -28,7 +40,6 @@ export function usePurchaseRifas() {
     }
     const { payment } = res.data as any
     if (payment?.payment_url) {
-      setPaymentUrl(payment.payment_url)
       window.location.href = payment.payment_url
     } else {
       setError('Falha ao obter URL de pagamento')
