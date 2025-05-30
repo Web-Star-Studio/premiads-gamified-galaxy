@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { 
   FileText, 
   Camera, 
@@ -34,6 +34,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import SurveyFormBuilder from "./SurveyFormBuilder";
 
 interface BasicInfoStepProps {
   /** Current form data */
@@ -63,9 +64,14 @@ const getMissionTypeIcon = (type: MissionType) => {
  * Collects title, description, mission type and target audience
  */
 const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
-  // All available mission types
+  const [builderOpen, setBuilderOpen] = useState(false)
+  useEffect(() => {
+    if (formData.type === 'survey') setBuilderOpen(true)
+  }, [formData.type])
+
+  // All available mission types (removed 'form' centralization)
   const missionTypes: MissionType[] = [
-    "form", "photo", "video", "checkin", "social", "coupon", "survey", "review"
+    "photo", "video", "checkin", "social", "coupon", "survey", "review"
   ];
   
   // All target audience options
@@ -136,24 +142,33 @@ const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
         <label className="text-sm font-medium">Tipo de Missão</label>
         
         {formData.type ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card 
-              className="bg-galaxy-purple/10 border border-galaxy-purple/40 cursor-pointer"
-              onClick={() => updateFormData("type", "")}
-            >
-              <CardContent className="flex items-center p-4">
-                <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
-                  {getMissionTypeIcon(formData.type as MissionType)}
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium">{missionTypeLabels[formData.type as MissionType]}</h4>
-                  <CardDescription className="text-xs line-clamp-2">
-                    {missionTypeDescriptions[formData.type as MissionType]}
-                  </CardDescription>
-                </div>
-              </CardContent>
-            </Card>
-            
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div className="flex items-center space-x-4">
+              <Card 
+                className="bg-galaxy-purple/10 border border-galaxy-purple/40 cursor-pointer"
+                onClick={() => updateFormData("type", "")}
+              >
+                <CardContent className="flex items-center p-4">
+                  <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
+                    {getMissionTypeIcon(formData.type as MissionType)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">{missionTypeLabels[formData.type as MissionType]}</h4>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {missionTypeDescriptions[formData.type as MissionType]}
+                    </CardDescription>
+                  </div>
+                </CardContent>
+              </Card>
+              {formData.type === 'survey' && (
+                <SurveyFormBuilder
+                  formData={formData}
+                  updateFormData={updateFormData}
+                  open={builderOpen}
+                  onOpenChange={setBuilderOpen}
+                />
+              )}
+            </div>
             <button
               type="button"
               onClick={() => updateFormData("type", "")}

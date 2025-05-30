@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/services/supabase';
 
@@ -39,14 +38,14 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits')
+        .select('cashback_balance')
         .eq('id', userId)
         .maybeSingle();
       
       if (error) throw error;
       
       if (data) {
-        const creditCount = Number(data.credits) || 0
+        const creditCount = Number(data.cashback_balance) || 0
         const userCredits: UserCredits = {
           totalTokens: creditCount,
           usedTokens: 0,

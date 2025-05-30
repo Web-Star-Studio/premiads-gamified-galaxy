@@ -1,6 +1,14 @@
 // Campaign form data types
 import { LootBoxRewardType } from "../LootBoxRewardsSelector";
 
+// Dynamic form field definitions for survey builder
+export interface FormField {
+  id: string
+  label: string
+  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file'
+  options?: string[]
+}
+
 export interface FormData {
   title: string;
   description: string;
@@ -30,6 +38,8 @@ export interface FormData {
   extraPrizeImageUrl?: string | null;
   minPurchase?: number; // Adding missing 'minPurchase' property
   selectedLootBoxRewards?: LootBoxRewardType[]; // Array of selected loot box reward types
+  /** Dynamic survey form schema */
+  formSchema?: FormField[]
 }
 
 // Default initial values for campaign form
@@ -60,5 +70,6 @@ export const initialFormData: FormData = {
   extraPrizeDescription: '',
   extraPrizeImageUrl: null,
   minPurchase: 0, // Default value for minPurchase
-  selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'] as LootBoxRewardType[]
+  selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'] as LootBoxRewardType[],
+  formSchema: []
 };

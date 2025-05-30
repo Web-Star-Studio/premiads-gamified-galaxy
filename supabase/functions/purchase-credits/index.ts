@@ -66,7 +66,17 @@ serve(async (req) => {
     })
     
     // Parse request body
-    const body = await req.json()
+    let body
+    try {
+      body = await req.json()
+    } catch (err) {
+      console.error('JSON parse error:', err)
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON', details: err.message }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
     const parseResult = purchaseRequestSchema.safeParse(body)
     
     if (!parseResult.success) {
@@ -99,9 +109,9 @@ serve(async (req) => {
     let packageData
     
     if (packageId) {
-      // Fetch existing package
+      // Fetch existing credit package
       const { data: pkg, error: pkgError } = await supabase
-        .from('rifa_packages')
+        .from('credit_packages')
         .select('*')
         .eq('id', packageId)
         .eq('active', true)
@@ -117,15 +127,20 @@ serve(async (req) => {
         )
       }
       
-      packageData = pkg
+      packageData = {
+        id: pkg.id,
+        rifas_amount: pkg.base,
+        bonus: pkg.bonus,
+        price: pkg.price,
+        validity_months: pkg.validity_months,
+      }
     } else if (customAmount) {
       // Calculate custom package
-      // Find the appropriate bonus tier based on amount
       const { data: packages, error: pkgsError } = await supabase
-        .from('rifa_packages')
+        .from('credit_packages')
         .select('*')
         .eq('active', true)
-        .order('rifas_amount', { ascending: true })
+        .order('base', { ascending: true })
       
       if (pkgsError || !packages || packages.length === 0) {
         return new Response(
@@ -140,9 +155,9 @@ serve(async (req) => {
       // Find the appropriate bonus tier
       let bonus = 0
       for (const pkg of packages) {
-        if (customAmount >= pkg.rifas_amount) {
+        if (customAmount >= pkg.base) {
           // Calculate bonus percentage
-          const bonusPercentage = pkg.bonus / pkg.rifas_amount
+          const bonusPercentage = pkg.bonus / pkg.base
           bonus = Math.floor(customAmount * bonusPercentage)
         }
       }
@@ -169,13 +184,13 @@ serve(async (req) => {
     
     // Create purchase record (pending)
     const { data: purchase, error: purchaseError } = await supabase
-      .from('rifa_purchases')
+      .from('credit_purchases')
       .insert({
         user_id: userId,
-        rifa_package_id: packageData.id,
+        package_id: packageData.id,
         base: packageData.rifas_amount,
         bonus: packageData.bonus,
-        total_rifas: packageData.rifas_amount + packageData.bonus,
+        total_credits: packageData.rifas_amount + packageData.bonus,
         price: packageData.price,
         status: 'pending',
         payment_method: paymentMethod,
@@ -318,7 +333,7 @@ serve(async (req) => {
         
         // Update purchase status to failed
         await supabase
-          .from('rifa_purchases')
+          .from('credit_purchases')
           .update({ status: 'failed' })
           .eq('id', purchase.id)
           
@@ -345,7 +360,7 @@ serve(async (req) => {
     
     // Update purchase with payment ID
     await supabase
-      .from('rifa_purchases')
+      .from('credit_purchases')
       .update({ payment_id: paymentData.payment_id })
       .eq('id', purchase.id)
     

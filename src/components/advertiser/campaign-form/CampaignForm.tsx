@@ -143,7 +143,9 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       // For min purchase requirements (coupon campaigns)
       min_purchase: formData.minPurchase || 0,
       // Store target filter as JSON for more complex filtering
-      target_filter: formData.targetFilter || null
+      target_filter: formData.targetFilter || null,
+      // Include dynamic survey form schema if defined
+      form_schema: formData.formSchema || null
     }
     return missionPayload
   };

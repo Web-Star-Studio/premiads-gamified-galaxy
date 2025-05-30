@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 export interface PurchaseRifasRequest {
   userId: string
   packageId?: string
-  customRifas?: number
+  customAmount?: number
   paymentProvider: 'stripe'
   paymentMethod: 'credit_card' | 'debit' | 'pix'
 }

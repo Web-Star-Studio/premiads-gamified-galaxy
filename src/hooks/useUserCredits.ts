@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useCreditsStore } from '@/store/useCreditsStore';
 import { useSounds } from '@/hooks/use-sounds';
@@ -45,8 +44,8 @@ export function useUserCredits() {
             // When credits/points are updated, play sound and refresh credits
             if (payload.new && payload.old) {
               // Check which values changed
-              if (payload.new.credits > payload.old.credits) {
-                const creditsDiff = payload.new.credits - payload.old.credits;
+              if (payload.new.cashback_balance > payload.old.cashback_balance) {
+                const creditsDiff = payload.new.cashback_balance - payload.old.cashback_balance;
                 console.log(`Credits increased by ${creditsDiff}`);
                 
                 playSound('reward');

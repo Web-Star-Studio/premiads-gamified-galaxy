@@ -223,7 +223,7 @@ const CreditsPurchasePage = () => {
                   onClick={() => purchaseRifas({
                     userId: authUser?.id!,
                     packageId: selectedPackage?.id!,
-                    customRifas: useCustomAmount ? customCredits : undefined,
+                    customAmount: useCustomAmount ? customCredits : undefined,
                     paymentProvider: 'stripe',
                     paymentMethod: paymentMethod === 'stripe' ? 'credit_card' : 'pix'
                   })}

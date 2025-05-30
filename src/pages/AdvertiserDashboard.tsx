@@ -5,7 +5,6 @@ import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import LoadingState from "@/components/advertiser/dashboard/LoadingState";
 import NotificationBanner from "@/components/advertiser/dashboard/NotificationBanner";
 import MetricsOverview from "@/components/advertiser/MetricsOverview";
-import TopUsers from "@/components/advertiser/TopUsers";
 import EngagementCharts from "@/components/advertiser/EngagementCharts";
 import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import DashboardHeader from "@/components/advertiser/DashboardHeader";
@@ -66,16 +65,12 @@ const AdvertiserDashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-1 gap-8 lg:grid-cols-3"
+                className="grid grid-cols-1 gap-8"
               >
-                <div className="lg:col-span-2 flex flex-col gap-8 w-full">
+                <div className="flex flex-col gap-8 w-full">
                   <MetricsOverview />
                   <EngagementCharts />
                   <AlertsPanel />
-                </div>
-                
-                <div className="space-y-8">
-                  <TopUsers />
                 </div>
               </motion.div>
             </div>

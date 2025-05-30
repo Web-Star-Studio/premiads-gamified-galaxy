@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +62,6 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="form">Formulário</SelectItem>
               <SelectItem value="photo">Foto</SelectItem>
               <SelectItem value="video">Vídeo</SelectItem>
               <SelectItem value="checkin">Check-in</SelectItem>
