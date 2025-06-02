@@ -73,7 +73,7 @@ export function CreditSlider({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-400">Selecione um pacote:</span>
-        <span className="text-sm font-medium">{value.toLocaleString()} créditos</span>
+        <span className="text-sm font-medium">{value.toLocaleString()} rifas</span>
       </div>
 
       <div className="flex items-center gap-2">

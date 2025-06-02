@@ -53,7 +53,7 @@ const CreditPackageCard = ({
         
         <div className="text-center mb-3 mt-2">
           <div className="text-2xl font-bold">{pack.credits.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">créditos</div>
+          <div className="text-sm text-gray-400">rifas</div>
         </div>
         
         {pack.bonus > 0 && (
@@ -66,10 +66,10 @@ const CreditPackageCard = ({
         <div className="text-center mt-auto w-full">
           <div className="text-lg font-bold">R$ {pack.price.toFixed(2).replace(".", ",")}</div>
           <div className="text-xs text-gray-400 mt-1">
-            {(pack.credits + pack.bonus).toLocaleString()} créditos no total
+            {(pack.credits + pack.bonus).toLocaleString()} rifas no total
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            R$ {(pack.price / (pack.credits + pack.bonus)).toFixed(3).replace(".", ",")} por crédito
+            R$ {(pack.price / (pack.credits + pack.bonus)).toFixed(3).replace(".", ",")} por rifa
           </div>
         </div>
       </Card>
@@ -95,7 +95,7 @@ const CreditSummary = ({ selectedPackage }: { selectedPackage: CreditPackage }) 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-300 flex items-center">
             <CreditCard className="w-4 h-4 mr-2 text-purple-400" />
-            Créditos base
+            Rifas base
           </span>
           <span className="font-medium">{selectedPackage.credits.toLocaleString()}</span>
         </div>
@@ -111,14 +111,14 @@ const CreditSummary = ({ selectedPackage }: { selectedPackage: CreditPackage }) 
         )}
 
         <div className="flex justify-between items-center pt-1 border-t border-gray-700">
-          <span className="text-sm text-gray-300">Total de créditos</span>
+          <span className="text-sm text-gray-300">Total de rifas</span>
           <span className="font-medium">{totalCredits.toLocaleString()}</span>
         </div>
       </div>
 
       <div className="pt-3 border-t border-gray-700">
         <div className="text-xs text-gray-400">
-          Os créditos serão adicionados à sua conta imediatamente após a confirmação do pagamento.
+          As rifas serão adicionadas à sua conta imediatamente após a confirmação do pagamento.
         </div>
       </div>
     </div>
@@ -319,15 +319,15 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
       setTimeout(() => {
         setShowConfirmation(false);
         toast({
-          title: "Créditos adquiridos",
-          description: `${selectedPackage.credits + selectedPackage.bonus} créditos foram adicionados à sua conta.`,
+          title: "Rifas adquiridas",
+          description: `${selectedPackage.credits + selectedPackage.bonus} rifas foram adicionadas à sua conta.`,
         });
         
         // Recarrega a página para mostrar o saldo atualizado
         window.location.reload();
       }, 3000);
     } catch (error: any) {
-      console.error("Erro ao comprar créditos:", error);
+      console.error("Erro ao comprar rifas:", error);
       toast({
         title: "Erro na compra",
         description: error.message || "Ocorreu um erro ao processar sua compra.",
@@ -344,14 +344,14 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-neon-pink" />
-          Comprar Créditos
+          Comprar Rifas
         </CardTitle>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1 cursor-help">
                 <CardDescription>
-                  Créditos para criar e gerenciar campanhas
+                  Rifas para criar e gerenciar campanhas
                 </CardDescription>
                 <Info className="w-3.5 h-3.5 text-gray-500" />
               </div>
@@ -359,9 +359,9 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
             <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
               <div className="space-y-1 text-xs">
                 <p className="font-medium text-sm">Conversão de valores</p>
-                <p>10 créditos = R$1,00</p>
-                <p>Cada crédito vale R$0,10</p>
-                <p className="text-gray-400 mt-1">Créditos são usados para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
+                <p>10 rifas = R$1,00</p>
+                <p>Cada rifa vale R$0,10</p>
+                <p className="text-gray-400 mt-1">Rifas são usadas para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -410,7 +410,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
                       className="bg-galaxy-darkPurple border-galaxy-purple/50"
                     />
                   </div>
-                  <span className="text-sm text-gray-400 whitespace-nowrap">créditos</span>
+                  <span className="text-sm text-gray-400 whitespace-nowrap">rifas</span>
                 </div>
                 <div className="space-y-3">
                   <Slider
@@ -434,7 +434,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Selecione um pacote:</span>
-                  <span className="text-sm font-medium">{selectedPackage.credits.toLocaleString()} créditos</span>
+                  <span className="text-sm font-medium">{selectedPackage.credits.toLocaleString()} rifas</span>
                 </div>
                 
                 <div className="px-1">
@@ -505,7 +505,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditPurchaseProps) => {
             <div className="flex items-center justify-between border-t border-gray-700 pt-4 mt-4">
               <span className="text-sm text-gray-400">Saldo atual</span>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">{currentCredits.toLocaleString()} créditos</span>
+                <span className="text-lg font-bold">{currentCredits.toLocaleString()} rifas</span>
               </div>
             </div>
           </div>

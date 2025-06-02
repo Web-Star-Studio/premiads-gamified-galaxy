@@ -146,6 +146,43 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
             />
           </div>
 
+          {/* Controle de Participantes Máximos */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label htmlFor="participants-slider" className="text-sm font-medium">Máximo de Participantes</label>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-pink-400">{formData.maxParticipants || 100}</span>
+                <Input
+                  id="participants-input"
+                  type="number"
+                  min={10}
+                  max={10000}
+                  step={10}
+                  value={formData.maxParticipants || 100}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10)
+                    if (!isNaN(val))
+                      updateFormData("maxParticipants", Math.min(Math.max(val, 10), 10000))
+                  }}
+                  className="w-24 bg-gray-800 border-gray-700 focus:border-pink-400 text-right"
+                />
+              </div>
+            </div>
+            <Slider
+              id="participants-slider"
+              value={[formData.maxParticipants || 100]}
+              min={10}
+              max={10000}
+              step={10}
+              onValueChange={(value) => updateFormData("maxParticipants", value[0])}
+              className="py-4"
+              aria-valuemin={10}
+              aria-valuemax={10000}
+              aria-valuenow={formData.maxParticipants || 100}
+              aria-valuetext={`${formData.maxParticipants || 100} participantes máximos`}
+            />
+          </div>
+
           <div className="flex items-center justify-between px-1 py-2">
             <div className="space-y-1">
               <p className="text-sm font-medium" id="extra-prize-label">Prêmio Extra</p>

@@ -116,15 +116,15 @@ const CreditsPurchasePage = () => {
                       <TooltipTrigger asChild>
                         <div className="flex items-center gap-1 text-sm text-gray-400 cursor-help">
                           <Info className="w-4 h-4" />
-                          <span>Sobre os créditos</span>
+                          <span>Sobre as rifas</span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
                         <div className="space-y-1 text-xs">
                           <p className="font-medium text-sm">Conversão de valores</p>
                           <p>1 Rifa = R$5,00</p>
-                          <p>Cada crédito vale R$0,10</p>
-                          <p className="text-gray-400 mt-1">Créditos são usados para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
+                          <p>Cada rifa vale R$0,10</p>
+                          <p className="text-gray-400 mt-1">Rifas são usadas para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
                         </div>
                       </TooltipContent>
                     </Tooltip>

@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -20,9 +19,9 @@ const ConfirmationScreen = ({ selectedPackage }: ConfirmationScreenProps) => {
       </p>
       <div className="p-3 bg-gray-800/50 rounded-md mb-4">
         <p className="font-medium">
-          +{selectedPackage.credits + selectedPackage.bonus} créditos
+          +{selectedPackage.credits + selectedPackage.bonus} rifas
         </p>
-        <p className="text-xs text-neon-pink">Créditos disponíveis em instantes</p>
+        <p className="text-xs text-neon-pink">Rifas disponíveis em instantes</p>
       </div>
     </motion.div>
   );

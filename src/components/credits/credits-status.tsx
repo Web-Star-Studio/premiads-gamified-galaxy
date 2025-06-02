@@ -38,7 +38,7 @@ export function CreditsStatus() {
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle>Status de Créditos</CardTitle>
+          <CardTitle>Status de Rifas</CardTitle>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -53,7 +53,7 @@ export function CreditsStatus() {
           </Button>
         </div>
         <CardDescription>
-          Gerenciamento dos seus créditos disponíveis
+          Gerenciamento das suas rifas disponíveis
         </CardDescription>
       </CardHeader>
       <CardContent>

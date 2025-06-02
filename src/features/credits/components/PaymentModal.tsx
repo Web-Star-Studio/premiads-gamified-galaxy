@@ -63,7 +63,7 @@ function PaymentModal({
         <DialogHeader>
           <DialogTitle>Finalizar Compra</DialogTitle>
           <DialogDescription>
-            Escolha o método de pagamento para concluir sua compra de créditos.
+            Escolha o método de pagamento para concluir sua compra de rifas.
           </DialogDescription>
         </DialogHeader>
         
@@ -80,7 +80,7 @@ function PaymentModal({
               <h3 className="text-xl font-bold">Pagamento Iniciado</h3>
               <p className="text-center text-gray-400 mt-2 mb-6">
                 Você será redirecionado para a página de pagamento.
-                Seus créditos serão adicionados após a confirmação.
+                Suas rifas serão adicionadas após a confirmação.
               </p>
               <Button onClick={onClose}>Fechar</Button>
             </motion.div>

@@ -55,7 +55,7 @@ export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCa
         
         <div className="text-center mb-3 mt-2">
           <div className="text-2xl font-bold">{base.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">créditos</div>
+          <div className="text-sm text-gray-400">rifas</div>
         </div>
         
         {bonus > 0 && (
@@ -68,10 +68,10 @@ export function CreditPackageCard({ pkg, isSelected, onSelect }: CreditPackageCa
         <div className="text-center mt-auto w-full">
           <div className="text-lg font-bold">R$ {(price / 10).toFixed(2).replace('.', ',')}</div>
           <div className="text-xs text-gray-400 mt-1">
-            {total.toLocaleString()} créditos no total
+            {total.toLocaleString()} rifas no total
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            R$ {(price / 10 / total).toFixed(3).replace('.', ',')} por crédito
+            R$ {(price / 10 / total).toFixed(3).replace('.', ',')} por rifa
           </div>
         </div>
       </Card>

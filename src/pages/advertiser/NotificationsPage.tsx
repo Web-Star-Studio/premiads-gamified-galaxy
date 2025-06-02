@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
@@ -43,8 +42,8 @@ const NotificationsPage = () => {
         },
         {
           id: 2,
-          title: "Créditos adicionados",
-          message: "200 créditos foram adicionados à sua conta.",
+          title: "Rifas adicionadas",
+          message: "200 rifas foram adicionadas à sua conta.",
           type: "info",
           date: "14/04/2025 11:20",
           read: false

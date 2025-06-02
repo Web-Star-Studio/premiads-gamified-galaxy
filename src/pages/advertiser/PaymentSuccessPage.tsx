@@ -160,7 +160,7 @@ function PaymentSuccessPage() {
           
           toast({
             title: "Pagamento confirmado!",
-            description: `${details.total} créditos foram adicionados à sua conta.`,
+            description: `${details.total} rifas foram adicionadas à sua conta.`,
             variant: "default"
           });
           
@@ -184,7 +184,7 @@ function PaymentSuccessPage() {
           
           toast({
             title: "Pagamento confirmado!",
-            description: `${mockPurchaseDetails.total} créditos foram adicionados à sua conta.`,
+            description: `${mockPurchaseDetails.total} rifas foram adicionadas à sua conta.`,
             variant: "default"
           });
         });
@@ -213,7 +213,7 @@ function PaymentSuccessPage() {
           <SidebarInset className="overflow-y-auto pb-20">
             <AdvertiserHeader 
               title="Pagamento Confirmado" 
-              description="Seus créditos foram adicionados à sua conta"
+              description="Suas rifas foram adicionadas à sua conta"
               userName={userName}
             />
             
@@ -282,9 +282,9 @@ function PaymentSuccessPage() {
                           transition={{ delay: 0.5 }}
                           className="text-xl md:text-2xl text-gray-200 mb-8"
                         >
-                          <p className="mb-2">Você adquiriu <span className="font-bold text-pink-500">{purchaseDetails.credits}</span> créditos</p>
+                          <p className="mb-2">Você adquiriu <span className="font-bold text-pink-500">{purchaseDetails.credits}</span> rifas</p>
                           <p className="mb-4">+ <span className="font-bold text-violet-400">{purchaseDetails.bonus}</span> de bônus</p>
-                          <p className="text-3xl font-bold">Total: <span className="text-green-400">{purchaseDetails.total}</span> créditos</p>
+                          <p className="text-3xl font-bold">Total: <span className="text-green-400">{purchaseDetails.total}</span> rifas</p>
                         </motion.div>
                       )}
                     </motion.div>
@@ -295,7 +295,7 @@ function PaymentSuccessPage() {
                       className="flex flex-col items-center"
                     >
                       <div className="bg-galaxy-purple/20 p-8 rounded-xl border border-pink-500/30 shadow-lg shadow-pink-500/20 mb-8">
-                        <h2 className="text-2xl font-bold text-white mb-4">Seus créditos estão prontos para uso!</h2>
+                        <h2 className="text-2xl font-bold text-white mb-4">Suas rifas estão prontas para uso!</h2>
                         <p className="text-gray-300 mb-6">
                           Agora você pode criar e impulsionar suas campanhas para alcançar mais participantes.
                         </p>
@@ -303,7 +303,7 @@ function PaymentSuccessPage() {
                         {purchaseDetails && (
                           <div className="grid grid-cols-3 gap-4 mb-6">
                             <div className="bg-galaxy-purple/30 p-4 rounded-lg">
-                              <p className="text-sm text-gray-400">Créditos Base</p>
+                              <p className="text-sm text-gray-400">Rifas Base</p>
                               <p className="text-2xl font-bold text-white">{purchaseDetails.credits}</p>
                             </div>
                             <div className="bg-galaxy-purple/30 p-4 rounded-lg">

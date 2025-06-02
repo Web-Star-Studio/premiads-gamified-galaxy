@@ -73,8 +73,8 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
       setTimeout(() => {
         setShowConfirmation(false);
         toast({
-          title: "Créditos adquiridos",
-          description: `${selectedPackage.credits + selectedPackage.bonus} créditos foram adicionados à sua conta.`,
+          title: "Rifas adquiridas",
+          description: `${selectedPackage.credits + selectedPackage.bonus} rifas foram adicionadas à sua conta.`,
         });
         
         // Reload page to show updated credit balance
@@ -109,14 +109,14 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-neon-pink" />
-          Comprar Créditos
+          Comprar Rifas
         </CardTitle>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1 cursor-help">
                 <CardDescription>
-                  Créditos para criar e gerenciar campanhas
+                  Rifas para criar e gerenciar campanhas
                 </CardDescription>
                 <Info className="w-3.5 h-3.5 text-gray-500" />
               </div>
@@ -124,9 +124,9 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
             <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
               <div className="space-y-1 text-xs">
                 <p className="font-medium text-sm">Conversão de valores</p>
-                <p>10 créditos = R$1,00</p>
-                <p>Cada crédito vale R$0,10</p>
-                <p className="text-gray-400 mt-1">Créditos são usados para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
+                <p>10 rifas = R$1,00</p>
+                <p>Cada rifa vale R$0,10</p>
+                <p className="text-gray-400 mt-1">Rifas são usadas para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -148,9 +148,9 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
             </p>
             <div className="p-3 bg-gray-800/50 rounded-md mb-4">
               <p className="font-medium">
-                +{selectedPackage.credits + selectedPackage.bonus} créditos
+                +{selectedPackage.credits + selectedPackage.bonus} rifas
               </p>
-              <p className="text-xs text-neon-pink">Créditos disponíveis em instantes</p>
+              <p className="text-xs text-neon-pink">Rifas disponíveis em instantes</p>
             </div>
           </motion.div>
         ) : (
@@ -159,7 +159,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium">Selecione um pacote:</label>
                 <span className="text-sm text-neon-pink">
-                  {selectedPackage.credits.toLocaleString()} créditos
+                  {selectedPackage.credits.toLocaleString()} rifas
                   {selectedPackage.bonus > 0 && ` (+${selectedPackage.bonus.toLocaleString()} bônus)`}
                 </span>
               </div>
@@ -191,7 +191,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
                   onClick={() => handleSliderChange([pkg.value])}
                 >
                   <p className="text-sm font-medium">{pkg.credits.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400">créditos</p>
+                  <p className="text-xs text-gray-400">rifas</p>
                   <p className="text-xs mt-1">{formatCurrencyValue(pkg.price / 10)}</p>
                   
                   {pkg.bonus > 0 && (
@@ -213,7 +213,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
               
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-400">Créditos base</span>
+                  <span className="text-gray-400">Rifas base</span>
                   <span>{selectedPackage.credits.toLocaleString()}</span>
                 </div>
                 
@@ -238,7 +238,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
                 <div className="flex justify-between text-xs">
                   <span className="flex items-center gap-1 text-gray-400">
                     <Zap className="w-3 h-3" />
-                    Preço por crédito
+                    Preço por rifa
                   </span>
                   <span>
                     {formatCurrencyValue((selectedPackage.price / 10) / (selectedPackage.credits + selectedPackage.bonus))}
@@ -260,7 +260,7 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Comprar Créditos
+                  Comprar Rifas
                 </>
               )}
             </Button>
@@ -268,13 +268,13 @@ const CreditsPurchase = ({ currentCredits = 0 }: CreditsPurchaseProps) => {
             <div className="flex items-center justify-between border-t border-gray-700 pt-4 mt-4">
               <span className="text-sm text-gray-400">Saldo atual</span>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">{currentCredits.toLocaleString()} créditos</span>
+                <span className="text-lg font-bold">{currentCredits.toLocaleString()} rifas</span>
                 <span className="text-xs text-gray-400">~{getMoneyValue(currentCredits)}</span>
               </div>
             </div>
             
             <p className="text-xs text-center text-gray-400">
-              Os créditos serão adicionados imediatamente após a confirmação do pagamento
+              As rifas serão adicionadas imediatamente após a confirmação do pagamento
             </p>
           </div>
         )}

@@ -26,6 +26,8 @@ export interface FormData {
   randomPoints: boolean;
   pointsRange: number[];
   pointsValue?: number; // For random points calculation
+  /** Número máximo de participantes da campanha */
+  maxParticipants?: number;
   targetFilter?: {
     age?: [string, string];
     gender?: string;
@@ -59,6 +61,7 @@ export const initialFormData: FormData = {
   randomPoints: false,
   pointsRange: [10, 50],
   pointsValue: 10, // initial manual points value
+  maxParticipants: 100, // Valor inicial para máximo de participantes
   targetFilter: {
     age: ["18", "65"],
     gender: "all",

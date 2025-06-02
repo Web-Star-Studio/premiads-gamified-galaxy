@@ -29,7 +29,7 @@ export function CreditSummary({ selectedPackage, paymentMethod }: CreditSummaryP
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-300 flex items-center">
             <CreditCard className="w-4 h-4 mr-2 text-purple-400" />
-            Créditos base
+            Rifas base
           </span>
           <span className="font-medium">{base.toLocaleString()}</span>
         </div>
@@ -45,14 +45,14 @@ export function CreditSummary({ selectedPackage, paymentMethod }: CreditSummaryP
         )}
 
         <div className="flex justify-between items-center pt-1 border-t border-gray-700">
-          <span className="text-sm text-gray-300">Total de créditos</span>
+          <span className="text-sm text-gray-300">Total de rifas</span>
           <span className="font-medium">{totalCredits.toLocaleString()}</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-300 flex items-center">
-            <Zap className="w-4 h-4 mr-2 text-yellow-400" />
-            Preço por crédito
+          <span className="flex items-center gap-1 text-gray-400">
+            <Zap className="w-3 h-3" />
+            Preço por rifa
           </span>
           <span className="text-sm">R$ {formattedPricePerCredit}</span>
         </div>
@@ -68,7 +68,7 @@ export function CreditSummary({ selectedPackage, paymentMethod }: CreditSummaryP
 
       <div className="pt-3 border-t border-gray-700">
         <div className="text-xs text-gray-400">
-          Os créditos serão adicionados à sua conta imediatamente após a confirmação do pagamento.
+          As rifas serão adicionadas à sua conta imediatamente após a confirmação do pagamento.
         </div>
       </div>
     </div>
