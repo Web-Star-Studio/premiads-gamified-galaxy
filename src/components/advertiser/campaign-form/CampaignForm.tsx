@@ -145,7 +145,11 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       // Store target filter as JSON for more complex filtering
       target_filter: formData.targetFilter || null,
       // Include dynamic survey form schema if defined
-      form_schema: formData.formSchema || null
+      form_schema: formData.formSchema || null,
+      // Campos de cashback
+      max_participants: formData.maxParticipants || 100,
+      max_cashback_redemptions: formData.maxCashbackRedemptions || 5,
+      cashback_amount_per_raffle: 5.00 // Valor fixo de R$ 5,00 por rifa
     }
     return missionPayload
   };

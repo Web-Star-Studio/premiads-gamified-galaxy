@@ -28,6 +28,10 @@ export interface FormData {
   pointsValue?: number; // For random points calculation
   /** Número máximo de participantes da campanha */
   maxParticipants?: number;
+  /** Número máximo de resgates de cashback */
+  maxCashbackRedemptions?: number;
+  /** Valor do cashback por rifa (em reais) */
+  cashbackAmountPerRaffle?: number;
   targetFilter?: {
     age?: [string, string];
     gender?: string;
@@ -62,6 +66,8 @@ export const initialFormData: FormData = {
   pointsRange: [10, 50],
   pointsValue: 10, // initial manual points value
   maxParticipants: 100, // Valor inicial para máximo de participantes
+  maxCashbackRedemptions: 5,
+  cashbackAmountPerRaffle: 5.00, // Valor fixo de R$ 5,00 por rifa
   targetFilter: {
     age: ["18", "65"],
     gender: "all",
