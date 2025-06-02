@@ -2,8 +2,7 @@
 import React from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export const ActivityLog = () => {
-  return (
+export const ActivityLog = () => (
     <ScrollArea className="h-[300px]">
       <div className="space-y-4">
         {/* Will be populated with actual system activity logs */}
@@ -14,4 +13,3 @@ export const ActivityLog = () => {
       </div>
     </ScrollArea>
   );
-};

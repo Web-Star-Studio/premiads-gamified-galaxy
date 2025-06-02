@@ -22,12 +22,12 @@ import LoadingParticles from './LoadingParticles';
 const initialTickets = [
   { 
     id: 'TIC-1285', 
-    title: 'Não consigo resgatar pontos', 
+    title: 'Não consigo resgatar tickets', 
     requester: 'João Silva',
     requesterType: 'cliente',
     status: 'open', 
     priority: 'high',
-    category: 'pontos',
+    category: 'tickets',
     created: '2025-04-14 10:23:15',
     lastUpdate: '2025-04-14 14:45:22',
     assignedTo: 'Ana Souza',
@@ -36,7 +36,7 @@ const initialTickets = [
         id: 1,
         sender: 'João Silva',
         role: 'client',
-        content: 'Estou tentando resgatar meus pontos há 3 dias e sempre recebo uma mensagem de erro que diz "Operação não permitida". Já tentei pelo aplicativo e pelo site.',
+        content: 'Estou tentando resgatar meus tickets há 3 dias e sempre recebo uma mensagem de erro que diz "Operação não permitida". Já tentei pelo aplicativo e pelo site.',
         timestamp: '2025-04-14 10:23:15'
       },
       {
@@ -50,7 +50,7 @@ const initialTickets = [
         id: 3,
         sender: 'Ana Souza',
         role: 'support',
-        content: 'Olá João, estou analisando seu caso. Poderia informar qual o valor em pontos que está tentando resgatar e para qual tipo de recompensa?',
+        content: 'Olá João, estou analisando seu caso. Poderia informar qual o valor em tickets que está tentando resgatar e para qual tipo de recompensa?',
         timestamp: '2025-04-14 14:45:22'
       }
     ]
@@ -134,14 +134,14 @@ const initialTickets = [
         id: 3,
         sender: 'Ana Souza',
         role: 'support',
-        content: 'Identifiquei que a última etapa da missão não foi registrada corretamente. Já corrigi o problema e adicionei os pontos correspondentes à sua conta.',
+        content: 'Identifiquei que a última etapa da missão não foi registrada corretamente. Já corrigi o problema e adicionei os tickets correspondentes à sua conta.',
         timestamp: '2025-04-14 09:15:45'
       },
       {
         id: 4,
         sender: 'Carlos Lima',
         role: 'client',
-        content: 'Perfeito! Já consegui ver os pontos na minha conta. Muito obrigado pela ajuda!',
+        content: 'Perfeito! Já consegui ver os tickets na minha conta. Muito obrigado pela ajuda!',
         timestamp: '2025-04-14 10:05:12'
       },
       {

@@ -7,8 +7,7 @@ interface FormFooterProps {
   loading: boolean;
 }
 
-export const FormFooter = ({ loading }: FormFooterProps) => {
-  return (
+export const FormFooter = ({ loading }: FormFooterProps) => (
     <>
       <div className="mt-6 flex justify-end">
         <Button 
@@ -42,4 +41,3 @@ export const FormFooter = ({ loading }: FormFooterProps) => {
       </div>
     </>
   );
-};

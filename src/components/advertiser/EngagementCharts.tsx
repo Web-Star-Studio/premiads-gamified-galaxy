@@ -128,7 +128,7 @@ const EngagementCharts = () => {
           <Card className="transition-all duration-300 hover:shadow-[0_0_15px_rgba(155,135,245,0.2)]">
             <CardHeader className="p-5 pb-3">
               <CardTitle className="text-lg font-bold">Conversão por Recompensa</CardTitle>
-              <CardDescription>Taxa de conclusão por faixa de pontos</CardDescription>
+              <CardDescription>Taxa de conclusão por faixa de tickets</CardDescription>
             </CardHeader>
             <CardContent className="p-5 pt-1">
               <div className="h-[250px]">

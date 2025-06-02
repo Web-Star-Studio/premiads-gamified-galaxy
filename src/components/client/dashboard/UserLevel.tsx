@@ -65,7 +65,7 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
           </h3>
         </div>
         <div className="text-sm text-neon-cyan">
-          {currentLevel.points_multiplier}x pontos
+          {currentLevel.points_multiplier}x tickets
         </div>
       </div>
       
@@ -90,7 +90,7 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
             ></div>
           </div>
           <div className="text-right text-xs text-gray-500 mt-1">
-            Faltam {pointsToNextLevel} pontos
+            Faltam {pointsToNextLevel} tickets
           </div>
         </div>
       )}

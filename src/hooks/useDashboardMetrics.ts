@@ -16,8 +16,7 @@ export interface DashboardMetrics {
   pointsTrend: number;
 }
 
-export const useDashboardMetrics = () => {
-  return useQuery({
+export const useDashboardMetrics = () => useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: async (): Promise<DashboardMetrics> => {
       // Get current metrics
@@ -105,4 +104,3 @@ export const useDashboardMetrics = () => {
     },
     refetchInterval: 30000,
   });
-};

@@ -4,8 +4,7 @@ import DailyChallenge from "@/components/dashboard/DailyChallenge";
 import SorteDoDia from "@/components/dashboard/SorteDoDia";
 import ReferralProgram from "@/components/client/ReferralProgram";
 
-const SidePanel = () => {
-  return (
+const SidePanel = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -19,6 +18,5 @@ const SidePanel = () => {
       </div>
     </motion.div>
   );
-};
 
 export default SidePanel;

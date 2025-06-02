@@ -13,8 +13,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   isSubmitting, 
   onCancel,
   submitLabel = "Criar Sorteio"
-}) => {
-  return (
+}) => (
     <motion.div 
       className="flex justify-end space-x-3 mt-8"
       initial={{ opacity: 0, y: 10 }}
@@ -39,6 +38,5 @@ const FormActions: React.FC<FormActionsProps> = ({
       </Button>
     </motion.div>
   );
-};
 
 export default FormActions;

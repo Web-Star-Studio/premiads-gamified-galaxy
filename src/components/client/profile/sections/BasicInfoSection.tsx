@@ -16,8 +16,7 @@ interface BasicInfoSectionProps {
   form: UseFormReturn<ProfileFormValues>;
 }
 
-export const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
-  return (
+export const BasicInfoSection = ({ form }: BasicInfoSectionProps) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Faixa Etária */}
       <FormField
@@ -201,4 +200,3 @@ export const BasicInfoSection = ({ form }: BasicInfoSectionProps) => {
       />
     </div>
   );
-};

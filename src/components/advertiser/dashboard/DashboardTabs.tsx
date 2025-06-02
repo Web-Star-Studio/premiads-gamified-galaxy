@@ -15,8 +15,7 @@ interface DashboardTabsProps {
   credits: number;
 }
 
-const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) => {
-  return (
+const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) => (
     <Tabs value={activeTab} onValueChange={onTabChange} className="mt-8">
       <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex md:gap-4 mb-6">
         <TabsTrigger className="data-[state=active]:neon-text-pink" value="overview">Visão Geral</TabsTrigger>
@@ -78,6 +77,5 @@ const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) 
       </TabsContent>
     </Tabs>
   );
-};
 
 export default DashboardTabs;

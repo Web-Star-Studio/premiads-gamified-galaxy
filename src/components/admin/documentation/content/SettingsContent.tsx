@@ -1,8 +1,7 @@
 
 import React from 'react';
 
-const SettingsContent: React.FC = () => {
-  return (
+const SettingsContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Configurações do Sistema</h3>
@@ -81,6 +80,5 @@ const SettingsContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default SettingsContent;

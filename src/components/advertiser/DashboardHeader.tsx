@@ -12,8 +12,7 @@ interface DashboardHeaderProps {
   isPremium?: boolean;
 }
 
-const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHeaderProps) => {
-  return (
+const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHeaderProps) => (
     <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -68,6 +67,5 @@ const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHead
       </motion.div>
     </div>
   );
-};
 
 export default DashboardHeader;

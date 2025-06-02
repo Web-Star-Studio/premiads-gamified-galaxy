@@ -47,15 +47,15 @@ const LifetimePoints = ({ totalPoints, rank, totalUsers }: LifetimePointsProps) 
           <TooltipTrigger asChild>
             <div className="flex items-baseline cursor-help">
               <span className="text-3xl font-bold text-white">{totalPoints.toLocaleString()}</span>
-              <span className="ml-1 text-sm text-neon-pink">pontos</span>
+              <span className="ml-1 text-sm text-neon-pink">tickets</span>
             </div>
           </TooltipTrigger>
           <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
             <div className="space-y-1 text-xs">
               <p className="font-medium text-sm">Conversão de valores</p>
-              <p>{totalPoints.toLocaleString()} pontos = {totalPoints.toLocaleString()} créditos</p>
+              <p>{totalPoints.toLocaleString()} tickets = {totalPoints.toLocaleString()} créditos</p>
               <p>Valor estimado: {getMoneyValue(totalPoints)}</p>
-              <p className="text-gray-400">10 pontos = R$1,00</p>
+              <p className="text-gray-400">10 tickets = R$1,00</p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -76,7 +76,7 @@ const LifetimePoints = ({ totalPoints, rank, totalUsers }: LifetimePointsProps) 
           </span>
           {levelInfo.nextLevel && (
             <span className="text-xs text-gray-400">
-              ({levelInfo.pointsToNextLevel} pontos para {levelInfo.nextLevel.name})
+              ({levelInfo.pointsToNextLevel} tickets para {levelInfo.nextLevel.name})
             </span>
           )}
         </div>

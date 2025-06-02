@@ -21,8 +21,7 @@ interface BlogPostCardProps {
   post: BlogPost;
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
-  return (
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -67,6 +66,5 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
       </Card>
     </motion.div>
   );
-};
 
 export default BlogPostCard;

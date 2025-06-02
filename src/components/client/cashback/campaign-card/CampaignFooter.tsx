@@ -8,8 +8,7 @@ interface CampaignFooterProps {
   onClick: () => void;
 }
 
-const CampaignFooter: React.FC<CampaignFooterProps> = ({ onClick }) => {
-  return (
+const CampaignFooter: React.FC<CampaignFooterProps> = ({ onClick }) => (
     <CardFooter>
       <Button 
         className="w-full bg-gradient-to-r from-neon-cyan to-neon-pink text-galaxy-dark font-medium hover:opacity-90 transition-opacity"
@@ -20,6 +19,5 @@ const CampaignFooter: React.FC<CampaignFooterProps> = ({ onClick }) => {
       </Button>
     </CardFooter>
   );
-};
 
 export default CampaignFooter;

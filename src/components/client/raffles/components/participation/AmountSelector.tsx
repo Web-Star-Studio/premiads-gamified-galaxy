@@ -19,8 +19,7 @@ const AmountSelector = ({
   disabled,
   min = 1,
   max = Infinity
-}: AmountSelectorProps) => {
-  return (
+}: AmountSelectorProps) => (
     <div className="flex items-center gap-2">
       <div className="flex items-center p-1 bg-galaxy-deepPurple/50 rounded-md border border-galaxy-purple/30">
         <Button 
@@ -46,6 +45,5 @@ const AmountSelector = ({
       <span className="text-sm text-gray-400">participações</span>
     </div>
   );
-};
 
 export default AmountSelector;

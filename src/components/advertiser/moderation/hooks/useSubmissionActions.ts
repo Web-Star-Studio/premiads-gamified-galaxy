@@ -47,7 +47,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         submissionId: submission.id,
         approverId: approverUser.id,
         decision: 'approve',
-        stage: stage 
+        stage 
       });
 
       if (!result.success || result.error) {
@@ -204,7 +204,7 @@ export const useSubmissionActions = ({ onRemove }: UseSubmissionActionsProps) =>
         submissionId: submission.id,
         approverId: rejectorUser.id,
         decision: 'reject',
-        stage: stage
+        stage
       });
 
       if (!result.success || result.error) {

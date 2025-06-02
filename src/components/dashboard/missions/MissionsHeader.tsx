@@ -6,8 +6,7 @@ interface MissionsHeaderProps {
   onViewAllMissions: () => void;
 }
 
-const MissionsHeader = ({ onViewAllMissions }: MissionsHeaderProps) => {
-  return (
+const MissionsHeader = ({ onViewAllMissions }: MissionsHeaderProps) => (
     <div className="flex items-center justify-between mb-4">
       <div>
         <h2 className="text-xl font-bold font-heading">Missões Recomendadas</h2>
@@ -25,6 +24,5 @@ const MissionsHeader = ({ onViewAllMissions }: MissionsHeaderProps) => {
       </div>
     </div>
   );
-};
 
 export default MissionsHeader;

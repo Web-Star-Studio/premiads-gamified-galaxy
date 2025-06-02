@@ -19,8 +19,7 @@ const CategoryRules = ({
   onToggleRule,
   onEditRule,
   onSaveRule
-}: CategoryRulesProps) => {
-  return (
+}: CategoryRulesProps) => (
     <div className="space-y-4">
       <Card className="bg-galaxy-dark border-galaxy-purple/30">
         <CardContent className="p-0">
@@ -41,6 +40,5 @@ const CategoryRules = ({
       <ImportantConsiderations />
     </div>
   );
-};
 
 export default CategoryRules;

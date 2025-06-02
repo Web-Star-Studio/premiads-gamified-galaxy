@@ -42,15 +42,13 @@ const TicketConversion = () => {
     setConversionAmount(value);
   };
   
-  const getTicketsFromPoints = (pointsAmount: number) => {
-    return Math.floor(pointsAmount / CONVERSION_RATE);
-  };
+  const getTicketsFromPoints = (pointsAmount: number) => Math.floor(pointsAmount / CONVERSION_RATE);
   
   const handleConvert = () => {
     if (conversionAmount <= 0 || conversionAmount > points) {
       toast({
         title: "Conversão inválida",
-        description: "Verifique a quantidade de pontos para conversão",
+        description: "Verifique a quantidade de tickets para conversão",
         variant: "destructive",
       });
       playSound("error");
@@ -70,7 +68,7 @@ const TicketConversion = () => {
       // Show success message
       toast({
         title: "Conversão realizada!",
-        description: `Você converteu ${conversionAmount} pontos em ${newTickets} tickets!`,
+        description: `Você converteu ${conversionAmount} tickets em ${newTickets} tickets!`,
       });
       
       playSound("reward");
@@ -92,7 +90,7 @@ const TicketConversion = () => {
               Suas Estatísticas
             </CardTitle>
             <CardDescription>
-              Confira seus pontos e tickets disponíveis
+              Confira seus tickets e tickets disponíveis
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -122,7 +120,7 @@ const TicketConversion = () => {
                 <h4 className="font-medium">Como funciona?</h4>
               </div>
               <p className="text-sm text-gray-400">
-                Converta seus pontos em tickets para participar de sorteios exclusivos. A taxa de conversão é de {CONVERSION_RATE} pontos por ticket.
+                Converta seus tickets em tickets para participar de sorteios exclusivos. A taxa de conversão é de {CONVERSION_RATE} tickets por ticket.
               </p>
             </div>
           </CardContent>
@@ -142,14 +140,14 @@ const TicketConversion = () => {
               Conversor de Pontos
             </CardTitle>
             <CardDescription>
-              Converta seus pontos em tickets para participar de sorteios
+              Converta seus tickets em tickets para participar de sorteios
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
               <div className="space-y-4">
                 <label className="text-sm text-gray-400">
-                  Quantidade de pontos para converter
+                  Quantidade de tickets para converter
                 </label>
                 
                 <div className="flex items-center gap-3">
@@ -162,7 +160,7 @@ const TicketConversion = () => {
                     step={CONVERSION_RATE}
                     className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 text-right"
                   />
-                  <span className="text-sm text-gray-400 whitespace-nowrap">de {points} pontos</span>
+                  <span className="text-sm text-gray-400 whitespace-nowrap">de {points} tickets</span>
                 </div>
                 
                 <Slider

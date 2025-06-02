@@ -12,8 +12,7 @@ const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   title, 
   advertiserName, 
   advertiserLogo 
-}) => {
-  return (
+}) => (
     <CardHeader className="pb-2">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-full overflow-hidden bg-galaxy-deepPurple/50 flex items-center justify-center">
@@ -32,6 +31,5 @@ const CampaignHeader: React.FC<CampaignHeaderProps> = ({
       </div>
     </CardHeader>
   );
-};
 
 export default CampaignHeader;

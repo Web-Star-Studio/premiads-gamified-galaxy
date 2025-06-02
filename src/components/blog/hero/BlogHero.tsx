@@ -14,8 +14,7 @@ const BlogHero: React.FC<BlogHeroProps> = ({
   searchQuery, 
   setSearchQuery, 
   handleSearchSubmit 
-}) => {
-  return (
+}) => (
     <section className="relative py-16 overflow-hidden">
       <div className="absolute inset-0 bg-blue-purple-gradient opacity-10 z-0"></div>
       <div className="container mx-auto px-4 relative z-10">
@@ -45,6 +44,5 @@ const BlogHero: React.FC<BlogHeroProps> = ({
       </div>
     </section>
   );
-};
 
 export default BlogHero;

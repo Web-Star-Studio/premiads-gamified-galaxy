@@ -2,8 +2,7 @@
 import React from 'react';
 import { motion } from "framer-motion";
 
-const LoadingState = () => {
-  return (
+const LoadingState = () => (
     <div className="min-h-screen bg-galaxy-dark flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0 }}
@@ -14,6 +13,5 @@ const LoadingState = () => {
       </motion.div>
     </div>
   );
-};
 
 export default LoadingState;

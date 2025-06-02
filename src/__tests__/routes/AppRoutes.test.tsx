@@ -28,15 +28,13 @@ Object.defineProperty(window, "location", {
   writable: true,
 });
 
-const renderWithRouter = (route: string) => {
-  return render(
+const renderWithRouter = (route: string) => render(
     <AuthProvider>
       <MemoryRouter initialEntries={[route]}>
         <AppRoutes />
       </MemoryRouter>
     </AuthProvider>
   );
-};
 
 describe("AppRoutes", () => {
   it("renders public routes for root path", () => {

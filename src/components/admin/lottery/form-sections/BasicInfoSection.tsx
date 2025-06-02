@@ -11,8 +11,7 @@ interface BasicInfoSectionProps {
   form: UseFormReturn<LotteryFormValues>;
 }
 
-const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
-  return (
+const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => (
     <motion.div 
       className="space-y-4"
       initial={{ opacity: 0, y: 10 }}
@@ -143,6 +142,5 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
       />
     </motion.div>
   );
-};
 
 export default BasicInfoSection;

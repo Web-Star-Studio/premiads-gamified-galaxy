@@ -127,7 +127,7 @@ export function RecentRewardsSection() {
           <div className="text-center text-gray-400 py-4">
             <ListOrderedIcon className="w-12 h-12 mx-auto mb-2" />
             <p>Nenhuma recompensa recente encontrada.</p>
-            <p className="text-sm">Complete missões para ganhar pontos!</p>
+            <p className="text-sm">Complete missões para ganhar tickets!</p>
           </div>
         </CardContent>
       </Card>

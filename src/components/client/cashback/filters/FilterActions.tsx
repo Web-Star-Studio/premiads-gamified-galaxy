@@ -7,8 +7,7 @@ interface FilterActionsProps {
   clearFilters: () => void;
 }
 
-const FilterActions: React.FC<FilterActionsProps> = ({ clearFilters }) => {
-  return (
+const FilterActions: React.FC<FilterActionsProps> = ({ clearFilters }) => (
     <>
       <Button 
         variant="outline" 
@@ -22,6 +21,5 @@ const FilterActions: React.FC<FilterActionsProps> = ({ clearFilters }) => {
       </SheetClose>
     </>
   );
-};
 
 export default FilterActions;

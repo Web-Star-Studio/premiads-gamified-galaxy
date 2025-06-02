@@ -105,20 +105,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
 export const mockUserCashback = 250;
 
 // Generate a redemption code
-export const generateRedemptionCode = (): string => {
-  return `CB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-};
+export const generateRedemptionCode = (): string => `CB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
 // Mock function to create a redemption
-export const createMockRedemption = (campaignId: string, amount: number): CashbackRedemption => {
-  return {
+export const createMockRedemption = (campaignId: string, amount: number): CashbackRedemption => ({
     id: Math.random().toString(36).substring(2, 15),
     campaign_id: campaignId,
     user_id: 'mock-user-id',
-    amount: amount,
+    amount,
     status: 'pending',
     code: generateRedemptionCode(),
     created_at: new Date().toISOString(),
     redeemed_at: null
-  };
-};
+  });

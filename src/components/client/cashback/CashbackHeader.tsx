@@ -9,8 +9,7 @@ interface CashbackHeaderProps {
   userCashback: number;
 }
 
-const CashbackHeader: React.FC<CashbackHeaderProps> = ({ userName, userCashback }) => {
-  return (
+const CashbackHeader: React.FC<CashbackHeaderProps> = ({ userName, userCashback }) => (
     <>
       <ClientDashboardHeader 
         title="Marketplace de Cashback" 
@@ -35,6 +34,5 @@ const CashbackHeader: React.FC<CashbackHeaderProps> = ({ userName, userCashback 
       </motion.div>
     </>
   );
-};
 
 export default CashbackHeader;

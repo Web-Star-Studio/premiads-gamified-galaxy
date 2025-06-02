@@ -1,8 +1,7 @@
 
 import React from 'react';
 
-const NotificationsContent: React.FC = () => {
-  return (
+const NotificationsContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sistema de Notificações</h3>
@@ -82,6 +81,5 @@ const NotificationsContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default NotificationsContent;

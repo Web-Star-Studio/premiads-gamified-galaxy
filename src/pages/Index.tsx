@@ -48,13 +48,13 @@ const MainContent = () => {
   );
 };
 
-const Index = () => {
+const Index = () => 
   // Remover qualquer lógica de redirecionamento para login
-  return (
+   (
     <UserProvider>
       <MainContent />
     </UserProvider>
-  );
-};
+  )
+;
 
 export default Index;

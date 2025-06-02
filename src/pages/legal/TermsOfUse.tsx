@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
 import MainHeader from "@/components/MainHeader";
 
-const TermsOfUse = () => {
-  return (
+const TermsOfUse = () => (
     <div className="min-h-screen bg-galaxy-dark">
       <MainHeader />
       
@@ -103,6 +102,5 @@ const TermsOfUse = () => {
       <Footer />
     </div>
   );
-};
 
 export default TermsOfUse;

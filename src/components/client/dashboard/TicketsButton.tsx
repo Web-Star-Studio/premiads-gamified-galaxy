@@ -7,21 +7,16 @@ import { useSounds } from "@/hooks/use-sounds";
 import { motion } from "framer-motion";
 
 // Icon component for reusability
-const TicketIcon = () => {
-  return <div className="relative">
+const TicketIcon = () => <div className="relative">
       <Gift className="w-6 h-6 mr-2 text-white" />
       
     </div>;
-};
 
 // Text label component for reusability
-const TicketLabel = () => {
-  return <span className="text-xl font-heading">Sorteios</span>;
-};
+const TicketLabel = () => <span className="text-xl font-heading">Sorteios</span>;
 
 // Content container for the button
-const TicketButtonContent = () => {
-  return <motion.div className="flex flex-col items-center justify-center w-full" initial={{
+const TicketButtonContent = () => <motion.div className="flex flex-col items-center justify-center w-full" initial={{
     opacity: 0,
     y: 10
   }} animate={{
@@ -35,7 +30,6 @@ const TicketButtonContent = () => {
         <TicketLabel />
       </div>
     </motion.div>;
-};
 const TicketsButton = () => {
   const navigate = useNavigate();
   const {

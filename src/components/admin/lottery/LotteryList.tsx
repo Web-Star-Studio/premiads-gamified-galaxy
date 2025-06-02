@@ -292,7 +292,7 @@ const LotteryList: React.FC<LotteryListProps> = ({
                     </div>
                     <div className="flex justify-between">
                       <span>Pontos por número:</span>
-                      <span className="text-white">{lottery.pointsPerNumber || lottery.points}</span>
+                      <span className="text-white">{lottery.pointsPerNumber || lottery.tickets_reward}</span>
                     </div>
                   </div>
                   

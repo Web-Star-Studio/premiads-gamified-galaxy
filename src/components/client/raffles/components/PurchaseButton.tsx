@@ -22,8 +22,7 @@ const PurchaseButton = ({
   pointsNeeded,
   onClick,
   discountPercentage = 0
-}: PurchaseButtonProps) => {
-  return (
+}: PurchaseButtonProps) => (
     <div className="relative">
       {discountPercentage > 0 && purchaseMode === 'points' && (
         <Badge 
@@ -49,12 +48,11 @@ const PurchaseButton = ({
             <Gift className="w-4 h-4 mr-2" />
             {purchaseMode === 'tickets' 
               ? `Participar com ${purchaseAmount} ticket${purchaseAmount > 1 ? 's' : ''}` 
-              : `Comprar com ${pointsNeeded} pontos`}
+              : `Comprar com ${pointsNeeded} tickets`}
           </>
         )}
       </Button>
     </div>
   );
-};
 
 export default PurchaseButton;

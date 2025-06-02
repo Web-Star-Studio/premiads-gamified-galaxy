@@ -8,8 +8,7 @@ interface DashboardHeaderProps {
   subtitle: string;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, subtitle }) => {
-  return (
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, subtitle }) => (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -32,6 +31,5 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, subtitle }) =>
       </div>
     </motion.div>
   );
-};
 
 export default DashboardHeader;

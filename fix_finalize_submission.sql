@@ -1,4 +1,3 @@
-
 -- Update the finalize_submission function to call process_mission_rewards internally
 CREATE OR REPLACE FUNCTION public.finalize_submission(p_submission_id uuid, p_approver_id uuid, p_decision text, p_stage text)
 RETURNS jsonb
@@ -8,8 +7,8 @@ AS $$
 DECLARE
   v_mission_id UUID;
   v_participant_id UUID;
-  v_points INT;
-  v_tokens INT;
+  v_tickets INT;
+  v_cashback_amount NUMERIC(10,2);
   v_status TEXT;
   v_request_id UUID;
   v_result JSONB;
@@ -30,11 +29,11 @@ BEGIN
     RAISE EXCEPTION 'Submission not found';
   END IF;
   
-  -- Get mission points AND tokens
+  -- Buscar recompensas definidas na missão
   SELECT 
-    points, 
-    cost_in_tokens INTO v_points, v_tokens 
-  FROM missions 
+    tickets_reward,
+    cashback_reward INTO v_tickets, v_cashback_amount
+  FROM missions
   WHERE id = v_mission_id;
   
   -- Check if reward has already been given to avoid duplicates
@@ -73,34 +72,27 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award points AND tokens to participant if not already rewarded
+      -- Award tickets AND cashback to participant if not already rewarded
       IF NOT v_already_rewarded THEN
-        -- Add points to user
-        UPDATE profiles
-        SET 
-          points = COALESCE(points, 0) + v_points,
-          credits = COALESCE(credits, 0) + v_tokens,
-          updated_at = NOW()
-        WHERE id = v_participant_id;
-        
-        -- Record the reward
+        -- Record the reward in mission_rewards (handled by trigger now, but good to have explicit insert if direct call)
         INSERT INTO mission_rewards (
           user_id, 
           mission_id, 
           submission_id, 
-          points_earned,
-          tokens_earned,
+          tickets_earned,
+          cashback_earned,
           rewarded_at
         ) VALUES (
           v_participant_id,
           v_mission_id,
           p_submission_id,
-          v_points,
-          v_tokens,
+          v_tickets,
+          v_cashback_amount,
           NOW()
-        );
+        )
+        ON CONFLICT (submission_id) DO NOTHING; -- Avoid duplicate entries if trigger also ran
         
-        -- Process additional rewards (badges, loot boxes, streaks)
+        -- Process additional rewards (badges, loot boxes)
         BEGIN
           SELECT process_mission_rewards(
             p_submission_id, 
@@ -214,32 +206,25 @@ BEGIN
         WHERE id = v_request_id;
       END IF;
       
-      -- Award both points AND tokens to participant if not already rewarded
+      -- Award tickets AND cashback to participant if not already rewarded
       IF NOT v_already_rewarded THEN
-        -- Add points to user
-        UPDATE profiles
-        SET 
-          points = COALESCE(points, 0) + v_points,
-          credits = COALESCE(credits, 0) + v_tokens,
-          updated_at = NOW()
-        WHERE id = v_participant_id;
-        
         -- Record the reward
         INSERT INTO mission_rewards (
           user_id, 
           mission_id, 
           submission_id, 
-          points_earned,
-          tokens_earned,
+          tickets_earned,
+          cashback_earned,
           rewarded_at
         ) VALUES (
           v_participant_id,
           v_mission_id,
           p_submission_id,
-          v_points,
-          v_tokens,
+          v_tickets,
+          v_cashback_amount,
           NOW()
-        );
+        )
+        ON CONFLICT (submission_id) DO NOTHING;
         
         -- Process additional rewards (badges, loot boxes, streaks)
         BEGIN
@@ -291,8 +276,8 @@ BEGIN
     'submission_id', p_submission_id,
     'participant_id', v_participant_id,
     'mission_id', v_mission_id,
-    'points_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_points ELSE 0 END,
-    'tokens_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_tokens ELSE 0 END
+    'tickets_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_tickets ELSE 0 END,
+    'cashback_awarded', CASE WHEN v_status = 'approved' AND NOT v_already_rewarded THEN v_cashback_amount ELSE 0 END
   );
   
   -- Merge additional rewards information if available

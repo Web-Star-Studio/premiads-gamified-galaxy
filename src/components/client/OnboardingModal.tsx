@@ -74,7 +74,7 @@ const OnboardingModal = ({ isOpen, onClose }: OnboardingModalProps) => {
             </div>
             <h3 className="text-xl font-heading mb-2">Complete Missões</h3>
             <p className="text-gray-400 mb-6">
-              Participe de missões e desafios para ganhar pontos. Quanto mais missões você completar, mais rápido subirá de nível!
+              Participe de missões e desafios para ganhar tickets. Quanto mais missões você completar, mais rápido subirá de nível!
             </p>
           </div>
         );
@@ -86,7 +86,7 @@ const OnboardingModal = ({ isOpen, onClose }: OnboardingModalProps) => {
             </div>
             <h3 className="text-xl font-heading mb-2">Ganhe Prêmios</h3>
             <p className="text-gray-400 mb-6">
-              Converta seus pontos em tickets para participar de sorteios exclusivos e ganhar prêmios incríveis!
+              Converta seus tickets em tickets para participar de sorteios exclusivos e ganhar prêmios incríveis!
             </p>
           </div>
         );
@@ -98,7 +98,7 @@ const OnboardingModal = ({ isOpen, onClose }: OnboardingModalProps) => {
             </div>
             <h3 className="text-xl font-heading mb-2">Convide Amigos</h3>
             <p className="text-gray-400 mb-6">
-              Ganhe pontos extras ao convidar seus amigos para se juntar à plataforma. Cada amigo que se registrar usando seu código de referência dará a você 200 pontos!
+              Ganhe tickets extras ao convidar seus amigos para se juntar à plataforma. Cada amigo que se registrar usando seu código de referência dará a você 200 tickets!
             </p>
           </div>
         );

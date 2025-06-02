@@ -2,8 +2,7 @@
 import { Menu } from "lucide-react";
 import { SidebarHeader as Header, SidebarTrigger } from "@/components/ui/sidebar";
 
-export const SidebarHeader = () => {
-  return (
+export const SidebarHeader = () => (
     <Header className="flex items-center justify-between p-4 pt-6">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-galaxy-purple flex items-center justify-center">
@@ -16,6 +15,5 @@ export const SidebarHeader = () => {
       </SidebarTrigger>
     </Header>
   );
-};
 
 export default SidebarHeader;

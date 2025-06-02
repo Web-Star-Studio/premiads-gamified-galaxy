@@ -5,28 +5,22 @@ import { BrowserRouter } from 'react-router-dom';
 import LotteryManagementPage from '@/pages/admin/LotteryManagementPage';
 
 // Mock the components used in LotteryManagementPage
-jest.mock('@/components/admin/AdminSidebar', () => {
-  return function MockAdminSidebar() {
+jest.mock('@/components/admin/AdminSidebar', () => function MockAdminSidebar() {
     return <div data-testid="admin-sidebar">Admin Sidebar</div>;
-  };
-});
+  });
 
-jest.mock('@/components/admin/DashboardHeader', () => {
-  return function MockDashboardHeader({ title, subtitle }: { title: string; subtitle: string }) {
+jest.mock('@/components/admin/DashboardHeader', () => function MockDashboardHeader({ title, subtitle }: { title: string; subtitle: string }) {
     return (
       <header data-testid="dashboard-header">
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </header>
     );
-  };
-});
+  });
 
-jest.mock('@/components/admin/LotteryManagement', () => {
-  return function MockLotteryManagement() {
+jest.mock('@/components/admin/LotteryManagement', () => function MockLotteryManagement() {
     return <div data-testid="lottery-management">Lottery Management Component</div>;
-  };
-});
+  });
 
 jest.mock('@/hooks/use-sounds', () => ({
   useSounds: () => ({

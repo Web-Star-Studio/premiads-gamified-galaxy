@@ -25,13 +25,11 @@ export const canPurchaseWithTickets = (
   participationCount: number,
   maxTicketsPerUser: number,
   isParticipationClosed: boolean
-): boolean => {
-  return (
+): boolean => (
     userTickets >= purchaseAmount && 
     participationCount + purchaseAmount <= maxTicketsPerUser &&
     !isParticipationClosed
   );
-};
 
 /**
  * Determines if the user can purchase with points
@@ -43,13 +41,11 @@ export const canPurchaseWithPoints = (
   purchaseAmount: number,
   maxTicketsPerUser: number,
   isParticipationClosed: boolean
-): boolean => {
-  return (
+): boolean => (
     userPoints >= pointsNeeded && 
     participationCount + purchaseAmount <= maxTicketsPerUser &&
     !isParticipationClosed
   );
-};
 
 /**
  * Gets the discount percentage from the user's level

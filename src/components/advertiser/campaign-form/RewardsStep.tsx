@@ -31,7 +31,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   
   // Limites de pontuação baseados nos créditos disponíveis
   const minPoints = 10;
-  // Máximo de pontos proporcional aos créditos disponíveis
+  // Máximo de tickets proporcional aos créditos disponíveis
   const maxPoints = userCredits;
   const pointsStep = 5;
 
@@ -136,7 +136,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
                     onChange={(e) => {
                       const val = parseInt(e.target.value, 10)
                       if (!isNaN(val))
-                        updateFormData("pointsValue", Math.min(Math.max(val, minPoints), maxPoints))
+                        {updateFormData("pointsValue", Math.min(Math.max(val, minPoints), maxPoints))}
                     }}
                     className="w-24 bg-gray-800 border-gray-700 focus:border-neon-cyan text-right"
                     disabled={userCredits === 0}
@@ -156,7 +156,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               aria-valuemin={minPoints}
               aria-valuemax={maxPoints}
               aria-valuenow={formData.pointsValue}
-              aria-valuetext={`${formData.pointsValue} pontos`}
+              aria-valuetext={`${formData.pointsValue} tickets`}
             />
           </div>
 
@@ -176,7 +176,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
                   onChange={(e) => {
                     const val = parseInt(e.target.value, 10)
                     if (!isNaN(val))
-                      updateFormData("maxParticipants", Math.min(Math.max(val, 10), 10000))
+                      {updateFormData("maxParticipants", Math.min(Math.max(val, 10), 10000))}
                   }}
                   className="w-24 bg-gray-800 border-gray-700 focus:border-pink-400 text-right"
                 />
@@ -213,7 +213,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
                   onChange={(e) => {
                     const val = parseInt(e.target.value, 10)
                     if (!isNaN(val))
-                      updateFormData("maxCashbackRedemptions", Math.min(Math.max(val, 1), 100))
+                      {updateFormData("maxCashbackRedemptions", Math.min(Math.max(val, 1), 100))}
                   }}
                   className="w-24 bg-gray-800 border-gray-700 focus:border-green-400 text-right"
                 />

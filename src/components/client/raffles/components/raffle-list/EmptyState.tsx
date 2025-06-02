@@ -1,8 +1,7 @@
 
 import React from "react";
 
-const EmptyState = () => {
-  return (
+const EmptyState = () => (
     <div className="text-center py-8">
       <p className="text-gray-400">Nenhum sorteio encontrado.</p>
       <p className="text-sm text-gray-500 mt-2">
@@ -10,6 +9,5 @@ const EmptyState = () => {
       </p>
     </div>
   );
-};
 
 export default EmptyState;

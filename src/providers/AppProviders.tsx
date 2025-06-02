@@ -9,8 +9,7 @@ import { CreditsProvider } from "./credits-provider";
 // Create a client
 const queryClient = new QueryClient();
 
-export const AppProviders = ({ children }: { children: React.ReactNode }) => {
-  return (
+export const AppProviders = ({ children }: { children: React.ReactNode }) => (
     <HelmetProvider>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
@@ -26,4 +25,3 @@ export const AppProviders = ({ children }: { children: React.ReactNode }) => {
       </BrowserRouter>
     </HelmetProvider>
   );
-};

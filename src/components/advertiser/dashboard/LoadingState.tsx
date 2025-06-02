@@ -1,8 +1,7 @@
 
 import { motion } from "framer-motion";
 
-const LoadingState = () => {
-  return (
+const LoadingState = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -14,6 +13,5 @@ const LoadingState = () => {
       </motion.div>
     </div>
   );
-};
 
 export default LoadingState;

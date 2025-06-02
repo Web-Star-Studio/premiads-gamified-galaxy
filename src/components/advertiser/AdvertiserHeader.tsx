@@ -13,8 +13,6 @@ export interface AdvertiserHeaderProps {
   titleClassName?: string;
 }
 
-const AdvertiserHeader: FC<AdvertiserHeaderProps> = (props) => {
-  return <ClientDashboardHeader {...props} />;
-};
+const AdvertiserHeader: FC<AdvertiserHeaderProps> = (props) => <ClientDashboardHeader {...props} />;
 
 export default AdvertiserHeader;

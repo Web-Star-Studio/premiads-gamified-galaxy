@@ -126,7 +126,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       // Show a descriptive toast with the reward details
       let description = getRewardDescription(selectedLootBox);
       if (typedData.points_difference && typedData.points_difference > 0) {
-        description = `Você recebeu ${typedData.points_difference} pontos de experiência!`;
+        description = `Você recebeu ${typedData.points_difference} tickets de experiência!`;
       } else if (typedData.credits_difference && typedData.credits_difference > 0) {
         description = `Você recebeu ${typedData.credits_difference} créditos!`;
       }
@@ -171,13 +171,13 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
     switch (lootBox.reward_type) {
       case 'xp_bonus':
       case 'credit_bonus':
-        return `Você ganhou ${lootBox.reward_amount} ${lootBox.reward_type === 'xp_bonus' ? 'pontos de experiência' : 'créditos'} extra!`;
+        return `Você ganhou ${lootBox.reward_amount} ${lootBox.reward_type === 'xp_bonus' ? 'tickets de experiência' : 'créditos'} extra!`;
       case 'token_multiplier':
       case 'multiplier':
         return `Multiplicador de ${lootBox.reward_type === 'token_multiplier' ? 'tokens' : 'créditos'}: ${lootBox.reward_amount}x!`;
       case 'instant_level_up':
       case 'level_up':
-        return `Level up instantâneo com bônus de ${lootBox.reward_amount} pontos!`;
+        return `Level up instantâneo com bônus de ${lootBox.reward_amount} tickets!`;
       case 'daily_streak_bonus':
         return `Sua sequência diária foi aumentada em ${lootBox.reward_amount}!`;
       case 'raffle_ticket':
@@ -189,9 +189,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
     }
   };
 
-  const getRewardAnimation = (lootBox: LootBox): string => {
-    return LOOTBOX_ANIMATIONS[lootBox.reward_type] || LOOTBOX_ANIMATIONS.default;
-  };
+  const getRewardAnimation = (lootBox: LootBox): string => LOOTBOX_ANIMATIONS[lootBox.reward_type] || LOOTBOX_ANIMATIONS.default;
 
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {

@@ -23,8 +23,7 @@ const UserBalanceDisplay = ({
   ticketsRequired,
   discountPercentage = 0,
   currentLevelName = 'Bronze'
-}: UserBalanceDisplayProps) => {
-  return (
+}: UserBalanceDisplayProps) => (
     <div className="bg-galaxy-deepPurple/50 p-3 rounded-md border border-galaxy-purple/30">
       <div className="flex items-center justify-between mb-2">
         <div className="text-sm">Você tem:</div>
@@ -35,7 +34,7 @@ const UserBalanceDisplay = ({
           </div>
           <div className="flex items-center">
             <CreditCard className="w-3 h-3 mr-1 text-neon-pink" />
-            <span className="text-neon-pink">{userPoints} pontos</span>
+            <span className="text-neon-pink">{userPoints} tickets</span>
           </div>
         </div>
       </div>
@@ -48,8 +47,8 @@ const UserBalanceDisplay = ({
         <div className="flex flex-col gap-1">
           <div className="text-sm text-gray-400 flex items-center justify-between">
             <div>
-              Custo: <span className="text-neon-pink">{pointsNeeded} pontos</span> 
-              <span className="text-xs ml-1">({purchaseAmount} x {ticketsRequired} tickets x 100 pontos)</span>
+              Custo: <span className="text-neon-pink">{pointsNeeded} tickets</span> 
+              <span className="text-xs ml-1">({purchaseAmount} x {ticketsRequired} tickets x 100 tickets)</span>
             </div>
             
             {discountPercentage > 0 && (
@@ -69,6 +68,5 @@ const UserBalanceDisplay = ({
       )}
     </div>
   );
-};
 
 export default UserBalanceDisplay;

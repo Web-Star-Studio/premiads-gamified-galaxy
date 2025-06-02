@@ -74,7 +74,7 @@ const ProfilePreview = ({ profileData }: ProfilePreviewProps) => {
               <User className="w-8 h-8 text-gray-300" />
             </div>
             <h4 className="font-medium text-gray-300 mb-2">Complete seu perfil</h4>
-            <p className="text-sm text-gray-400 mb-4">Ganhe pontos e desbloqueie funcionalidades adicionais</p>
+            <p className="text-sm text-gray-400 mb-4">Ganhe tickets e desbloqueie funcionalidades adicionais</p>
             <Link 
               to="/cliente/perfil" 
               className="inline-block bg-galaxy-purple/30 border border-neon-cyan/30 text-white px-4 py-2 rounded-md hover:bg-galaxy-purple/50 transition-colors"

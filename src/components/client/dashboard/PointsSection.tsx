@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import PointsCard from "@/components/dashboard/PointsCard";
+import TicketsCard from "@/components/dashboard/TicketsCard";
 import UserLevel from "@/components/client/dashboard/UserLevel";
 import TicketsButton from "@/components/client/dashboard/TicketsButton";
 import { useClientStats } from "@/hooks/useClientStats";
@@ -15,7 +15,7 @@ interface PointsSectionProps {
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
   const { data: stats, isLoading } = useClientStats();
-  const effectivePoints = totalPoints || stats?.points || 0;
+  const effectivePoints = totalPoints || stats?.tickets_reward || 0;
   const { levelInfo, loading: levelLoading } = useUserLevel(effectivePoints);
   
   return (
@@ -29,7 +29,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              <PointsCard 
+              <TicketsCard 
                 points={effectivePoints} 
                 isLoading={isLoading}
                 tickets={stats?.tickets || 0} 
@@ -44,9 +44,9 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
               <p className="text-sm font-medium">Conversão de Pontos e Créditos</p>
               <div className="text-xs space-y-1">
                 <p>
-                  <span className="text-neon-cyan">{effectivePoints}</span> pontos = <span className="text-neon-pink">{effectivePoints}</span> créditos = {getMoneyValue(effectivePoints)}
+                  <span className="text-neon-cyan">{effectivePoints}</span> tickets = <span className="text-neon-pink">{effectivePoints}</span> créditos = {getMoneyValue(effectivePoints)}
                 </p>
-                <p>• Cada 10 pontos equivalem a R$1,00</p>
+                <p>• Cada 10 tickets equivalem a R$1,00</p>
                 <p>• Pontos são ganhos completando missões</p>
                 <p>• Créditos podem ser usados para sorteios</p>
               </div>

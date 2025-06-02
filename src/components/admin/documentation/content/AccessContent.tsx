@@ -2,8 +2,7 @@
 import React from 'react';
 import { Shield } from "lucide-react";
 
-const AccessContent: React.FC = () => {
-  return (
+const AccessContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sistema de Permissões</h3>
@@ -81,6 +80,5 @@ const AccessContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default AccessContent;

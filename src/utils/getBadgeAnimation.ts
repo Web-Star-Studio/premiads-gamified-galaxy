@@ -8,7 +8,7 @@ export const getBadgeAnimationForMissionType = (missionType: string): string => 
   if (missionType.includes('coupon')) return '/images/badges/coupon-badge.svg';
   if (missionType.includes('social')) return '/images/badges/social-badge.svg';
   if (missionType.includes('checkin') || missionType.includes('check-in')) 
-    return '/images/badges/checkin-badge.svg';
+    {return '/images/badges/checkin-badge.svg';}
   
   // Fallback to Lottie animations
   if (missionType.includes('photo')) return 'https://assets10.lottiefiles.com/packages/lf20_qm8eqtyw.json';
@@ -19,15 +19,13 @@ export const getBadgeAnimationForMissionType = (missionType: string): string => 
   if (missionType.includes('coupon')) return 'https://assets10.lottiefiles.com/packages/lf20_uomoou11.json';
   if (missionType.includes('social')) return 'https://assets9.lottiefiles.com/packages/lf20_wloxwm9w.json';
   if (missionType.includes('checkin') || missionType.includes('check-in')) 
-    return 'https://assets3.lottiefiles.com/packages/lf20_9yi1lpr7.json';
+    {return 'https://assets3.lottiefiles.com/packages/lf20_9yi1lpr7.json';}
   
   // Default badge if nothing matches
   return '/images/badges/default-badge.svg';
 };
 
-export const generateBadgeName = (missionTitle: string): string => {
-  return `${missionTitle} Badge`;
-};
+export const generateBadgeName = (missionTitle: string): string => `${missionTitle} Badge`;
 
 export const generateBadgeDescription = (missionTitle: string): string => {
   const templates = [
@@ -63,7 +61,7 @@ export const getFallbackBadgeUrl = (missionType?: string): string => {
     if (missionType.includes('coupon')) return '/images/badges/coupon-badge.svg';
     if (missionType.includes('social')) return '/images/badges/social-badge.svg';
     if (missionType.includes('checkin') || missionType.includes('check-in')) 
-      return '/images/badges/checkin-badge.svg';
+      {return '/images/badges/checkin-badge.svg';}
   }
   
   // Default fallback

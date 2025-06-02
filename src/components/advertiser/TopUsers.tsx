@@ -57,8 +57,8 @@ const TopUsers = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-neon-pink">{user.points.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400">pontos</p>
+                  <p className="text-sm font-bold text-neon-pink">{user.tickets_reward.toLocaleString()}</p>
+                  <p className="text-xs text-gray-400">tickets</p>
                 </div>
               </motion.div>
             ))}
@@ -66,7 +66,7 @@ const TopUsers = () => {
           
           <div className="mt-5 pt-3 border-t border-gray-800">
             <p className="text-xs text-center text-gray-500">
-              Ranking atualizado com base nos pontos acumulados nos últimos 30 dias
+              Ranking atualizado com base nos tickets acumulados nos últimos 30 dias
             </p>
           </div>
         </CardContent>

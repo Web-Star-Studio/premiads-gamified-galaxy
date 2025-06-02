@@ -20,8 +20,7 @@ interface FeaturedPostCardProps {
   post: BlogPost;
 }
 
-const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
-  return (
+const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -68,6 +67,5 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
       </div>
     </motion.div>
   );
-};
 
 export default FeaturedPostCard;

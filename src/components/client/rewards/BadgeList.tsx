@@ -66,9 +66,7 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
   };
 
   // Check if a badge is new
-  const isNewBadge = (badge: Badge): boolean => {
-    return newBadgeIds.includes(badge.id);
-  };
+  const isNewBadge = (badge: Badge): boolean => newBadgeIds.includes(badge.id);
 
   // Handle badge image rendering based on URL type
   const renderBadgeImage = (badge: Badge, large = false) => {

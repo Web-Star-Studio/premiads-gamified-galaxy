@@ -34,7 +34,7 @@ export const useLottery = () => {
         const numbersSold = raffle.numbers?.length || 0;
         const progress = Math.round((numbersSold / raffle.numbers_total) * 100);
         
-        let winner = raffle.winner ? {
+        const winner = raffle.winner ? {
           id: raffle.winner.id,
           name: raffle.winner.full_name || 'Unknown',
           avatar: raffle.winner.avatar_url || 'https://i.pravatar.cc/150?img=1'
@@ -48,7 +48,7 @@ export const useLottery = () => {
           detailed_description: raffle.detailed_description,
           detailedDescription: raffle.detailed_description, // Alias for compatibility
           type: raffle.type,
-          points: raffle.points,
+          points: raffle.tickets_reward,
           numbers_total: raffle.numbers_total,
           numbersTotal: raffle.numbers_total, // Alias for compatibility
           status: raffle.status as Lottery['status'],
@@ -62,7 +62,7 @@ export const useLottery = () => {
           prizeType: raffle.prize_type, // Alias for compatibility
           prize_value: raffle.prize_value,
           prizeValue: raffle.prize_value, // Alias for compatibility
-          pointsPerNumber: raffle.points, // Using points as pointsPerNumber
+          pointsPerNumber: raffle.tickets_reward, // Using points as pointsPerNumber
           winner,
           created_at: raffle.created_at,
           updated_at: raffle.updated_at,
@@ -101,7 +101,7 @@ export const useLottery = () => {
           description: lotteryData.description,
           detailed_description: lotteryData.detailed_description || lotteryData.detailedDescription,
           type: lotteryData.type,
-          points: lotteryData.points,
+          points: lotteryData.tickets_reward,
           numbers_total: lotteryData.numbers_total || lotteryData.numbersTotal,
           status: lotteryData.status,
           start_date: lotteryData.start_date || lotteryData.startDate,
@@ -124,7 +124,7 @@ export const useLottery = () => {
         detailed_description: data.detailed_description,
         detailedDescription: data.detailed_description,
         type: data.type,
-        points: data.points,
+        points: data.tickets_reward,
         numbers_total: data.numbers_total,
         numbersTotal: data.numbers_total,
         status: data.status as Lottery['status'],
@@ -138,7 +138,7 @@ export const useLottery = () => {
         prizeType: data.prize_type,
         prize_value: data.prize_value,
         prizeValue: data.prize_value,
-        pointsPerNumber: data.points,
+        pointsPerNumber: data.tickets_reward,
         winner: null,
         numbers: [],
         created_at: data.created_at,

@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 
-const BlogPostSkeleton: React.FC = () => {
-  return (
+const BlogPostSkeleton: React.FC = () => (
     <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden">
       <div className="h-48 bg-zinc-800 animate-pulse"></div>
       <CardContent className="p-6">
@@ -25,6 +24,5 @@ const BlogPostSkeleton: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
 
 export default BlogPostSkeleton;

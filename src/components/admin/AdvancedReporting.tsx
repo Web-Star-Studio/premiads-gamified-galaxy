@@ -21,13 +21,13 @@ import LoadingParticles from './LoadingParticles';
 
 // Mock data for charts
 const userActivityData = [
-  { name: 'Jan', usuarios: 4000, missoes: 2400, pontos: 2400 },
-  { name: 'Fev', usuarios: 3000, missoes: 1398, pontos: 2210 },
-  { name: 'Mar', usuarios: 2000, missoes: 9800, pontos: 2290 },
-  { name: 'Abr', usuarios: 2780, missoes: 3908, pontos: 2000 },
-  { name: 'Mai', usuarios: 1890, missoes: 4800, pontos: 2181 },
-  { name: 'Jun', usuarios: 2390, missoes: 3800, pontos: 2500 },
-  { name: 'Jul', usuarios: 3490, missoes: 4300, pontos: 2100 },
+  { name: 'Jan', usuarios: 4000, missoes: 2400, tickets: 2400 },
+  { name: 'Fev', usuarios: 3000, missoes: 1398, tickets: 2210 },
+  { name: 'Mar', usuarios: 2000, missoes: 9800, tickets: 2290 },
+  { name: 'Abr', usuarios: 2780, missoes: 3908, tickets: 2000 },
+  { name: 'Mai', usuarios: 1890, missoes: 4800, tickets: 2181 },
+  { name: 'Jun', usuarios: 2390, missoes: 3800, tickets: 2500 },
+  { name: 'Jul', usuarios: 3490, missoes: 4300, tickets: 2100 },
 ];
 
 const revenueData = [
@@ -294,7 +294,7 @@ const AdvancedReporting: React.FC = () => {
                                 activeDot={{ r: 8 }} 
                               />
                               <Line type="monotone" dataKey="missoes" stroke="#FF6B8B" />
-                              <Line type="monotone" dataKey="pontos" stroke="#82ca9d" />
+                              <Line type="monotone" dataKey="tickets" stroke="#82ca9d" />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -496,7 +496,7 @@ const AdvancedReporting: React.FC = () => {
                               <Legend />
                               <Bar dataKey="usuarios" name="Mobile" fill="#8884d8" />
                               <Bar dataKey="missoes" name="Desktop" fill="#FF6B8B" />
-                              <Bar dataKey="pontos" name="Tablet" fill="#82ca9d" />
+                              <Bar dataKey="tickets" name="Tablet" fill="#82ca9d" />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -589,7 +589,7 @@ const AdvancedReporting: React.FC = () => {
                             />
                             <Legend />
                             <Bar dataKey="missoes" name="Missões Completadas" fill="#FF6B8B" />
-                            <Bar dataKey="pontos" name="Pontos Ganhos" fill="#82ca9d" />
+                            <Bar dataKey="tickets" name="Pontos Ganhos" fill="#82ca9d" />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>

@@ -87,8 +87,7 @@ interface PageTransitionProps {
   location: string; // Use current route as key for AnimatePresence
 }
 
-export const PageTransition: React.FC<PageTransitionProps> = ({ children, location }) => {
-  return (
+export const PageTransition: React.FC<PageTransitionProps> = ({ children, location }) => (
     <AnimatePresence mode="wait">
       <motion.div
         key={location}
@@ -103,7 +102,6 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children, locati
       </motion.div>
     </AnimatePresence>
   );
-};
 
 // Stagger item component
 interface StaggerItemProps {
@@ -112,8 +110,7 @@ interface StaggerItemProps {
   className?: string;
 }
 
-export const StaggerItem: React.FC<StaggerItemProps> = ({ children, index = 0, className }) => {
-  return (
+export const StaggerItem: React.FC<StaggerItemProps> = ({ children, index = 0, className }) => (
     <motion.div
       variants={staggerItemVariants}
       transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -122,4 +119,3 @@ export const StaggerItem: React.FC<StaggerItemProps> = ({ children, index = 0, c
       {children}
     </motion.div>
   );
-};

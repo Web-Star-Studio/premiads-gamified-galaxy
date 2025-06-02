@@ -15,8 +15,7 @@ const CampaignContent: React.FC<CampaignContentProps> = ({
   endDate,
   minimumPurchase,
   formatDate
-}) => {
-  return (
+}) => (
     <CardContent className="pb-2">
       <p className="text-sm line-clamp-2 text-gray-300 min-h-[40px]">
         {description}
@@ -37,6 +36,5 @@ const CampaignContent: React.FC<CampaignContentProps> = ({
       </div>
     </CardContent>
   );
-};
 
 export default CampaignContent;

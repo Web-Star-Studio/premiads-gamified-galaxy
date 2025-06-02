@@ -1,8 +1,7 @@
 
 import { motion } from "framer-motion";
 
-const TypingIndicator = () => {
-  return (
+const TypingIndicator = () => (
     <div className="flex w-max max-w-[80%] flex-col gap-1 rounded-lg px-3 py-2 text-sm bg-galaxy-deepPurple/70">
       <div className="flex items-center gap-1">
         <motion.div
@@ -23,6 +22,5 @@ const TypingIndicator = () => {
       </div>
     </div>
   );
-};
 
 export default TypingIndicator;

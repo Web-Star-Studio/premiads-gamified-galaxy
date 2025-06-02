@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { FormData, initialFormData } from '@/components/advertiser/campaign-form/types';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -54,10 +53,10 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
   }, [editCampaign]);
   
   // Update form data
-  const updateFormData = (updates: Partial<FormData>) => {
+  const updateFormData = (field: string, value: any) => {
     setFormData(prevData => ({
       ...prevData,
-      ...updates
+      [field]: value
     }));
   };
   

@@ -23,8 +23,7 @@ const Blog = lazy(() => import("@/pages/Blog"));
 const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
 
-const PublicRoutes = () => {
-  return (
+const PublicRoutes = () => (
     <Routes>
       <Route index element={
         <Suspense fallback={<RouteLoadingSpinner />}>
@@ -126,6 +125,5 @@ const PublicRoutes = () => {
       } />
     </Routes>
   );
-};
 
 export default PublicRoutes;

@@ -7,8 +7,7 @@ interface CampaignImageProps {
   discountPercentage: number;
 }
 
-const CampaignImage: React.FC<CampaignImageProps> = ({ image, discountPercentage }) => {
-  return (
+const CampaignImage: React.FC<CampaignImageProps> = ({ image, discountPercentage }) => (
     <div className="relative h-48 overflow-hidden">
       <img 
         src={image} 
@@ -23,6 +22,5 @@ const CampaignImage: React.FC<CampaignImageProps> = ({ image, discountPercentage
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-galaxy-dark to-transparent" />
     </div>
   );
-};
 
 export default CampaignImage;

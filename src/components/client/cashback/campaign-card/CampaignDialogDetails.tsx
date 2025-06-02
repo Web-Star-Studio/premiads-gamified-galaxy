@@ -14,8 +14,7 @@ const CampaignDialogDetails: React.FC<CampaignDialogDetailsProps> = ({
   campaign, 
   userCashback,
   formatDate 
-}) => {
-  return (
+}) => (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 rounded-full overflow-hidden bg-galaxy-deepPurple/50 flex items-center justify-center">
@@ -71,6 +70,5 @@ const CampaignDialogDetails: React.FC<CampaignDialogDetailsProps> = ({
       )}
     </div>
   );
-};
 
 export default CampaignDialogDetails;

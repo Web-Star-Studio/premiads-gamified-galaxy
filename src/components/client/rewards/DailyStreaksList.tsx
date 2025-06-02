@@ -32,7 +32,7 @@ const DailyStreaksList: React.FC<DailyStreaksListProps> = ({ streaks }) => {
 
   // Calculate potential bonus for next completion
   const getNextBonus = (streak: DailyStreak): number => {
-    const basePoints = streak.missions.points;
+    const basePoints = streak.missions.tickets_reward;
     const multiplier = streak.missions.streak_multiplier || 1.2;
     const nextStreak = streak.current_streak + 1;
     return Math.floor(basePoints * (multiplier - 1) * nextStreak);

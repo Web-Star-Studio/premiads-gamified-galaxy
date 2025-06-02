@@ -2,8 +2,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 
-const LoadingSpinner = () => {
-  return (
+const LoadingSpinner = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-galaxy-dark bg-opacity-80">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -17,6 +16,5 @@ const LoadingSpinner = () => {
       </motion.div>
     </div>
   );
-};
 
 export default memo(LoadingSpinner);

@@ -2,8 +2,7 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
 
-const ErrorState = () => {
-  return (
+const ErrorState = () => (
     <div className="glass-panel p-6 h-full flex items-center justify-center">
       <div className="text-center">
         <div className="w-12 h-12 text-red-500 mx-auto flex items-center justify-center">
@@ -14,6 +13,5 @@ const ErrorState = () => {
       </div>
     </div>
   );
-};
 
 export default ErrorState;

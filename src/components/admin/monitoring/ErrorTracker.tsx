@@ -2,8 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 
-export const ErrorTracker = () => {
-  return (
+export const ErrorTracker = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Total Errors (24h)</span>
@@ -15,4 +14,3 @@ export const ErrorTracker = () => {
       </div>
     </div>
   );
-};

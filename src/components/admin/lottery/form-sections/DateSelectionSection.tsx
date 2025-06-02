@@ -16,8 +16,7 @@ interface DateSelectionSectionProps {
   form: UseFormReturn<LotteryFormValues>;
 }
 
-const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => {
-  return (
+const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => (
     <motion.div 
       className="space-y-6"
       initial={{ opacity: 0, y: 10 }}
@@ -113,7 +112,7 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
             <div className="space-y-0.5">
               <FormLabel className="text-base">Agendamento Automático</FormLabel>
               <FormDescription>
-                O sorteio será realizado automaticamente 48 horas após atingir o mínimo de pontos ou ao vender todos os números.
+                O sorteio será realizado automaticamente 48 horas após atingir o mínimo de tickets ou ao vender todos os números.
               </FormDescription>
             </div>
             <FormControl>
@@ -128,6 +127,5 @@ const DateSelectionSection: React.FC<DateSelectionSectionProps> = ({ form }) => 
       />
     </motion.div>
   );
-};
 
 export default DateSelectionSection;

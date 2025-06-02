@@ -35,7 +35,7 @@ const rewardOptions: LootBoxRewardOption[] = [
   {
     type: "multiplier",
     label: "Multiplicador",
-    description: "Multiplica os pontos obtidos em missões futuras",
+    description: "Multiplica os tickets obtidos em missões futuras",
     icon: <Percent className="h-5 w-5" />,
   },
   {

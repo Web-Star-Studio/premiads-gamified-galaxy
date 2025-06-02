@@ -23,11 +23,9 @@ const UserTypeSelector: FC<UserTypeSelectorProps> = ({
     setIsOverlayOpen(false);
   };
 
-  const getActiveStyle = (type: UserType) => {
-    return userType === type
+  const getActiveStyle = (type: UserType) => userType === type
       ? "border-2 border-neon-cyan bg-galaxy-purple/40"
       : "hover:bg-galaxy-purple/20";
-  };
 
   return (
     <div className="flex items-center space-x-1">

@@ -6,9 +6,7 @@ import { userEvent } from "@testing-library/user-event";
 /**
  * Helper to wait for a specified time in tests
  */
-export const wait = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
+export const wait = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Helper to wait for an element to appear in the DOM
@@ -17,8 +15,7 @@ export const waitForElement = async (
   callback: () => HTMLElement | null,
   timeout: number = 1000,
   interval: number = 50
-): Promise<HTMLElement> => {
-  return new Promise((resolve, reject) => {
+): Promise<HTMLElement> => new Promise((resolve, reject) => {
     const startTime = Date.now();
     
     const checkForElement = () => {
@@ -39,7 +36,6 @@ export const waitForElement = async (
     
     checkForElement();
   });
-};
 
 /**
  * Helper to simulate component rendering after route change

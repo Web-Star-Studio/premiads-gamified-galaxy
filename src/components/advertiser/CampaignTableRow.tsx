@@ -16,7 +16,7 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
   // Use properties from the campaign object with proper fallbacks
   const audience = campaign.audience || campaign.target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
-  const reward = campaign.reward || `${campaign.points} pontos`;
+  const reward = campaign.reward || `${campaign.tickets_reward} tickets`;
   const expires = campaign.expires || (campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'N/A');
 
   return (

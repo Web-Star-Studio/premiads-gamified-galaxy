@@ -54,7 +54,7 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                     className="flex items-center gap-1"
                   >
                     <Award className="w-3 h-3" />
-                    <span>{mission.points} pts</span>
+                    <span>{mission.tickets_reward} pts</span>
                   </Badge>
                   
                   {mission.has_badge && (

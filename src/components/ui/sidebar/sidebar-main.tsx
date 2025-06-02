@@ -168,8 +168,7 @@ SidebarRail.displayName = "SidebarRail";
 const SidebarInset = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"main">
->(({ className, ...props }, ref) => {
-  return (
+>(({ className, ...props }, ref) => (
     <main
       ref={ref}
       className={cn(
@@ -179,8 +178,7 @@ const SidebarInset = React.forwardRef<
       )}
       {...props}
     />
-  );
-});
+  ));
 SidebarInset.displayName = "SidebarInset";
 
 export { Sidebar, SidebarTrigger, SidebarRail, SidebarInset };

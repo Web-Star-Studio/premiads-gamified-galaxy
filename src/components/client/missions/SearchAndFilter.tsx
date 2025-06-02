@@ -9,8 +9,7 @@ interface SearchAndFilterProps {
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const SearchAndFilter = ({ searchTerm, onSearchChange }: SearchAndFilterProps) => {
-  return (
+const SearchAndFilter = ({ searchTerm, onSearchChange }: SearchAndFilterProps) => (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <div className="relative flex-grow">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -31,6 +30,5 @@ const SearchAndFilter = ({ searchTerm, onSearchChange }: SearchAndFilterProps) =
       </Button>
     </div>
   );
-};
 
 export default SearchAndFilter;

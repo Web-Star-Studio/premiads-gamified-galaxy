@@ -51,7 +51,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       }
       
       // Upload files if present
-      let fileUrls: string[] = [];
+      const fileUrls: string[] = [];
       if (submissionData.files && submissionData.files.length > 0) {
         // Upload each file to Supabase Storage
         for (const file of submissionData.files) {
@@ -82,7 +82,7 @@ export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateActio
       // Prepare final submission data with uploads
       const finalSubmissionData = {
         content: submissionData.content,
-        fileUrls: fileUrls,
+        fileUrls,
         ...submissionData,
         submittedAt: new Date().toISOString()
       };

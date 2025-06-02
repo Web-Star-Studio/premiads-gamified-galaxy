@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
 import MainHeader from "@/components/MainHeader";
 
-const CookiesPolicy = () => {
-  return (
+const CookiesPolicy = () => (
     <div className="min-h-screen bg-galaxy-dark">
       <MainHeader />
       
@@ -112,6 +111,5 @@ const CookiesPolicy = () => {
       <Footer />
     </div>
   );
-};
 
 export default CookiesPolicy;

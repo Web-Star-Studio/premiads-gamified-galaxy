@@ -46,7 +46,7 @@ export const realtimeCreditsService = {
             callback(payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE');
           });
           
-          console.log('Credits updated:', (payload.new as any)?.credits);
+          console.log('Rifas updated:', (payload.new as any)?.rifas);
         }
       )
       .subscribe();

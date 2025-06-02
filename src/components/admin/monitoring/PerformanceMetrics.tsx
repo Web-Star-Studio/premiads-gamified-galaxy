@@ -2,8 +2,7 @@
 import React from 'react';
 import { Progress } from "@/components/ui/progress";
 
-export const PerformanceMetrics = () => {
-  return (
+export const PerformanceMetrics = () => (
     <div className="space-y-4">
       <div>
         <div className="flex justify-between mb-2">
@@ -21,4 +20,3 @@ export const PerformanceMetrics = () => {
       </div>
     </div>
   );
-};

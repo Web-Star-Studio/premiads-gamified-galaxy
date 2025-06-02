@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
@@ -11,7 +10,7 @@ import {
 } from '@/types/missions';
 
 // Inicialização lazy do cliente - usando a instância existente
-let supabaseInstance = supabaseClient;
+const supabaseInstance = supabaseClient;
 
 // Valores constantes para evitar problemas de CORS
 const SUPABASE_URL = "https://zfryjwaeojccskfiibtq.supabase.co";
@@ -23,9 +22,7 @@ const defaultUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_URL;
 const defaultKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 
 // Função para obter o cliente Supabase - apenas retorna a instância existente
-export const getSupabaseClient = async () => {
-  return supabaseInstance;
-};
+export const getSupabaseClient = async () => supabaseInstance;
 
 // Exporta a mesma instância para uso em todo o aplicativo
 export const supabase = supabaseInstance;
@@ -197,7 +194,7 @@ export const missionService = {
       if (getError) throw getError;
       
       // Create update payload
-      let updatePayload: any = {
+      const updatePayload: any = {
         validated_by: validatedBy,
         updated_at: new Date().toISOString()
       };
@@ -234,8 +231,8 @@ export const missionService = {
         submission_id: submissionId,
         validated_by: validatedBy,
         is_admin: isAdmin,
-        result: result,
-        notes: notes
+        result,
+        notes
       };
       
       const { error: logError } = await client
@@ -266,11 +263,11 @@ export const missionService = {
     // Busca créditos diretamente no perfil do usuário
     const { data: profile, error: profileError } = await client
       .from('profiles')
-      .select('credits')
+      .select('rifas')
       .eq('id', userId)
       .maybeSingle();
     if (profileError) throw profileError;
-    const total = Number(profile?.credits) || 0;
+    const total = Number((profile as any)?.rifas) || 0;
     // Retorna no shape esperado para compatibilidade
     return { user_id: userId, total_tokens: total, used_tokens: 0 };
   },
@@ -294,14 +291,14 @@ export const missionService = {
     console.warn("missionService.addTokens: This function directly updates credits and might be redundant or non-atomic. Consider using an RPC for atomic credit updates if needed outside mission finalization.");
     const { data: profileData, error: profileError } = await client
       .from('profiles')
-      .select('credits')
+      .select('rifas')
       .eq('id', userId)
       .maybeSingle();
     if (profileError) throw profileError;
-    const newTotal = (Number(profileData?.credits) || 0) + amount;
+    const newTotal = (Number((profileData as any)?.rifas) || 0) + amount;
     // const { data, error } = await client
     //   .from('profiles')
-    //   .update({ credits: newTotal, updated_at: new Date().toISOString() })
+    //   .update({ rifas: newTotal, updated_at: new Date().toISOString() })
     //   .eq('id', userId)
     //   .select()
     //   .single();

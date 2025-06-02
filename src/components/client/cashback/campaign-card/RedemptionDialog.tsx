@@ -30,8 +30,7 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
   userCashback,
   formatDate,
   onRedeem
-}) => {
-  return (
+}) => (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="glass-panel border-neon-cyan/20 max-w-md">
         <DialogHeader>
@@ -66,6 +65,5 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
 
 export default RedemptionDialog;

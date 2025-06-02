@@ -26,8 +26,7 @@ const PurchaseButton = ({
   pointsNeeded,
   onClick,
   discountPercentage = 0
-}: PurchaseButtonProps) => {
-  return (
+}: PurchaseButtonProps) => (
     <div className="relative">
       {discountPercentage > 0 && purchaseMode === 'points' && (
         <motion.div
@@ -90,7 +89,7 @@ const PurchaseButton = ({
             ) : (
               <>
                 <Gift className="w-4 h-4 mr-2" />
-                <span>Comprar com {pointsNeeded} pontos</span>
+                <span>Comprar com {pointsNeeded} tickets</span>
               </>
             )}
           </motion.div>
@@ -105,6 +104,5 @@ const PurchaseButton = ({
       </Button>
     </div>
   );
-};
 
 export default PurchaseButton;

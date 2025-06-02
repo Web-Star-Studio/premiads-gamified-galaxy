@@ -18,8 +18,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   categories,
   selectedCategory,
   setSelectedCategory,
-}) => {
-  return (
+}) => (
     <div className="space-y-2">
       <h3 className="text-sm font-medium">Categoria</h3>
       <Select 
@@ -40,6 +39,5 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </Select>
     </div>
   );
-};
 
 export default CategoryFilter;

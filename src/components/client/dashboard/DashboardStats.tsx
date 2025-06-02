@@ -132,7 +132,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       value: points.toLocaleString('pt-BR'),
       icon: <Award className="w-5 h-5 text-white" />,
       trend: pointsTrend,
-      additionalInfo: `Média diária: ${averagePointsPerDay} pontos`,
+      additionalInfo: `Média diária: ${averagePointsPerDay} tickets`,
       variant: "purple" as const,
       delay: 0.2,
     },

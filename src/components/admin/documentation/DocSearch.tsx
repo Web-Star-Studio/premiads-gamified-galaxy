@@ -8,8 +8,7 @@ interface DocSearchProps {
   setSearchQuery: (query: string) => void;
 }
 
-const DocSearch: React.FC<DocSearchProps> = ({ searchQuery, setSearchQuery }) => {
-  return (
+const DocSearch: React.FC<DocSearchProps> = ({ searchQuery, setSearchQuery }) => (
     <div className="relative w-full sm:w-64">
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
@@ -21,6 +20,5 @@ const DocSearch: React.FC<DocSearchProps> = ({ searchQuery, setSearchQuery }) =>
       />
     </div>
   );
-};
 
 export default DocSearch;

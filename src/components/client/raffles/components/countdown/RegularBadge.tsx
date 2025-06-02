@@ -7,8 +7,7 @@ interface RegularBadgeProps {
   timeRemaining: string;
 }
 
-const RegularBadge = ({ timeRemaining }: RegularBadgeProps) => {
-  return (
+const RegularBadge = ({ timeRemaining }: RegularBadgeProps) => (
     <Badge className="absolute top-4 right-4 bg-neon-cyan text-black border border-neon-cyan/50 flex items-center gap-1 px-3 py-1 text-sm">
       <Clock className="w-3.5 h-3.5" />
       <div className="flex flex-col items-start">
@@ -17,6 +16,5 @@ const RegularBadge = ({ timeRemaining }: RegularBadgeProps) => {
       </div>
     </Badge>
   );
-};
 
 export default RegularBadge;

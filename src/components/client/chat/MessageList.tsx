@@ -10,8 +10,7 @@ interface MessageListProps {
   messagesEndRef: RefObject<HTMLDivElement>;
 }
 
-const MessageList = ({ messages, isTyping, messagesEndRef }: MessageListProps) => {
-  return (
+const MessageList = ({ messages, isTyping, messagesEndRef }: MessageListProps) => (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-galaxy-dark/80">
       {messages.map((message) => (
         <ChatBubble key={message.id} message={message} />
@@ -22,6 +21,5 @@ const MessageList = ({ messages, isTyping, messagesEndRef }: MessageListProps) =
       <div ref={messagesEndRef} />
     </div>
   );
-};
 
 export default MessageList;

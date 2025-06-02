@@ -16,8 +16,7 @@ const containerVariants = {
   }
 };
 
-const AdminOverview = () => {
-  return (
+const AdminOverview = () => (
     <motion.div
       variants={containerVariants}
       initial="hidden"
@@ -41,6 +40,5 @@ const AdminOverview = () => {
       </div>
     </motion.div>
   );
-};
 
 export default AdminOverview;

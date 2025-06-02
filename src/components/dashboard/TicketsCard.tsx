@@ -7,8 +7,8 @@ import { Award, TrendingUp, Wallet } from "lucide-react";
 import { useUserLevel } from "@/hooks/useUserLevel";
 import { getMoneyValue } from "@/utils/formatCurrency";
 
-interface PointsCardProps {
-  points: number;
+interface TicketsCardProps {
+  tickets_reward: number;
   credits?: number;
   level?: number; // Keep for backward compatibility
   progress?: number; // Keep for backward compatibility
@@ -16,12 +16,12 @@ interface PointsCardProps {
   tickets?: number;
 }
 
-const PointsCard = ({ points, credits, isLoading, tickets }: PointsCardProps) => {
+const TicketsCard = ({ tickets_reward, credits, isLoading, tickets }: TicketsCardProps) => {
   const { playSound } = useSounds();
-  const { levelInfo, loading } = useUserLevel(points);
+  const { levelInfo, loading } = useUserLevel(tickets_reward);
   
-  // If credits are not provided, assume they equal points (1:1 conversion)
-  const effectiveCredits = credits !== undefined ? credits : points;
+  // If credits are not provided, assume they equal tickets_reward (1:1 conversion)
+  const effectiveCredits = credits !== undefined ? credits : tickets_reward;
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,8 +49,8 @@ const PointsCard = ({ points, credits, isLoading, tickets }: PointsCardProps) =>
         <div>
           <div className="text-sm text-gray-400">Saldo atual</div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-white">{points}</span>
-            <span className="ml-1 text-sm text-neon-cyan">pontos</span>
+            <span className="text-3xl font-bold text-white">{tickets_reward}</span>
+            <span className="ml-1 text-sm text-neon-cyan">tickets</span>
           </div>
           <div className="flex items-baseline mt-1">
             <Wallet className="w-3 h-3 text-neon-pink mr-1" />
@@ -117,4 +117,4 @@ const PointsCard = ({ points, credits, isLoading, tickets }: PointsCardProps) =>
   );
 };
 
-export default PointsCard;
+export default TicketsCard;

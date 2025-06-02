@@ -1,9 +1,9 @@
--- Tabela para armazenar os tokens/créditos dos usuários anunciantes
-CREATE TABLE IF NOT EXISTS user_tokens (
+-- Tabela para armazenar o saldo de cashback dos usuários
+CREATE TABLE IF NOT EXISTS user_cashbacks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    total_tokens INTEGER NOT NULL DEFAULT 0,
-    used_tokens INTEGER NOT NULL DEFAULT 0,
+    total_cashback NUMERIC(10,2) NOT NULL DEFAULT 0,
+    redeemed_cashback NUMERIC(10,2) NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS missions (
     requirements TEXT,
     type VARCHAR(50) NOT NULL, -- 'formulario', 'foto', 'video', 'check-in', 'redes_sociais', 'cupom', 'pesquisa', 'avaliacao'
     target_audience VARCHAR(100), -- 'todos', 'premium', 'beta', etc.
-    points_range JSONB NOT NULL, -- e.g. {"min": 50, "max": 150}
+    tickets_reward INTEGER NOT NULL DEFAULT 0,
+    cashback_reward NUMERIC(10,2) NOT NULL DEFAULT 0,
     created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    cost_in_tokens INTEGER NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pendente', -- 'ativa', 'pendente', 'encerrada'
     expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -50,13 +50,14 @@ CREATE TABLE IF NOT EXISTS mission_validation_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Tabela para registrar pontos ganhos pelos usuários
+-- Tabela para registrar recompensas (tickets + cashback) ganhos pelos usuários
 CREATE TABLE IF NOT EXISTS mission_rewards (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     mission_id UUID NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
     submission_id UUID NOT NULL REFERENCES mission_submissions(id) ON DELETE CASCADE,
-    points_earned INTEGER NOT NULL,
+    tickets_earned INTEGER NOT NULL,
+    cashback_earned NUMERIC(10,2) NOT NULL,
     rewarded_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
@@ -70,80 +71,55 @@ CREATE INDEX IF NOT EXISTS idx_mission_rewards_user_id ON mission_rewards(user_i
 
 -- Funções e Triggers
 
--- Função para verificar se o anunciante tem tokens suficientes para criar uma campanha
-CREATE OR REPLACE FUNCTION check_tokens_before_mission_creation()
+-- Função para atualizar tickets e cashback do usuário quando uma submissão for aprovada
+CREATE OR REPLACE FUNCTION update_user_rewards_on_approval()
 RETURNS TRIGGER AS $$
 DECLARE
-    available_tokens INTEGER;
-BEGIN
-    SELECT (total_tokens - used_tokens) INTO available_tokens
-    FROM user_tokens
-    WHERE user_id = NEW.created_by;
-    
-    IF available_tokens IS NULL THEN
-        RAISE EXCEPTION 'Usuário não possui tokens disponíveis';
-    END IF;
-    
-    IF available_tokens < NEW.cost_in_tokens THEN
-        RAISE EXCEPTION 'Tokens insuficientes para criar esta campanha';
-    END IF;
-    
-    -- Atualizar tokens usados
-    UPDATE user_tokens
-    SET used_tokens = used_tokens + NEW.cost_in_tokens
-    WHERE user_id = NEW.created_by;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger para verificar tokens antes de criar missão
-CREATE TRIGGER check_tokens_trigger
-BEFORE INSERT ON missions
-FOR EACH ROW
-EXECUTE FUNCTION check_tokens_before_mission_creation();
-
--- Função para atualizar pontos do usuário quando uma submissão for aprovada
-CREATE OR REPLACE FUNCTION update_user_points_on_approval()
-RETURNS TRIGGER AS $$
-DECLARE
-    points_range JSONB;
-    points_to_award INTEGER;
+    v_tickets INTEGER;
+    v_cashback NUMERIC(10,2);
 BEGIN
     IF NEW.status = 'aprovado' AND OLD.status != 'aprovado' THEN
-        -- Buscar o range de pontos da missão
-        SELECT m.points_range INTO points_range
+        -- Buscar recompensas definidas na missão
+        SELECT m.tickets_reward, m.cashback_reward INTO v_tickets, v_cashback
         FROM missions m
         WHERE m.id = NEW.mission_id;
-        
-        -- Calcular pontos aleatórios dentro do range
-        points_to_award := floor(random() * (
-            (points_range->>'max')::INTEGER - (points_range->>'min')::INTEGER + 1
-        ) + (points_range->>'min')::INTEGER);
-        
-        -- Inserir na tabela de recompensas
-        INSERT INTO mission_rewards (user_id, mission_id, submission_id, points_earned)
-        VALUES (NEW.user_id, NEW.mission_id, NEW.id, points_to_award);
+
+        -- Inserir registro de recompensa
+        INSERT INTO mission_rewards (user_id, mission_id, submission_id, tickets_earned, cashback_earned)
+        VALUES (NEW.user_id, NEW.mission_id, NEW.id, v_tickets, v_cashback);
+
+        -- Atualizar/Inserir saldo de cashback agregado
+        INSERT INTO user_cashbacks (user_id, total_cashback)
+        VALUES (NEW.user_id, v_cashback)
+        ON CONFLICT (user_id) DO UPDATE
+        SET total_cashback = user_cashbacks.total_cashback + EXCLUDED.total_cashback,
+            updated_at = now();
     END IF;
-    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para atualizar pontos do usuário
-CREATE TRIGGER update_points_trigger
+-- Trigger para atualizar tickets e cashback do usuário
+CREATE TRIGGER update_rewards_trigger
 AFTER UPDATE ON mission_submissions
 FOR EACH ROW
-EXECUTE FUNCTION update_user_points_on_approval();
+EXECUTE FUNCTION update_user_rewards_on_approval();
 
 -- Políticas RLS (Row Level Security)
 
 -- Ativar RLS nas tabelas
 ALTER TABLE missions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mission_submissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_cashbacks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mission_validation_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mission_rewards ENABLE ROW LEVEL SECURITY;
+
+-- Garantir que políticas antigas sejam removidas antes de recriar
+DROP POLICY IF EXISTS missions_advertisers_policy ON missions;
+DROP POLICY IF EXISTS submissions_user_policy ON mission_submissions;
+DROP POLICY IF EXISTS cashbacks_user_policy ON user_cashbacks;
+DROP POLICY IF EXISTS validation_logs_policy ON mission_validation_logs;
+DROP POLICY IF EXISTS rewards_user_policy ON mission_rewards;
 
 -- Política para missions (anunciantes podem ver/editar suas próprias missões, participantes veem missões ativas)
 CREATE POLICY missions_advertisers_policy ON missions
@@ -170,8 +146,8 @@ CREATE POLICY submissions_user_policy ON mission_submissions
         )
     );
 
--- Política para user_tokens
-CREATE POLICY tokens_user_policy ON user_tokens
+-- Política para user_cashbacks
+CREATE POLICY cashbacks_user_policy ON user_cashbacks
     FOR ALL
     TO authenticated
     USING (user_id = auth.uid() OR

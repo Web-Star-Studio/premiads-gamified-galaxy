@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const SubmissionsLoading = () => {
-  return (
+const SubmissionsLoading = () => (
     <Card className="border-galaxy-purple bg-galaxy-darkPurple">
       <CardContent className="p-6">
         <div className="space-y-6">
@@ -37,6 +36,5 @@ const SubmissionsLoading = () => {
       </CardContent>
     </Card>
   );
-};
 
 export default SubmissionsLoading;

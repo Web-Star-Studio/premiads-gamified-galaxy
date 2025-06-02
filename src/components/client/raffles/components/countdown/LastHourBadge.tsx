@@ -7,8 +7,7 @@ interface LastHourBadgeProps {
   timeRemaining: string;
 }
 
-const LastHourBadge = ({ timeRemaining }: LastHourBadgeProps) => {
-  return (
+const LastHourBadge = ({ timeRemaining }: LastHourBadgeProps) => (
     <Badge className="absolute top-4 right-4 bg-amber-500 text-black border border-amber-400/50 flex items-center gap-1 px-3 py-1 text-sm animate-pulse">
       <Clock className="w-3.5 h-3.5" />
       <div className="flex flex-col items-start">
@@ -17,6 +16,5 @@ const LastHourBadge = ({ timeRemaining }: LastHourBadgeProps) => {
       </div>
     </Badge>
   );
-};
 
 export default LastHourBadge;

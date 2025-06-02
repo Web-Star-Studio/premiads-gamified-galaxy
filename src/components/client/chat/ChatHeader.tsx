@@ -9,8 +9,7 @@ interface ChatHeaderProps {
 
 const ChatHeader: FC<ChatHeaderProps> = ({
   onClose
-}) => {
-  return (
+}) => (
     <div className="p-4 border-b border-galaxy-purple/30 bg-gradient-to-r from-galaxy-purple/20 to-galaxy-blue/20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -32,6 +31,5 @@ const ChatHeader: FC<ChatHeaderProps> = ({
       </p>
     </div>
   );
-};
 
 export default ChatHeader;

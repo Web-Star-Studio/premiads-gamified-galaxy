@@ -20,8 +20,7 @@ const RaffleHeader = ({
   progress, 
   soldTickets, 
   totalTickets 
-}: RaffleHeaderProps) => {
-  return (
+}: RaffleHeaderProps) => (
     <div className="mb-6">
       <RaffleImage 
         imageUrl={imageUrl} 
@@ -38,6 +37,5 @@ const RaffleHeader = ({
       />
     </div>
   );
-};
 
 export default RaffleHeader;

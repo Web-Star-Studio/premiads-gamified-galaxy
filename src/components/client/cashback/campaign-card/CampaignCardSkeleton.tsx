@@ -3,8 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const CampaignCardSkeleton: React.FC = () => {
-  return (
+const CampaignCardSkeleton: React.FC = () => (
     <Card className="h-full overflow-hidden glass-panel-hover border-neon-cyan/20">
       {/* Image skeleton */}
       <Skeleton className="h-48 w-full" />
@@ -39,6 +38,5 @@ const CampaignCardSkeleton: React.FC = () => {
       </CardFooter>
     </Card>
   );
-};
 
 export default CampaignCardSkeleton;

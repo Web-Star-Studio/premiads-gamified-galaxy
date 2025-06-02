@@ -81,15 +81,11 @@ const ParticipationHistory = () => {
     });
   };
   
-  const getResultColor = (result: string) => {
-    return result === 'win' ? 
+  const getResultColor = (result: string) => result === 'win' ? 
       'bg-neon-lime/20 text-neon-lime border-neon-lime/30' : 
       'bg-gray-700/20 text-gray-400 border-gray-600/30';
-  };
   
-  const getResultText = (result: string) => {
-    return result === 'win' ? 'Prêmio Ganho' : 'Não Premiado';
-  };
+  const getResultText = (result: string) => result === 'win' ? 'Prêmio Ganho' : 'Não Premiado';
   
   // Pagination
   const totalPages = Math.ceil(history.length / itemsPerPage);
@@ -129,7 +125,7 @@ const ParticipationHistory = () => {
           <Trophy className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <h3 className="text-lg font-medium mb-2">Nenhuma participação ainda</h3>
           <p className="text-gray-400">
-            Você ainda não participou de nenhum sorteio. Converta seus pontos em tickets e tente a sorte!
+            Você ainda não participou de nenhum sorteio. Converta seus tickets em tickets e tente a sorte!
           </p>
         </div>
       ) : (

@@ -26,7 +26,7 @@ export function CreditsDisplay({
       ) : (
         <>
           <span className="font-medium">{displayValue}</span>
-          {showLabel && <span className="text-sm text-muted-foreground">créditos</span>}
+          {showLabel && <span className="text-sm text-muted-foreground">rifas</span>}
         </>
       )}
     </div>

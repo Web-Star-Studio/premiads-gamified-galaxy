@@ -10,8 +10,7 @@ interface DiscountRangeFilterProps {
 const DiscountRangeFilter: React.FC<DiscountRangeFilterProps> = ({
   discountRange,
   setDiscountRange,
-}) => {
-  return (
+}) => (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Valor do Desconto (%)</h3>
@@ -30,6 +29,5 @@ const DiscountRangeFilter: React.FC<DiscountRangeFilterProps> = ({
       />
     </div>
   );
-};
 
 export default DiscountRangeFilter;

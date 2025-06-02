@@ -193,7 +193,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId: approverId,
+        approverId,
         decision: 'approve',
         stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });
@@ -237,7 +237,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId: approverId,
+        approverId,
         decision: 'reject',
         stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
       });

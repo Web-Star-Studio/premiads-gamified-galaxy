@@ -8,8 +8,7 @@ interface CashbackSearchProps {
   setSearchTerm: (value: string) => void;
 }
 
-const CashbackSearch: React.FC<CashbackSearchProps> = ({ searchTerm, setSearchTerm }) => {
-  return (
+const CashbackSearch: React.FC<CashbackSearchProps> = ({ searchTerm, setSearchTerm }) => (
     <div className="relative w-full sm:w-64">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
       <Input
@@ -28,6 +27,5 @@ const CashbackSearch: React.FC<CashbackSearchProps> = ({ searchTerm, setSearchTe
       )}
     </div>
   );
-};
 
 export default CashbackSearch;

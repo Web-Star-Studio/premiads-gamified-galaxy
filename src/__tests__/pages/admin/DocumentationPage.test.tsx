@@ -4,25 +4,20 @@ import DocumentationPage from "@/pages/admin/DocumentationPage";
 import { toastInfo } from "@/utils/toast";
 
 // Mock the components used in DocumentationPage
-jest.mock("@/components/admin/AdminSidebar", () => {
-  return function MockAdminSidebar() {
+jest.mock("@/components/admin/AdminSidebar", () => function MockAdminSidebar() {
     return <div data-testid="admin-sidebar">Admin Sidebar</div>;
-  };
-});
+  });
 
-jest.mock("@/components/admin/DashboardHeader", () => {
-  return function MockDashboardHeader({ title, subtitle }: { title: string; subtitle: string }) {
+jest.mock("@/components/admin/DashboardHeader", () => function MockDashboardHeader({ title, subtitle }: { title: string; subtitle: string }) {
     return (
       <header data-testid="dashboard-header">
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </header>
     );
-  };
-});
+  });
 
-jest.mock("@/components/admin/documentation/DocHeader", () => {
-  return function MockDocHeader({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: any }) {
+jest.mock("@/components/admin/documentation/DocHeader", () => function MockDocHeader({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: any }) {
     return (
       <div data-testid="doc-header">
         <input 
@@ -33,11 +28,9 @@ jest.mock("@/components/admin/documentation/DocHeader", () => {
         />
       </div>
     );
-  };
-});
+  });
 
-jest.mock("@/components/admin/documentation/DocNavigation", () => {
-  return function MockDocNavigation({ activeSection, setActiveSection }: { activeSection: string; setActiveSection: any }) {
+jest.mock("@/components/admin/documentation/DocNavigation", () => function MockDocNavigation({ activeSection, setActiveSection }: { activeSection: string; setActiveSection: any }) {
     return (
       <div data-testid="doc-navigation">
         <button data-testid="nav-overview" onClick={() => setActiveSection("overview")}>Overview</button>
@@ -45,18 +38,15 @@ jest.mock("@/components/admin/documentation/DocNavigation", () => {
         <div>Active: {activeSection}</div>
       </div>
     );
-  };
-});
+  });
 
-jest.mock("@/components/admin/documentation/DocContentTabs", () => {
-  return function MockDocContentTabs({ activeSection }: { activeSection: string }) {
+jest.mock("@/components/admin/documentation/DocContentTabs", () => function MockDocContentTabs({ activeSection }: { activeSection: string }) {
     return (
       <div data-testid="doc-content-tabs">
         <div>Content for: {activeSection}</div>
       </div>
     );
-  };
-});
+  });
 
 jest.mock("@/utils/toast", () => ({
   toastInfo: jest.fn(),

@@ -34,8 +34,7 @@ const CashbackFilters: React.FC<CashbackFiltersProps> = ({
   discountRange,
   setDiscountRange,
   clearFilters
-}) => {
-  return (
+}) => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="border-galaxy-purple/30">
@@ -66,6 +65,5 @@ const CashbackFilters: React.FC<CashbackFiltersProps> = ({
       </SheetContent>
     </Sheet>
   );
-};
 
 export default CashbackFilters;

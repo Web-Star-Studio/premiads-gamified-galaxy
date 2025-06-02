@@ -19,8 +19,7 @@ interface RaffleContainerProps {
   participation: ParticipationResult;
 }
 
-const RaffleContainer = ({ raffle, countdownInfo, participation }: RaffleContainerProps) => {
-  return (
+const RaffleContainer = ({ raffle, countdownInfo, participation }: RaffleContainerProps) => (
     <div className="glass-panel p-6">
       {/* Countdown Badge for Raffles in Countdown */}
       {countdownInfo.isCountingDown && (
@@ -82,6 +81,5 @@ const RaffleContainer = ({ raffle, countdownInfo, participation }: RaffleContain
       />
     </div>
   );
-};
 
 export default RaffleContainer;

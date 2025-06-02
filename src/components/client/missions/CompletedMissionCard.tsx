@@ -65,7 +65,7 @@ const CompletedMissionCard = ({ mission, reward, onShareClick }: CompletedMissio
           <div className="flex items-center gap-1.5">
             <Award className="w-4 h-4 text-neon-cyan" />
             <span className="text-sm font-medium text-neon-cyan">
-              {reward?.points_earned || mission.points} pts
+              {reward?.points_earned || mission.tickets_reward} pts
             </span>
           </div>
           

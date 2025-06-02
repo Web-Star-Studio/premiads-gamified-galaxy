@@ -2,8 +2,7 @@
 import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-const FaqContent: React.FC = () => {
-  return (
+const FaqContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">Perguntas Frequentes (FAQ) Técnico</h3>
@@ -67,6 +66,5 @@ const FaqContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default FaqContent;

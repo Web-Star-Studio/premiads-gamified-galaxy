@@ -20,8 +20,7 @@ const RaffleListItem = ({
   onSelect,
   formatTimeRemaining,
   getRarityColor
-}: RaffleListItemProps) => {
-  return (
+}: RaffleListItemProps) => (
     <motion.div
       className={`bg-galaxy-deepPurple/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
         isSelected 
@@ -62,7 +61,7 @@ const RaffleListItem = ({
               {raffle.isAutoScheduled && raffle.minPointsReachedAt ? (
                 <span>Sorteio em: {formatTimeRemaining(raffle.drawDate)}</span>
               ) : (
-                <span>Meta: {raffle.minPoints.toLocaleString('pt-BR')} pontos</span>
+                <span>Meta: {raffle.minPoints.toLocaleString('pt-BR')} tickets</span>
               )}
             </div>
             <div className="flex items-center">
@@ -101,6 +100,5 @@ const RaffleListItem = ({
       </div>
     </motion.div>
   );
-};
 
 export default RaffleListItem;

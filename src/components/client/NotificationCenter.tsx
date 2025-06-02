@@ -22,7 +22,7 @@ const mockNotifications: Notification[] = [
     id: "1",
     type: "mission",
     title: "Nova Missão Disponível",
-    message: "Pesquisa de satisfação da marca XYZ disponível! Complete e ganhe 50 pontos.",
+    message: "Pesquisa de satisfação da marca XYZ disponível! Complete e ganhe 50 tickets.",
     time: "2025-04-15T10:30:00Z",
     read: false
   },
@@ -30,7 +30,7 @@ const mockNotifications: Notification[] = [
     id: "2",
     type: "reward",
     title: "Pontos Adicionados",
-    message: "Parabéns! Você ganhou 150 pontos pela missão completada.",
+    message: "Parabéns! Você ganhou 150 tickets pela missão completada.",
     time: "2025-04-14T15:45:00Z",
     read: false
   },

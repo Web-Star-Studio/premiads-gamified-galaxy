@@ -33,9 +33,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return (savedType as UserType) || "participante";
   });
   
-  const [userName, setUserNameState] = useState<string>(() => {
-    return localStorage.getItem("userName") || "";
-  });
+  const [userName, setUserNameState] = useState<string>(() => localStorage.getItem("userName") || "");
   
   const [isOverlayOpen, setIsOverlayOpenState] = useState<boolean>(() => {
     // Show overlay if no username is set

@@ -8,8 +8,7 @@ interface RaffleImageProps {
   ticketsRequired: number;
 }
 
-const RaffleImage = ({ imageUrl, name, ticketsRequired }: RaffleImageProps) => {
-  return (
+const RaffleImage = ({ imageUrl, name, ticketsRequired }: RaffleImageProps) => (
     <div className="relative h-56 rounded-lg overflow-hidden mb-4">
       <img 
         src={imageUrl} 
@@ -27,6 +26,5 @@ const RaffleImage = ({ imageUrl, name, ticketsRequired }: RaffleImageProps) => {
       </div>
     </div>
   );
-};
 
 export default RaffleImage;

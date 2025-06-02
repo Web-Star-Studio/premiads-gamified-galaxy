@@ -64,9 +64,7 @@ const DailyChallenge = () => {
     });
   };
   
-  const formatTime = (value: number) => {
-    return value.toString().padStart(2, '0');
-  };
+  const formatTime = (value: number) => value.toString().padStart(2, '0');
 
   return (
     <motion.div
@@ -110,7 +108,7 @@ const DailyChallenge = () => {
           </div>
           <div className="text-sm">
             <span className="font-medium text-neon-pink">250</span>
-            <span className="text-gray-400 text-xs ml-1">pontos</span>
+            <span className="text-gray-400 text-xs ml-1">tickets</span>
           </div>
         </div>
         

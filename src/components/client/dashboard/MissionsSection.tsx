@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import MissionsCarousel from "@/components/dashboard/MissionsCarousel";
 import ActiveMissions from "@/components/dashboard/ActiveMissions";
 
-const MissionsSection = () => {
-  return (
+const MissionsSection = () => (
     <>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -25,6 +24,5 @@ const MissionsSection = () => {
       </motion.div>
     </>
   );
-};
 
 export default MissionsSection;

@@ -19,8 +19,7 @@ export const MetricCard = ({
   icon: Icon, 
   colorClass, 
   index 
-}: MetricCardProps) => {
-  return (
+}: MetricCardProps) => (
     <motion.div
       key={title}
       initial={{ opacity: 0, y: 20 }}
@@ -48,4 +47,3 @@ export const MetricCard = ({
       </Card>
     </motion.div>
   );
-};

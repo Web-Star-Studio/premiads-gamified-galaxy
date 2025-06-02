@@ -17,8 +17,7 @@ jest.mock("@/pages/advertiser/ModerationPage", () => () => <div data-testid="mod
 jest.mock("@/pages/NotFound", () => () => <div data-testid="not-found">Not Found</div>);
 
 // Helper to render component at specific route
-const renderWithRouter = (route: string) => {
-  return render(
+const renderWithRouter = (route: string) => render(
     <AuthProvider>
       <MemoryRouter initialEntries={[route]}>
         <Routes>
@@ -27,7 +26,6 @@ const renderWithRouter = (route: string) => {
       </MemoryRouter>
     </AuthProvider>
   );
-};
 
 describe("AdvertiserRoutes", () => {
   // Disable React.lazy warnings in test environment

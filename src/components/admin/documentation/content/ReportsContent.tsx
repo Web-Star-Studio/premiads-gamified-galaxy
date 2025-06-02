@@ -3,8 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer, BarChart4 } from "lucide-react";
 
-const ReportsContent: React.FC = () => {
-  return (
+const ReportsContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sistema de Relatórios</h3>
@@ -93,6 +92,5 @@ const ReportsContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default ReportsContent;

@@ -18,8 +18,7 @@ const BlogCategories: React.FC<BlogCategoriesProps> = ({
   categories, 
   activeCategory, 
   setActiveCategory 
-}) => {
-  return (
+}) => (
     <Card className="bg-zinc-900/50 border-zinc-800">
       <CardContent className="p-6">
         <h3 className="text-xl font-bold mb-4">Categorias</h3>
@@ -68,6 +67,5 @@ const BlogCategories: React.FC<BlogCategoriesProps> = ({
       </CardContent>
     </Card>
   );
-};
 
 export default BlogCategories;

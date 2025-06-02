@@ -113,7 +113,7 @@ function PaymentSuccessPage() {
         angle: 60,
         spread: 55,
         origin: { x: 0 },
-        colors: colors
+        colors
       });
       
       confetti({
@@ -121,7 +121,7 @@ function PaymentSuccessPage() {
         angle: 120,
         spread: 55,
         origin: { x: 1 },
-        colors: colors
+        colors
       });
 
       if (Date.now() < end) {

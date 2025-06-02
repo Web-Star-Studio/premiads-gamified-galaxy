@@ -38,26 +38,26 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('cashback_balance')
+        .select('rifas')
         .eq('id', userId)
         .maybeSingle();
       
       if (error) throw error;
       
       if (data) {
-        const creditCount = Number(data.cashback_balance) || 0
+        const rifasCount = Number(data.rifas) || 0
         const userCredits: UserCredits = {
-          totalTokens: creditCount,
+          totalTokens: rifasCount,
           usedTokens: 0,
-          availableTokens: creditCount
+          availableTokens: rifasCount
         }
         set({ credits: userCredits })
       } else {
         set({ credits: initialState })
       }
     } catch (err: any) {
-      set({ error: err.message || 'Erro ao buscar créditos' });
-      console.error('Erro ao buscar créditos:', err);
+      set({ error: err.message || 'Erro ao buscar rifas' });
+      console.error('Erro ao buscar rifas:', err);
     } finally {
       set({ isLoading: false });
     }

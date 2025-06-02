@@ -15,8 +15,7 @@ interface DesktopNavigationProps {
   scrollToSection: (sectionId: string) => void;
 }
 
-const DesktopNavigation: React.FC<DesktopNavigationProps> = ({ sections, scrollToSection }) => {
-  return (
+const DesktopNavigation: React.FC<DesktopNavigationProps> = ({ sections, scrollToSection }) => (
     <motion.nav
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -46,6 +45,5 @@ const DesktopNavigation: React.FC<DesktopNavigationProps> = ({ sections, scrollT
       ))}
     </motion.nav>
   );
-};
 
 export default DesktopNavigation;

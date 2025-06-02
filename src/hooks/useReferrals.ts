@@ -49,7 +49,7 @@ export const useReferrals = () => {
         
         if (referralError) throw referralError;
         
-        let userReferralCode = referralData?.referral_code || 
+        const userReferralCode = referralData?.referral_code || 
           `${userId.substring(0, 8).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
         
         setReferralCode(userReferralCode);

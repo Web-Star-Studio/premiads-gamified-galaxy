@@ -3,8 +3,7 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Server } from "lucide-react";
 
-const MonitoringContent: React.FC = () => {
-  return (
+const MonitoringContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sistema de Monitoramento</h3>
@@ -88,6 +87,5 @@ const MonitoringContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default MonitoringContent;

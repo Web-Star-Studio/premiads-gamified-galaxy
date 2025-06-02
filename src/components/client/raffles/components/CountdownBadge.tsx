@@ -9,8 +9,6 @@ export interface CountdownBadgeProps {
   isParticipationClosed: boolean;
 }
 
-const CountdownBadge = (props: CountdownBadgeProps) => {
-  return <RefactoredCountdownBadge {...props} />;
-};
+const CountdownBadge = (props: CountdownBadgeProps) => <RefactoredCountdownBadge {...props} />;
 
 export default CountdownBadge;

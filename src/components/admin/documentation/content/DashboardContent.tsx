@@ -2,8 +2,7 @@
 import React from 'react';
 import { HelpCircle } from "lucide-react";
 
-const DashboardContent: React.FC = () => {
-  return (
+const DashboardContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Visão Geral do Dashboard</h3>
@@ -66,6 +65,5 @@ const DashboardContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default DashboardContent;

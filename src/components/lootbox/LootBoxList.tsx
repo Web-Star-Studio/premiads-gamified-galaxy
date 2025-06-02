@@ -68,11 +68,11 @@ export const LootBoxList: React.FC<LootBoxListProps> = ({
       }
       
       // Show notification with details of what changed
-      let notificationTitle = "Recompensa recebida!";
+      const notificationTitle = "Recompensa recebida!";
       let notificationDescription = "";
       
       if (typedData.points_difference && typedData.points_difference > 0) {
-        notificationDescription = `Você recebeu ${typedData.points_difference} pontos de experiência!`;
+        notificationDescription = `Você recebeu ${typedData.points_difference} tickets de experiência!`;
       } else if (typedData.credits_difference && typedData.credits_difference > 0) {
         notificationDescription = `Você recebeu ${typedData.credits_difference} créditos!`;
       } else {

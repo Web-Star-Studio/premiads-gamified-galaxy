@@ -3,8 +3,7 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 
-const UsersContent: React.FC = () => {
-  return (
+const UsersContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Visão Geral do Gerenciamento de Usuários</h3>
@@ -81,6 +80,5 @@ const UsersContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default UsersContent;

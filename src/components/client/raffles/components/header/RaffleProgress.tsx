@@ -8,8 +8,7 @@ interface RaffleProgressProps {
   totalTickets: number;
 }
 
-const RaffleProgress = ({ progress, soldTickets, totalTickets }: RaffleProgressProps) => {
-  return (
+const RaffleProgress = ({ progress, soldTickets, totalTickets }: RaffleProgressProps) => (
     <div className="mb-4">
       <div className="flex justify-between text-sm text-gray-400 mb-1">
         <span>Progresso do sorteio</span>
@@ -18,6 +17,5 @@ const RaffleProgress = ({ progress, soldTickets, totalTickets }: RaffleProgressP
       <Progress value={progress} className="h-2" />
     </div>
   );
-};
 
 export default RaffleProgress;

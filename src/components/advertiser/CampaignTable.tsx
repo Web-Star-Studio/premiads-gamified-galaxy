@@ -9,8 +9,7 @@ interface CampaignTableProps {
   onEdit: (campaign: Campaign) => void;
 }
 
-const CampaignTable = ({ campaigns, onDelete, onEdit }: CampaignTableProps) => {
-  return (
+const CampaignTable = ({ campaigns, onDelete, onEdit }: CampaignTableProps) => (
     <div className="rounded-lg border border-gray-800 overflow-hidden">
       {campaigns.length === 0 ? (
         <div className="py-8 text-center text-gray-400">
@@ -45,6 +44,5 @@ const CampaignTable = ({ campaigns, onDelete, onEdit }: CampaignTableProps) => {
       )}
     </div>
   );
-};
 
 export default CampaignTable;

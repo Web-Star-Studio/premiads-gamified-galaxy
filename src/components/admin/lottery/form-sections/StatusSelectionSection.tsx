@@ -10,8 +10,7 @@ interface StatusSelectionSectionProps {
   form: UseFormReturn<LotteryFormValues>;
 }
 
-const StatusSelectionSection: React.FC<StatusSelectionSectionProps> = ({ form }) => {
-  return (
+const StatusSelectionSection: React.FC<StatusSelectionSectionProps> = ({ form }) => (
     <motion.div 
       className="space-y-4"
       initial={{ opacity: 0, y: 10 }}
@@ -54,6 +53,5 @@ const StatusSelectionSection: React.FC<StatusSelectionSectionProps> = ({ form })
       </div>
     </motion.div>
   );
-};
 
 export default StatusSelectionSection;

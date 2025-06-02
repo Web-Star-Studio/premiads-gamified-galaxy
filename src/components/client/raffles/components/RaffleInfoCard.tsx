@@ -62,7 +62,7 @@ const RaffleInfoCard = ({
       }
     }
     
-    return `Meta: ${minPoints} pontos`;
+    return `Meta: ${minPoints} tickets`;
   };
 
   return (
@@ -137,7 +137,7 @@ const RaffleInfoCard = ({
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm">Meta de pontos:</span>
+              <span className="text-sm">Meta de tickets:</span>
               <span className="text-sm font-medium">{minPoints.toLocaleString('pt-BR')}</span>
             </div>
             
@@ -150,7 +150,7 @@ const RaffleInfoCard = ({
               <div className="mt-3 bg-neon-cyan/10 p-2 rounded-md border border-neon-cyan/20">
                 <div className="flex items-center gap-1 text-xs">
                   <AlertCircle className="w-3 h-3 text-neon-cyan" />
-                  <span className="text-neon-cyan">Meta de pontos atingida</span>
+                  <span className="text-neon-cyan">Meta de tickets atingida</span>
                 </div>
                 <div className="text-xs mt-1">
                   Sorteio será realizado {formatDate(drawDate)}

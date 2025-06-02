@@ -36,7 +36,7 @@ const ProfileCompletionBanner = () => {
         <div className="flex-1">
           <h3 className="font-medium text-lg text-white">Complete seu perfil</h3>
           <p className="text-gray-300 text-sm">
-            Preencha seu perfil e ganhe 100 pontos de bônus!
+            Preencha seu perfil e ganhe 100 tickets de bônus!
           </p>
         </div>
         <div className="flex gap-2">

@@ -8,8 +8,7 @@ interface DocHeaderProps {
   setSearchQuery: (query: string) => void;
 }
 
-const DocHeader: React.FC<DocHeaderProps> = ({ searchQuery, setSearchQuery }) => {
-  return (
+const DocHeader: React.FC<DocHeaderProps> = ({ searchQuery, setSearchQuery }) => (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <CardTitle className="text-xl font-semibold">
@@ -25,6 +24,5 @@ const DocHeader: React.FC<DocHeaderProps> = ({ searchQuery, setSearchQuery }) =>
       />
     </div>
   );
-};
 
 export default DocHeader;

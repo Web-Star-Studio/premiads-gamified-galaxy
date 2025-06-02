@@ -1,8 +1,7 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export const UserProfile = () => {
-  return (
+export const UserProfile = () => (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-galaxy-deepPurple/30 my-2">
       <Avatar className="h-10 w-10 border-2 border-neon-pink">
         <AvatarFallback className="bg-galaxy-purple text-white">
@@ -15,6 +14,5 @@ export const UserProfile = () => {
       </div>
     </div>
   );
-};
 
 export default UserProfile;

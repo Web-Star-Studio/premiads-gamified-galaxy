@@ -29,8 +29,7 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
   onPointsChange,
   deadline,
   onDeadlineChange
-}) => {
-  return (
+}) => (
     <div className="space-y-4">
       <div>
         <Label htmlFor="title">Título da Missão*</Label>
@@ -98,6 +97,5 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
       </div>
     </div>
   );
-};
 
 export default BasicInfoStep;

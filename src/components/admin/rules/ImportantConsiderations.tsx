@@ -7,8 +7,7 @@ interface ImportantConsiderationsProps {
   className?: string;
 }
 
-const ImportantConsiderations: React.FC<ImportantConsiderationsProps> = ({ className }) => {
-  return (
+const ImportantConsiderations: React.FC<ImportantConsiderationsProps> = ({ className }) => (
     <Card className={`bg-galaxy-dark border-galaxy-purple/30 ${className || ''}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center">
@@ -28,6 +27,5 @@ const ImportantConsiderations: React.FC<ImportantConsiderationsProps> = ({ class
       </CardContent>
     </Card>
   );
-};
 
 export default ImportantConsiderations;

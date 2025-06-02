@@ -29,8 +29,7 @@ export const TargetingStep: React.FC<TargetingStepProps> = ({
   onTargetAudienceAgeMaxChange,
   targetAudienceRegion,
   onTargetAudienceRegionChange
-}) => {
-  return (
+}) => (
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Segmentação e Público-Alvo</h2>
@@ -133,6 +132,5 @@ export const TargetingStep: React.FC<TargetingStepProps> = ({
       </div>
     </div>
   );
-};
 
 export default TargetingStep;

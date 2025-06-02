@@ -24,8 +24,7 @@ const RulesTabs = ({
   onEditRule,
   onToggleRule,
   onSaveRule,
-}: RulesTabsProps) => {
-  return (
+}: RulesTabsProps) => (
     <Tabs defaultValue={currentCategory} onValueChange={setCurrentCategory}>
       <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
         {ruleCategories.map(category => {
@@ -59,6 +58,5 @@ const RulesTabs = ({
       ))}
     </Tabs>
   );
-};
 
 export default RulesTabs;

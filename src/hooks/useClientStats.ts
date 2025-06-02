@@ -16,8 +16,7 @@ interface ClientStats {
   averagePointsPerDay: number;
 }
 
-export const useClientStats = () => {
-  return useQuery({
+export const useClientStats = () => useQuery({
     queryKey: ["client-stats"],
     queryFn: async (): Promise<ClientStats> => {
       const user = (await supabase.auth.getUser()).data.user;
@@ -119,4 +118,3 @@ export const useClientStats = () => {
     },
     refetchInterval: 30000,
   });
-};

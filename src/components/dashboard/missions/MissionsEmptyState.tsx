@@ -3,8 +3,7 @@ import { Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CarouselItem } from "@/components/ui/carousel";
 
-const MissionsEmptyState = () => {
-  return (
+const MissionsEmptyState = () => (
     <CarouselItem className="md:basis-full">
       <Card className="bg-galaxy-deepPurple/30 border-galaxy-purple/20 p-8 text-center">
         <CardContent className="pt-6">
@@ -15,6 +14,5 @@ const MissionsEmptyState = () => {
       </Card>
     </CarouselItem>
   );
-};
 
 export default MissionsEmptyState;

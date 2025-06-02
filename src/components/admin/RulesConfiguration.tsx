@@ -112,7 +112,7 @@ const RulesConfiguration: React.FC = () => {
                   Configuração de Regras
                 </CardTitle>
                 <CardDescription>
-                  Defina parâmetros para missões, recompensas, sorteios e sistema de pontos.
+                  Defina parâmetros para missões, recompensas, sorteios e sistema de tickets.
                 </CardDescription>
               </div>
               <Button 

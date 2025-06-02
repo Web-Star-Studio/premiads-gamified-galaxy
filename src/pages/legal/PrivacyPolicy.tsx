@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
 import MainHeader from "@/components/MainHeader";
 
-const PrivacyPolicy = () => {
-  return (
+const PrivacyPolicy = () => (
     <div className="min-h-screen bg-galaxy-dark">
       <MainHeader />
       
@@ -130,6 +129,5 @@ const PrivacyPolicy = () => {
       <Footer />
     </div>
   );
-};
 
 export default PrivacyPolicy;

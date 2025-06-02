@@ -4,11 +4,9 @@ import { apiService } from "@/services/api";
 import { ruleCategories } from "@/components/admin/rules/rulesData";
 
 // Create an initial structure based on rule categories
-const createInitialRuleStructure = () => {
-  return Object.fromEntries(
+const createInitialRuleStructure = () => Object.fromEntries(
     ruleCategories.map(category => [category.id, []])
   );
-};
 
 // Get all rules 
 export const getRules = async (): Promise<RulesByCategory> => {

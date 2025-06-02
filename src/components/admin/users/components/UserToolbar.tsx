@@ -8,8 +8,7 @@ interface UserToolbarProps {
   onSearchChange: (value: string) => void;
 }
 
-const UserToolbar = ({ searchQuery, onSearchChange }: UserToolbarProps) => {
-  return (
+const UserToolbar = ({ searchQuery, onSearchChange }: UserToolbarProps) => (
     <div className="relative w-full md:w-auto flex-1">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
       <Input
@@ -20,6 +19,5 @@ const UserToolbar = ({ searchQuery, onSearchChange }: UserToolbarProps) => {
       />
     </div>
   );
-};
 
 export default UserToolbar;

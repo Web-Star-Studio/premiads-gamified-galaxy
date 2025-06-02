@@ -33,13 +33,11 @@ export const useCheckboxGroupContext = () => {
 export const CheckboxGroup = React.forwardRef<
   HTMLDivElement,
   CheckboxGroupProps
->(({ value, onValueChange, className, children, ...props }, ref) => {
-  return (
+>(({ value, onValueChange, className, children, ...props }, ref) => (
     <CheckboxGroupContext.Provider value={{ value, onValueChange }}>
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
         {children}
       </div>
     </CheckboxGroupContext.Provider>
-  );
-});
+  ));
 CheckboxGroup.displayName = "CheckboxGroup";

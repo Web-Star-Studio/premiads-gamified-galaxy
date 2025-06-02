@@ -4,8 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-const BlogNewsletter = () => {
-  return (
+const BlogNewsletter = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -29,6 +28,5 @@ const BlogNewsletter = () => {
       </Card>
     </motion.div>
   );
-};
 
 export default BlogNewsletter;

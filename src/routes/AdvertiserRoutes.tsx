@@ -21,8 +21,7 @@ const AdvertiserCrmPage = lazy(() => import("@/pages/advertiser/CrmPage"));
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
-const AdvertiserRoutes = () => {
-  return (
+const AdvertiserRoutes = () => (
     <Routes>
       {/* Remover a restrição de roles e usar RouteGuard padrão */}
       <Route index element={
@@ -118,6 +117,5 @@ const AdvertiserRoutes = () => {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
-};
 
 export default AdvertiserRoutes;

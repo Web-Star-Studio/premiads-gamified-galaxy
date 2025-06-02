@@ -17,8 +17,7 @@ const ChatInput: FC<ChatInputProps> = ({
   onSend,
   onKeyPress,
   inputRef,
-}) => {
-  return (
+}) => (
     <div className="p-4 border-t border-galaxy-purple/30 bg-gradient-to-r from-galaxy-purple/10 to-galaxy-blue/10">
       <div className="flex gap-2">
         <input
@@ -42,6 +41,5 @@ const ChatInput: FC<ChatInputProps> = ({
       </div>
     </div>
   );
-};
 
 export default ChatInput;

@@ -2,48 +2,30 @@ CREATE OR REPLACE FUNCTION process_mission_rewards(p_submission_id uuid, p_user_
 RETURNS jsonb AS $$
 DECLARE
   v_mission RECORD;
-  v_points INTEGER;
-  v_streak_bonus NUMERIC := 0;
-  v_current_streak INTEGER := 0; 
-  v_streak_record RECORD;
+  v_tickets INTEGER := 0;
+  v_cashback NUMERIC(10,2) := 0;
   v_loot_box_reward TEXT := NULL;
   v_loot_box_amount NUMERIC := 0;
   v_result JSONB;
   v_has_badge BOOLEAN;
   v_has_lootbox BOOLEAN;
-  v_sequence_bonus BOOLEAN;
-  v_streak_multiplier NUMERIC;
   v_badge_exists BOOLEAN;
-  v_badge_earned BOOLEAN := FALSE; 
+  v_badge_earned BOOLEAN := FALSE;
   v_badge_id UUID;
   v_lootbox_id UUID;
   v_badge_name TEXT;
   v_badge_description TEXT;
   v_badge_image_url TEXT;
 BEGIN
-  RAISE NOTICE 'Starting process_mission_rewards for submission_id: %, user_id: %, mission_id: %', 
+  RAISE NOTICE 'Starting process_mission_rewards for submission_id: %, user_id: %, mission_id: %',
                p_submission_id, p_user_id, p_mission_id;
 
-  -- Check for existing streak
-  SELECT current_streak INTO v_current_streak
-  FROM daily_streaks
-  WHERE user_id = p_user_id AND mission_id = p_mission_id;
-  
-  IF NOT FOUND THEN
-    RAISE NOTICE 'No existing streak found for user % and mission %', p_user_id, p_mission_id;
-    v_current_streak := 0; 
-  ELSE
-    RAISE NOTICE 'Found existing streak: % for user % and mission %', 
-                 v_current_streak, p_user_id, p_mission_id;
-  END IF;
-
-  -- Get mission info
+  -- Buscar dados da missão (tickets e cashback)
   SELECT 
-    points, 
-    has_badge, 
-    has_lootbox, 
-    sequence_bonus,
-    COALESCE(streak_multiplier, 1.2) as streak_multiplier,
+    tickets_reward,
+    cashback_reward,
+    has_badge,
+    has_lootbox,
     title,
     type
   INTO v_mission
@@ -56,97 +38,17 @@ BEGIN
       'badge_earned', FALSE,
       'loot_box_reward', NULL,
       'loot_box_amount', 0,
-      'streak_bonus', 0,
-      'current_streak', 0,
+      'tickets_earned', 0,
+      'cashback_earned', 0,
       'error', 'Mission not found'
     );
   END IF;
 
-  RAISE NOTICE 'Mission found: title=%, has_badge=%, has_lootbox=%, sequence_bonus=%', 
-               v_mission.title, v_mission.has_badge, v_mission.has_lootbox, v_mission.sequence_bonus;
-
-  v_points := v_mission.points;
+  v_tickets := v_mission.tickets_reward;
+  v_cashback := v_mission.cashback_reward;
   v_has_badge := v_mission.has_badge;
   v_has_lootbox := v_mission.has_lootbox;
-  v_sequence_bonus := v_mission.sequence_bonus;
-  v_streak_multiplier := v_mission.streak_multiplier;
 
-  -- Process streak if applicable
-  IF v_sequence_bonus THEN
-    RAISE NOTICE 'Processing sequence bonus for mission %', p_mission_id;
-    
-    SELECT * INTO v_streak_record
-    FROM daily_streaks
-    WHERE user_id = p_user_id AND mission_id = p_mission_id;
-    
-    IF FOUND THEN
-      RAISE NOTICE 'Found streak record: current_streak=%, last_completion_date=%', 
-                   v_streak_record.current_streak, v_streak_record.last_completion_date;
-      
-      IF (now()::date - v_streak_record.last_completion_date::date) = 1 THEN
-        -- Consecutive day - increment streak
-        v_current_streak := v_streak_record.current_streak + 1;
-        RAISE NOTICE 'Consecutive day detected, incrementing streak to %', v_current_streak;
-        
-        IF v_current_streak > v_streak_record.max_streak THEN
-          UPDATE daily_streaks
-          SET 
-            current_streak = v_current_streak,
-            max_streak = v_current_streak,
-            last_completion_date = now()
-          WHERE id = v_streak_record.id;
-          RAISE NOTICE 'Updated streak with new max of %', v_current_streak;
-        ELSE
-          UPDATE daily_streaks
-          SET 
-            current_streak = v_current_streak,
-            last_completion_date = now()
-          WHERE id = v_streak_record.id;
-          RAISE NOTICE 'Updated streak to %', v_current_streak;
-        END IF;
-      ELSIF (now()::date - v_streak_record.last_completion_date::date) = 0 THEN
-        -- Same day - maintain streak
-        v_current_streak := v_streak_record.current_streak;
-        RAISE NOTICE 'Same day completion, maintaining streak at %', v_current_streak;
-      ELSE
-        -- Streak broken - reset to 1
-        v_current_streak := 1;
-        RAISE NOTICE 'Streak broken, resetting to 1';
-        
-        UPDATE daily_streaks
-        SET 
-          current_streak = 1,
-          last_completion_date = now()
-        WHERE id = v_streak_record.id;
-      END IF;
-    ELSE
-      -- First time - create new streak record
-      v_current_streak := 1;
-      RAISE NOTICE 'Creating new streak record with initial value 1';
-      
-      INSERT INTO daily_streaks (
-        user_id,
-        mission_id,
-        current_streak,
-        max_streak,
-        last_completion_date
-      ) VALUES (
-        p_user_id,
-        p_mission_id,
-        1,
-        1,
-        now()
-      );
-    END IF;
-    
-    -- Calculate streak bonus if applicable
-    IF v_current_streak > 1 THEN 
-      v_streak_bonus := v_mission.points * (v_streak_multiplier - 1) * (v_current_streak - 1); 
-      v_points := v_points + v_streak_bonus;
-      RAISE NOTICE 'Applied streak bonus: % points for streak of %', v_streak_bonus, v_current_streak;
-    END IF;
-  END IF;
-  
   -- Process badge if applicable
   IF v_has_badge THEN
     RAISE NOTICE 'Processing badge for mission %', p_mission_id;
@@ -277,8 +179,8 @@ BEGIN
         v_loot_box_amount := 1.5; 
         RAISE NOTICE 'Selected loot box type: token_multiplier with amount %', v_loot_box_amount;
         
-        v_points := v_points * v_loot_box_amount;
-        RAISE NOTICE 'Applied token multiplier: points now %', v_points;
+        v_tickets := v_tickets * v_loot_box_amount;
+        RAISE NOTICE 'Applied token multiplier: tickets now %', v_tickets;
         
       WHEN 3 THEN
         v_loot_box_reward := 'instant_level_up';
@@ -313,25 +215,27 @@ BEGIN
   
   -- Update user points
   UPDATE profiles
-  SET points = points + v_points
+  SET points = points + v_tickets
   WHERE id = p_user_id;
-  RAISE NOTICE 'Updated user % profile with % points', p_user_id, v_points;
+  RAISE NOTICE 'Updated user % profile with % tickets', p_user_id, v_tickets;
   
   -- Record the reward
   INSERT INTO mission_rewards (
     user_id,
     mission_id,
     submission_id,
-    points_earned,
+    tickets_earned,
+    cashback_earned,
     rewarded_at
   ) VALUES (
     p_user_id,
     p_mission_id,
     p_submission_id,
-    v_points, 
+    v_tickets,
+    v_cashback,
     NOW()
   );
-  RAISE NOTICE 'Recorded mission reward of % points for user %', v_points, p_user_id;
+  RAISE NOTICE 'Recorded mission reward of % tickets and % cashback for user %', v_tickets, v_cashback, p_user_id;
 
   -- Build result object
   v_result := jsonb_build_object(
@@ -339,8 +243,8 @@ BEGIN
     'badge_id', v_badge_id,
     'loot_box_reward', v_loot_box_reward, 
     'loot_box_amount', v_loot_box_amount, 
-    'streak_bonus', v_streak_bonus,       
-    'current_streak', v_current_streak   
+    'tickets_earned', v_tickets,
+    'cashback_earned', v_cashback
   );
   
   RAISE NOTICE 'process_mission_rewards completed with result: %', v_result;

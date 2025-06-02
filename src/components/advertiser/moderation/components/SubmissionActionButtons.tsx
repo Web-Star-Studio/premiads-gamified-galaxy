@@ -8,8 +8,7 @@ interface SubmissionActionButtonsProps {
   onReject: () => Promise<void>;
 }
 
-const SubmissionActionButtons = ({ processing, onApprove, onReject }: SubmissionActionButtonsProps) => {
-  return (
+const SubmissionActionButtons = ({ processing, onApprove, onReject }: SubmissionActionButtonsProps) => (
     <div className="flex justify-end mt-4 gap-3">
       <Button 
         variant="destructive"
@@ -41,6 +40,5 @@ const SubmissionActionButtons = ({ processing, onApprove, onReject }: Submission
       </Button>
     </div>
   );
-};
 
 export default SubmissionActionButtons;

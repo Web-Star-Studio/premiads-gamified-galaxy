@@ -93,7 +93,7 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
         <div className="space-y-1">
           <p className="text-sm font-medium" id="streak-label">Bônus de Sequência</p>
           <p className="text-xs text-gray-400">
-            Ofereça pontos adicionais para usuários que completarem a missão em dias consecutivos
+            Ofereça tickets adicionais para usuários que completarem a missão em dias consecutivos
           </p>
         </div>
         <Switch
@@ -118,7 +118,7 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
           {formData.streakBonus && (
             <li><span className="text-gray-400">Bônus de Sequência:</span> 
               {formData.streakMultiplier ? 
-                `${(formData.streakMultiplier * 100 - 100).toFixed(0)}% de pontos adicionais` : 
+                `${(formData.streakMultiplier * 100 - 100).toFixed(0)}% de tickets adicionais` : 
                 "Ativado"}  
             </li>
           )}

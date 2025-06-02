@@ -1,8 +1,6 @@
 
 // Format dates
-export const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('pt-BR');
-};
+export const formatDate = (dateString: string): string => new Date(dateString).toLocaleDateString('pt-BR');
 
 // Default logo and image for campaigns without them
 export const defaultLogo = "https://via.placeholder.com/80x80?text=Logo";

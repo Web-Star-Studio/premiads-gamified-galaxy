@@ -20,8 +20,7 @@ const FeaturedPostSection: React.FC<FeaturedPostSectionProps> = ({
   allTags,
   onTagToggle,
   onClearTags
-}) => {
-  return (
+}) => (
     <>
       {/* Featured post */}
       {featuredPost && !isLoading ? (
@@ -41,6 +40,5 @@ const FeaturedPostSection: React.FC<FeaturedPostSectionProps> = ({
       )}
     </>
   );
-};
 
 export default FeaturedPostSection;

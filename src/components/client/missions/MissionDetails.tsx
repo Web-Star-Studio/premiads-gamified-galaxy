@@ -54,7 +54,7 @@ const MissionDetails = ({ mission, onStartMission }: MissionDetailsProps) => {
                   <Award className="w-4 h-4 text-neon-cyan" />
                 </div>
                 <div>
-                  <span className="text-sm font-medium">{mission.points} pontos</span>
+                  <span className="text-sm font-medium">{mission.tickets_reward} tickets</span>
                 </div>
               </div>
               

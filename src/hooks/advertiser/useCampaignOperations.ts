@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -41,8 +40,8 @@ const useCampaignOperations = () => {
         target_audience: formData.audience,
         requirements: Array.isArray(formData.requirements) 
           ? formData.requirements 
-          : [formData.requirements], // Convert to array if it's a string
-        business_type: 'retail', // Default
+          : [formData.requirements],
+        business_type: 'retail',
         target_audience_gender: formData.targetFilter?.gender || 'all',
         target_audience_age_min: formData.targetFilter?.age?.[0] 
           ? parseInt(formData.targetFilter.age[0]) 
@@ -54,46 +53,37 @@ const useCampaignOperations = () => {
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
         status: 'ativa',
-        // Using correct column names from the updated database schema
         has_badge: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
         sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
-        badge_image_url: formData.badgeImageUrl, // Store badge image URL
+        badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [
           'credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
-        points: formData.randomPoints 
-          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
-          : formData.pointsValue || formData.pointsRange[0],
-        cost_in_tokens: formData.randomPoints 
-          ? Math.floor(Math.random() * (formData.pointsRange[1] - formData.pointsRange[0] + 1)) + formData.pointsRange[0]
-          : formData.pointsValue || formData.pointsRange[0],
+        tickets_reward: formData.ticketsReward,
+        cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         advertiser_id: user.id,
-        created_by: user.id
+        created_by: user.id,
+        max_participants: formData.maxParticipants || 100,
+        max_cashback_redemptions: formData.maxCashbackRedemptions || 5,
+        cashback_amount_per_raffle: 5.00 // Valor fixo
       };
       
-      // Deduct tokens from advertiser's balance
-      const { error: deductError } = await supabase.rpc('deduct_credits_from_advertiser', {
-        p_advertiser_id: user.id, 
-        p_credits_to_deduct: missionData.cost_in_tokens
-      });
+      // Garantir remoção de campos obsoletos
+      delete (missionData as any).credits;
+      delete (missionData as any).cost_in_tokens;
+      delete (missionData as any).points;
+      console.log('DEBUG missionData sendo enviado:', missionData);
+      console.log('DEBUG keys:', Object.keys(missionData));
       
-      if (deductError) {
-        throw new Error(`Erro ao debitar tokens: ${deductError.message}`);
-      }
+      // TODO: opcional -- debitar rifas do anunciante se houver lógica de custo
       
-      // Insert the new mission
-      const { data, error } = await supabase
-        .from('missions')
-        .insert(missionData)
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
+      // Insert the new mission without returning columns to avoid schema cache errors
+      const { error: insertError } = await (supabase.from('missions') as any)
+        .insert(missionData, { returning: 'minimal' })
+      if (insertError) throw insertError
       
       toast({
         title: 'Campanha criada com sucesso',
@@ -156,6 +146,8 @@ const useCampaignOperations = () => {
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [
           'credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
+        tickets_reward: formData.ticketsReward,
+        cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()
       };

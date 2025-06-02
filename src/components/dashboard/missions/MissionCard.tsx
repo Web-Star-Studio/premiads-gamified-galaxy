@@ -22,9 +22,9 @@ const MissionCard = ({
   const [isShaking, setIsShaking] = useState(false);
   const { playSound } = useSounds();
   
-  // Get difficulty based on points
+  // Get difficulty based on tickets_reward
   const difficulty = getMissionDifficulty({
-    points: mission.points,
+    tickets_reward: mission.tickets_reward,
     type: mission.type,
     requirements: mission.requirements || []
   });
@@ -81,7 +81,7 @@ const MissionCard = ({
       <div className="mt-4 flex flex-col items-start sm:flex-row sm:items-center sm:flex-wrap gap-1">
         <div className="flex h-8 items-center rounded-full bg-galaxy-deepPurple/50 px-3 text-sm font-medium text-white flex-shrink-0 min-w-max">
           <Star className="h-4 w-4 text-yellow-400 mr-1" />
-          <span className="whitespace-nowrap inline-block">{mission.points} pontos</span>
+          <span className="whitespace-nowrap inline-block">{mission.tickets_reward} tickets</span>
         </div>
         
         {/* Additional reward indicators */}

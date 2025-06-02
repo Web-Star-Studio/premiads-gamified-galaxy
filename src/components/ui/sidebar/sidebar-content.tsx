@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 const SidebarInput = React.forwardRef<
   React.ElementRef<typeof Input>,
   React.ComponentProps<typeof Input>
->(({ className, ...props }, ref) => {
-  return (
+>(({ className, ...props }, ref) => (
     <Input
       ref={ref}
       data-sidebar="input"
@@ -18,15 +17,13 @@ const SidebarInput = React.forwardRef<
       )}
       {...props}
     />
-  );
-});
+  ));
 SidebarInput.displayName = "SidebarInput";
 
 const SidebarContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
-  return (
+>(({ className, ...props }, ref) => (
     <div
       ref={ref}
       data-sidebar="content"
@@ -36,23 +33,20 @@ const SidebarContent = React.forwardRef<
       )}
       {...props}
     />
-  );
-});
+  ));
 SidebarContent.displayName = "SidebarContent";
 
 const SidebarSeparator = React.forwardRef<
   React.ElementRef<typeof Separator>,
   React.ComponentProps<typeof Separator>
->(({ className, ...props }, ref) => {
-  return (
+>(({ className, ...props }, ref) => (
     <Separator
       ref={ref}
       data-sidebar="separator"
       className={cn("mx-2 w-auto bg-sidebar-border", className)}
       {...props}
     />
-  );
-});
+  ));
 SidebarSeparator.displayName = "SidebarSeparator";
 
 export { SidebarInput, SidebarContent, SidebarSeparator };

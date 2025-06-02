@@ -21,12 +21,12 @@ const HowItWorks = () => {
     color: "cyan"
   }, {
     title: "Complete & Ganhe",
-    description: "Complete as tarefas e ganhe pontos, badges e recompensas exclusivas.",
+    description: "Complete as tarefas e ganhe tickets, badges e recompensas exclusivas.",
     icon: <CheckCircle className="w-12 h-12 text-neon-pink" />,
     color: "pink"
   }, {
     title: "Concorra em Sorteios",
-    description: "Use seus pontos acumulados para participar de sorteios de prêmios incríveis.",
+    description: "Use seus tickets acumulados para participar de sorteios de prêmios incríveis.",
     icon: <Trophy className="w-12 h-12 text-neon-lime" />,
     color: "lime"
   }] : [{

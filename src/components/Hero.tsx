@@ -64,7 +64,7 @@ const Hero = () => {
             className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto"
           >
             {userType === "participante" ? (
-              "Complete missões, acumule pontos e concorra a prêmios incríveis em nossa plataforma gamificada."
+              "Complete missões, acumule tickets e concorra a prêmios incríveis em nossa plataforma gamificada."
             ) : (
               "Crie campanhas interativas que engajam e recompensam seus clientes de forma inovadora."
             )}

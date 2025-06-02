@@ -2,8 +2,7 @@
 import React from 'react';
 import { Shield } from "lucide-react";
 
-const RafflesContent: React.FC = () => {
-  return (
+const RafflesContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sistema de Sorteios</h3>
@@ -82,6 +81,5 @@ const RafflesContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default RafflesContent;

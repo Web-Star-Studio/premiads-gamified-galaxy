@@ -31,8 +31,7 @@ const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
   selectedCategory,
   discountRange,
   isLoading = false
-}) => {
-  return (
+}) => (
     <Tabs 
       defaultValue="all" 
       value={currentTab} 
@@ -92,6 +91,5 @@ const CashbackTabsContent: React.FC<CashbackTabsContentProps> = ({
       </div>
     </Tabs>
   );
-};
 
 export default CashbackTabsContent;

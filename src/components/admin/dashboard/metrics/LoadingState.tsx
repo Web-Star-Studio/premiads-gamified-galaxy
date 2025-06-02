@@ -2,8 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const LoadingState = () => {
-  return (
+export const LoadingState = () => (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <Card key={i} className="relative overflow-hidden">
@@ -16,4 +15,3 @@ export const LoadingState = () => {
       ))}
     </div>
   );
-};

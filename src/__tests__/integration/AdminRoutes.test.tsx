@@ -31,23 +31,17 @@ const renderWithProviders = (ui: React.ReactElement, { route = '/' } = {}) => {
 };
 
 // Mock components to prevent actual rendering of complex components
-jest.mock('@/pages/admin/LotteryManagementPage', () => {
-  return function MockLotteryManagementPage() {
+jest.mock('@/pages/admin/LotteryManagementPage', () => function MockLotteryManagementPage() {
     return <div data-testid="lottery-management-page">Lottery Management Page</div>;
-  };
-});
+  });
 
-jest.mock('@/pages/admin/UserManagementPage', () => {
-  return function MockUserManagementPage() {
+jest.mock('@/pages/admin/UserManagementPage', () => function MockUserManagementPage() {
     return <div data-testid="user-management-page">User Management Page</div>;
-  };
-});
+  });
 
-jest.mock('@/pages/AdminPanel', () => {
-  return function MockAdminPanel() {
+jest.mock('@/pages/AdminPanel', () => function MockAdminPanel() {
     return <div data-testid="admin-panel">Admin Panel Page</div>;
-  };
-});
+  });
 
 // Test route navigation and lazy loading
 describe('Admin Routes Integration', () => {

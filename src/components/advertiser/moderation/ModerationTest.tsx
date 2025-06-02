@@ -261,7 +261,7 @@ const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
                 <AlertDescription className="mt-2">
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     <li>Você (anunciante) recebe submissões "pending" para aprovar ou rejeitar</li>
-                    <li>Se você aprovar, o usuário recebe os pontos imediatamente</li>
+                    <li>Se você aprovar, o usuário recebe os tickets imediatamente</li>
                     <li>Se você rejeitar, a submissão vai para "second_instance_pending" para revisão do administrador</li>
                     <li>O administrador pode rejeitar definitivamente ou aprovar e retornar para você</li>
                     <li>Submissões retornadas aparecem como "returned_to_advertiser" para sua decisão final</li>

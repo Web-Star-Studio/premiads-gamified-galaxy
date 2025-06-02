@@ -1,8 +1,7 @@
 
 import React from 'react';
 
-const DatabaseContent: React.FC = () => {
-  return (
+const DatabaseContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Estrutura do Banco de Dados</h3>
@@ -80,6 +79,5 @@ raffles (
       </div>
     </div>
   );
-};
 
 export default DatabaseContent;

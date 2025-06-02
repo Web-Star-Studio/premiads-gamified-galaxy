@@ -3,8 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
-const OverviewContent: React.FC = () => {
-  return (
+const OverviewContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Sobre o PremiAds</h3>
@@ -57,6 +56,5 @@ const OverviewContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default OverviewContent;

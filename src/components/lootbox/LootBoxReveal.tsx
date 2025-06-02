@@ -104,7 +104,7 @@ export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({
       case 'multiplier':
         return `Multiplicador de créditos: ${reward.reward_amount}x!`;
       case 'level_up':
-        return `Ganhe ${reward.reward_amount} pontos de experiência instantâneos!`;
+        return `Ganhe ${reward.reward_amount} tickets de experiência instantâneos!`;
       case 'daily_streak_bonus':
         return `Sua sequência diária foi aumentada em ${reward.reward_amount}!`;
       case 'raffle_ticket':

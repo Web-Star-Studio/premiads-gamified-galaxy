@@ -19,8 +19,7 @@ const Faq = lazy(() => import("@/pages/Faq"));
 const ClientNotifications = lazy(() => import("@/pages/client/ClientNotifications"));
 const RewardsPage = lazy(() => import("@/pages/client/RewardsPage"));
 
-const ClientRoutes = () => {
-  return (
+const ClientRoutes = () => (
     <Routes>
       <Route index element={
         <RouteGuard>
@@ -121,6 +120,5 @@ const ClientRoutes = () => {
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
-};
 
 export default ClientRoutes;

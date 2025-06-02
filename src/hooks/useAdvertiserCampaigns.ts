@@ -65,7 +65,7 @@ export function useAdvertiserCampaigns() {
           type: mission.type,
           points: mission.points,
           cost_in_tokens: mission.cost_in_tokens,
-          status: status,
+          status,
           start_date: mission.start_date,
           end_date: mission.end_date,
           requirements: mission.requirements || [],

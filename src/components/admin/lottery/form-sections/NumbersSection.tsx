@@ -10,8 +10,7 @@ interface NumbersSectionProps {
   form: UseFormReturn<LotteryFormValues>;
 }
 
-const NumbersSection: React.FC<NumbersSectionProps> = ({ form }) => {
-  return (
+const NumbersSection: React.FC<NumbersSectionProps> = ({ form }) => (
     <motion.div 
       className="space-y-4"
       initial={{ opacity: 0, y: 10 }}
@@ -86,6 +85,5 @@ const NumbersSection: React.FC<NumbersSectionProps> = ({ form }) => {
       </div>
     </motion.div>
   );
-};
 
 export default NumbersSection;

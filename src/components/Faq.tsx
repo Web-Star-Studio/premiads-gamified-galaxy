@@ -15,20 +15,20 @@ const Faq = () => {
   const faqs = userType === "participante"
     ? [
         {
-          question: "Como converto meus pontos em sorteios?",
-          answer: "Para converter pontos em entradas de sorteio, vá até a seção 'Sorteios' no seu painel, escolha o sorteio desejado e clique em 'Usar Pontos'. Cada sorteio exige uma quantidade específica de pontos por entrada, e você pode participar múltiplas vezes para aumentar suas chances!"
+          question: "Como converto meus tickets em sorteios?",
+          answer: "Para converter tickets em entradas de sorteio, vá até a seção 'Sorteios' no seu painel, escolha o sorteio desejado e clique em 'Usar Pontos'. Cada sorteio exige uma quantidade específica de tickets por entrada, e você pode participar múltiplas vezes para aumentar suas chances!"
         },
         {
           question: "Como desbloquear badges exclusivos?",
           answer: "Os badges exclusivos são desbloqueados ao completar desafios específicos ou atingir metas. Verifique a seção 'Missões Especiais' para descobrir quais badges estão disponíveis e o que precisa fazer para conquistá-los."
         },
         {
-          question: "Existe validade para os pontos acumulados?",
-          answer: "Sim, os pontos acumulados têm validade de 6 meses a partir da data em que foram conquistados. Fique atento ao seu saldo e datas de expiração no painel 'Meus Pontos'."
+          question: "Existe validade para os tickets acumulados?",
+          answer: "Sim, os tickets acumulados têm validade de 6 meses a partir da data em que foram conquistados. Fique atento ao seu saldo e datas de expiração no painel 'Meus Pontos'."
         },
         {
-          question: "Posso transferir pontos para outros usuários?",
-          answer: "Atualmente não permitimos a transferência de pontos entre participantes, mas estamos desenvolvendo essa funcionalidade para implementação futura."
+          question: "Posso transferir tickets para outros usuários?",
+          answer: "Atualmente não permitimos a transferência de tickets entre participantes, mas estamos desenvolvendo essa funcionalidade para implementação futura."
         }
       ]
     : [
@@ -38,7 +38,7 @@ const Faq = () => {
         },
         {
           question: "Posso personalizar as recompensas?",
-          answer: "Sim! Você pode personalizar completamente as recompensas oferecidas, desde pontos e badges até produtos físicos e descontos. Nossa plataforma permite integração com seu e-commerce para resgates automáticos."
+          answer: "Sim! Você pode personalizar completamente as recompensas oferecidas, desde tickets e badges até produtos físicos e descontos. Nossa plataforma permite integração com seu e-commerce para resgates automáticos."
         },
         {
           question: "Quais formas de pagamento para créditos?",

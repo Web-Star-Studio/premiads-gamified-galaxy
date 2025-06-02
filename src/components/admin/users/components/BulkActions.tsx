@@ -10,8 +10,7 @@ interface BulkActionsProps {
   onAddUser: () => void;
 }
 
-const BulkActions = ({ selectedCount, onBulkDelete, onExportUsers, onAddUser }: BulkActionsProps) => {
-  return (
+const BulkActions = ({ selectedCount, onBulkDelete, onExportUsers, onAddUser }: BulkActionsProps) => (
     <div className="flex gap-2">
       {selectedCount > 0 && (
         <>
@@ -42,6 +41,5 @@ const BulkActions = ({ selectedCount, onBulkDelete, onExportUsers, onAddUser }: 
       </Button>
     </div>
   );
-};
 
 export default BulkActions;

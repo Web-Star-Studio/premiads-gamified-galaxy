@@ -16,7 +16,7 @@ const ACTIVE_MISSIONS = [
     currentStep: 7,
     reward: 200,
     deadline: "2025-04-20T23:59:59",
-    checkpoints: [
+    checktickets_reward: [
       { id: 1, name: "Responder parte 1", completed: true },
       { id: 2, name: "Responder parte 2", completed: true },
       { id: 3, name: "Responder desafio final", completed: false },
@@ -29,7 +29,7 @@ const ACTIVE_MISSIONS = [
     currentStep: 1,
     reward: 120,
     deadline: "2025-04-25T23:59:59",
-    checkpoints: [
+    checktickets_reward: [
       { id: 1, name: "Visitar loja 1", completed: true },
       { id: 2, name: "Visitar loja 2", completed: false },
       { id: 3, name: "Visitar loja 3", completed: false },
@@ -54,16 +54,16 @@ const ActiveMissions = () => {
     setMissions(prevMissions => 
       prevMissions.map(mission => {
         if (mission.id === missionId) {
-          const updatedCheckpoints = mission.checkpoints.map(cp => 
+          const updatedChecktickets_reward = mission.checktickets_reward.map(cp => 
             cp.id === checkpointId ? { ...cp, completed: true } : cp
           );
           
-          const completedCheckpoints = updatedCheckpoints.filter(cp => cp.completed).length;
+          const completedChecktickets_reward = updatedChecktickets_reward.filter(cp => cp.completed).length;
           
           return {
             ...mission,
-            checkpoints: updatedCheckpoints,
-            currentStep: completedCheckpoints
+            checktickets_reward: updatedChecktickets_reward,
+            currentStep: completedChecktickets_reward
           };
         }
         return mission;
@@ -138,7 +138,7 @@ const ActiveMissions = () => {
                   <div className="text-right">
                     <div className="text-sm">
                       <span className="font-medium text-neon-cyan">{mission.reward}</span>
-                      <span className="text-gray-400 text-xs ml-1">pontos</span>
+                      <span className="text-gray-400 text-xs ml-1">tickets</span>
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
                       {mission.currentStep}/{mission.totalSteps} completados
@@ -158,8 +158,8 @@ const ActiveMissions = () => {
                 </motion.div>
                 
                 <div className="mt-4 space-y-2">
-                  <h4 className="text-sm font-medium mb-2">Checkpoints:</h4>
-                  {mission.checkpoints.map((checkpoint) => (
+                  <h4 className="text-sm font-medium mb-2">Checktickets_reward:</h4>
+                  {mission.checktickets_reward.map((checkpoint) => (
                     <div key={checkpoint.id} className="flex items-center justify-between">
                       <div className="flex items-center">
                         {checkpoint.completed ? (

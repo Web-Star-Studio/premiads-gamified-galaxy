@@ -256,7 +256,7 @@ export const useAuthMethods = () => {
       }
       
       const { error } = await supabase.auth.updateUser({
-        password: password,
+        password,
       });
       
       if (error) throw error;

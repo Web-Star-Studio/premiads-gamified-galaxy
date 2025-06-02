@@ -5,8 +5,7 @@ import { ActivityLog } from "./ActivityLog";
 import { PerformanceMetrics } from "./PerformanceMetrics";
 import { ErrorTracker } from "./ErrorTracker";
 
-const SystemMonitoringDashboard = () => {
-  return (
+const SystemMonitoringDashboard = () => (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="col-span-2">
         <CardHeader>
@@ -36,6 +35,5 @@ const SystemMonitoringDashboard = () => {
       </Card>
     </div>
   );
-};
 
 export default SystemMonitoringDashboard;

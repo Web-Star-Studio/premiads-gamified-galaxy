@@ -9,8 +9,7 @@ interface ModeSelectorProps {
   disabled: boolean;
 }
 
-const ModeSelector = ({ purchaseMode, setPurchaseMode, disabled }: ModeSelectorProps) => {
-  return (
+const ModeSelector = ({ purchaseMode, setPurchaseMode, disabled }: ModeSelectorProps) => (
     <div className="flex items-center gap-2">
       <Button
         variant={purchaseMode === 'tickets' ? "secondary" : "outline"}
@@ -34,6 +33,5 @@ const ModeSelector = ({ purchaseMode, setPurchaseMode, disabled }: ModeSelectorP
       </Button>
     </div>
   );
-};
 
 export default ModeSelector;

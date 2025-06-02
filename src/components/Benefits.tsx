@@ -14,7 +14,7 @@ const Benefits = () => {
     ? [
         {
           title: "Pontos Aleatórios & Loot Boxes",
-          description: "Ganhe pontos surpresa e abra caixas de recompensas cheias de prêmios inesperados!",
+          description: "Ganhe tickets surpresa e abra caixas de recompensas cheias de prêmios inesperados!",
           icon: <Gift size={36} className="text-neon-pink" />,
         },
         {
@@ -24,7 +24,7 @@ const Benefits = () => {
         },
         {
           title: "Badges Raros & Loja de Itens",
-          description: "Colecione emblemas exclusivos e troque seus pontos por itens na loja virtual.",
+          description: "Colecione emblemas exclusivos e troque seus tickets por itens na loja virtual.",
           icon: <Star size={36} className="text-neon-cyan" />,
         },
       ]

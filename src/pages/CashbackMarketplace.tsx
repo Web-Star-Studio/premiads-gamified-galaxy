@@ -37,8 +37,7 @@ const CashbackMarketplace: React.FC = () => {
   ];
 
   // Filter campaigns based on search, tab, and filters
-  const getFilteredCampaigns = () => {
-    return campaigns.filter(campaign => {
+  const getFilteredCampaigns = () => campaigns.filter(campaign => {
       // Search filter
       const matchesSearch = 
         campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -62,7 +61,6 @@ const CashbackMarketplace: React.FC = () => {
       
       return matchesSearch && matchesTab && matchesDiscount && matchesCategory;
     });
-  };
 
   const filteredCampaigns = getFilteredCampaigns();
 

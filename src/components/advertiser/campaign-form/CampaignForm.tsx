@@ -76,9 +76,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   };
 
   // Função para formatar a data
-  const formatDate = (date: Date): string => {
-    return date.toISOString();
-  };
+  const formatDate = (date: Date): string => date.toISOString();
 
   // Função para converter os dados do formulário para o formato de missão
   const createMissionObject = async (): Promise<any> => {
@@ -133,20 +131,13 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
           ? (formData.targetFilter.region as string[]).join(",")
           : null,
       // Additional fields for rewards
-      has_badges: formData.hasBadges || false,
-      has_extra_prize: formData.hasLootBox || false,
-      extra_prize_name: formData.extraPrizeName || null,
-      extra_prize_description: formData.extraPrizeDescription || null,
-      extra_prize_image_url: formData.extraPrizeImageUrl || null,
+      has_badge: formData.hasBadges || false,
+      has_lootbox: formData.hasLootBox || false,
       streak_bonus: formData.streakBonus || false,
       streak_multiplier: formData.streakMultiplier || 1.0,
-      // For min purchase requirements (coupon campaigns)
       min_purchase: formData.minPurchase || 0,
-      // Store target filter as JSON for more complex filtering
       target_filter: formData.targetFilter || null,
-      // Include dynamic survey form schema if defined
       form_schema: formData.formSchema || null,
-      // Campos de cashback
       max_participants: formData.maxParticipants || 100,
       max_cashback_redemptions: formData.maxCashbackRedemptions || 5,
       cashback_amount_per_raffle: 5.00 // Valor fixo de R$ 5,00 por rifa
@@ -238,7 +229,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       return false;
     }
     
-    // Verificar se há pontos suficientes definidos
+    // Verificar se há tickets suficientes definidos
     const hasPoints = formData.randomPoints ? (formData.pointsValue !== undefined) : (formData.pointsRange[0] > 0);
     
     return hasPoints;

@@ -10,8 +10,7 @@ interface SearchBarProps {
   setSearchTerm: (term: string) => void;
 }
 
-const SearchBar = ({ searchTerm, setSearchTerm }: SearchBarProps) => {
-  return (
+const SearchBar = ({ searchTerm, setSearchTerm }: SearchBarProps) => (
     <div className="mb-4">
       <div className="relative">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -34,6 +33,5 @@ const SearchBar = ({ searchTerm, setSearchTerm }: SearchBarProps) => {
       </div>
     </div>
   );
-};
 
 export default SearchBar;

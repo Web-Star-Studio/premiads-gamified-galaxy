@@ -2,8 +2,7 @@
 import React from 'react';
 import { HelpCircle } from "lucide-react";
 
-const RulesContent: React.FC = () => {
-  return (
+const RulesContent: React.FC = () => (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Motor de Regras</h3>
@@ -58,7 +57,7 @@ const RulesContent: React.FC = () => {
   "name": "Participação em Sorteio Premium",
   "conditions": [
     { "field": "user.status", "operator": "equals", "value": "active" },
-    { "field": "user.points", "operator": "greaterThan", "value": 1000 },
+    { "field": "user.tickets_reward", "operator": "greaterThan", "value": 1000 },
     { "field": "user.age", "operator": "greaterThanOrEqual", "value": 18 }
   ],
   "conditionLogic": "AND",
@@ -82,6 +81,5 @@ const RulesContent: React.FC = () => {
       </div>
     </div>
   );
-};
 
 export default RulesContent;

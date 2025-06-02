@@ -26,6 +26,10 @@ export interface FormData {
   randomPoints: boolean;
   pointsRange: number[];
   pointsValue?: number; // For random points calculation
+  /** Novo campo – tickets distribuídos por missão */
+  ticketsReward: number;
+  /** Novo campo – cashback por missão (R$) */
+  cashbackReward: number;
   /** Número máximo de participantes da campanha */
   maxParticipants?: number;
   /** Número máximo de resgates de cashback */
@@ -65,6 +69,8 @@ export const initialFormData: FormData = {
   randomPoints: false,
   pointsRange: [10, 50],
   pointsValue: 10, // initial manual points value
+  ticketsReward: 0,
+  cashbackReward: 0,
   maxParticipants: 100, // Valor inicial para máximo de participantes
   maxCashbackRedemptions: 5,
   cashbackAmountPerRaffle: 5.00, // Valor fixo de R$ 5,00 por rifa

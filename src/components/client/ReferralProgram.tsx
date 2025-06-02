@@ -34,7 +34,7 @@ const ReferralProgram = () => {
       </div>
       
       <p className="text-sm text-gray-400 mb-4">
-        Convide seus amigos para o PremiAds e ganhe 200 pontos por cada amigo que se cadastrar e completar sua primeira missão.
+        Convide seus amigos para o PremiAds e ganhe 200 tickets por cada amigo que se cadastrar e completar sua primeira missão.
       </p>
       
       <div className="bg-galaxy-deepPurple/50 rounded-lg p-4 mb-4 border border-galaxy-purple/30">

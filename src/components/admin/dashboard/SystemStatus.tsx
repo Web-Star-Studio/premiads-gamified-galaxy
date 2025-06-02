@@ -18,10 +18,10 @@ const itemVariants = {
 };
 
 const iconMap: Record<string, any> = {
-  "Server": Server,
-  "Database": Database,
-  "HardDrive": HardDrive,
-  "ArrowDown": ArrowDown
+  Server,
+  Database,
+  HardDrive,
+  ArrowDown
 };
 
 const SystemStatus = () => {

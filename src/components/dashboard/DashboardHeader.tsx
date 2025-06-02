@@ -10,8 +10,7 @@ interface DashboardHeaderProps {
   streak?: number;
 }
 
-const DashboardHeader = ({ userName, streak = 0 }: DashboardHeaderProps) => {
-  return (
+const DashboardHeader = ({ userName, streak = 0 }: DashboardHeaderProps) => (
     <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
         <Link to="/">
@@ -47,6 +46,5 @@ const DashboardHeader = ({ userName, streak = 0 }: DashboardHeaderProps) => {
       </div>
     </header>
   );
-};
 
 export default DashboardHeader;

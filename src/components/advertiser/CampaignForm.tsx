@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useCampaignForm } from '@/hooks/use-campaign-form';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -47,32 +46,25 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     "Datas"
   ];
   
-  // Helper to create a field update handler that matches the step component's expected function signature
-  const createFieldUpdateHandler = (stepUpdateFn: (updates: Partial<FormData>) => void) => {
-    return (field: string, value: any) => {
-      stepUpdateFn({ [field]: value });
-    };
-  };
-  
   // Render the appropriate step content
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return <BasicInfoStep 
                 formData={formData} 
-                updateFormData={createFieldUpdateHandler(updateFormData)} />;
+                updateFormData={updateFormData} />;
       case 2:
         return <RequirementsStep 
                 formData={formData} 
-                updateFormData={createFieldUpdateHandler(updateFormData)} />;
+                updateFormData={updateFormData} />;
       case 3:
         return <RewardsStep 
                 formData={formData} 
-                updateFormData={createFieldUpdateHandler(updateFormData)} />;
+                updateFormData={updateFormData} />;
       case 4:
         return <DatesStep 
                 formData={formData} 
-                updateFormData={createFieldUpdateHandler(updateFormData)} />;
+                updateFormData={updateFormData} />;
       default:
         return null;
     }

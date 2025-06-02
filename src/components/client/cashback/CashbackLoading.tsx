@@ -6,8 +6,7 @@ interface CashbackLoadingProps {
   userName: string | null;
 }
 
-const CashbackLoading: React.FC<CashbackLoadingProps> = ({ userName }) => {
-  return (
+const CashbackLoading: React.FC<CashbackLoadingProps> = ({ userName }) => (
     <div className="container mx-auto px-4 py-8">
       <ClientDashboardHeader 
         title="Marketplace de Cashback" 
@@ -24,6 +23,5 @@ const CashbackLoading: React.FC<CashbackLoadingProps> = ({ userName }) => {
       </div>
     </div>
   );
-};
 
 export default CashbackLoading;

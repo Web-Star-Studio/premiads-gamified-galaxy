@@ -19,11 +19,9 @@ const AppRoutes = () => {
   console.log("AppRoutes rendered, current path:", location.pathname, "isAuthenticated:", isAuthenticated, "loading:", isLoading);
   
   // Helper function to handle redirections for root and auth paths
-  const shouldRedirect = () => {
-    return isAuthenticated && 
+  const shouldRedirect = () => isAuthenticated && 
            currentUser && 
            (location.pathname === "/" || location.pathname === "/auth");
-  };
   
   // Get appropriate dashboard path based on user type
   const getDashboardPath = () => {

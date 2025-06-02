@@ -2,8 +2,7 @@
 import React from 'react';
 import { SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
-const FilterHeader: React.FC = () => {
-  return (
+const FilterHeader: React.FC = () => (
     <>
       <SheetTitle>Filtros</SheetTitle>
       <SheetDescription>
@@ -11,6 +10,5 @@ const FilterHeader: React.FC = () => {
       </SheetDescription>
     </>
   );
-};
 
 export default FilterHeader;

@@ -110,11 +110,11 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   const getFilteredMissions = useCallback(() => {
     const statusFilter = filterToStatus[currentFilter];
     
-    return missions.filter((mission) => {
+    return missions.filter((mission) => 
       // If the filter is "available", we want missions with status "available"
       // For other filters, match the corresponding status
-      return mission.status === statusFilter;
-    });
+       mission.status === statusFilter
+    );
   }, [missions, currentFilter]);
 
   // Submit a mission with specific status

@@ -3,8 +3,7 @@ import React from 'react';
 import { motion } from "framer-motion";
 import ClientHeader from "@/components/client/ClientHeader";
 
-const ClientNotifications = () => {
-  return (
+const ClientNotifications = () => (
     <div className="min-h-screen bg-galaxy-dark">
       <ClientHeader />
       <main className="container mx-auto px-4 py-8">
@@ -21,6 +20,5 @@ const ClientNotifications = () => {
       </main>
     </div>
   );
-};
 
 export default ClientNotifications;

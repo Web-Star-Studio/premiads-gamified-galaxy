@@ -17,8 +17,7 @@ interface AdditionalInfoSectionProps {
   form: UseFormReturn<ProfileFormValues>;
 }
 
-export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
-  return (
+export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Frequência de Uso de Serviços */}
       <FormField
@@ -222,4 +221,3 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
       />
     </div>
   );
-};

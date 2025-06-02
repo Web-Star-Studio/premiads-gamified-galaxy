@@ -12,8 +12,7 @@ interface FilteredMissionsListProps {
   type: "in_progress" | "pending" | "completed";
 }
 
-const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: FilteredMissionsListProps) => {
-  return (
+const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: FilteredMissionsListProps) => (
     <div className="grid grid-cols-1 gap-4">
       {missions.length === 0 ? (
         <div className="glass-panel p-8 text-center">
@@ -37,7 +36,7 @@ const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: 
                   "bg-blue-600"
                 }
               >
-                {mission.points} pts
+                {mission.tickets_reward} pts
               </Badge>
             </div>
             <p className="mt-2 mb-2">{mission.description}</p>
@@ -70,6 +69,5 @@ const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: 
       )}
     </div>
   );
-};
 
 export default FilteredMissionsList;

@@ -11,8 +11,7 @@ interface UserMenuProps {
   onLogout: () => void;
 }
 
-const UserMenu = ({ credits, onProfileClick, onLogout }: UserMenuProps) => {
-  return (
+const UserMenu = ({ credits, onProfileClick, onLogout }: UserMenuProps) => (
     <div className="flex items-center gap-4">
       <div className="text-right hidden md:block">
         <TooltipProvider>
@@ -55,6 +54,5 @@ const UserMenu = ({ credits, onProfileClick, onLogout }: UserMenuProps) => {
       </DropdownMenu>
     </div>
   );
-};
 
 export default UserMenu;

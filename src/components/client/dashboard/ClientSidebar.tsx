@@ -24,10 +24,10 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
   const location = useLocation();
   const { signOut } = useAuth();
   
-  const isActive = (path: string) => {
+  const isActive = (path: string) => 
     // Account for both exact matches and nested routes
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
+     location.pathname === path || location.pathname.startsWith(`${path}/`)
+  ;
 
   const handleLogout = async () => {
     await signOut();

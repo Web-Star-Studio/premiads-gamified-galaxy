@@ -23,11 +23,9 @@ export const createMockSupabaseClient = () => ({
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
-    onAuthStateChange: vi.fn().mockImplementation((callback) => {
-      return {
+    onAuthStateChange: vi.fn().mockImplementation((callback) => ({
         data: { subscription: { unsubscribe: vi.fn() } }
-      };
-    })
+      }))
   },
   from: vi.fn().mockReturnValue({
     select: vi.fn().mockReturnThis(),

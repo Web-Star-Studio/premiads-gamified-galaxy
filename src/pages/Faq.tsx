@@ -70,15 +70,13 @@ const Faq = () => {
     );
   };
   
-  const filterItems = () => {
-    return faqItems.filter(item => {
+  const filterItems = () => faqItems.filter(item => {
       const matchesSearch = item.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            item.answer.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = activeCategory === "todos" || item.category === activeCategory;
       
       return matchesSearch && matchesCategory;
     });
-  };
   
   const categories = [
     { id: "todos", label: "Todos" },
