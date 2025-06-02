@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -71,14 +72,8 @@ const useCampaignOperations = () => {
         cashback_amount_per_raffle: 5.00 // Valor fixo
       };
       
-      // Garantir remoção de campos obsoletos
-      delete (missionData as any).credits;
-      delete (missionData as any).cost_in_tokens;
-      delete (missionData as any).points;
       console.log('DEBUG missionData sendo enviado:', missionData);
       console.log('DEBUG keys:', Object.keys(missionData));
-      
-      // TODO: opcional -- debitar rifas do anunciante se houver lógica de custo
       
       // Insert the new mission without returning columns to avoid schema cache errors
       const { error: insertError } = await (supabase.from('missions') as any)
@@ -137,12 +132,11 @@ const useCampaignOperations = () => {
         target_audience_region: formData.targetFilter?.region?.join(',') || 'all',
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
-        // Using correct column names from the updated database schema
         has_badge: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
         sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
-        badge_image_url: formData.badgeImageUrl, // Store badge image URL
+        badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [
           'credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],

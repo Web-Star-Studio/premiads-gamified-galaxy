@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ export const MissionForm = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("");
-  const [points, setPoints] = useState(100);
+  const [ticketsReward, setTicketsReward] = useState(0);
+  const [cashbackReward, setCashbackReward] = useState(0);
   const [deadline, setDeadline] = useState<string | null>(null);
   
   // Requirements state
@@ -95,7 +97,8 @@ export const MissionForm = () => {
         title,
         description,
         requirements: requirements.filter((req) => req.trim() !== ""),
-        points,
+        ticketsReward,
+        cashbackReward,
         deadline,
         type,
         businessType,
@@ -149,8 +152,10 @@ export const MissionForm = () => {
             onDescriptionChange={setDescription}
             type={type}
             onTypeChange={setType}
-            points={points}
-            onPointsChange={setPoints}
+            ticketsReward={ticketsReward}
+            onTicketsRewardChange={setTicketsReward}
+            cashbackReward={cashbackReward}
+            onCashbackRewardChange={setCashbackReward}
             deadline={deadline}
             onDeadlineChange={setDeadline}
           />

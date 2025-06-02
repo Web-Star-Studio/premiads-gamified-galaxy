@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +13,9 @@ import { useFormNavigation } from "@/hooks/use-form-navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { FormData, initialFormData } from "./types";
-import { supabase } from "@/integrations/supabase/client";
-import { missionService, Mission, UserTokens } from "@/services/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import useCampaignOperations from "@/hooks/advertiser/useCampaignOperations";
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -28,6 +28,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createCampaign, updateCampaign, isSubmitting } = useCampaignOperations();
   
   const steps = [
     "Informações Básicas",
@@ -68,136 +69,37 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }));
   };
   
-  /** Calculate final points based on manual or random selection */
-  const calculateCampaignPoints = (): number => {
-    if (formData.randomPoints && formData.pointsValue !== undefined) return formData.pointsValue
-    // Manual points selection
-    return formData.pointsValue || 0
-  };
-
-  // Função para formatar a data
-  const formatDate = (date: Date): string => date.toISOString();
-
-  // Função para converter os dados do formulário para o formato de missão
-  const createMissionObject = async (): Promise<any> => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData?.session?.user?.id;
-
-    if (!userId) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    const pointsValue = calculateCampaignPoints();
-    
-    // Handle requirements properly - ensure it's an array for storage
-    const requirementsArray = Array.isArray(formData.requirements)
-      ? formData.requirements
-      : typeof formData.requirements === 'string'
-        ? [formData.requirements]
-        : ["Sem requisitos específicos"];
-      
-    // Build the mission payload including all fields needed for the DB schema
-    const missionPayload = {
-      advertiser_id: userId,
-      title: formData.title,
-      description: formData.description || "Sem descrição",
-      requirements: requirementsArray,
-      points: pointsValue,
-      cost_in_tokens: pointsValue,
-      type: formData.type || "social",
-      business_type: formData.type || null,
-      status: "ativa",
-      start_date:
-        formData.startDate instanceof Date
-          ? formatDate(formData.startDate)
-          : formData.startDate,
-      end_date:
-        formData.endDate instanceof Date
-          ? formatDate(formData.endDate)
-          : formData.endDate,
-      is_active: true,
-      target_audience: formData.audience || "todos",
-      target_audience_gender: formData.targetFilter?.gender || null,
-      target_audience_age_min:
-        formData.targetFilter?.age && formData.targetFilter.age.length > 0
-          ? parseInt((formData.targetFilter.age as string[])[0].split("-")[0], 10)
-          : null,
-      target_audience_age_max:
-        formData.targetFilter?.age && formData.targetFilter.age.length > 0
-          ? parseInt((formData.targetFilter.age as string[])[0].split("-")[1], 10)
-          : null,
-      target_audience_region:
-        formData.targetFilter?.region && formData.targetFilter.region.length > 0
-          ? (formData.targetFilter.region as string[]).join(",")
-          : null,
-      // Additional fields for rewards
-      has_badge: formData.hasBadges || false,
-      has_lootbox: formData.hasLootBox || false,
-      streak_bonus: formData.streakBonus || false,
-      streak_multiplier: formData.streakMultiplier || 1.0,
-      min_purchase: formData.minPurchase || 0,
-      target_filter: formData.targetFilter || null,
-      form_schema: formData.formSchema || null,
-      max_participants: formData.maxParticipants || 100,
-      max_cashback_redemptions: formData.maxCashbackRedemptions || 5,
-      cashback_amount_per_raffle: 5.00 // Valor fixo de R$ 5,00 por rifa
-    }
-    return missionPayload
-  };
-  
-  // Função para consumir os créditos do usuário
-  const consumeUserCredits = async (userId: string, creditsToConsume: number): Promise<void> => {
-    // Obter tokens do usuário
-    const userTokens = await missionService.getUserTokens(userId) as UserTokens;
-    
-    // Verificar se tem créditos suficientes
-    if (userTokens.total_tokens - userTokens.used_tokens < creditsToConsume) {
-      throw new Error("Créditos insuficientes para criar esta campanha");
-    }
-    
-    // Atualizar tokens usados
-    await missionService.addTokens(userId, -creditsToConsume);
-  };
-  
   const handleSave = async () => {
     try {
       setLoading(true);
       
-      // Verificar sessão do usuário
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
+      let success;
       
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
+      if (isEditing && editCampaign) {
+        success = await updateCampaign(editCampaign.id, formData);
+      } else {
+        success = await createCampaign(formData);
       }
       
-      // Criar objeto da missão
-      const mission = await createMissionObject();
-      
-      // Consumir créditos
-      await consumeUserCredits(userId, mission.cost_in_tokens);
-      
-      // Criar missão no banco de dados
-      const createdMission = await missionService.createMission(mission);
-      
-      // Exibir toast de sucesso
-      toast({
-        title: "Campanha criada com sucesso!",
-        description: `Créditos utilizados: ${mission.cost_in_tokens}`,
-      });
-      
-      // Redirecionar para o dashboard
-      setTimeout(() => {
-        navigate("/anunciante/campanhas");
-      }, 1500);
+      if (success) {
+        toast({
+          title: isEditing ? 'Campanha atualizada' : 'Campanha criada com sucesso!',
+          description: isEditing 
+            ? 'Sua campanha foi atualizada com sucesso'
+            : 'Sua campanha foi criada e está pronta para ser publicada',
+        });
+        
+        setTimeout(() => {
+          navigate("/anunciante/campanhas");
+        }, 1500);
+      }
       
     } catch (error: any) {
-      console.error("Erro ao criar campanha:", error);
+      console.error("Erro ao salvar campanha:", error);
       
-      // Exibir toast de erro
       toast({
-        title: "Erro ao criar campanha",
-        description: error.message || "Ocorreu um erro ao criar a campanha",
+        title: "Erro ao salvar campanha",
+        description: error.message || "Ocorreu um erro ao salvar a campanha",
         variant: "destructive",
       });
       
@@ -229,10 +131,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       return false;
     }
     
-    // Verificar se há tickets suficientes definidos
-    const hasPoints = formData.randomPoints ? (formData.pointsValue !== undefined) : (formData.pointsRange[0] > 0);
+    // Verificar se há tickets ou cashback definidos
+    const hasRewards = formData.ticketsReward > 0 || formData.cashbackReward > 0;
     
-    return hasPoints;
+    return hasRewards;
   };
   
   return (
@@ -272,17 +174,17 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
               <Button
                 variant="outline"
                 onClick={prevStep}
-                disabled={loading}
+                disabled={loading || isSubmitting}
               >
                 Voltar
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={loading || !isFormComplete()}
+                disabled={loading || isSubmitting || !isFormComplete()}
                 className="gap-2"
               >
-                {loading ? 'Processando...' : 'Concluir'}
-                {!loading && <Save className="h-4 w-4" />}
+                {loading || isSubmitting ? 'Processando...' : 'Concluir'}
+                {!loading && !isSubmitting && <Save className="h-4 w-4" />}
               </Button>
             </div>
           ) : (

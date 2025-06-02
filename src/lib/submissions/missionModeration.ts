@@ -1,96 +1,80 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 
-export type ValidationStage = "advertiser_first" | "admin" | "advertiser_second";
-
-interface SubmissionDecisionParams {
-  submissionId: string;
-  approverId: string;
-  decision: "approve" | "reject";
-  stage: ValidationStage;
-  feedback?: string;
-}
-
-interface FinalizationResult {
+export interface FinalizationResult {
   status: string;
   badge_earned: boolean;
-  badge_id: string;
-  badge_image_url: string;
-  loot_box_reward: string;
-  loot_box_amount: number;
-  loot_box_display_name: string;
-  loot_box_description: string;
-  streak_bonus: number;
-  current_streak: number;
+  badge_id?: string;
+  badge_image_url?: string;
+  loot_box_reward?: string;
+  loot_box_amount?: number;
+  loot_box_display_name?: string;
+  loot_box_description?: string;
+  streak_bonus?: number;
+  current_streak?: number;
 }
 
-export const finalizeMissionSubmission = async ({
+export async function finalizeMissionSubmission({
   submissionId,
   approverId,
   decision,
   stage,
   feedback
-}: SubmissionDecisionParams) => {
+}: {
+  submissionId: string;
+  approverId: string;
+  decision: 'approve' | 'reject';
+  stage: 'advertiser_first' | 'admin' | 'advertiser_second';
+  feedback?: string;
+}): Promise<{ success: boolean; error?: string; result?: FinalizationResult }> {
+  if (!submissionId || !approverId) {
+    return { success: false, error: 'Parâmetros obrigatórios não fornecidos' };
+  }
+
   try {
-    if (!submissionId) {
-      throw new Error("ID da submissão é obrigatório");
-    }
-    
-    if (!approverId) {
-      throw new Error("ID do aprovador é obrigatório");
-    }
-    
-    console.log(`Finalizing submission: ${submissionId} with decision: ${decision} at stage: ${stage}`);
-    
-    // First, update the feedback if provided
-    if (feedback) {
-      const { error: feedbackError } = await supabase
-        .from("mission_submissions")
-        .update({ feedback })
-        .eq("id", submissionId);
-        
-      if (feedbackError) {
-        console.error("Error updating feedback:", feedbackError);
-      }
-    }
-    
-    // Call the finalize_submission function to process the submission
-    const { data, error } = await supabase.rpc("finalize_submission", {
+    console.log('Finalizing submission:', {
+      submissionId,
+      approverId,
+      decision,
+      stage,
+      feedback
+    });
+
+    // Call the finalize_submission function
+    const { data, error } = await supabase.rpc('finalize_submission', {
       p_submission_id: submissionId,
       p_approver_id: approverId,
       p_decision: decision,
       p_stage: stage
     });
-    
+
     if (error) {
-      throw error;
+      console.error('Error in finalize_submission RPC:', error);
+      return { success: false, error: error.message };
     }
-    
-    // Process the result
-    console.log("Finalize submission result:", data);
-    
-    const typedData = data as FinalizationResult;
-    
+
+    console.log('finalize_submission RPC result:', data);
+
+    // Parse the result and ensure it matches our FinalizationResult interface
+    const result = data as FinalizationResult;
+
     return { 
       success: true, 
-      status: typedData.status,
-      rewardDetails: {
-        badgeEarned: typedData.badge_earned,
-        badgeId: typedData.badge_id,
-        badgeImageUrl: typedData.badge_image_url,
-        lootBoxReward: typedData.loot_box_reward,
-        lootBoxAmount: typedData.loot_box_amount,
-        lootBoxDisplayName: typedData.loot_box_display_name,
-        lootBoxDescription: typedData.loot_box_description,
-        streakBonus: typedData.streak_bonus,
-        currentStreak: typedData.current_streak
+      result: {
+        status: result.status || 'unknown',
+        badge_earned: Boolean(result.badge_earned),
+        badge_id: result.badge_id,
+        badge_image_url: result.badge_image_url,
+        loot_box_reward: result.loot_box_reward,
+        loot_box_amount: result.loot_box_amount,
+        loot_box_display_name: result.loot_box_display_name,
+        loot_box_description: result.loot_box_description,
+        streak_bonus: result.streak_bonus,
+        current_streak: result.current_streak
       }
     };
   } catch (error: any) {
-    console.error("Error finalizing submission:", error);
-    return { 
-      success: false, 
-      error: error.message || "Erro ao finalizar submissão" 
-    };
+    console.error('Error finalizing submission:', error);
+    return { success: false, error: error.message || 'Erro interno do servidor' };
   }
-};
+}
