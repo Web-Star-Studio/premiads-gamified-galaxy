@@ -98,11 +98,20 @@ const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
   ];
 
   const interests = [
-    { value: "tecnologia", label: "Tecnologia" },
-    { value: "moda", label: "Moda" },
     { value: "esportes", label: "Esportes" },
-    { value: "gastronomia", label: "Gastronomia" },
-    { value: "viagem", label: "Viagem" }
+    { value: "comida", label: "Comida" },
+    { value: "lazer", label: "Lazer" },
+    { value: "moda", label: "Moda" },
+    { value: "beleza", label: "Beleza" },
+    { value: "educacao", label: "Educação" },
+    { value: "jogos", label: "Jogos" },
+    { value: "restaurantes", label: "Restaurantes" },
+    { value: "eventos", label: "Eventos" },
+    { value: "turismo", label: "Turismo" },
+    { value: "tecnologia", label: "Tecnologia" },
+    { value: "saude", label: "Saúde" },
+    { value: "financas", label: "Finanças" },
+    { value: "arte-cultura", label: "Arte e Cultura" }
   ];
 
   // Handle audience filter changes
@@ -284,7 +293,7 @@ const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
             <AccordionItem value="interests" className="border-galaxy-purple/20">
               <AccordionTrigger className="text-sm py-2">Interesses</AccordionTrigger>
               <AccordionContent>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {interests.map((interest) => (
                     <div key={interest.value} className="flex items-center space-x-2">
                       <Checkbox 
