@@ -1,253 +1,214 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Trophy, Users, Eye, MoreVertical, Trash2, Edit } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+import { useSounds } from "@/hooks/use-sounds";
+import { LotteryList } from "@/components/admin/lottery/LotteryList";
+import LotteryDetails from "@/components/admin/lottery/LotteryDetails";
+import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
+import EmptyState from "@/components/admin/lottery/EmptyState";
+import { Lottery } from "@/types/lottery";
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from "@/components/ui/card";
-import { useSounds } from '@/hooks/use-sounds';
-import { toastSuccess } from '@/utils/toast';
-import LoadingParticles from './LoadingParticles';
-import LotteryList from './lottery/LotteryList';
-import { Lottery } from './lottery/types';
-import LotteryDetails from './lottery/LotteryDetails';
-
-// Mock lottery data with proper type-safe status values
-const initialLotteries: Lottery[] = [
-  { 
-    id: "1", 
-    title: 'iPhone 15 Pro Max 256GB', 
-    name: 'iPhone 15 Pro Max 256GB', // Add alias
-    description: 'Sorteio do mais recente iPhone com armazenamento ampliado.', 
-    detailed_description: 'O iPhone 15 Pro Max com memória de 256GB, cor Titanium Black, com 1 ano de garantia Apple, desbloqueado para todas as operadoras.', 
-    detailedDescription: 'O iPhone 15 Pro Max com memória de 256GB, cor Titanium Black, com 1 ano de garantia Apple, desbloqueado para todas as operadoras.', // Add alias
-    type: 'electronics', 
-    prize_type: 'electronics',
-    prizeType: 'electronics', // Add alias 
-    prize_value: 9999, 
-    prizeValue: 9999, // Add alias
-    imageUrl: 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-7inch-naturaltitanium?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009284517', 
-    start_date: '2025-04-15', 
-    startDate: '2025-04-15', // Add alias
-    end_date: '2025-04-22', 
-    endDate: '2025-04-22', // Add alias
-    draw_date: '2025-04-23',
-    drawDate: '2025-04-23', // Add alias
-    status: 'active',
-    numbers_total: 1000,
-    numbersTotal: 1000, // Add alias
-    points: 100,
-    pointsPerNumber: 100, // Add alias
-    progress: 75,
-    numbersSold: 750,
-    numbers: [],
-    created_at: '',
-    updated_at: '',
-    winner: null,
-    prizes: []
-  },
-  { 
-    id: "2", 
-    title: 'PS5 Slim Digital Edition',
-    name: 'PS5 Slim Digital Edition', // Add alias
-    description: 'PlayStation 5 versão digital com jogo de lançamento.', 
-    detailed_description: 'Console PlayStation 5 Slim Digital Edition, acompanha um controle DualSense e um jogo digital à escolha do ganhador no valor de até R$ 350.', 
-    detailedDescription: 'Console PlayStation 5 Slim Digital Edition, acompanha um controle DualSense e um jogo digital à escolha do ganhador no valor de até R$ 350.', // Add alias
-    type: 'electronics', 
-    prize_type: 'electronics',
-    prizeType: 'electronics', // Add alias
-    prize_value: 3799, 
-    prizeValue: 3799, // Add alias
-    imageUrl: 'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=627&q=80', 
-    start_date: '2025-04-17', 
-    startDate: '2025-04-17', // Add alias
-    end_date: '2025-04-24',
-    endDate: '2025-04-24', // Add alias 
-    draw_date: '2025-04-25',
-    drawDate: '2025-04-25', // Add alias
-    status: 'pending',
-    numbers_total: 500,
-    numbersTotal: 500, // Add alias
-    points: 50,
-    pointsPerNumber: 50, // Add alias
-    progress: 0,
-    numbersSold: 0,
-    numbers: [],
-    created_at: '',
-    updated_at: '',
-    winner: null,
-    prizes: []
-  },
-  { 
-    id: "3", 
-    title: 'Pacote Viagem Cancún',
-    name: 'Pacote Viagem Cancún', // Add alias
-    description: 'Semana completa em Cancún para duas pessoas, tudo incluso.', 
-    detailed_description: 'Passagem aérea de ida e volta para duas pessoas, 7 noites em hotel 5 estrelas em regime all-inclusive, traslados e seguro viagem inclusos. Válido para utilização em até 12 meses após o sorteio.', 
-    detailedDescription: 'Passagem aérea de ida e volta para duas pessoas, 7 noites em hotel 5 estrelas em regime all-inclusive, traslados e seguro viagem inclusos. Válido para utilização em até 12 meses após o sorteio.', // Add alias
-    type: 'travel', 
-    prize_type: 'travel',
-    prizeType: 'travel', // Add alias
-    prize_value: 15000, 
-    prizeValue: 15000, // Add alias
-    imageUrl: 'https://images.unsplash.com/photo-1552074284-5e88ef1aef18?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 
-    start_date: '2025-04-01', 
-    startDate: '2025-04-01', // Add alias
-    end_date: '2025-04-10', 
-    endDate: '2025-04-10', // Add alias
-    draw_date: '2025-04-12',
-    drawDate: '2025-04-12', // Add alias
-    status: 'completed',
-    numbers_total: 2000,
-    numbersTotal: 2000, // Add alias
-    points: 200,
-    pointsPerNumber: 200, // Add alias
-    progress: 100,
-    numbersSold: 2000,
-    numbers: [],
-    created_at: '',
-    updated_at: '',
-    winner: {
-      id: "2",
-      name: "Maria Oliveira",
-      avatar: "https://i.pravatar.cc/150?img=5"
-    },
-    prizes: []
-  },
-  { 
-    id: "4", 
-    title: 'MacBook Air M3',
-    name: 'MacBook Air M3', // Add alias
-    description: 'O laptop mais fino e leve da Apple com o novo chip M3.', 
-    detailed_description: 'MacBook Air com chip M3, tela de 13.6", 16GB de RAM e 512GB de SSD. Acompanha carregador de 35W com duas portas USB-C e 1 ano de garantia Apple.', 
-    detailedDescription: 'MacBook Air com chip M3, tela de 13.6", 16GB de RAM e 512GB de SSD. Acompanha carregador de 35W com duas portas USB-C e 1 ano de garantia Apple.', // Add alias
-    type: 'electronics', 
-    prize_type: 'electronics',
-    prizeType: 'electronics', // Add alias
-    prize_value: 12999, 
-    prizeValue: 12999, // Add alias
-    imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFjYm9vayUyMGFpcnxlbnwwfHwwfHx8MA%3D%3D', 
-    start_date: '2025-04-28', 
-    startDate: '2025-04-28', // Add alias
-    end_date: '2025-05-28', 
-    endDate: '2025-05-28', // Add alias
-    draw_date: '2025-05-30',
-    drawDate: '2025-05-30', // Add alias
-    status: 'pending',
-    numbers_total: 1500,
-    numbersTotal: 1500, // Add alias
-    points: 150,
-    pointsPerNumber: 150, // Add alias
-    progress: 0,
-    numbersSold: 0,
-    numbers: [],
-    created_at: '',
-    updated_at: '',
-    winner: null,
-    prizes: []
-  },
-];
-
-const LotteryManagement: React.FC = () => {
-  const [lotteries, setLotteries] = useState<Lottery[]>(initialLotteries);
+const LotteryManagement = () => {
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [lotteries, setLotteries] = useState<Lottery[]>([
+    {
+      id: "1",
+      title: "Sorteio Semanal de Pontos",
+      name: "Sorteio Semanal de Pontos",
+      description: "Sorteio semanal com prêmios incríveis para os participantes mais ativos",
+      detailed_description: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
+      detailedDescription: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
+      type: "regular",
+      points: 100,
+      numbers_total: 1000,
+      numbersTotal: 1000,
+      status: "active" as const,
+      start_date: "2025-01-15T00:00:00Z",
+      startDate: "2025-01-15T00:00:00Z",
+      end_date: "2025-01-22T23:59:59Z",
+      endDate: "2025-01-22T23:59:59Z",
+      draw_date: "2025-01-23T20:00:00Z",
+      drawDate: "2025-01-23T20:00:00Z",
+      prize_type: "electronics",
+      prizeType: "electronics",
+      prize_value: 2500,
+      prizeValue: 2500,
+      pointsPerNumber: 10,
+      minPoints: 100,
+      imageUrl: "",
+      winner: null,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+      numbers: [],
+      progress: 45,
+      numbersSold: 450,
+      prizes: [
+        { id: 1, name: "Smartphone Premium", rarity: "legendary", probability: 5 },
+        { id: 2, name: "Fone Bluetooth", rarity: "rare", probability: 20 },
+        { id: 3, name: "Pontos Bonus", rarity: "common", probability: 75 }
+      ]
+    },
+    {
+      id: "2",
+      title: "Loot Box Especial",
+      name: "Loot Box Especial",
+      description: "Participe e concorra a prêmios exclusivos em nossa Loot Box especial",
+      detailed_description: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
+      detailedDescription: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
+      type: "lootbox",
+      points: 50,
+      numbers_total: 500,
+      numbersTotal: 500,
+      status: "pending" as const,
+      start_date: "2025-02-01T00:00:00Z",
+      startDate: "2025-02-01T00:00:00Z",
+      end_date: "2025-02-15T23:59:59Z",
+      endDate: "2025-02-15T23:59:59Z",
+      draw_date: "2025-02-16T20:00:00Z",
+      drawDate: "2025-02-16T20:00:00Z",
+      prize_type: "items",
+      prizeType: "items",
+      prize_value: 100,
+      prizeValue: 100,
+      pointsPerNumber: 5,
+      minPoints: 50,
+      imageUrl: "",
+      winner: null,
+      created_at: "2025-01-20T00:00:00Z",
+      updated_at: "2025-01-20T00:00:00Z",
+      numbers: [],
+      progress: 20,
+      numbersSold: 100,
+      prizes: [
+        { id: 4, name: "Espada Ancestral", rarity: "epic", probability: 10 },
+        { id: 5, name: "Poção de Mana", rarity: "uncommon", probability: 30 },
+        { id: 6, name: "Créditos", rarity: "common", probability: 60 }
+      ]
+    },
+    {
+      id: "3",
+      title: "Promoção de Aniversário",
+      name: "Promoção de Aniversário",
+      description: "Comemore conosco e concorra a prêmios incríveis em nosso sorteio de aniversário",
+      detailed_description: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
+      detailedDescription: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
+      type: "special",
+      points: 200,
+      numbers_total: 2000,
+      numbersTotal: 2000,
+      status: "completed" as const,
+      start_date: "2025-03-01T00:00:00Z",
+      startDate: "2025-03-01T00:00:00Z",
+      end_date: "2025-03-15T23:59:59Z",
+      endDate: "2025-03-15T23:59:59Z",
+      draw_date: "2025-03-16T20:00:00Z",
+      drawDate: "2025-03-16T20:00:00Z",
+      prize_type: "travel",
+      prizeType: "travel",
+      prize_value: 5000,
+      prizeValue: 5000,
+      pointsPerNumber: 20,
+      minPoints: 200,
+      imageUrl: "",
+      winner: {
+        id: "user123",
+        name: "Maria Silva",
+        avatar: "https://example.com/avatar.jpg"
+      },
+      created_at: "2025-02-15T00:00:00Z",
+      updated_at: "2025-02-15T00:00:00Z",
+      numbers: [],
+      progress: 100,
+      numbersSold: 2000,
+      prizes: [
+        { id: 7, name: "Viagem para o Caribe", rarity: "legendary", probability: 5 },
+        { id: 8, name: "Estadia em Hotel de Luxo", rarity: "rare", probability: 15 },
+        { id: 9, name: "Jantar em Restaurante", rarity: "common", probability: 80 }
+      ]
+    }
+  ]);
+  const [showNewDialog, setShowNewDialog] = useState(false);
   const { playSound } = useSounds();
 
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSelectLottery = (lottery: Lottery) => {
-    setSelectedLottery(lottery);
-    
-    // Toque um som ao selecionar
-    try {
-      playSound('pop');
-    } catch (error) {
-      console.log("Som não reproduzido", error);
-    }
-  };
-
-  const handleStatusChange = (id: string, newStatus: 'active' | 'pending' | 'completed' | 'canceled') => {
-    setLoading(true);
-    
-    setTimeout(() => {
-      setLotteries(lotteries.map(lottery => 
-        lottery.id === id ? { ...lottery, status: newStatus } : lottery
-      ));
-      
-      const lottery = lotteries.find(l => l.id === id);
-      if (lottery) {
-        toastSuccess(
-          `Status Alterado`,
-          `O sorteio "${lottery.title}" foi ${
-            newStatus === 'active' ? 'ativado' : 
-            newStatus === 'pending' ? 'pausado' : 
-            newStatus === 'completed' ? 'finalizado' : 'cancelado'
-          }.`
-        );
-        
-        try {
-          playSound('pop');
-        } catch (error) {
-          console.log("Som não reproduzido", error);
-        }
-      }
-      
-      setLoading(false);
-    }, 800);
-  };
-
   const handleLotteryCreated = (newLottery: Lottery) => {
-    // Adicionar o novo sorteio à lista
-    setLotteries([newLottery, ...lotteries]);
-    
-    // Selecionar o novo sorteio
-    setSelectedLottery(newLottery);
-    
-    // Tocar som de sucesso
-    try {
-      playSound('reward');
-    } catch (error) {
-      console.log("Som não reproduzido", error);
-    }
+    setLotteries([...lotteries, newLottery]);
+    toast({
+      title: "Sorteio criado!",
+      description: "O sorteio foi criado com sucesso.",
+    });
+  };
+
+  const handleStatusChange = (lotteryId: string, newStatus: Lottery['status']) => {
+    setLotteries(lotteries.map(lottery => {
+      if (lottery.id === lotteryId) {
+        return { ...lottery, status: newStatus };
+      }
+      return lottery;
+    }));
+    setSelectedLottery(lotteries.find(lottery => lottery.id === lotteryId) || null);
+    toast({
+      title: "Status atualizado!",
+      description: "O status do sorteio foi atualizado com sucesso.",
+    });
+  };
+
+  const handleEditLottery = (lottery: Lottery) => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A edição de sorteios será disponibilizada em breve.",
+      variant: "info"
+    });
+  };
+
+  const handleDeleteLottery = (lotteryId: string) => {
+    setLotteries(lotteries.filter(lottery => lottery.id !== lotteryId));
+    setSelectedLottery(null);
+    toast({
+      title: "Sorteio excluído!",
+      description: "O sorteio foi excluído com sucesso.",
+    });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="grid grid-cols-1 gap-6">
-        {loading ? (
-          <motion.div 
-            className="flex justify-center items-center h-60 relative"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <LoadingParticles />
-            <div className="w-12 h-12 border-4 border-t-neon-pink border-galaxy-purple rounded-full animate-spin"></div>
-            <div className="mt-20 text-muted-foreground">Carregando sorteios...</div>
-          </motion.div>
-        ) : (
-          <Card className="bg-galaxy-deepPurple border-galaxy-purple/30">
-            <CardContent className="p-6">
-              <LotteryList 
-                lotteries={lotteries} 
-                selectedLotteryId={selectedLottery?.id || null}
-                onSelectLottery={handleSelectLottery}
-                onLotteryCreated={handleLotteryCreated}
-              />
-            </CardContent>
-          </Card>
-        )}
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Administração de Sorteios</h1>
+        <p className="text-gray-400">Gerencie todos os sorteios da plataforma</p>
       </div>
-    </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <LotteryList
+            lotteries={lotteries}
+            onViewDetails={setSelectedLottery}
+            onEdit={handleEditLottery}
+            onDelete={handleDeleteLottery}
+          />
+        </div>
+        
+        <div className="lg:col-span-2">
+          {selectedLottery ? (
+            <LotteryDetails
+              selectedLottery={selectedLottery}
+              onStatusChange={handleStatusChange}
+            />
+          ) : (
+            <EmptyState onNewLotteryClick={() => setShowNewDialog(true)} />
+          )}
+        </div>
+      </div>
+
+      <NewLotteryDialog
+        open={showNewDialog}
+        onOpenChange={setShowNewDialog}
+        onLotteryCreated={handleLotteryCreated}
+      />
+    </div>
   );
 };
 

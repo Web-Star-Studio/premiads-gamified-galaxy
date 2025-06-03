@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import LotteryDetails from '@/components/admin/lottery/LotteryDetails';
 import { toastInfo } from '@/utils/toast';
-import { Lottery } from '@/components/admin/lottery/types';
+import { Lottery } from '@/types/lottery';
 
 // Mock the toast utility
 jest.mock('@/utils/toast', () => ({

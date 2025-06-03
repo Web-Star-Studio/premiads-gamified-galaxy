@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import LotteryManagement from '@/components/admin/LotteryManagement';
 import { BrowserRouter } from 'react-router-dom';
 import { useSounds } from '@/hooks/use-sounds';

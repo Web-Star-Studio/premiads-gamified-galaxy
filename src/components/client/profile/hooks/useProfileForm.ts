@@ -117,28 +117,28 @@ export function useProfileForm() {
       
       if (error) throw error;
       
-      // Award points if user hasn't completed the profile before
+      // Award rifas if user hasn't completed the profile before
       if (!hasCompletedBefore) {
-        // First, fetch current points
+        // First, fetch current rifas
         const { data: currentProfile, error: fetchError } = await supabase
           .from('profiles')
-          .select('points')
+          .select('rifas')
           .eq('id', userId)
           .single();
         
         if (fetchError) throw fetchError;
         
         // Then update with incremented value
-        const newPoints = (currentProfile?.points || 0) + POINTS_PER_PROFILE_COMPLETION;
+        const newRifas = (currentProfile?.rifas || 0) + POINTS_PER_PROFILE_COMPLETION;
         
-        const { error: pointsError } = await supabase
+        const { error: rifasError } = await supabase
           .from('profiles')
           .update({
-            points: newPoints
+            rifas: newRifas
           })
           .eq('id', userId);
         
-        if (pointsError) throw pointsError;
+        if (rifasError) throw rifasError;
         
         setPointsAwarded(true);
         playSound("chime");

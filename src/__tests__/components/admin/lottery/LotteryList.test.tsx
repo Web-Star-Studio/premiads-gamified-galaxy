@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@/utils/test-utils';
 import LotteryList from '@/components/admin/lottery/LotteryList';
-import { Lottery } from '@/components/admin/lottery/types';
+import { Lottery } from '@/types/lottery';
 
 describe('LotteryList Component', () => {
   const mockLotteries: Lottery[] = [
@@ -74,8 +74,9 @@ describe('LotteryList Component', () => {
     }
   ];
   
-  const mockOnSelectLottery = jest.fn();
-  const mockOnLotteryCreated = jest.fn();
+  const mockOnViewDetails = jest.fn();
+  const mockOnEdit = jest.fn();
+  const mockOnDelete = jest.fn();
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -85,85 +86,49 @@ describe('LotteryList Component', () => {
     render(
       <LotteryList
         lotteries={mockLotteries}
-        selectedLotteryId={null}
-        onSelectLottery={mockOnSelectLottery}
-        onLotteryCreated={mockOnLotteryCreated}
+        onViewDetails={mockOnViewDetails}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
       />
     );
-    
-    // Check if the component heading is displayed
-    expect(screen.getByText('Gerenciamento de Sorteios')).toBeInTheDocument();
-    expect(screen.getByText('Novo Sorteio')).toBeInTheDocument();
     
     // Check if lottery items are displayed
     expect(screen.getByText('Sorteio de Teste 1')).toBeInTheDocument();
     expect(screen.getByText('Sorteio de Teste 2')).toBeInTheDocument();
     
     // Check if status badges are displayed
-    expect(screen.getByText('Ativo')).toBeInTheDocument();
-    expect(screen.getByText('Rascunho')).toBeInTheDocument();
+    expect(screen.getByText('Ativa')).toBeInTheDocument();
+    expect(screen.getByText('Pendente')).toBeInTheDocument();
   });
   
-  test('selects a lottery when clicked', () => {
+  test('calls onViewDetails when view details is clicked', () => {
     render(
       <LotteryList
         lotteries={mockLotteries}
-        selectedLotteryId={null}
-        onSelectLottery={mockOnSelectLottery}
-        onLotteryCreated={mockOnLotteryCreated}
+        onViewDetails={mockOnViewDetails}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
       />
     );
     
-    // Click on a lottery
-    fireEvent.click(screen.getByText('Sorteio de Teste 1'));
+    // Click on view details button
+    fireEvent.click(screen.getAllByText('Ver Detalhes')[0]);
     
-    // Check if onSelectLottery was called with the correct lottery
-    expect(mockOnSelectLottery).toHaveBeenCalledWith(mockLotteries[0]);
-  });
-  
-  test('opens new lottery dialog when "Novo" button is clicked', () => {
-    render(
-      <LotteryList
-        lotteries={mockLotteries}
-        selectedLotteryId={null}
-        onSelectLottery={mockOnSelectLottery}
-        onLotteryCreated={mockOnLotteryCreated}
-      />
-    );
-    
-    // Click on new lottery button
-    fireEvent.click(screen.getByText('Novo Sorteio'));
-    
-    // We'll check if the dialog opens in NewLotteryDialog tests
-    // Here we just verify handleNewLotteryClick is called
+    // Check if onViewDetails was called with the correct lottery
+    expect(mockOnViewDetails).toHaveBeenCalledWith(mockLotteries[0]);
   });
   
   test('displays empty state when no lotteries exist', () => {
     render(
       <LotteryList
         lotteries={[]}
-        selectedLotteryId={null}
-        onSelectLottery={mockOnSelectLottery}
-        onLotteryCreated={mockOnLotteryCreated}
+        onViewDetails={mockOnViewDetails}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
       />
     );
     
     // Check if empty state message is displayed
-    expect(screen.getByText('Nenhum sorteio encontrado')).toBeInTheDocument();
-  });
-  
-  test('highlights selected lottery', () => {
-    render(
-      <LotteryList
-        lotteries={mockLotteries}
-        selectedLotteryId="1"
-        onSelectLottery={mockOnSelectLottery}
-        onLotteryCreated={mockOnLotteryCreated}
-      />
-    );
-    
-    // The styling would be tested in a different way typically
-    // For now, just ensure all elements are rendered correctly
-    expect(screen.getByText('Sorteio de Teste 1')).toBeInTheDocument();
+    expect(screen.queryByText('Sorteio de Teste 1')).not.toBeInTheDocument();
   });
 });

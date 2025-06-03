@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -11,30 +10,27 @@ export const fetchUserData = async () => {
     
     if (!session?.user?.id) {
       console.log("No authenticated user found, using default values");
-      return { points: 0, tickets: 0 };
+      return { rifas: 0, tickets: 0 };
     }
     
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('points')
+      .select('rifas')
       .eq('id', session.user.id)
       .single();
       
     console.log("User data fetched", { 
-      points: profileData?.points || 0, 
+      rifas: profileData?.rifas || 0, 
       tickets: 8 // Mock data
     });
     
-    // In a real app, we would also fetch tickets information
-    // For now, we're using mock data
-    
     return {
-      points: profileData?.points || 0,
+      rifas: profileData?.rifas || 0,
       tickets: 8 // Mock data
     };
   } catch (error) {
     console.error("Error fetching user data:", error);
-    return { points: 0, tickets: 0 };
+    return { rifas: 0, tickets: 0 };
   }
 };
 

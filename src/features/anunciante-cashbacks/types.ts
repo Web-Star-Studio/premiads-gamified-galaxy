@@ -1,3 +1,4 @@
+
 export interface CashbackCampaign {
   id: string
   advertiser_id: string
@@ -12,4 +13,4 @@ export interface CashbackCampaign {
   created_at: string
 }
 
-export type CreateCashbackInput = Omit<CashbackCampaign, 'id' | 'created_at'> 
+export type CreateCashbackInput = Omit<CashbackCampaign, 'id' | 'created_at'>
