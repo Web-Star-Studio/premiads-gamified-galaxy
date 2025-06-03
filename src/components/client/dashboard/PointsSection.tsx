@@ -15,7 +15,7 @@ interface PointsSectionProps {
 
 const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
   const { data: stats, isLoading } = useClientStats();
-  const effectivePoints = totalPoints || stats?.tickets_reward || 0;
+  const effectivePoints = totalPoints || stats?.rifas || 0;
   const { levelInfo, loading: levelLoading } = useUserLevel(effectivePoints);
   
   return (
@@ -30,9 +30,8 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
           <TooltipTrigger asChild>
             <div className="relative">
               <TicketsCard 
-                points={effectivePoints} 
+                tickets={effectivePoints} 
                 isLoading={isLoading}
-                tickets={stats?.tickets || 0} 
               />
               <div className="absolute top-3 right-3">
                 <Info className="h-4 w-4 text-neon-cyan cursor-help" />

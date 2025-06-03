@@ -1,5 +1,5 @@
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@/utils/test-utils';
 import { FormNavigation } from '@/components/advertiser/campaign-form/FormNavigation';
 
 describe('FormNavigation', () => {

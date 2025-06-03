@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,7 @@ const getStatusText = (status: string) => {
   }
 };
 
-export const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryListProps) => {
+const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryListProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [lotteryToDelete, setLotteryToDelete] = useState<string | null>(null);
 
@@ -166,3 +167,6 @@ export const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: Lott
     </div>
   );
 };
+
+export { LotteryList };
+export default LotteryList;

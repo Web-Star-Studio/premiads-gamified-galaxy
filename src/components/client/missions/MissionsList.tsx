@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Clock, Award, Badge as BadgeIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useSounds } from "@/hooks/use-sounds";
-import { Mission } from "@/hooks/useMissions";
+import { Mission } from "@/hooks/useMissionsTypes";
 
 interface MissionsListProps {
   missions: Mission[];

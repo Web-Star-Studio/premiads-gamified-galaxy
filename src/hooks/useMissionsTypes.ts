@@ -1,10 +1,12 @@
+
 // Define mission types for consistency across the app
 export interface Mission {
   id: string;
   title: string;
   description: string;
   type: MissionType;
-  points: number;
+  tickets_reward: number;
+  cashback_reward: number;
   cost_in_tokens: number;
   requirements: string[] | string;
   status: string;
@@ -23,6 +25,10 @@ export interface Mission {
   target_filter?: any;
   created_at?: string;
   updated_at?: string;
+  deadline?: string;
+  has_badge?: boolean;
+  has_lootbox?: boolean;
+  brand?: string;
 }
 
 export type MissionType = 'form' | 'photo' | 'video' | 'checkin' | 'social' | 'coupon' | 'survey' | 'review';
@@ -113,18 +119,16 @@ export const missionTypeDescriptions: Record<MissionType, string> = {
 };
 
 /**
- * Determines mission difficulty based on points or other criteria.
- * Placeholder logic: Adjust as needed.
+ * Determines mission difficulty based on tickets_reward or other criteria.
  */
-export function getMissionDifficulty(mission: Pick<Mission, 'points' | 'type' | 'requirements'>): string {
-  if (mission.points > 150) return 'Difícil';
-  if (mission.points > 75) return 'Médio';
+export function getMissionDifficulty(mission: Pick<Mission, 'tickets_reward' | 'type' | 'requirements'>): string {
+  if (mission.tickets_reward > 150) return 'Difícil';
+  if (mission.tickets_reward > 75) return 'Médio';
   return 'Fácil';
 }
 
 /**
  * Estimates completion time for a mission.
- * Placeholder logic: Adjust based on mission type and requirements.
  */
 export function getEstimatedTime(mission: Pick<Mission, 'type' | 'requirements'>): string {
   switch (mission.type) {

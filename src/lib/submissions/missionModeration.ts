@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+export type ValidationStage = 'advertiser_first' | 'admin' | 'advertiser_second';
+
 export interface FinalizationResult {
   status: string;
   badge_earned: boolean;
@@ -24,7 +26,7 @@ export async function finalizeMissionSubmission({
   submissionId: string;
   approverId: string;
   decision: 'approve' | 'reject';
-  stage: 'advertiser_first' | 'admin' | 'advertiser_second';
+  stage: ValidationStage;
   feedback?: string;
 }): Promise<{ success: boolean; error?: string; result?: FinalizationResult }> {
   if (!submissionId || !approverId) {

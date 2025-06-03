@@ -1,6 +1,6 @@
 
 import { act } from "react-dom/test-utils";
-import { waitFor } from "@testing-library/react";
+import { waitFor } from "@/utils/test-utils";
 
 export const navigateAndWait = async (path: string) => {
   await act(async () => {

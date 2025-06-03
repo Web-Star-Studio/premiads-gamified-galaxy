@@ -3,7 +3,7 @@ import React from "react";
 import { CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mission } from "@/hooks/useMissions";
+import { Mission } from "@/hooks/useMissionsTypes";
 
 interface FilteredMissionsListProps {
   missions: Mission[];

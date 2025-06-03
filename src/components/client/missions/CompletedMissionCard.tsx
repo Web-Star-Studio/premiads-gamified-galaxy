@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Award, Calendar, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mission } from "@/hooks/missions/types";
+import { Mission } from "@/hooks/useMissionsTypes";
 import confetti from "canvas-confetti";
 
 interface CompletedMissionCardProps {
@@ -90,4 +91,4 @@ const CompletedMissionCard = ({ mission, reward, onShareClick }: CompletedMissio
   );
 };
 
-export default CompletedMissionCard; 
+export default CompletedMissionCard;
