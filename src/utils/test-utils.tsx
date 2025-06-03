@@ -1,6 +1,6 @@
 
 import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { render, RenderOptions, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UserProvider } from '@/context/UserContext';
@@ -38,8 +38,8 @@ const customRender = (
   );
 };
 
-// Re-export everything
+// Re-export everything from testing library
 export * from '@testing-library/react';
 
-// Override render method
-export { customRender as render };
+// Override render method and export additional utilities
+export { customRender as render, screen, fireEvent, waitFor };

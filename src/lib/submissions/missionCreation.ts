@@ -6,7 +6,8 @@ export interface CreateMissionParams {
   title: string;
   description: string;
   requirements: string[];
-  points: number;
+  ticketsReward: number;
+  cashbackReward: number;
   deadline?: string | null;
   type: string;
   businessType?: string;
@@ -31,12 +32,13 @@ export const createMission = async (params: CreateMissionParams) => {
       throw new Error("Usuário não autenticado");
     }
     
-    // Prepare mission data
+    // Prepare mission data with tickets and cashback rewards
     const missionData = {
       title: params.title,
       description: params.description,
       requirements: params.requirements,
-      points: params.points,
+      tickets_reward: params.ticketsReward,
+      cashback_reward: params.cashbackReward,
       end_date: params.deadline,
       type: params.type,
       business_type: params.businessType || null,
@@ -50,6 +52,7 @@ export const createMission = async (params: CreateMissionParams) => {
       badge_image_url: params.badgeImageUrl || null,
       advertiser_id: advertiserId,
       is_active: true,
+      status: 'ativa',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       selected_lootbox_rewards: params.hasLootbox ? params.selectedLootBoxRewards : null

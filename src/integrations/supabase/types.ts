@@ -200,27 +200,36 @@ export type Database = {
       }
       mission_rewards: {
         Row: {
+          cashback_earned: number | null
           id: string
           mission_id: string
+          points_earned: number | null
           rewarded_at: string | null
           rifas_earned: number
           submission_id: string
+          tickets_earned: number | null
           user_id: string
         }
         Insert: {
+          cashback_earned?: number | null
           id?: string
           mission_id: string
+          points_earned?: number | null
           rewarded_at?: string | null
           rifas_earned?: number
           submission_id: string
+          tickets_earned?: number | null
           user_id: string
         }
         Update: {
+          cashback_earned?: number | null
           id?: string
           mission_id?: string
+          points_earned?: number | null
           rewarded_at?: string | null
           rifas_earned?: number
           submission_id?: string
+          tickets_earned?: number | null
           user_id?: string
         }
         Relationships: [
