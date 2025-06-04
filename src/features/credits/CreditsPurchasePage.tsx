@@ -15,7 +15,6 @@ import {
   PaymentModal 
 } from "./index";
 import useCreditPurchase from "./useCreditPurchase.hook";
-import { usePurchaseRifas } from "@/hooks/usePurchaseRifas.hook";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -29,9 +28,11 @@ const CreditsPurchasePage = () => {
     setSelectedPackage,
     paymentMethod,
     setPaymentMethod,
+    handlePayment,
+    isLoading: isPurchasing,
+    paymentError,
     resetState,
   } = useCreditPurchase();
-  const { purchaseRifas, isLoading: isPurchasing, error: purchaseError } = usePurchaseRifas();
   const { user: authUser } = useAuthSession();
 
   const [customCredits, setCustomCredits] = useState<number>(500);
@@ -66,7 +67,7 @@ const CreditsPurchasePage = () => {
   }, [useCustomAmount, customCredits, packages]);
 
   const handleClose = () => {
-    navigate("/perfil");
+    navigate("/anunciante");
     resetState();
   };
 
@@ -83,6 +84,13 @@ const CreditsPurchasePage = () => {
       setCustomCredits(500);
     } else if (packages.length > 0) {
       setSelectedPackage(packages[0]);
+    }
+  };
+
+  const handlePurchaseClick = () => {
+    if (selectedPackage && authUser) {
+      // Use the method from useCreditPurchase hook
+      handlePayment('stripe', 'credit_card');
     }
   };
 
@@ -122,8 +130,8 @@ const CreditsPurchasePage = () => {
                       <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
                         <div className="space-y-1 text-xs">
                           <p className="font-medium text-sm">Conversão de valores</p>
-                          <p>1 Rifa = R$5,00</p>
-                          <p>Cada rifa vale R$0,10</p>
+                          <p>100 rifas = R$5,00</p>
+                          <p>Cada rifa vale R$0,05</p>
                           <p className="text-gray-400 mt-1">Rifas são usadas para impulsionar campanhas, alcançar mais usuários e desbloquear recursos premium.</p>
                         </div>
                       </TooltipContent>
@@ -220,13 +228,7 @@ const CreditsPurchasePage = () => {
                 
                 <Button
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
-                  onClick={() => purchaseRifas({
-                    userId: authUser?.id!,
-                    packageId: selectedPackage?.id!,
-                    customAmount: useCustomAmount ? customCredits : undefined,
-                    paymentProvider: 'stripe',
-                    paymentMethod: paymentMethod === 'stripe' ? 'credit_card' : 'pix'
-                  })}
+                  onClick={handlePurchaseClick}
                   disabled={!selectedPackage || isPurchasing}
                 >
                   {isPurchasing ? (

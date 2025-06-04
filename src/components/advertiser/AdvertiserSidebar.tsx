@@ -88,7 +88,7 @@ export const AdvertiserSidebar = () => {
       icon: Users,
     },
     {
-      title: "Créditos",
+      title: "Rifas",
       url: "/anunciante/creditos",
       icon: Wallet,
     },
@@ -193,7 +193,7 @@ export const AdvertiserSidebar = () => {
           <SidebarGroupContent>
             <div className={cn("space-y-2 px-2", isCollapsed ? "hidden" : "")}>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Créditos</span>
+                <span className="text-sm text-muted-foreground">Rifas</span>
                 <span className="text-sm text-neon-cyan flex items-center">
                   <Wallet className="w-4 h-4 mr-1" />
                   <CreditsDisplay showLabel={false} />

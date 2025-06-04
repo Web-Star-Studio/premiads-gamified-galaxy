@@ -1,4 +1,3 @@
-
 import { User, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -18,15 +17,15 @@ const UserMenu = ({ credits, onProfileClick, onLogout }: UserMenuProps) => (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center">
-                <p className="text-sm text-muted-foreground">Créditos disponíveis</p>
+                <p className="text-sm text-muted-foreground">Rifas disponíveis</p>
                 <Info className="h-3 w-3 text-muted-foreground ml-1 cursor-help" />
               </div>
             </TooltipTrigger>
             <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
               <div className="space-y-1">
                 <p className="text-sm font-medium">Valor estimado: {getMoneyValue(credits)}</p>
-                <p className="text-xs text-gray-400">10 créditos = R$1,00</p>
-                <p className="text-xs text-gray-400">Créditos usados para campanhas e promoções</p>
+                <p className="text-xs text-gray-400">100 rifas = R$5,00</p>
+                <p className="text-xs text-gray-400">Rifas usadas para campanhas e promoções</p>
               </div>
             </TooltipContent>
           </Tooltip>

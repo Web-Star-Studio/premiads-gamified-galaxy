@@ -11,7 +11,7 @@ const AlertsPanel = () => {
       id: 1,
       type: "credit",
       title: "Saldo baixo",
-      message: "Seus créditos estão abaixo do limite recomendado (500).",
+      message: "Suas rifas estão abaixo do limite recomendado (500).",
       timestamp: "Agora",
       icon: <DollarSign className="w-4 h-4 text-yellow-400" />,
       color: "border-yellow-500/30 bg-yellow-500/10",

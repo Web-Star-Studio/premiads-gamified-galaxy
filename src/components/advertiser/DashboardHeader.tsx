@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Bell, Wallet, Star, Info } from "lucide-react";
@@ -39,7 +38,7 @@ const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHead
                 >
                   <Wallet className="h-4 w-4 text-neon-cyan" />
                   <span className="text-sm font-medium">
-                    {credits !== undefined ? `${credits} Créditos` : 'Créditos Disponíveis'}
+                    {credits !== undefined ? `${credits} Rifas` : 'Rifas Disponíveis'}
                   </span>
                   <Info className="h-3 w-3 text-gray-400" />
                 </motion.div>
@@ -47,8 +46,8 @@ const DashboardHeader = ({ userName, credits, isPremium = false }: DashboardHead
               <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Valor estimado: {credits !== undefined ? getMoneyValue(credits) : 'R$0,00'}</p>
-                  <p className="text-xs text-gray-400">10 créditos = R$1,00</p>
-                  <p className="text-xs text-gray-400">Cada crédito vale R$0,10</p>
+                  <p className="text-xs text-gray-400">100 rifas = R$5,00</p>
+                  <p className="text-xs text-gray-400">Cada rifa vale R$0,05</p>
                 </div>
               </TooltipContent>
             </Tooltip>

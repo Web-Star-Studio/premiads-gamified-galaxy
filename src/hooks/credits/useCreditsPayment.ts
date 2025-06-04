@@ -10,7 +10,7 @@ interface PaymentOptions {
 }
 
 /**
- * Hook personalizado para gerenciar o processo de pagamento de créditos
+ * Hook personalizado para gerenciar o processo de pagamento de rifas
  */
 export function useCreditsPayment(options: PaymentOptions = {}) {
   const { refreshCredits } = useUserCredits();
@@ -28,7 +28,7 @@ export function useCreditsPayment(options: PaymentOptions = {}) {
     // Exibe toast de sucesso
     toast({
       title: 'Pagamento confirmado!',
-      description: 'Seus créditos foram adicionados à sua conta.',
+      description: 'Suas rifas foram adicionadas à sua conta.',
       variant: 'default',
     });
     

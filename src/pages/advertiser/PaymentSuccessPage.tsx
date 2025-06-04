@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserCredits } from '@/hooks/useUserCredits';
 
 interface PurchaseDetails {
-  credits: number;
+  rifas: number;
   bonus: number;
   total: number;
 }
@@ -42,9 +42,8 @@ function PaymentSuccessPage() {
     try {
       console.log("Fetching purchase details for session:", sessionId);
       
-      // @ts-ignore: credit_purchases não existe no tipo Database
-      const { data: purchases, error: purchaseError } = await (supabase as any)
-        .from('credit_purchases')
+      const { data: purchases, error: purchaseError } = await supabase
+        .from('rifa_purchases')
         .select('*')
         .eq('payment_id', sessionId)
         .single();
@@ -62,15 +61,15 @@ function PaymentSuccessPage() {
       }
       
       return {
-        credits: purchases.base,
+        rifas: purchases.base,
         bonus: purchases.bonus,
-        total: purchases.total_credits
+        total: purchases.total_rifas
       };
     } catch (error) {
       console.error("Error in fetchPurchaseDetails:", error);
       // Fallback to mock data if we can't get the real data
       return {
-        credits: 5000,
+        rifas: 5000,
         bonus: 1000,
         total: 6000
       };
@@ -80,9 +79,9 @@ function PaymentSuccessPage() {
   // Function to ensure purchase is confirmed even if webhook failed
   const ensurePurchaseConfirmed = async (purchaseId: string) => {
     try {
-      console.log("Invoking update-credit-purchase-status for purchase:", purchaseId)
+      console.log("Invoking update-rifa-purchase-status for purchase:", purchaseId)
       
-      const { data, error } = await supabase.functions.invoke('update-credit-purchase-status', {
+      const { data, error } = await supabase.functions.invoke('update-rifa-purchase-status', {
         body: JSON.stringify({ purchase_id: purchaseId, new_status: 'confirmed' })
       })
       
@@ -175,7 +174,7 @@ function PaymentSuccessPage() {
           
           // Fallback to mock data
           const mockPurchaseDetails: PurchaseDetails = {
-            credits: 5000,
+            rifas: 5000,
             bonus: 1000,
             total: 6000
           };
@@ -282,7 +281,7 @@ function PaymentSuccessPage() {
                           transition={{ delay: 0.5 }}
                           className="text-xl md:text-2xl text-gray-200 mb-8"
                         >
-                          <p className="mb-2">Você adquiriu <span className="font-bold text-pink-500">{purchaseDetails.credits}</span> rifas</p>
+                          <p className="mb-2">Você adquiriu <span className="font-bold text-pink-500">{purchaseDetails.rifas}</span> rifas</p>
                           <p className="mb-4">+ <span className="font-bold text-violet-400">{purchaseDetails.bonus}</span> de bônus</p>
                           <p className="text-3xl font-bold">Total: <span className="text-green-400">{purchaseDetails.total}</span> rifas</p>
                         </motion.div>
@@ -304,7 +303,7 @@ function PaymentSuccessPage() {
                           <div className="grid grid-cols-3 gap-4 mb-6">
                             <div className="bg-galaxy-purple/30 p-4 rounded-lg">
                               <p className="text-sm text-gray-400">Rifas Base</p>
-                              <p className="text-2xl font-bold text-white">{purchaseDetails.credits}</p>
+                              <p className="text-2xl font-bold text-white">{purchaseDetails.rifas}</p>
                             </div>
                             <div className="bg-galaxy-purple/30 p-4 rounded-lg">
                               <p className="text-sm text-gray-400">Bônus</p>

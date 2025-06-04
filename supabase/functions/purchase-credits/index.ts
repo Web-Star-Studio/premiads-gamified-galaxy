@@ -109,9 +109,9 @@ serve(async (req) => {
     let packageData
     
     if (packageId) {
-      // Fetch existing credit package
+      // Fetch existing rifa package
       const { data: pkg, error: pkgError } = await supabase
-        .from('credit_packages')
+        .from('rifa_packages')
         .select('*')
         .eq('id', packageId)
         .eq('active', true)
@@ -129,18 +129,18 @@ serve(async (req) => {
       
       packageData = {
         id: pkg.id,
-        rifas_amount: pkg.base,
-        bonus: pkg.bonus,
+        rifas_amount: pkg.rifas_amount,
+        bonus: pkg.rifas_bonus,
         price: pkg.price,
         validity_months: pkg.validity_months,
       }
     } else if (customAmount) {
       // Calculate custom package
       const { data: packages, error: pkgsError } = await supabase
-        .from('credit_packages')
+        .from('rifa_packages')
         .select('*')
         .eq('active', true)
-        .order('base', { ascending: true })
+        .order('rifas_amount', { ascending: true })
       
       if (pkgsError || !packages || packages.length === 0) {
         return new Response(
@@ -155,15 +155,15 @@ serve(async (req) => {
       // Find the appropriate bonus tier
       let bonus = 0
       for (const pkg of packages) {
-        if (customAmount >= pkg.base) {
+        if (customAmount >= pkg.rifas_amount) {
           // Calculate bonus percentage
-          const bonusPercentage = pkg.bonus / pkg.base
+          const bonusPercentage = pkg.rifas_bonus / pkg.rifas_amount
           bonus = Math.floor(customAmount * bonusPercentage)
         }
       }
       
-      // Calculate price based on amount (10 credits = R$1.00)
-      const price = customPrice || (customAmount / 10)
+      // Calculate price based on amount (100 rifas = R$5.00)
+      const price = customPrice || (customAmount * 0.05)
       
       packageData = {
         id: null,
@@ -184,13 +184,13 @@ serve(async (req) => {
     
     // Create purchase record (pending)
     const { data: purchase, error: purchaseError } = await supabase
-      .from('credit_purchases')
+      .from('rifa_purchases')
       .insert({
         user_id: userId,
-        package_id: packageData.id,
+        rifa_package_id: packageData.id,
         base: packageData.rifas_amount,
         bonus: packageData.bonus,
-        total_credits: packageData.rifas_amount + packageData.bonus,
+        total_rifas: packageData.rifas_amount + packageData.bonus,
         price: packageData.price,
         status: 'pending',
         payment_method: paymentMethod,
@@ -281,8 +281,8 @@ serve(async (req) => {
                 price_data: {
                   currency: 'brl',
                   product_data: {
-                    name: `${packageData.rifas_amount} créditos + ${packageData.bonus} bônus`,
-                    description: 'Créditos para sua conta PremiAds',
+                    name: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus`,
+                    description: 'Rifas para sua conta PremiAds',
                   },
                   unit_amount: Math.round(packageData.price * 100), // Stripe uses cents
                 },
@@ -333,7 +333,7 @@ serve(async (req) => {
         
         // Update purchase status to failed
         await supabase
-          .from('credit_purchases')
+          .from('rifa_purchases')
           .update({ status: 'failed' })
           .eq('id', purchase.id)
           
@@ -360,7 +360,7 @@ serve(async (req) => {
     
     // Update purchase with payment ID
     await supabase
-      .from('credit_purchases')
+      .from('rifa_purchases')
       .update({ payment_id: paymentData.payment_id })
       .eq('id', purchase.id)
     

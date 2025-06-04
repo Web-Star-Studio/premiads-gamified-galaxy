@@ -4,57 +4,24 @@ type SoundType = "success" | "error" | "notification" | "click" | "reward" | "po
 
 export const useSounds = () => {
   const playSound = useCallback((type: SoundType) => {
-    // Usar o caminho base do Vite
-    const baseUrl = import.meta.env.BASE_URL || "/";
-    let soundUrl: string;
-    
-    switch (type) {
-      case "success":
-        soundUrl = `${baseUrl}sounds/success.mp3`;
-        break;
-      case "error":
-        soundUrl = `${baseUrl}sounds/error.mp3`;
-        break;
-      case "notification":
-        soundUrl = `${baseUrl}sounds/notification.mp3`;
-        break;
-      case "click":
-        soundUrl = `${baseUrl}sounds/click.mp3`;
-        break;
-      case "reward":
-        soundUrl = `${baseUrl}sounds/reward.mp3`;
-        break;
-      case "pop":
-        soundUrl = `${baseUrl}sounds/pop.mp3`;
-        break;
-      case "chime":
-        soundUrl = `${baseUrl}sounds/chime.mp3`;
-        break;
-      default:
-        soundUrl = `${baseUrl}sounds/click.mp3`;
+    // Disable sounds in development automatically due to corrupted placeholder files
+    if (import.meta.env.DEV) {
+      return;
     }
+
+    const soundUrl = `/sounds/${type}.mp3`;
     
     try {
-      // Verificar se estamos em ambiente de desenvolvimento
-      if (import.meta.env.DEV) {
-        // Em desenvolvimento, usar o caminho absoluto para o servidor Vite
-        const devServerUrl = import.meta.env.VITE_DEV_SERVER_URL || "";
-        if (devServerUrl) {
-          soundUrl = `${devServerUrl}${soundUrl.startsWith('/') ? soundUrl.substring(1) : soundUrl}`;
-        }
-      }
-      
       const audio = new Audio(soundUrl);
-      audio.volume = 0.5; // Set volume to 50%
+      audio.volume = 0.3; // Lower volume to be less intrusive
       
-      // Adicionar um listener para erros de carregamento
+      // Add error handling for corrupted files
       audio.addEventListener('error', (e) => {
         console.error(`Error loading sound ${soundUrl}:`, e);
       });
       
       audio.play().catch((error) => {
-        // Silently handle error - browsers often block autoplay
-        console.log("Sound not played:", error);
+        console.log("Sound not played:", error.message);
       });
     } catch (error) {
       console.error("Error playing sound:", error);

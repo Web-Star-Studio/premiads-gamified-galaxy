@@ -8,28 +8,28 @@ interface CreditsProviderProps {
 }
 
 /**
- * Provedor de contexto que inicializa o sistema de gerenciamento de créditos
+ * Provedor de contexto que inicializa o sistema de gerenciamento de rifas
  * Este componente deve ser colocado na árvore de componentes após o AuthProvider
  */
 export function CreditsProvider({ children }: CreditsProviderProps) {
   const { user, isAuthenticated } = useAuth();
   const { fetchCredits, resetCredits } = useCreditsStore();
 
-  // Inicializa a assinatura de créditos quando o usuário faz login
+  // Inicializa a assinatura de rifas quando o usuário faz login
   useEffect(() => {
-    const setupCredits = async () => {
+    const setupRifas = async () => {
       if (isAuthenticated && user?.id) {
-        console.log('Inicializando sistema de créditos para o usuário:', user.id);
-        await fetchCredits(user.id);
+        console.log('Inicializando sistema de rifas para o usuário:', user.id);
+        await fetchCredits(user.id); // Função ainda busca rifas, apenas o nome que precisa ser atualizado
         await realtimeCreditsService.subscribeToUserCredits(user.id);
       } else {
-        // Limpa os créditos quando não há usuário autenticado
+        // Limpa as rifas quando não há usuário autenticado
         resetCredits();
         await realtimeCreditsService.unsubscribe();
       }
     };
 
-    setupCredits();
+    setupRifas();
 
     // Cleanup
     return () => {
