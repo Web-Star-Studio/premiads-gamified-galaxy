@@ -21,7 +21,7 @@ interface RewardsStepProps {
 
 /**
  * Mission rewards configuration step
- * Manages points, badges, and other reward options
+ * Manages rifas, badges, and other reward options
  */
 const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const { availableCredits: userCredits, isLoading, error } = useUserCredits();
@@ -29,11 +29,11 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const [prizeImagePreview, setPrizeImagePreview] = useState<string | null>(formData.extraPrizeImageUrl || null);
   const { toast } = useToast();
   
-  // Limites de pontuação baseados nos créditos disponíveis
-  const minPoints = 10;
-  // Máximo de tickets proporcional aos créditos disponíveis
-  const maxPoints = userCredits;
-  const pointsStep = 5;
+  // Limites de rifas baseados nos créditos disponíveis
+  const minRifas = 1;
+  // Máximo de rifas proporcional aos créditos disponíveis
+  const maxRifas = userCredits;
+  const rifasStep = 1;
 
   // Inicializa e mantém créditos dinâmicos via store e real-time
   useEffect(() => {
@@ -93,15 +93,15 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
         <div className="text-center py-4">Carregando informações de créditos...</div>
       ) : (
         <>
-          <Card className="bg-galaxy-darkPurple/50 border-galaxy-purple/30">
+          <Card className="bg-yellow-900/20 border-yellow-500/30">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 mb-2">
-                <Info className="text-neon-cyan h-4 w-4" />
-                <span className="text-sm font-medium">Saldo disponível: {userCredits} créditos</span>
+                <Info className="text-yellow-400 h-4 w-4" />
+                <span className="text-sm font-medium text-yellow-400">Saldo disponível: {userCredits} créditos</span>
               </div>
               <p className="text-xs text-gray-400">
                 Os créditos são consumidos quando a campanha é publicada.
-                Cada ponto atribuído à missão consome 1 crédito da sua conta.
+                Cada rifa atribuída à missão consome 1 crédito da sua conta.
               </p>
             </CardContent>
           </Card>
@@ -122,42 +122,57 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label htmlFor="points-slider" className="text-sm font-medium">Pontos</label>
+              <label htmlFor="rifas-slider" className="text-sm font-medium">Rifas por Participante</label>
               <div className="flex items-center space-x-3">
                 <>
-                  <span className="text-sm text-neon-cyan">{formData.pointsValue}</span>
+                  <span className="text-sm text-yellow-400">{formData.rifas}</span>
                   <Input
-                    id="points-input"
+                    id="rifas-input"
                     type="number"
-                    min={minPoints}
-                    max={maxPoints}
-                    step={pointsStep}
-                    value={formData.pointsValue}
+                    min={minRifas}
+                    max={maxRifas}
+                    step={rifasStep}
+                    value={formData.rifas}
                     onChange={(e) => {
                       const val = parseInt(e.target.value, 10)
                       if (!isNaN(val))
-                        {updateFormData("pointsValue", Math.min(Math.max(val, minPoints), maxPoints))}
+                        {updateFormData("rifas", Math.min(Math.max(val, minRifas), maxRifas))}
                     }}
-                    className="w-24 bg-gray-800 border-gray-700 focus:border-neon-cyan text-right"
+                    className="w-24 bg-gray-800 border-gray-700 focus:border-yellow-400 text-right"
                     disabled={userCredits === 0}
                   />
                 </>
               </div>
             </div>
             <Slider
-              id="points-slider"
-              value={[formData.pointsValue]}
-              min={minPoints}
-              max={maxPoints}
-              step={pointsStep}
+              id="rifas-slider"
+              value={[formData.rifas]}
+              min={minRifas}
+              max={maxRifas}
+              step={rifasStep}
               disabled={userCredits === 0}
-              onValueChange={(value) => updateFormData("pointsValue", value[0])}
+              onValueChange={(value) => updateFormData("rifas", value[0])}
               className="py-4"
-              aria-valuemin={minPoints}
-              aria-valuemax={maxPoints}
-              aria-valuenow={formData.pointsValue}
-              aria-valuetext={`${formData.pointsValue} tickets`}
+              aria-valuemin={minRifas}
+              aria-valuemax={maxRifas}
+              aria-valuenow={formData.rifas}
+              aria-valuetext={`${formData.rifas} rifas`}
             />
+            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-md p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Info className="text-yellow-400 h-4 w-4" />
+                <span className="text-sm font-medium text-yellow-400">Rifas da Missão</span>
+              </div>
+              <p className="text-xs text-gray-400">
+                Define quantas rifas cada participante receberá ao concluir esta missão.
+                Este valor será debitado do seu saldo de créditos no momento da criação da campanha.
+                {formData.rifas > 0 && (
+                  <span className="block mt-1 text-yellow-300">
+                    ⚠️ {formData.rifas} créditos serão debitados da sua conta.
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
 
           {/* Controle de Participantes Máximos */}

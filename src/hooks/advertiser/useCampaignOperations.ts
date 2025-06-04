@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { FormData } from '@/components/advertiser/campaign-form/types';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Helper function to format dates as ISO strings
 const formatDate = (date: Date | string): string => {
@@ -18,6 +19,7 @@ const useCampaignOperations = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const createCampaign = async (formData: FormData) => {
     if (!user) {
@@ -62,6 +64,7 @@ const useCampaignOperations = () => {
           'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
         tickets_reward: formData.ticketsReward,
+        rifas: formData.rifas,
         cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         advertiser_id: user.id,
@@ -83,6 +86,10 @@ const useCampaignOperations = () => {
         title: 'Campanha criada com sucesso',
         description: 'Sua campanha foi criada e está pronta para ser publicada',
       });
+      
+      // Refresh user rifas and dashboard metrics
+      queryClient.invalidateQueries({ queryKey: ['user-rifas'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       
       return true;
     } catch (error: any) {
@@ -140,6 +147,7 @@ const useCampaignOperations = () => {
           'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
         tickets_reward: formData.ticketsReward,
+        rifas: formData.rifas,
         cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()

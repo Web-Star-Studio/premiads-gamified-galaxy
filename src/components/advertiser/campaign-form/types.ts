@@ -25,7 +25,8 @@ export interface FormData {
   streakMultiplier: number;
   randomPoints: boolean;
   pointsRange: number[];
-  pointsValue?: number; // For random points calculation
+  /** Quantidade de rifas que serão distribuídas aos participantes que completarem a missão */
+  rifas: number;
   /** Novo campo – tickets distribuídos por missão */
   ticketsReward: number;
   /** Novo campo – cashback por missão (R$) */
@@ -68,7 +69,7 @@ export const initialFormData: FormData = {
   streakMultiplier: 1.2,
   randomPoints: false,
   pointsRange: [10, 50],
-  pointsValue: 10, // initial manual points value
+  rifas: 10, // Quantidade inicial de rifas para a missão
   ticketsReward: 0,
   cashbackReward: 0,
   maxParticipants: 100, // Valor inicial para máximo de participantes

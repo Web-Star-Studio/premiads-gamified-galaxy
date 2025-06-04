@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { LootBoxRewardType } from "@/components/advertiser/LootBoxRewardsSelector";
 
@@ -20,6 +19,7 @@ export interface CreateMissionParams {
   sequenceBonus?: boolean;
   badgeImageUrl?: string;
   selectedLootBoxRewards?: LootBoxRewardType[];
+  rifas: number;
 }
 
 export const createMission = async (params: CreateMissionParams) => {
@@ -37,6 +37,7 @@ export const createMission = async (params: CreateMissionParams) => {
       title: params.title,
       description: params.description,
       requirements: params.requirements,
+      rifas: params.rifas,
       tickets_reward: params.ticketsReward,
       cashback_reward: params.cashbackReward,
       end_date: params.deadline,
