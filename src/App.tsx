@@ -1,11 +1,16 @@
 
-import { AppProviders } from "./providers/AppProviders";
-import AppRoutes from "./routes/AppRoutes";
+import React, { Suspense } from 'react';
+import { OptimizedProviders } from './providers/OptimizedProviders';
+import AppRoutes from './routes/AppRoutes';
+import { Loading } from './components/atoms';
+import './index.css';
 
 const App = () => (
-    <AppProviders>
+  <OptimizedProviders>
+    <Suspense fallback={<Loading size="lg" text="Carregando aplicação..." />}>
       <AppRoutes />
-    </AppProviders>
-  );
+    </Suspense>
+  </OptimizedProviders>
+);
 
 export default App;
