@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Base service class with common functionality
@@ -8,10 +7,11 @@ class BaseSupabaseService {
     throw new Error(error.message || 'An unexpected error occurred');
   }
 
-  protected async executeQuery<T>(query: Promise<{ data: T; error: any }>) {
+  protected async executeQuery<T = any>(query: any): Promise<T> {
     const { data, error } = await query;
     if (error) this.handleError(error);
-    return data;
+    // Some Supabase methods (e.g., signOut) return only an error key
+    return data as T;
   }
 }
 

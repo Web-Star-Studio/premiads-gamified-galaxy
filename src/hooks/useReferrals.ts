@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,12 +11,14 @@ export interface Referral {
   date: string;
   completedMissions?: number;
   rifasEarned?: number;
+  /** Points earned by the referred user (legacy field for dashboard). */
+  pointsEarned?: number;
 }
 
 export interface ReferralReward {
   id: number;
   description: string;
-  type: "rifas" | "tickets" | "special";
+  type: "rifas" | "tickets" | "special" | "points";
   value: number;
   status: "available" | "claimed";
   expiresAt?: string;

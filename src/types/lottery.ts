@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 export interface Lottery {
@@ -38,6 +37,12 @@ export interface Lottery {
     rarity: string;
     probability: number;
   }>;
+  /**
+   * When true, the raffle will be automatically drawn after either selling out
+   * or reaching the minimum number of tickets (48 h cooldown).  Used only on
+   * the admin form UI – not persisted in the DB.
+   */
+  isAutoScheduled?: boolean;
 }
 
 export const lotteryFormSchema = z.object({
@@ -53,7 +58,9 @@ export const lotteryFormSchema = z.object({
   status: z.enum(['active', 'pending', 'completed', 'canceled']),
   numbersTotal: z.number().min(1, "Total de números deve ser positivo"),
   pointsPerNumber: z.number().min(1, "Pontos por número deve ser positivo"),
-  minPoints: z.number().min(0, "Pontos mínimos deve ser positivo")
+  minPoints: z.number().min(0, "Pontos mínimos deve ser positivo"),
+  // Toggle for automatic scheduling
+  isAutoScheduled: z.boolean().default(false)
 });
 
 export type LotteryFormValues = z.infer<typeof lotteryFormSchema>;

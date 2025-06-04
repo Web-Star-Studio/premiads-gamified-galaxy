@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +13,10 @@ export interface DashboardMetrics {
   missionCompletionRate: number;
   userGrowthRate: number;
   rifasTrend: number;
+  /** Compat fields required by UI that still expects values in "pontos" */
+  totalPoints: number;
+  averagePointsPerUser: number;
+  pointsTrend: number;
 }
 
 export const useDashboardMetrics = () => useQuery({
@@ -83,11 +86,16 @@ export const useDashboardMetrics = () => useQuery({
       const currentRifas = totalRifasData?.reduce((acc, curr) => acc + (curr.rifas || 0), 0) || 0;
       const previousRifas = previousMonthRifasData?.reduce((acc, curr) => acc + (curr.rifas || 0), 0) || 0;
 
-      // Calculate additional metrics
+      // Calculate additional metrics (rifas == pontos for backward-compat)
       const averageRifasPerUser = totalUsers ? Math.round(currentRifas / totalUsers) : 0;
       const missionCompletionRate = activeMissions ? Math.round((completedMissions / activeMissions) * 100) : 0;
       const userGrowthRate = previousMonthUsers ? Math.round(((totalUsers - previousMonthUsers) / previousMonthUsers) * 100) : 0;
       const rifasTrend = previousRifas ? Math.round(((currentRifas - previousRifas) / previousRifas) * 100) : 0;
+
+      // Legacy values for dashboards that ainda usam "pontos"
+      const totalPoints = currentRifas;
+      const averagePointsPerUser = averageRifasPerUser;
+      const pointsTrend = rifasTrend;
 
       return {
         totalUsers: totalUsers || 0,
@@ -100,6 +108,10 @@ export const useDashboardMetrics = () => useQuery({
         missionCompletionRate,
         userGrowthRate,
         rifasTrend,
+        // Compat
+        totalPoints,
+        averagePointsPerUser,
+        pointsTrend,
       };
     },
     refetchInterval: 30000,

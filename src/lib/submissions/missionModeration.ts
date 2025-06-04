@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface FinalizationResult {
@@ -7,12 +6,33 @@ export interface FinalizationResult {
   [key: string]: any;
 }
 
-export async function finalizeMissionSubmission(
-  submissionId: string,
-  approverId: string,
-  decision: 'approve' | 'reject',
-  stage: 'advertiser_first' | 'admin' | 'advertiser_second'
-): Promise<FinalizationResult> {
+export type ValidationStage = 'advertiser_first' | 'admin' | 'advertiser_second';
+
+export interface FinalizeMissionSubmissionInput {
+  submissionId: string;
+  approverId: string;
+  decision: 'approve' | 'reject';
+  stage: ValidationStage;
+  feedback?: string;
+}
+
+export interface FinalizeMissionSubmissionResponse {
+  success: boolean;
+  result?: FinalizationResult;
+  error?: string;
+}
+
+/**
+ * Finalizes a mission submission calling the `finalize_submission` RPC.
+ * Accepts a single object (RORO) for simpler/safer invocation.
+ */
+export async function finalizeMissionSubmission({
+  submissionId,
+  approverId,
+  decision,
+  stage,
+  feedback
+}: FinalizeMissionSubmissionInput): Promise<FinalizeMissionSubmissionResponse> {
   try {
     const { data, error } = await supabase.rpc('finalize_submission', {
       p_submission_id: submissionId,
@@ -22,23 +42,16 @@ export async function finalizeMissionSubmission(
     });
 
     if (error) {
-      throw new Error(`Database error: ${error.message}`);
+      console.error('Database error:', error);
+      return { success: false, error: error.message };
     }
 
-    // Ensure we return a properly typed result
-    const result = data as unknown;
-    
-    if (typeof result === 'object' && result !== null) {
-      return result as FinalizationResult;
-    }
-    
-    // Fallback if the result is not in expected format
     return {
-      status: decision === 'approve' ? 'approved' : 'rejected',
-      badge_earned: false
+      success: true,
+      result: (data || {}) as FinalizationResult
     };
   } catch (error: any) {
     console.error('Error finalizing submission:', error);
-    throw new Error(`Failed to finalize submission: ${error.message}`);
+    return { success: false, error: error.message };
   }
 }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { render, screen, fireEvent } from '@/utils/test-utils';
 import LotteryList from '@/components/admin/lottery/LotteryList';
@@ -27,7 +26,7 @@ describe('LotteryList Component', () => {
       status: 'active',
       numbers_total: 100,
       numbersTotal: 100,
-      points: 50,
+      tickets_reward: 50,
       type: 'regular',
       pointsPerNumber: 50,
       minPoints: 100,
@@ -60,7 +59,7 @@ describe('LotteryList Component', () => {
       status: 'pending',
       numbers_total: 200,
       numbersTotal: 200,
-      points: 100,
+      tickets_reward: 100,
       type: 'regular',
       pointsPerNumber: 100,
       minPoints: 200,

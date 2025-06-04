@@ -1,4 +1,3 @@
-
 export type MissionStatus = "available" | "in_progress" | "pending_approval" | "completed";
 
 export interface Mission {
@@ -10,7 +9,7 @@ export interface Mission {
   tickets_reward: number;
   cashback_reward: number;
   deadline?: string;
-  status: MissionStatus;
+  status: MissionStatus | string;
   requirements: string[];
   business_type?: string;
   target_audience_gender?: string;
@@ -23,6 +22,9 @@ export interface Mission {
   streak_multiplier?: number;
   target_filter?: any;
   min_purchase?: number;
+  cost_in_tokens?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface UseMissionsOptions {

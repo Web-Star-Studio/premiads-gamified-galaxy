@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import LotteryDetails from '@/components/admin/lottery/LotteryDetails';
@@ -30,10 +29,10 @@ describe('LotteryDetails Component', () => {
     draw_date: '2025-04-23',
     drawDate: '2025-04-23',
     status: 'active',
+    type: 'regular',
     numbers_total: 100,
     numbersTotal: 100,
-    points: 50,
-    type: 'regular',
+    tickets_reward: 50,
     pointsPerNumber: 50,
     minPoints: 100,
     numbers: [],

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -60,7 +59,7 @@ const useCampaignOperations = () => {
         streak_multiplier: formData.streakMultiplier,
         badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [
-          'credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
+          'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
         tickets_reward: formData.ticketsReward,
         cashback_reward: formData.cashbackReward,
@@ -138,7 +137,7 @@ const useCampaignOperations = () => {
         streak_multiplier: formData.streakMultiplier,
         badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [
-          'credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
+          'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'
         ],
         tickets_reward: formData.ticketsReward,
         cashback_reward: formData.cashbackReward,

@@ -3,7 +3,7 @@ import { useCashbacks } from './useCashbacks.hook'
 import { CashbackCampaign } from './types'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import { CashbackForm } from './CashbackForm'
+import CashbackForm from './CashbackForm'
 
 interface CashbackListProps {
   advertiserId: string
