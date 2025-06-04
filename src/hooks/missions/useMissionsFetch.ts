@@ -85,23 +85,14 @@ export const useMissionsFetch = () => {
                 : [String(mission.requirements)]
             : [];
 
-          // Use type assertion with any to access non-standard fields safely
-          const missionData: any = mission;
-
-          // Log mission rewards data for debugging
-          console.log(`Mission ${mission.id} - ${mission.title} rewards:`, {
-            has_badge: mission.has_badge || false,
-            has_lootbox: mission.has_lootbox || false,
-            sequence_bonus: mission.sequence_bonus || false
-          });
-
           return {
             id: mission.id,
             title: mission.title,
             description: mission.description,
             brand: mission.advertiser_id,
             type: mission.type as MissionType,
-            points: mission.points,
+            tickets_reward: mission.tickets_reward || 0,
+            cashback_reward: mission.cashback_reward || 0,
             deadline: mission.end_date,
             status,
             requirements: requirementsArray,
@@ -110,15 +101,12 @@ export const useMissionsFetch = () => {
             target_audience_age_min: mission.target_audience_age_min,
             target_audience_age_max: mission.target_audience_age_max,
             target_audience_region: mission.target_audience_region,
-            // Include reward-related fields with safe access
-            has_badge: missionData.has_badge || false,
-            has_lootbox: missionData.has_lootbox || false,
-            sequence_bonus: missionData.sequence_bonus || false,
-            streak_multiplier: missionData.streak_multiplier || 1.0,
-            // Target filter with safe access
-            target_filter: missionData.target_filter || null,
-            // Min purchase amount with safe access
-            min_purchase: missionData.min_purchase || 0
+            has_badge: mission.has_badge || false,
+            has_lootbox: mission.has_lootbox || false,
+            sequence_bonus: mission.sequence_bonus || false,
+            streak_multiplier: mission.streak_multiplier || 1.0,
+            target_filter: mission.target_filter || null,
+            min_purchase: mission.min_purchase || 0
           };
         });
 

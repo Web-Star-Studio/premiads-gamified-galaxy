@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,13 +11,13 @@ export interface Referral {
   status: "pending" | "registered" | "completed";
   date: string;
   completedMissions?: number;
-  pointsEarned?: number;
+  rifasEarned?: number;
 }
 
 export interface ReferralReward {
   id: number;
   description: string;
-  type: "points" | "tickets" | "special";
+  type: "rifas" | "tickets" | "special";
   value: number;
   status: "available" | "claimed";
   expiresAt?: string;
@@ -62,7 +63,7 @@ export const useReferrals = () => {
             id, 
             status, 
             created_at, 
-            points_awarded,
+            rifas_awarded,
             referred_id
           `)
           .eq('referrer_id', userId);
@@ -110,7 +111,7 @@ export const useReferrals = () => {
             status: referral.status as Referral['status'],
             date: referral.created_at,
             completedMissions: referral.status === "completed" ? 1 : 0,
-            pointsEarned: referral.points_awarded || 0
+            rifasEarned: referral.rifas_awarded || 0
           };
         });
         

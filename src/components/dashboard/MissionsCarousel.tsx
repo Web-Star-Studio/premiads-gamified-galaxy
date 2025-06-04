@@ -1,160 +1,135 @@
 
-import { useState, useEffect } from "react";
+import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft, ChevronRight, Calendar, Trophy, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useSounds } from "@/hooks/use-sounds";
-import { useNavigate } from "react-router-dom";
-import { useMissions } from "@/hooks/useMissions";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import MissionCard from "./missions/MissionCard";
-import MissionsEmptyState from "./missions/MissionsEmptyState";
-import MissionsHeader from "./missions/MissionsHeader";
-import MissionsLoading from "./missions/MissionsLoading";
-import { supabase } from "@/integrations/supabase/client";
+import { Mission } from "@/hooks/missions/types";
 
-const MissionsCarousel = () => {
-  const { toast } = useToast();
+interface MissionsCarouselProps {
+  missions: Mission[];
+  onSelectMission: (mission: Mission) => void;
+}
+
+const MissionsCarousel = memo<MissionsCarouselProps>(({ missions, onSelectMission }) => {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
   const { playSound } = useSounds();
-  const [acceptedMissions, setAcceptedMissions] = useState<string[]>([]);
-  const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
 
-  const { 
-    loading, 
-    allMissions,
-    error,
-    getMissionTypeLabel 
-  } = useMissions();
-  
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        console.log("No auth session in MissionsCarousel");
-        toast({
-          title: "Sessão expirada",
-          description: "Por favor, faça login novamente para ver suas missões",
-          variant: "destructive",
-        });
-      } else {
-        console.log("User authenticated in MissionsCarousel");
-      }
-      setAuthChecked(true);
-    };
-    
-    checkAuth();
-  }, [toast]);
-  
-  // Effect to initialize from localStorage
-  useEffect(() => {
-    const savedAccepted = localStorage.getItem('acceptedMissions');
-    if (savedAccepted) {
-      setAcceptedMissions(JSON.parse(savedAccepted));
-    }
-  }, []);
-  
-  const handleAcceptMission = (missionId: string) => {
-    if (acceptedMissions.includes(missionId)) {
-      toast({
-        title: "Missão já aceita",
-        description: "Você já aceitou essa missão antes",
-      });
-      return;
-    }
-    
-    // Play coin sound
+  const nextSlide = React.useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % missions.length);
     playSound("pop");
-    
-    // Update accepted missions and save to localStorage
-    const updatedAccepted = [...acceptedMissions, missionId];
-    setAcceptedMissions(updatedAccepted);
-    localStorage.setItem('acceptedMissions', JSON.stringify(updatedAccepted));
-    
-    toast({
-      title: "Missão aceita!",
-      description: "Verifique suas missões em andamento",
-    });
-  };
+  }, [missions.length, playSound]);
 
-  const handleViewAllMissions = () => {
-    navigate('/cliente/missoes');
-  };
+  const prevSlide = React.useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + missions.length) % missions.length);
+    playSound("pop");
+  }, [missions.length, playSound]);
 
-  // Get only available missions for the carousel
-  const availableMissions = allMissions.filter(m => m.status === "available").slice(0, 8);
+  const handleMissionClick = React.useCallback((mission: Mission) => {
+    playSound("chime");
+    onSelectMission(mission);
+  }, [onSelectMission, playSound]);
 
-  if (!authChecked) {
-    return <MissionsLoading />;
-  }
-
-  if (error) {
+  if (!missions || missions.length === 0) {
     return (
-      <motion.div
-        className="glass-panel p-6"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <MissionsHeader onViewAllMissions={handleViewAllMissions} />
-        <div className="p-8 text-center">
-          <p className="text-red-400">Erro ao carregar missões: {error}</p>
-          <button 
-            className="mt-4 px-4 py-2 bg-neon-cyan text-galaxy-dark rounded"
-            onClick={() => window.location.reload()}
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </motion.div>
+      <div className="text-center py-8">
+        <p className="text-gray-400">Nenhuma missão disponível no momento.</p>
+      </div>
     );
   }
 
+  const visibleMissions = missions.slice(currentIndex, currentIndex + 3);
+  
+  // Fill remaining slots if we don't have 3 missions to show
+  while (visibleMissions.length < 3 && missions.length > 0) {
+    visibleMissions.push(missions[(currentIndex + visibleMissions.length) % missions.length]);
+  }
+
   return (
-    <motion.div
-      className="glass-panel p-6"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <MissionsHeader onViewAllMissions={handleViewAllMissions} />
-      
-      {loading ? (
-        <MissionsLoading />
-      ) : (
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {availableMissions.length > 0 ? (
-              availableMissions.map((mission) => (
-                <CarouselItem key={mission.id} className="md:basis-1/2 lg:basis-1/3">
-                  <MissionCard 
-                    mission={mission}
-                    isAccepted={acceptedMissions.includes(mission.id)}
-                    onAcceptMission={handleAcceptMission}
-                    getMissionTypeLabel={getMissionTypeLabel}
-                  />
-                </CarouselItem>
-              ))
-            ) : (
-              <MissionsEmptyState />
-            )}
-          </CarouselContent>
-          {availableMissions.length > 1 && (
-            <div className="flex justify-center mt-4 gap-2">
-              <CarouselPrevious className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
-              <CarouselNext className="static translate-y-0 bg-galaxy-deepPurple/50 border-galaxy-purple/20" />
-            </div>
-          )}
-        </Carousel>
-      )}
-    </motion.div>
+    <div className="relative w-full">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold">Missões Disponíveis</h3>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={prevSlide}
+            disabled={missions.length <= 3}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={nextSlide}
+            disabled={missions.length <= 3}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {visibleMissions.map((mission, index) => (
+          <motion.div
+            key={`${mission.id}-${index}`}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 glass-panel border-galaxy-purple/30"
+              onClick={() => handleMissionClick(mission)}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-semibold text-white line-clamp-1">{mission.title}</h4>
+                    <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
+                  </div>
+                  <Badge 
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30"
+                  >
+                    <Trophy className="w-3 h-3" />
+                    <span>{mission.tickets_reward} pts</span>
+                  </Badge>
+                </div>
+
+                <p className="text-sm text-gray-300 line-clamp-2 mb-3">
+                  {mission.description}
+                </p>
+
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>
+                      {mission.deadline 
+                        ? new Date(mission.deadline).toLocaleDateString('pt-BR')
+                        : "Sem prazo"
+                      }
+                    </span>
+                  </div>
+                  
+                  {mission.has_badge && (
+                    <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30">
+                      Badge
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
-};
+});
+
+MissionsCarousel.displayName = "MissionsCarousel";
 
 export default MissionsCarousel;

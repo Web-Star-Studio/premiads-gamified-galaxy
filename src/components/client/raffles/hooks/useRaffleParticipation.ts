@@ -21,12 +21,12 @@ export const useRaffleParticipation = ({
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [userTickets, setUserTickets] = useState(8); // Default value before data loads
-  const [userPoints, setUserPoints] = useState(750); // Default value before data loads
+  const [userRifas, setUserRifas] = useState(750); // Default value before data loads
   const [participationCount, setParticipationCount] = useState(0);
   const [isParticipating, setIsParticipating] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState(1);
   const [purchaseMode, setPurchaseMode] = useState<'tickets' | 'points'>('tickets');
-  const { levelInfo } = useUserLevel(userPoints);
+  const { levelInfo } = useUserLevel(userRifas);
   
   const remainingSlots = maxTicketsPerUser - participationCount;
   
@@ -50,7 +50,7 @@ export const useRaffleParticipation = ({
   );
   
   const canBuyWithPoints = canPurchaseWithPoints(
-    userPoints,
+    userRifas,
     pointsNeeded,
     participationCount,
     purchaseAmount,
@@ -62,7 +62,7 @@ export const useRaffleParticipation = ({
   useEffect(() => {
     const loadUserData = async () => {
       const userData = await fetchUserData();
-      setUserPoints(userData.points);
+      setUserRifas(userData.rifas);
       setUserTickets(userData.tickets);
     };
     
@@ -129,7 +129,7 @@ export const useRaffleParticipation = ({
         if (purchaseMode === 'tickets') {
           setUserTickets(prev => prev - purchaseAmount);
         } else {
-          setUserPoints(prev => prev - pointsNeeded);
+          setUserRifas(prev => prev - pointsNeeded);
         }
         
         setParticipationCount(prev => prev + purchaseAmount);
@@ -157,7 +157,7 @@ export const useRaffleParticipation = ({
   return {
     // State
     userTickets,
-    userPoints,
+    userPoints: userRifas, // Alias for compatibility
     participationCount,
     isParticipating,
     purchaseAmount,

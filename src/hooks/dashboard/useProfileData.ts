@@ -10,8 +10,8 @@ export const useProfileData = () => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState(0);
-  const [credits, setCredits] = useState(0);
+  const [rifas, setRifas] = useState(0);
+  const [cashback, setCashback] = useState(0);
   const [streak, setStreak] = useState(0);
   const [isProfileCompleted, setIsProfileCompleted] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
@@ -23,8 +23,8 @@ export const useProfileData = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          setPoints(0);
-          setCredits(0);
+          setRifas(0);
+          setCashback(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -34,8 +34,8 @@ export const useProfileData = () => {
         const userId = session.user.id;
         
         if (!userId) {
-          setPoints(0);
-          setCredits(0);
+          setRifas(0);
+          setCashback(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -50,8 +50,8 @@ export const useProfileData = () => {
         
         if (profileError) {
           console.error("Profile error:", profileError);
-          setPoints(0);
-          setCredits(0);
+          setRifas(0);
+          setCashback(0);
           setStreak(0);
           setIsProfileCompleted(false);
           setLoading(false);
@@ -60,8 +60,8 @@ export const useProfileData = () => {
         
         if (profileData) {
           setProfileData(profileData);
-          setPoints(profileData.points || 0);
-          setCredits(profileData.credits !== null ? profileData.credits : profileData.points || 0);
+          setRifas(profileData.rifas || 0);
+          setCashback(profileData.cashback_balance || 0);
           setIsProfileCompleted(profileData.profile_completed || false);
           
           if (profileData.full_name && !userName) {
@@ -73,8 +73,8 @@ export const useProfileData = () => {
         localStorage.setItem("lastActivity", Date.now().toString());
       } catch (error: any) {
         console.error("Error fetching user data:", error);
-        setPoints(0);
-        setCredits(0);
+        setRifas(0);
+        setCashback(0);
         setStreak(0);
         setIsProfileCompleted(false);
       } finally {
@@ -96,8 +96,10 @@ export const useProfileData = () => {
 
   return {
     loading,
-    points,
-    credits,
+    points: rifas, // Alias for compatibility
+    credits: cashback, // Alias for compatibility  
+    rifas,
+    cashback,
     streak,
     isProfileCompleted,
     profileData,

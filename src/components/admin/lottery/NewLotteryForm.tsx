@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { Form } from "@/components/ui/form";
 import { useSounds } from '@/hooks/use-sounds';
-import { toastSuccess, toastError } from "@/utils/toast";
+import { toast } from "@/hooks/use-toast";
 import { lotteryFormSchema, LotteryFormValues, Lottery } from './types';
 import BasicInfoSection from './form-sections/BasicInfoSection';
 import DateSelectionSection from './form-sections/DateSelectionSection';
@@ -38,7 +38,6 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       numbersTotal: 1000,
       pointsPerNumber: 100,
       minPoints: 0,
-      isAutoScheduled: true,
     },
   });
   
@@ -78,11 +77,9 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
         status: values.status,
         numbers_total: values.numbersTotal,
         numbersTotal: values.numbersTotal,
-        points: values.pointsPerNumber,
+        tickets_reward: values.pointsPerNumber,
         pointsPerNumber: values.pointsPerNumber,
         minPoints: values.minPoints,
-        isAutoScheduled: values.isAutoScheduled,
-        minPointsReachedAt: null,
         prizes: [], // Começar sem prêmios
         progress: 0, // 0% inicial
         numbersSold: 0, // Nenhum número vendido inicialmente
@@ -92,7 +89,10 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
         winner: null
       };
       
-      toastSuccess('Sorteio criado', `O sorteio "${values.name}" foi criado com sucesso.`);
+      toast({
+        title: 'Sorteio criado',
+        description: `O sorteio "${values.name}" foi criado com sucesso.`
+      });
       
       try {
         playSound('reward');
@@ -103,7 +103,11 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       onSuccess(newLottery);
     } catch (error) {
       console.error("Erro ao criar sorteio:", error);
-      toastError('Erro', 'Não foi possível criar o sorteio. Tente novamente.');
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar o sorteio. Tente novamente.',
+        variant: 'destructive'
+      });
       
       try {
         playSound('error');

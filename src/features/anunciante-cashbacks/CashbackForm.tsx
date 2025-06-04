@@ -43,14 +43,13 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
   const { register, handleSubmit, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: initialData ? {
-      ...initialData,
+      title: initialData.title,
+      description: initialData.description,
       minimum_purchase: initialData.minimum_purchase ?? 0,
-      title: initialData.title || '',
-      description: initialData.description || '',
-      discount_percentage: initialData.discount_percentage || 10,
-      end_date: initialData.end_date || '',
-      category: initialData.category || '',
-      advertiser_logo: initialData.advertiser_logo || ''
+      discount_percentage: initialData.discount_percentage,
+      end_date: initialData.end_date,
+      category: initialData.category,
+      advertiser_logo: initialData.advertiser_logo
     } : {
       title: '',
       description: '',
@@ -77,7 +76,13 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
         await updateCashback(dataToUpdate)
       } else {
         const dataToSave: CreateCashbackInput = {
-          ...values,
+          title: values.title,
+          description: values.description,
+          discount_percentage: values.discount_percentage,
+          minimum_purchase: values.minimum_purchase,
+          end_date: values.end_date,
+          category: values.category,
+          advertiser_logo: values.advertiser_logo,
           advertiser_id: advertiserId,
           is_active: true
         }
@@ -171,4 +176,4 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
   )
 }
 
-export { CashbackForm } 
+export default CashbackForm

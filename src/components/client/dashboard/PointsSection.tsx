@@ -30,7 +30,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
           <TooltipTrigger asChild>
             <div className="relative">
               <TicketsCard 
-                tickets={effectivePoints} 
+                tickets_reward={effectivePoints}
                 isLoading={isLoading}
               />
               <div className="absolute top-3 right-3">

@@ -1,3 +1,4 @@
 
-// Re-export the main Lottery type to maintain compatibility
-export { Lottery, lotteryFormSchema, type LotteryFormValues } from '@/types/lottery';
+// Re-export types using export type for isolated modules
+export type { Lottery, LotteryFormValues } from '@/types/lottery';
+export { lotteryFormSchema } from '@/types/lottery';

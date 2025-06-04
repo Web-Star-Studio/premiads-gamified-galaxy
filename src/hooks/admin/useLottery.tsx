@@ -48,7 +48,7 @@ export const useLottery = () => {
           detailed_description: raffle.detailed_description,
           detailedDescription: raffle.detailed_description, // Alias for compatibility
           type: raffle.type,
-          points: raffle.tickets_reward,
+          tickets_reward: raffle.points, // Use points as tickets_reward
           numbers_total: raffle.numbers_total,
           numbersTotal: raffle.numbers_total, // Alias for compatibility
           status: raffle.status as Lottery['status'],
@@ -62,7 +62,8 @@ export const useLottery = () => {
           prizeType: raffle.prize_type, // Alias for compatibility
           prize_value: raffle.prize_value,
           prizeValue: raffle.prize_value, // Alias for compatibility
-          pointsPerNumber: raffle.tickets_reward, // Using points as pointsPerNumber
+          pointsPerNumber: raffle.points, // Using points as pointsPerNumber
+          minPoints: 0, // Default value
           winner,
           created_at: raffle.created_at,
           updated_at: raffle.updated_at,
@@ -124,7 +125,7 @@ export const useLottery = () => {
         detailed_description: data.detailed_description,
         detailedDescription: data.detailed_description,
         type: data.type,
-        points: data.tickets_reward,
+        tickets_reward: data.points,
         numbers_total: data.numbers_total,
         numbersTotal: data.numbers_total,
         status: data.status as Lottery['status'],
@@ -138,7 +139,8 @@ export const useLottery = () => {
         prizeType: data.prize_type,
         prize_value: data.prize_value,
         prizeValue: data.prize_value,
-        pointsPerNumber: data.tickets_reward,
+        pointsPerNumber: data.points,
+        minPoints: 0, // Default value
         winner: null,
         numbers: [],
         created_at: data.created_at,

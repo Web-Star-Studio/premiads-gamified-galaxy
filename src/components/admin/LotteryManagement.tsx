@@ -24,7 +24,7 @@ const LotteryManagement = () => {
       detailed_description: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
       detailedDescription: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
       type: "regular",
-      points: 100,
+      tickets_reward: 100,
       numbers_total: 1000,
       numbersTotal: 1000,
       status: "active" as const,
@@ -61,7 +61,7 @@ const LotteryManagement = () => {
       detailed_description: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
       detailedDescription: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
       type: "lootbox",
-      points: 50,
+      tickets_reward: 50,
       numbers_total: 500,
       numbersTotal: 500,
       status: "pending" as const,
@@ -98,7 +98,7 @@ const LotteryManagement = () => {
       detailed_description: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
       detailedDescription: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
       type: "special",
-      points: 200,
+      tickets_reward: 200,
       numbers_total: 2000,
       numbersTotal: 2000,
       status: "completed" as const,
@@ -161,7 +161,6 @@ const LotteryManagement = () => {
     toast({
       title: "Funcionalidade em desenvolvimento",
       description: "A edição de sorteios será disponibilizada em breve.",
-      variant: "info"
     });
   };
 
