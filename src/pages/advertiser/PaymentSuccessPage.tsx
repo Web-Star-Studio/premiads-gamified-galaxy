@@ -14,7 +14,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserCredits } from '@/hooks/useUserCredits';
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { useCreditsPayment } from "@/hooks/credits/useCreditsPayment";
 
 interface PurchaseDetails {
   rifas: number;
@@ -30,10 +31,14 @@ function PaymentSuccessPage() {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const { refreshCredits } = useUserCredits();
+  const { handlePaymentSuccess } = useCreditsPayment();
   const queryClient = useQueryClient();
   const [isAnimating, setIsAnimating] = useState(true);
   const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [purchase, setPurchase] = useState<any>(null);
+  const [rifasAwarded, setRifasAwarded] = useState(0);
+  const [bonusRifas, setBonusRifas] = useState(0);
   
   const sessionId = searchParams.get('session_id');
   
@@ -130,66 +135,93 @@ function PaymentSuccessPage() {
   };
 
   useEffect(() => {
+    const processPurchase = async () => {
+      const purchaseId = searchParams.get('purchase_id');
+      const sessionId = searchParams.get('session_id');
+
+      if (!purchaseId && !sessionId) {
+        navigate('/anunciante/creditos');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+
+        // Get purchase data
+        const { data: purchaseData, error: purchaseError } = await supabase
+          .from('rifa_purchases')
+          .select(`
+            *,
+            rifa_packages (
+              rifas_amount,
+              rifas_bonus,
+              price
+            )
+          `)
+          .eq('id', purchaseId)
+          .single();
+
+        if (purchaseError) throw purchaseError;
+
+        if (purchaseData) {
+          setPurchase(purchaseData);
+          setRifasAwarded(purchaseData.rifa_packages.rifas_amount);
+          setBonusRifas(purchaseData.rifa_packages.rifas_bonus);
+
+          // Update purchase status to confirmed
+          const { error: updateError } = await supabase.functions.invoke(
+            'update-rifa-purchase-status',
+            {
+              body: {
+                purchase_id: purchaseId,
+                new_status: 'confirmed'
+              }
+            }
+          );
+
+          if (updateError) {
+            console.error('Error updating purchase status:', updateError);
+          }
+
+          // Refresh credits and invalidate queries
+          await handlePaymentSuccess();
+          
+          // Additional manual refresh to ensure data is updated
+          setTimeout(async () => {
+            await refreshCredits();
+            queryClient.invalidateQueries({ queryKey: ['user-rifas'] });
+          }, 1000);
+
+          // Play success sound
+          playSound('success');
+
+          toast({
+            title: "Pagamento confirmado!",
+            description: `Suas rifas foram adicionadas à sua conta.`,
+          });
+        }
+      } catch (error) {
+        console.error('Error processing purchase:', error);
+        toast({
+          title: "Erro ao processar pagamento",
+          description: "Houve um problema ao confirmar seu pagamento. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    processPurchase();
+  }, [searchParams, navigate, toast, handlePaymentSuccess, refreshCredits, queryClient, playSound]);
+
+  useEffect(() => {
     // Add log for debugging
     console.log("PaymentSuccessPage: URL params:", Object.fromEntries(searchParams.entries()));
     console.log("PaymentSuccessPage: sessionId:", sessionId);
     
-    // Play success sound
-    playSound('reward');
-    
     // Launch confetti effect
     launchConfetti();
-    
-    // Refresh user data
-    queryClient.invalidateQueries({ queryKey: ['userCredits'] });
-    queryClient.invalidateQueries({ queryKey: ['activityLog'] });
-    
-    // Fetch the actual purchase details if we have a sessionId
-    if (sessionId) {
-      console.log("PaymentSuccessPage: Fetching purchase details for session:", sessionId);
-      
-      setIsLoading(true);
-      fetchPurchaseDetails(sessionId)
-        .then(async details => {
-          console.log("PaymentSuccessPage: Got purchase details:", details);
-          setPurchaseDetails(details);
-          
-          // Atualiza os créditos na store Zustand
-          await refreshCredits();
-          
-          toast({
-            title: "Pagamento confirmado!",
-            description: `${details.total} rifas foram adicionadas à sua conta.`,
-            variant: "default"
-          });
-          
-          setIsLoading(false);
-        })
-        .catch(error => {
-          console.error("Error fetching purchase details:", error);
-          setIsLoading(false);
-          
-          // Mesmo em erro, tenta atualizar créditos
-          refreshCredits();
-          
-          // Fallback to mock data
-          const mockPurchaseDetails: PurchaseDetails = {
-            rifas: 5000,
-            bonus: 1000,
-            total: 6000
-          };
-          
-          setPurchaseDetails(mockPurchaseDetails);
-          
-          toast({
-            title: "Pagamento confirmado!",
-            description: `${mockPurchaseDetails.total} rifas foram adicionadas à sua conta.`,
-            variant: "default"
-          });
-        });
-    } else {
-      setIsLoading(false);
-    }
     
     // Timer to stop the animation after 5 seconds
     const timer = setTimeout(() => {

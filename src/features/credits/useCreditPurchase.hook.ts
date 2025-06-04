@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { supabase } from "@/integrations/supabase/client";
 import { loadStripe } from "@stripe/stripe-js";
 import { getSupabaseConfig } from '@/services/config';
@@ -53,8 +53,9 @@ export default function useCreditPurchase() {
   const [paymentError, setPaymentError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { user } = useAuth();
+  const { user } = useAuthSession();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Fetch credit packages
@@ -122,6 +123,12 @@ export default function useCreditPurchase() {
         return data
       },
       onSuccess: async (data: any) => {
+        // Invalidate queries to refresh user data
+        queryClient.invalidateQueries({ queryKey: ['user-rifas'] })
+        queryClient.invalidateQueries({ queryKey: ['userCredits'] })
+        queryClient.invalidateQueries({ queryKey: ['profile'] })
+        queryClient.invalidateQueries({ queryKey: ['activityLog'] })
+
         // Para Stripe, redireciona via Stripe.js
         if (data.payment?.session_id) {
           const stripe = await getStripe()
