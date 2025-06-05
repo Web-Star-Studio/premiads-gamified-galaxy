@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
@@ -79,18 +78,12 @@ const ClientRaffles = () => {
         
         <div className="mt-8">
           <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden p-1">
+            <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden p-1">
               <TabsTrigger 
                 value="active" 
                 className="rounded-lg data-[state=active]:bg-gradient-to-r from-neon-cyan to-galaxy-purple data-[state=active]:text-white"
               >
                 Sorteios Ativos
-              </TabsTrigger>
-              <TabsTrigger 
-                value="conversion"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r from-neon-cyan to-galaxy-purple data-[state=active]:text-white"
-              >
-                Converter Pontos
               </TabsTrigger>
               <TabsTrigger 
                 value="history"
@@ -164,10 +157,6 @@ const ClientRaffles = () => {
                   )}
                 </motion.div>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="conversion" className="mt-6">
-              <TicketConversion />
             </TabsContent>
             
             <TabsContent value="history" className="mt-6">

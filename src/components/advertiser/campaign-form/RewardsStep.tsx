@@ -212,43 +212,6 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
             />
           </div>
 
-          {/* Controle de Cashback Máximo */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="cashback-slider" className="text-sm font-medium">Máximo de Cashbacks</label>
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-green-400">{formData.maxCashbackRedemptions || 5}</span>
-                <Input
-                  id="cashback-input"
-                  type="number"
-                  min={1}
-                  max={100}
-                  step={1}
-                  value={formData.maxCashbackRedemptions || 5}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10)
-                    if (!isNaN(val))
-                      {updateFormData("maxCashbackRedemptions", Math.min(Math.max(val, 1), 100))}
-                  }}
-                  className="w-24 bg-gray-800 border-gray-700 focus:border-green-400 text-right"
-                />
-              </div>
-            </div>
-            <Slider
-              id="cashback-slider"
-              value={[formData.maxCashbackRedemptions || 5]}
-              min={1}
-              max={100}
-              step={1}
-              onValueChange={(value) => updateFormData("maxCashbackRedemptions", value[0])}
-              className="py-4"
-              aria-valuemin={1}
-              aria-valuemax={100}
-              aria-valuenow={formData.maxCashbackRedemptions || 5}
-              aria-valuetext={`${formData.maxCashbackRedemptions || 5} cashbacks máximos`}
-            />
-          </div>
-
           <div className="flex items-center justify-between px-1 py-2">
             <div className="space-y-1">
               <p className="text-sm font-medium" id="extra-prize-label">Prêmio Extra</p>

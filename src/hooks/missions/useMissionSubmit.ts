@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { Mission } from "./types";
 
-export const useMissionSubmit = (setMissions: (missions: Mission[]) => void) => {
+export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateAction<Mission[]>>) => {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
@@ -33,23 +32,35 @@ export const useMissionSubmit = (setMissions: (missions: Mission[]) => void) => 
         .eq("id", missionId)
         .single();
 
-      if (missionError) {
-        throw missionError;
+      if (missionError || !missionData) {
+        throw new Error("Missão não encontrada");
       }
 
-      // Check if submission already exists
-      const { data: existingSubmission, error: existingError } = await supabase
-        .from("mission_submissions")
-        .select("id")
-        .eq("mission_id", missionId)
-        .eq("user_id", userId)
-        .maybeSingle();
+      // Check if submission, participation, or reward already exists
+      const [submissionRes, participationRes, rewardRes] = await Promise.all([
+        supabase
+          .from("mission_submissions")
+          .select("id")
+          .eq("mission_id", missionId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("participations")
+          .select("id")
+          .eq("campaign_id", missionId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("mission_rewards")
+          .select("id")
+          .eq("mission_id", missionId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
 
-      if (existingError && existingError.code !== 'PGRST116') {
-        throw existingError;
-      }
-
-      if (existingSubmission) {
+      if ((submissionRes.data && submissionRes.data.id) ||
+          (participationRes.data && participationRes.data.id) ||
+          (rewardRes.data && rewardRes.data.id)) {
         throw new Error("Você já participou desta missão");
       }
 

@@ -33,8 +33,6 @@ export interface FormData {
   cashbackReward: number;
   /** Número máximo de participantes da campanha */
   maxParticipants?: number;
-  /** Número máximo de resgates de cashback */
-  maxCashbackRedemptions?: number;
   /** Valor do cashback por rifa (em reais) */
   cashbackAmountPerRaffle?: number;
   targetFilter?: {
@@ -73,7 +71,6 @@ export const initialFormData: FormData = {
   ticketsReward: 0,
   cashbackReward: 0,
   maxParticipants: 100, // Valor inicial para máximo de participantes
-  maxCashbackRedemptions: 5,
   cashbackAmountPerRaffle: 5.00, // Valor fixo de R$ 5,00 por rifa
   targetFilter: {
     age: ["18", "65"],

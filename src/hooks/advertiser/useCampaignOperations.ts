@@ -70,7 +70,6 @@ const useCampaignOperations = () => {
         advertiser_id: user.id,
         created_by: user.id,
         max_participants: formData.maxParticipants || 100,
-        max_cashback_redemptions: formData.maxCashbackRedemptions || 5,
         cashback_amount_per_raffle: 5.00 // Valor fixo
       };
       

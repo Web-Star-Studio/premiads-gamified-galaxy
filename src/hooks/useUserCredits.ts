@@ -19,12 +19,12 @@ export function useUserCredits() {
     queryKey: ['user-rifas', user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        return { rifas: 0 }
+        return { rifas: 0, cashback_balance: 0 }
       }
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('rifas')
+        .select('rifas, cashback_balance')
         .eq('id', user.id)
         .single()
 
@@ -33,7 +33,7 @@ export function useUserCredits() {
         throw error
       }
 
-      return { rifas: data?.rifas || 0 }
+      return { rifas: data?.rifas || 0, cashback_balance: data?.cashback_balance || 0 }
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -41,6 +41,7 @@ export function useUserCredits() {
   })
 
   const rifas = rifasData?.rifas || 0
+  const cashback = rifasData?.cashback_balance || 0
 
   const refreshCredits = async () => {
     await refetch()
@@ -62,6 +63,7 @@ export function useUserCredits() {
     totalCredits: rifas,
     availableCredits: rifas,
     usedCredits: 0,
+    availableCashback: cashback,
     isLoading,
     isInitialized: !isLoading && !error,
     error: error?.message || null,

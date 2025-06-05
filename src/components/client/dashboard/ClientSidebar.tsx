@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, Award, Bell } from 'lucide-react';
+import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, Award, Bell, PiggyBank } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCredits } from '@/hooks/useUserCredits';
 import { 
   Sidebar, 
   SidebarHeader, 
@@ -23,6 +23,7 @@ interface ClientSidebarProps {
 const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' }) => {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { availableCredits: rifas, availableCashback: cashback, isLoading } = useUserCredits();
   
   const isActive = (path: string) => 
     // Account for both exact matches and nested routes
@@ -43,6 +44,18 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
           <div className="flex flex-col">
             <span className="font-medium text-sm text-white">{userName || 'Visitante'}</span>
             <span className="text-xs text-gray-400">Participante</span>
+          </div>
+        </div>
+        <div className="mt-4 mb-2 px-2 py-3 rounded-lg bg-galaxy-deepPurple/40 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-neon-cyan" />
+            <span className="text-xs text-gray-300">Rifas</span>
+            <span className="ml-auto text-sm font-semibold text-neon-cyan">{isLoading ? '...' : rifas}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <PiggyBank className="w-4 h-4 text-green-400" />
+            <span className="text-xs text-gray-300">Cashback</span>
+            <span className="ml-auto text-sm font-semibold text-green-400">{isLoading ? '...' : formatCurrency(cashback)}</span>
           </div>
         </div>
       </SidebarHeader>
@@ -181,5 +194,9 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
     </Sidebar>
   );
 };
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 
 export default ClientSidebar;
