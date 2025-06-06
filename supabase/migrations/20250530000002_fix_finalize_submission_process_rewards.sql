@@ -1,4 +1,3 @@
-
 -- Update the finalize_submission function to ensure it properly calls process_mission_rewards
 CREATE OR REPLACE FUNCTION public.finalize_submission(p_submission_id uuid, p_approver_id uuid, p_decision text, p_stage text)
 RETURNS jsonb
@@ -45,7 +44,7 @@ BEGIN
   
   -- Get request ID if exists
   SELECT id INTO v_request_id 
-  FROM missions_requests 
+  FROM mission_submissions
   WHERE mission_id = v_mission_id AND user_id = v_participant_id
   ORDER BY created_at DESC 
   LIMIT 1;
@@ -65,7 +64,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           status = 'approved',
           review_stage = 'finalized',
@@ -124,7 +123,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           status = 'second_instance_pending',
           review_stage = 'admin',
@@ -150,7 +149,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           second_instance_status = 'approved',
           review_stage = 'returned_to_advertiser',
@@ -174,7 +173,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           status = 'rejected',
           review_stage = 'completed',
@@ -200,7 +199,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           status = 'approved',
           second_instance_status = 'approved',
@@ -260,7 +259,7 @@ BEGIN
       
       -- Update request if exists
       IF v_request_id IS NOT NULL THEN
-        UPDATE missions_requests
+        UPDATE mission_submissions
         SET 
           status = 'rejected',
           second_instance_status = 'rejected',

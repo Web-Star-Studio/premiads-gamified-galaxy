@@ -62,6 +62,17 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
   
   // Handle form submission
   const handleSubmit = async () => {
+    // Adicionar validação de rifas aqui
+    const totalRifasAtribuidas = formData.rifas * formData.maxParticipants;
+    if (totalRifasAtribuidas > availableCredits) {
+      toast({
+        title: 'Envio cancelado',
+        description: `O total de rifas atribuídas (${totalRifasAtribuidas}) excede seu saldo disponível (${availableCredits}).`,
+        variant: 'destructive'
+      });
+      return; // Impede o envio
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -130,6 +141,12 @@ export const useCampaignForm = ({ editCampaign, onClose }: UseCampaignFormProps)
     
     // Check if end date is after start date
     if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+      return false;
+    }
+    
+    // Validação de rifas para desabilitar o botão
+    const totalRifasAtribuidas = formData.rifas * formData.maxParticipants;
+    if (totalRifasAtribuidas > availableCredits) {
       return false;
     }
     

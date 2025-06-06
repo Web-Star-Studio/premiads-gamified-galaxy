@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CampaignTableRow from "./CampaignTableRow";
 import { Campaign } from "./campaignData";
@@ -24,7 +23,7 @@ const CampaignTable = ({ campaigns, onDelete, onEdit }: CampaignTableProps) => (
                 <TableHead>Status</TableHead>
                 <TableHead>Público</TableHead>
                 <TableHead className="text-right">Completadas</TableHead>
-                <TableHead>Pontos</TableHead>
+                <TableHead>Rifas</TableHead>
                 <TableHead>Expira</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>

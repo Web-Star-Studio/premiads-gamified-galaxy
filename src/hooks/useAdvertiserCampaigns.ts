@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -73,6 +72,7 @@ export function useAdvertiserCampaigns() {
           audience: mission.target_audience || "Todos",
           completions: completionsCount,
           expires: mission.end_date ? new Date(mission.end_date).toLocaleDateString() : 'N/A',
+          rifas: mission.rifas,
           reward: `${mission.points} pontos`,
           // New reward feature fields with mapping for backwards compatibility
           has_badge: mission.has_badge,

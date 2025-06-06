@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Edit, Eye, Trash, BarChart } from "lucide-react";
@@ -16,7 +15,7 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
   // Use properties from the campaign object with proper fallbacks
   const audience = campaign.audience || campaign.target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
-  const reward = campaign.reward || `${campaign.tickets_reward} tickets`;
+  const raffles = typeof campaign.rifas === 'number' ? campaign.rifas : 0;
   const expires = campaign.expires || (campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : 'N/A');
 
   return (
@@ -27,7 +26,7 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
       </TableCell>
       <TableCell>{audience}</TableCell>
       <TableCell className="text-right">{completions}</TableCell>
-      <TableCell>{reward}</TableCell>
+      <TableCell>{raffles} rifas</TableCell>
       <TableCell>{expires}</TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">

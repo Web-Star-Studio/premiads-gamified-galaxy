@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
+// Mapeamento de abas para status do DB
+const tabStatusMap: Record<string, string> = {
+  pendentes: 'pending_approval',
+  aprovadas: 'approved',
+  rejeitadas: 'rejected',
+  segunda_instancia: 'second_instance_pending',
+  retornadas: 'returned_to_advertiser',
+};
+
 interface ModerationContentProps {
   refreshKey: number;
 }
@@ -28,7 +37,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('pending'); 
+  const [activeTab, setActiveTab] = useState<string>('pendentes'); 
   const { toast } = useToast();
   
   // Set up real-time listener for mission submissions
@@ -97,7 +106,14 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       console.log('Fetching submissions for mission IDs:', missionIds);
       console.log('Current active tab:', activeTab);
       
-      // Fixed query - don't use nested select with user_id
+      const dbStatus = tabStatusMap[activeTab];
+      if (!dbStatus) {
+        console.warn(`Status de banco de dados não encontrado para a aba: ${activeTab}`);
+        setLoading(false);
+        return;
+      }
+      
+      // Fixed query - use status from map
       let submissionsQuery = supabase
         .from('mission_submissions')
         .select('*');
@@ -109,7 +125,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       }
       
       // Filter by status
-      submissionsQuery = submissionsQuery.eq('status', activeTab).order('submitted_at', { ascending: false })
+      submissionsQuery = submissionsQuery.eq('status', dbStatus).order('submitted_at', { ascending: false })
       
       const { data: submissionsData, error: submissionsError } = await submissionsQuery;
       
@@ -275,6 +291,14 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     }
   };
   
+  const TABS = [
+    { id: 'pendentes', label: 'Pendentes' },
+    { id: 'aprovadas', label: 'Aprovadas' },
+    { id: 'rejeitadas', label: 'Rejeitadas' },
+    { id: 'segunda_instancia', label: 'Segunda Instância' },
+    { id: 'retornadas', label: 'Retornadas' },
+  ];
+
   return (
     <div>
       {/* Mission filter dropdown */}
@@ -292,37 +316,24 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         </Select>
       </div>
       {/* Status tabs */}
-      <div className="mb-4 flex space-x-2">
-        <Button
-          variant={activeTab === 'pending' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('pending')}
-        >
-          Pendentes
-        </Button>
-        <Button
-          variant={activeTab === 'approved' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('approved')}
-        >
-          Aprovadas
-        </Button>
-        <Button
-          variant={activeTab === 'rejected' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('rejected')}
-        >
-          Rejeitadas
-        </Button>
-         <Button
-          variant={activeTab === 'second_instance_pending' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('second_instance_pending')}
-        >
-          Segunda Instância
-        </Button>
-        <Button
-          variant={activeTab === 'returned_to_advertiser' ? 'default' : 'outline'}
-          onClick={() => setActiveTab('returned_to_advertiser')}
-        >
-          Retornadas
-        </Button>
+      <div className="border-b border-white/10 mb-4">
+        <div className="flex space-x-4">
+          {TABS.map((tab) => (
+            <Button
+              key={tab.id}
+              variant="ghost"
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-2 text-sm font-medium rounded-t-md transition-colors duration-200
+                ${activeTab === tab.id
+                  ? 'border-b-2 border-galaxy-blue text-white' 
+                  : 'text-gray-400 hover:text-white'
+                }`
+              }
+            >
+              {tab.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {loading && <SubmissionsLoading />}

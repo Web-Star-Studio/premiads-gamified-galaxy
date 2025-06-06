@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { FormData } from "./types";
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { Card, CardContent } from "@/components/ui/card";
-import { Info } from "lucide-react";
+import { Info, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -24,21 +24,56 @@ interface RewardsStepProps {
  * Manages rifas, badges, and other reward options
  */
 const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
-  const { availableCredits: userCredits, isLoading, error } = useUserCredits();
+  const { availableCredits: totalRifasDisponiveis, isLoading, error } = useUserCredits();
   const [uploadingPrizeImage, setUploadingPrizeImage] = useState(false);
   const [prizeImagePreview, setPrizeImagePreview] = useState<string | null>(formData.extraPrizeImageUrl || null);
   const { toast } = useToast();
   
-  // Limites de rifas baseados nos créditos disponíveis
+  const [maxRifas, setMaxRifas] = useState(totalRifasDisponiveis);
+  const [maxParticipants, setMaxParticipants] = useState(10000); // Default max
+  
   const minRifas = 1;
-  // Máximo de rifas proporcional aos créditos disponíveis
-  const maxRifas = userCredits;
+  const minParticipants = 10;
   const rifasStep = 1;
 
-  // Inicializa e mantém créditos dinâmicos via store e real-time
+  const totalRifasAtribuidas = formData.rifas * formData.maxParticipants;
+  const excedeLimite = totalRifasAtribuidas > totalRifasDisponiveis;
+
   useEffect(() => {
     if (error) console.error('Erro ao carregar créditos:', error)
   }, [error]);
+
+  useEffect(() => {
+    if (totalRifasDisponiveis > 0) {
+      // Quando "Rifas por Participante" muda, ajusta o máximo de participantes
+      if (formData.rifas > 0) {
+        const newMaxParticipants = Math.floor(totalRifasDisponiveis / formData.rifas);
+        setMaxParticipants(Math.max(newMaxParticipants, minParticipants));
+
+        if (formData.maxParticipants > newMaxParticipants) {
+          updateFormData("maxParticipants", Math.max(newMaxParticipants, minParticipants));
+        }
+      } else {
+        setMaxParticipants(10000); // Reset to default if rifas is 0
+      }
+    }
+  }, [formData.rifas, totalRifasDisponiveis, updateFormData]);
+
+  useEffect(() => {
+    if (totalRifasDisponiveis > 0) {
+      // Quando "Máximo de Participantes" muda, ajusta o máximo de rifas por participante
+      if (formData.maxParticipants > 0) {
+        const newMaxRifas = Math.floor(totalRifasDisponiveis / formData.maxParticipants);
+        setMaxRifas(Math.max(newMaxRifas, minRifas));
+
+        if (formData.rifas > newMaxRifas) {
+          updateFormData("rifas", Math.max(newMaxRifas, minRifas));
+        }
+      } else {
+        setMaxRifas(totalRifasDisponiveis); // Reset to total available if no participants
+      }
+    }
+  }, [formData.maxParticipants, totalRifasDisponiveis, updateFormData]);
 
   // Handle prize image upload
   const handlePrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +132,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 mb-2">
                 <Info className="text-yellow-400 h-4 w-4" />
-                <span className="text-sm font-medium text-yellow-400">Saldo disponível: {userCredits} créditos</span>
+                <span className="text-sm font-medium text-yellow-400">Saldo disponível: {totalRifasDisponiveis} créditos</span>
               </div>
               <p className="text-xs text-gray-400">
                 Os créditos são consumidos quando a campanha é publicada.
@@ -105,6 +140,21 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               </p>
             </CardContent>
           </Card>
+
+          {excedeLimite && (
+            <Card className="bg-destructive/20 border-destructive/50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="text-destructive h-4 w-4" />
+                  <span className="text-sm font-medium text-destructive">Limite de Rifas Excedido</span>
+                </div>
+                <p className="text-xs text-red-400">
+                  A combinação de rifas por participante e o máximo de participantes ({totalRifasAtribuidas}) 
+                  ultrapassa seu saldo de {totalRifasDisponiveis} rifas. Ajuste os valores para continuar.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="bg-green-900/20 border-green-500/30">
             <CardContent className="pt-4">
@@ -139,7 +189,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
                         {updateFormData("rifas", Math.min(Math.max(val, minRifas), maxRifas))}
                     }}
                     className="w-24 bg-gray-800 border-gray-700 focus:border-yellow-400 text-right"
-                    disabled={userCredits === 0}
+                    disabled={totalRifasDisponiveis === 0}
                   />
                 </>
               </div>
@@ -150,7 +200,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               min={minRifas}
               max={maxRifas}
               step={rifasStep}
-              disabled={userCredits === 0}
+              disabled={totalRifasDisponiveis === 0}
               onValueChange={(value) => updateFormData("rifas", value[0])}
               className="py-4"
               aria-valuemin={minRifas}
@@ -180,18 +230,18 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
             <div className="flex items-center justify-between">
               <label htmlFor="participants-slider" className="text-sm font-medium">Máximo de Participantes</label>
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-pink-400">{formData.maxParticipants || 100}</span>
+                <span className="text-sm text-pink-400">{formData.maxParticipants}</span>
                 <Input
                   id="participants-input"
                   type="number"
-                  min={10}
-                  max={10000}
+                  min={minParticipants}
+                  max={maxParticipants}
                   step={10}
-                  value={formData.maxParticipants || 100}
+                  value={formData.maxParticipants}
                   onChange={(e) => {
                     const val = parseInt(e.target.value, 10)
                     if (!isNaN(val))
-                      {updateFormData("maxParticipants", Math.min(Math.max(val, 10), 10000))}
+                      {updateFormData("maxParticipants", Math.min(Math.max(val, minParticipants), maxParticipants))}
                   }}
                   className="w-24 bg-gray-800 border-gray-700 focus:border-pink-400 text-right"
                 />
@@ -199,16 +249,16 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
             </div>
             <Slider
               id="participants-slider"
-              value={[formData.maxParticipants || 100]}
-              min={10}
-              max={10000}
+              value={[formData.maxParticipants]}
+              min={minParticipants}
+              max={maxParticipants}
               step={10}
               onValueChange={(value) => updateFormData("maxParticipants", value[0])}
               className="py-4"
-              aria-valuemin={10}
-              aria-valuemax={10000}
-              aria-valuenow={formData.maxParticipants || 100}
-              aria-valuetext={`${formData.maxParticipants || 100} participantes máximos`}
+              aria-valuemin={minParticipants}
+              aria-valuemax={maxParticipants}
+              aria-valuenow={formData.maxParticipants}
+              aria-valuetext={`${formData.maxParticipants} participantes máximos`}
             />
           </div>
 

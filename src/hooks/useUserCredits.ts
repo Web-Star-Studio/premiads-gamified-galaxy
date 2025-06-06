@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuthSession } from '@/hooks/useAuthSession'
+import { useEffect } from 'react';
 
 /**
  * Hook for managing user credits with real-time updates
@@ -9,6 +10,34 @@ import { useAuthSession } from '@/hooks/useAuthSession'
 export function useUserCredits() {
   const { user } = useAuthSession()
   const queryClient = useQueryClient()
+
+  // Subscribe to real-time updates for user credits
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`user-credits-${user.id}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'profiles',
+          filter: `id=eq.${user.id}` 
+        },
+        (payload) => {
+          console.log('Real-time credit update received:', payload);
+          // Invalidate and refetch the user's credits query
+          queryClient.invalidateQueries({ queryKey: ['user-rifas', user.id] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   const {
     data: rifasData,
