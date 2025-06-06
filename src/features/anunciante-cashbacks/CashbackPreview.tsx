@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react'
 import { CashbackCampaign } from './types'
 
 interface CashbackPreviewProps {
-  data: Partial<Pick<CashbackCampaign, 'title' | 'description' | 'discount_percentage' | 'minimum_purchase' | 'end_date' | 'category'>> & { advertiser_logo?: any }
+  data: Partial<Pick<CashbackCampaign, 'title' | 'description' | 'cashback_percentage' | 'minimum_purchase' | 'end_date' | 'category'>> & { advertiser_logo?: any }
 }
 
 function CashbackPreview({ data }: CashbackPreviewProps) {
@@ -41,13 +42,13 @@ function CashbackPreview({ data }: CashbackPreviewProps) {
           <div className="font-bold text-xl text-foreground truncate">{data.title || 'Título do Cupom'}</div>
           <div className="text-sm text-muted-foreground capitalize">{data.category || 'Categoria'}</div>
         </div>
-        <div className="text-primary font-bold text-2xl whitespace-nowrap">{data.discount_percentage || 0}% OFF</div>
+        <div className="text-primary font-bold text-2xl whitespace-nowrap">{data.cashback_percentage || 0}% CASHBACK</div>
       </div>
       <p className="text-sm text-muted-foreground min-h-[40px]">{data.description || 'Descrição do cupom aparecerá aqui.'}</p>
       <div className="border-t border-border pt-3 mt-2 flex justify-between items-center text-xs text-muted-foreground">
         <div>
           <span className="font-semibold">Valor Mínimo:</span>
-          <span className="ml-1">{data.discount_percentage === 100 ? 'Não aplicável' : `R$ ${Number(data.minimum_purchase || 0).toFixed(2)}`}</span>
+          <span className="ml-1">{data.cashback_percentage === 100 ? 'Não aplicável' : `R$ ${Number(data.minimum_purchase || 0).toFixed(2)}`}</span>
         </div>
         <div>
           <span className="font-semibold">Validade:</span>
@@ -58,4 +59,4 @@ function CashbackPreview({ data }: CashbackPreviewProps) {
   )
 }
 
-export { CashbackPreview } 
+export { CashbackPreview }

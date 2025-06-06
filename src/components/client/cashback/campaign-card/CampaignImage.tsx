@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { defaultImage } from './utils';
@@ -16,7 +17,7 @@ const CampaignImage: React.FC<CampaignImageProps> = ({ image, discountPercentage
       />
       <div className="absolute top-3 right-3">
         <Badge className="bg-neon-cyan text-galaxy-dark font-bold text-sm px-3 py-1">
-          {discountPercentage}% OFF
+          {discountPercentage}% CASHBACK
         </Badge>
       </div>
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-galaxy-dark to-transparent" />

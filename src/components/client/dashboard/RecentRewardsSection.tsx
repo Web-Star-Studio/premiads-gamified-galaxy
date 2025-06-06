@@ -6,9 +6,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ListOrderedIcon, TrophyIcon } from 'lucide-react'
 
-// Placeholder: Assume userId is obtained from a context or a more robust auth hook
-// For example: import { useAuth } from '@/hooks/useAuth'; const { userId } = useAuth();
-// This simplified version is for demonstration.
 async function getAuthenticatedUserId(): Promise<string | undefined> {
   const { data: { user } } = await supabase.auth.getUser()
   return user?.id
@@ -19,16 +16,15 @@ interface MissionData {
   title: string
 }
 
-// Reflects the actual columns in mission_rewards (with tokens_earned)
+// Atualizado para refletir as novas colunas do banco
 interface FetchedReward {
   id: string
   rewarded_at: string
-  points_earned: number
-  tokens_earned: number
+  rifas_earned: number
+  cashback_earned: number
   missions: MissionData | null
 }
 
-// This will be the type for our component's state and props if needed elsewhere
 export interface ProcessedReward extends Omit<FetchedReward, 'missions'> {
   missionTitle: string | null;
 }
@@ -40,7 +36,7 @@ async function fetchRecentRewardsQueryFn(userId: string | undefined): Promise<Fe
 
   const { data, error } = await supabase
     .from('mission_rewards')
-    .select('id, rewarded_at, points_earned, tokens_earned, missions (id, title)')
+    .select('id, rewarded_at, rifas_earned, cashback_earned, missions (id, title)')
     .eq('user_id', userId)
     .order('rewarded_at', { ascending: false })
     .limit(5)
@@ -49,7 +45,6 @@ async function fetchRecentRewardsQueryFn(userId: string | undefined): Promise<Fe
     console.error('Error fetching recent rewards:', error.message)
     throw new Error(`Failed to fetch recent rewards: ${error.message}`)
   }
-  // Force type assertion as a diagnostic step due to persistent linter errors
   return (data as unknown as FetchedReward[]) || [];
 }
 
@@ -108,7 +103,6 @@ export function RecentRewardsSection() {
     );
   }
   
-  // Process rewards for display AFTER confirming fetchedRewards is an array
   const rewardsToDisplay: ProcessedReward[] = Array.isArray(fetchedRewards) ? fetchedRewards.map(r => ({
     ...r,
     missionTitle: r.missions?.title || 'Missão desconhecida'
@@ -127,7 +121,7 @@ export function RecentRewardsSection() {
           <div className="text-center text-gray-400 py-4">
             <ListOrderedIcon className="w-12 h-12 mx-auto mb-2" />
             <p>Nenhuma recompensa recente encontrada.</p>
-            <p className="text-sm">Complete missões para ganhar tickets!</p>
+            <p className="text-sm">Complete missões para ganhar rifas!</p>
           </div>
         </CardContent>
       </Card>
@@ -156,9 +150,9 @@ export function RecentRewardsSection() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-lg text-green-400">+{reward.points_earned} pts</span>
-                  {reward.tokens_earned > 0 && (
-                     <span className="block text-xs text-sky-400">+{reward.tokens_earned} tokens</span>
+                  <span className="font-bold text-lg text-green-400">+{reward.rifas_earned} rifas</span>
+                  {reward.cashback_earned > 0 && (
+                     <span className="block text-xs text-sky-400">+R$ {reward.cashback_earned.toFixed(2)} cashback</span>
                   )}
                 </div>
               </li>

@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/services/supabase';
 
@@ -38,7 +39,7 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('rifas')
+        .select('rifas') // Atualizado para usar apenas rifas
         .eq('id', userId)
         .maybeSingle();
       

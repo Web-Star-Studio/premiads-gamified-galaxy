@@ -12,14 +12,12 @@ export type Database = {
       cashback_campaigns: {
         Row: {
           advertiser_id: string | null
-          advertiser_image: string | null
           advertiser_logo: string | null
           advertiser_name: string | null
+          cashback_percentage: number
           category: string | null
-          conditions: string | null
           created_at: string | null
           description: string | null
-          discount_percentage: number
           end_date: string
           expires_at: string | null
           id: string
@@ -31,14 +29,12 @@ export type Database = {
         }
         Insert: {
           advertiser_id?: string | null
-          advertiser_image?: string | null
           advertiser_logo?: string | null
           advertiser_name?: string | null
+          cashback_percentage: number
           category?: string | null
-          conditions?: string | null
           created_at?: string | null
           description?: string | null
-          discount_percentage: number
           end_date?: string
           expires_at?: string | null
           id?: string
@@ -50,14 +46,12 @@ export type Database = {
         }
         Update: {
           advertiser_id?: string | null
-          advertiser_image?: string | null
           advertiser_logo?: string | null
           advertiser_name?: string | null
+          cashback_percentage?: number
           category?: string | null
-          conditions?: string | null
           created_at?: string | null
           description?: string | null
-          discount_percentage?: number
           end_date?: string
           expires_at?: string | null
           id?: string
@@ -151,85 +145,32 @@ export type Database = {
           },
         ]
       }
-      loot_box_rewards: {
-        Row: {
-          awarded_at: string | null
-          created_at: string | null
-          description: string | null
-          display_name: string | null
-          id: string
-          is_claimed: boolean | null
-          mission_id: string
-          reward_amount: number
-          reward_type: string
-          user_id: string
-        }
-        Insert: {
-          awarded_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          id?: string
-          is_claimed?: boolean | null
-          mission_id: string
-          reward_amount: number
-          reward_type: string
-          user_id: string
-        }
-        Update: {
-          awarded_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          id?: string
-          is_claimed?: boolean | null
-          mission_id?: string
-          reward_amount?: number
-          reward_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loot_box_rewards_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "missions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       mission_rewards: {
         Row: {
           cashback_earned: number | null
           id: string
           mission_id: string
-          points_earned: number | null
           rewarded_at: string | null
           rifas_earned: number
           submission_id: string
-          tickets_earned: number | null
           user_id: string
         }
         Insert: {
           cashback_earned?: number | null
           id?: string
           mission_id: string
-          points_earned?: number | null
           rewarded_at?: string | null
           rifas_earned?: number
           submission_id: string
-          tickets_earned?: number | null
           user_id: string
         }
         Update: {
           cashback_earned?: number | null
           id?: string
           mission_id?: string
-          points_earned?: number | null
           rewarded_at?: string | null
           rifas_earned?: number
           submission_id?: string
-          tickets_earned?: number | null
           user_id?: string
         }
         Relationships: [
@@ -252,7 +193,6 @@ export type Database = {
       mission_submissions: {
         Row: {
           admin_validated: boolean | null
-          feedback: string | null
           id: string
           mission_id: string | null
           review_stage: string | null
@@ -260,7 +200,6 @@ export type Database = {
           second_instance_status: string | null
           status: string | null
           submission_data: Json | null
-          submitted: boolean | null
           submitted_at: string | null
           updated_at: string | null
           user_id: string | null
@@ -268,7 +207,6 @@ export type Database = {
         }
         Insert: {
           admin_validated?: boolean | null
-          feedback?: string | null
           id?: string
           mission_id?: string | null
           review_stage?: string | null
@@ -276,7 +214,6 @@ export type Database = {
           second_instance_status?: string | null
           status?: string | null
           submission_data?: Json | null
-          submitted?: boolean | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -284,7 +221,6 @@ export type Database = {
         }
         Update: {
           admin_validated?: boolean | null
-          feedback?: string | null
           id?: string
           mission_id?: string | null
           review_stage?: string | null
@@ -292,7 +228,6 @@ export type Database = {
           second_instance_status?: string | null
           status?: string | null
           submission_data?: Json | null
-          submitted?: boolean | null
           submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -350,14 +285,12 @@ export type Database = {
         Row: {
           advertiser_id: string | null
           badge_image_url: string | null
-          business_type: string | null
           cashback_amount_per_raffle: number | null
           cashback_reward: number | null
           created_at: string | null
           created_by: string | null
           description: string | null
           end_date: string | null
-          expires_at: string | null
           has_badge: boolean | null
           has_lootbox: boolean | null
           id: string
@@ -365,20 +298,15 @@ export type Database = {
           max_cashback_redemptions: number | null
           max_participants: number | null
           requirements: Json | null
+          rifas: number
           rifas_per_mission: number
           selected_lootbox_rewards: string[] | null
           sequence_bonus: boolean | null
-          sequence_bonus_old: boolean
           start_date: string | null
           status: string | null
           streak_multiplier: number | null
           target_audience: string | null
-          target_audience_age_max: number | null
-          target_audience_age_min: number | null
-          target_audience_gender: string | null
-          target_audience_region: string | null
           target_filter: Json
-          tickets_reward: number | null
           title: string
           type: string
           updated_at: string | null
@@ -386,14 +314,12 @@ export type Database = {
         Insert: {
           advertiser_id?: string | null
           badge_image_url?: string | null
-          business_type?: string | null
           cashback_amount_per_raffle?: number | null
           cashback_reward?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_date?: string | null
-          expires_at?: string | null
           has_badge?: boolean | null
           has_lootbox?: boolean | null
           id?: string
@@ -401,20 +327,15 @@ export type Database = {
           max_cashback_redemptions?: number | null
           max_participants?: number | null
           requirements?: Json | null
+          rifas?: number
           rifas_per_mission?: number
           selected_lootbox_rewards?: string[] | null
           sequence_bonus?: boolean | null
-          sequence_bonus_old?: boolean
           start_date?: string | null
           status?: string | null
           streak_multiplier?: number | null
           target_audience?: string | null
-          target_audience_age_max?: number | null
-          target_audience_age_min?: number | null
-          target_audience_gender?: string | null
-          target_audience_region?: string | null
           target_filter?: Json
-          tickets_reward?: number | null
           title: string
           type: string
           updated_at?: string | null
@@ -422,14 +343,12 @@ export type Database = {
         Update: {
           advertiser_id?: string | null
           badge_image_url?: string | null
-          business_type?: string | null
           cashback_amount_per_raffle?: number | null
           cashback_reward?: number | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_date?: string | null
-          expires_at?: string | null
           has_badge?: boolean | null
           has_lootbox?: boolean | null
           id?: string
@@ -437,20 +356,15 @@ export type Database = {
           max_cashback_redemptions?: number | null
           max_participants?: number | null
           requirements?: Json | null
+          rifas?: number
           rifas_per_mission?: number
           selected_lootbox_rewards?: string[] | null
           sequence_bonus?: boolean | null
-          sequence_bonus_old?: boolean
           start_date?: string | null
           status?: string | null
           streak_multiplier?: number | null
           target_audience?: string | null
-          target_audience_age_max?: number | null
-          target_audience_age_min?: number | null
-          target_audience_gender?: string | null
-          target_audience_region?: string | null
           target_filter?: Json
-          tickets_reward?: number | null
           title?: string
           type?: string
           updated_at?: string | null
@@ -802,30 +716,6 @@ export type Database = {
         }
         Relationships: []
       }
-      token_attribution_logs: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          source: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          source: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          source?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       transactions: {
         Row: {
           amount: number
@@ -921,42 +811,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_levels: {
-        Row: {
-          benefits: Json
-          color: string
-          description: string
-          icon: string
-          id: number
-          max_points: number | null
-          min_points: number
-          name: string
-          points_multiplier: number
-        }
-        Insert: {
-          benefits?: Json
-          color?: string
-          description?: string
-          icon?: string
-          id?: number
-          max_points?: number | null
-          min_points: number
-          name: string
-          points_multiplier?: number
-        }
-        Update: {
-          benefits?: Json
-          color?: string
-          description?: string
-          icon?: string
-          id?: number
-          max_points?: number | null
-          min_points?: number
-          name?: string
-          points_multiplier?: number
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -970,10 +824,6 @@ export type Database = {
         Args: { user_id: string; reward: number }
         Returns: undefined
       }
-      claim_loot_box_reward: {
-        Args: { p_loot_box_id: string }
-        Returns: Json
-      }
       confirm_rifa_purchase: {
         Args: { p_purchase_id: string }
         Returns: undefined
@@ -985,10 +835,6 @@ export type Database = {
           date_filter?: string
         }
         Returns: Json
-      }
-      deduct_credits_from_advertiser: {
-        Args: { p_advertiser_id: string; p_credits_to_deduct: number }
-        Returns: undefined
       }
       delete_user_account: {
         Args: { target_user_id: string }
@@ -1007,14 +853,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           advertiser_id: string | null
-          advertiser_image: string | null
           advertiser_logo: string | null
           advertiser_name: string | null
+          cashback_percentage: number
           category: string | null
-          conditions: string | null
           created_at: string | null
           description: string | null
-          discount_percentage: number
           end_date: string
           expires_at: string | null
           id: string
@@ -1043,10 +887,6 @@ export type Database = {
         Args: { x: number; row_id: string; table_name: string }
         Returns: undefined
       }
-      increment_user_credits: {
-        Args: { user_id: string; credits_to_add: number }
-        Returns: undefined
-      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1056,6 +896,14 @@ export type Database = {
         Returns: boolean
       }
       process_mission_rewards: {
+        Args: {
+          p_submission_id: string
+          p_user_id: string
+          p_mission_id: string
+        }
+        Returns: Json
+      }
+      process_mission_rewards_simplified: {
         Args: {
           p_submission_id: string
           p_user_id: string

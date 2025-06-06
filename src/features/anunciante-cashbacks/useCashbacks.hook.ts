@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import type { CashbackCampaign } from './types'
@@ -7,7 +8,7 @@ const TABLE = 'cashback_campaigns'
 interface CreateCashbackInput {
   title: string
   description: string
-  discount_percentage: number
+  cashback_percentage: number // Atualizado
   minimum_purchase: number | null
   end_date: string
   category: string
@@ -107,4 +108,4 @@ function useCashbacks(advertiserId: string) {
   }
 }
 
-export { useCashbacks } 
+export { useCashbacks }

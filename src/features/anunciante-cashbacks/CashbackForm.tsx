@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
@@ -18,7 +19,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const schema = z.object({
   title: z.string().min(3, "O título deve ter no mínimo 3 caracteres."),
   description: z.string().min(5, "A descrição deve ter no mínimo 5 caracteres."),
-  discount_percentage: z.number().min(5).max(100),
+  cashback_percentage: z.number().min(5).max(100), // Atualizado
   minimum_purchase: z.number().min(0).nullable(),
   end_date: z.string().min(1, "A data de validade é obrigatória."),
   category: z.string().min(1, "A categoria é obrigatória."),
@@ -30,7 +31,7 @@ const schema = z.object({
       "Apenas .jpg, .jpeg, .png and .webp são permitidos."
     ),
 }).superRefine((val, ctx) => {
-  if (val.discount_percentage < 100 && (val.minimum_purchase === null || val.minimum_purchase === undefined)) {
+  if (val.cashback_percentage < 100 && (val.minimum_purchase === null || val.minimum_purchase === undefined)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Obrigatório se percentual < 100%',
@@ -55,11 +56,11 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
     resolver: zodResolver(schema),
     defaultValues: initialData ? {
       ...initialData,
-      minimum_purchase: initialData.minimum_purchase ?? 0,
+      minimum_purchase: initialData.min_purchase ?? 0,
     } : {
       title: '',
       description: '',
-      discount_percentage: 10,
+      cashback_percentage: 10, // Atualizado
       minimum_purchase: 0,
       end_date: '',
       category: '',
@@ -74,7 +75,6 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
       setValue('advertiser_logo', initialData.advertiser_logo)
     }
   }, [initialData, setValue])
-
 
   async function onSubmit(values: FormData) {
     try {
@@ -112,7 +112,7 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
         const dataToSave: CreateCashbackInput = {
           title: values.title,
           description: values.description,
-          discount_percentage: values.discount_percentage,
+          cashback_percentage: values.cashback_percentage, // Atualizado
           minimum_purchase: values.minimum_purchase,
           end_date: values.end_date,
           category: values.category,
@@ -177,9 +177,16 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
 
         <div>
           <label className="block text-sm font-medium mb-2">Percentual de Cashback</label>
-          <input type="range" min={5} max={100} step={1} {...register('discount_percentage', { valueAsNumber: true })} className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer" />
-          <div className="text-sm mt-1 text-right font-medium">{watchedValues.discount_percentage}%</div>
-          {errors.discount_percentage && <div className="text-xs text-red-500">{errors.discount_percentage.message}</div>}
+          <input 
+            type="range" 
+            min={5} 
+            max={100} 
+            step={1} 
+            {...register('cashback_percentage', { valueAsNumber: true })} 
+            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer" 
+          />
+          <div className="text-sm mt-1 text-right font-medium">{watchedValues.cashback_percentage}%</div>
+          {errors.cashback_percentage && <div className="text-xs text-red-500">{errors.cashback_percentage.message}</div>}
         </div>
         <div>
           <label className="block text-sm font-medium mb-2" htmlFor="minimum_purchase">Valor Mínimo (R$)</label>
@@ -189,7 +196,7 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
             step="0.01"
             placeholder="0.00"
             {...register('minimum_purchase', { valueAsNumber: true, required: false })}
-            disabled={watchedValues.discount_percentage === 100}
+            disabled={watchedValues.cashback_percentage === 100}
           />
           {errors.minimum_purchase && <div className="text-xs text-red-500 mt-1">{errors.minimum_purchase.message}</div>}
         </div>
