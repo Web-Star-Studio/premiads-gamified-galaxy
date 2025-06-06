@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -10,7 +9,6 @@ import {
   CampaignFooter,
   RedemptionDialog,
   formatDate,
-  getImage,
   defaultLogo
 } from './campaign-card';
 import CampaignCardSkeleton from './campaign-card/CampaignCardSkeleton';
@@ -54,8 +52,6 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
     );
   }
 
-  const imageUrl = getImage(campaign.id, campaign.advertiser_image);
-
   return (
     <>
       <motion.div
@@ -66,7 +62,7 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
       >
         <Card className="h-full overflow-hidden glass-panel-hover border-neon-cyan/20 hover:shadow-[0_0_15px_rgba(0,255,231,0.2)]">
           <CampaignImage
-            image={imageUrl}
+            image={campaign.advertiser_logo}
             discountPercentage={campaign.discount_percentage}
           />
           

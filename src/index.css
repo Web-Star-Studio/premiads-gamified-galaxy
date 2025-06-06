@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -119,6 +118,10 @@
 
   .card-panel {
     @apply bg-card/80 backdrop-blur-md border border-white/5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  .card-image {
+    @apply aspect-video overflow-hidden;
   }
 
   .glass-card {

@@ -1,16 +1,16 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { defaultImage } from './utils';
 
 interface CampaignImageProps {
-  image: string;
+  image?: string | null;
   discountPercentage: number;
 }
 
 const CampaignImage: React.FC<CampaignImageProps> = ({ image, discountPercentage }) => (
-    <div className="relative h-48 overflow-hidden">
+    <div className="relative card-image">
       <img 
-        src={image} 
+        src={image || defaultImage} 
         alt="Campaign" 
         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
       />

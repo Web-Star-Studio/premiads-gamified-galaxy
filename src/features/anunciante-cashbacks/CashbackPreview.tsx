@@ -1,33 +1,57 @@
+import { useState, useEffect } from 'react'
 import { CashbackCampaign } from './types'
 
 interface CashbackPreviewProps {
-  data: Partial<Pick<CashbackCampaign, 'title' | 'description' | 'discount_percentage' | 'minimum_purchase' | 'end_date' | 'category' | 'advertiser_logo'>>
+  data: Partial<Pick<CashbackCampaign, 'title' | 'description' | 'discount_percentage' | 'minimum_purchase' | 'end_date' | 'category'>> & { advertiser_logo?: any }
 }
 
 function CashbackPreview({ data }: CashbackPreviewProps) {
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    let objectUrl: string | null = null
+    
+    if (data.advertiser_logo) {
+      if (typeof data.advertiser_logo === 'string') {
+        setLogoPreview(data.advertiser_logo)
+      } else if (data.advertiser_logo instanceof File) {
+        objectUrl = URL.createObjectURL(data.advertiser_logo)
+        setLogoPreview(objectUrl)
+      }
+    } else {
+      setLogoPreview(null)
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [data.advertiser_logo])
+
   return (
-    <div className="bg-card rounded-lg shadow p-6 flex flex-col gap-3 max-w-md mx-auto">
-      <div className="flex items-center gap-3">
-        {data.advertiser_logo ? (
-          <img src={data.advertiser_logo} alt="Ícone" className="w-12 h-12 rounded-full bg-muted" />
+    <div className="bg-card rounded-lg shadow-lg p-6 flex flex-col gap-4 max-w-sm mx-auto border border-border">
+      <div className="flex items-center gap-4">
+        {logoPreview ? (
+          <img src={logoPreview} alt="Ícone do Anunciante" className="w-14 h-14 rounded-full bg-muted object-cover" />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl text-muted-foreground">?</div>
+          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-2xl text-muted-foreground">?</div>
         )}
-        <div>
-          <div className="font-bold text-lg">{data.title || 'Título do Cupom'}</div>
-          <div className="text-xs text-muted-foreground">{data.category || 'Categoria'}</div>
+        <div className="flex-1">
+          <div className="font-bold text-xl text-foreground truncate">{data.title || 'Título do Cupom'}</div>
+          <div className="text-sm text-muted-foreground capitalize">{data.category || 'Categoria'}</div>
         </div>
-        <span className="ml-auto text-primary font-bold text-lg">{data.discount_percentage ? `${data.discount_percentage}%` : '--'} OFF</span>
+        <div className="text-primary font-bold text-2xl whitespace-nowrap">{data.discount_percentage || 0}% OFF</div>
       </div>
-      <div className="text-sm text-muted-foreground line-clamp-2">{data.description || 'Descrição do cupom.'}</div>
-      <div className="flex gap-4 text-xs mt-2">
-        <div className="flex items-center gap-1">
-          <span className="font-medium">Valor Mínimo:</span>
-          <span>{data.discount_percentage === 100 ? 'Não exige' : data.minimum_purchase ? `R$ ${Number(data.minimum_purchase).toFixed(2)}` : '--'}</span>
+      <p className="text-sm text-muted-foreground min-h-[40px]">{data.description || 'Descrição do cupom aparecerá aqui.'}</p>
+      <div className="border-t border-border pt-3 mt-2 flex justify-between items-center text-xs text-muted-foreground">
+        <div>
+          <span className="font-semibold">Valor Mínimo:</span>
+          <span className="ml-1">{data.discount_percentage === 100 ? 'Não aplicável' : `R$ ${Number(data.minimum_purchase || 0).toFixed(2)}`}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <span className="font-medium">Validade:</span>
-          <span>{data.end_date ? new Date(data.end_date).toLocaleDateString() : '--'}</span>
+        <div>
+          <span className="font-semibold">Validade:</span>
+          <span className="ml-1">{data.end_date ? new Date(data.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : 'dd/mm/aaaa'}</span>
         </div>
       </div>
     </div>
