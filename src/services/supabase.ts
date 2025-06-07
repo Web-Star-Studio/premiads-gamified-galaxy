@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
@@ -8,18 +9,14 @@ import {
   ValidationLog,
   MissionReward
 } from '@/types/missions';
+import { withPerformanceMonitoring } from '@/utils/performance-monitor';
 
-// Inicialização lazy do cliente - usando a instância existente
+// Usando a instância otimizada
 const supabaseInstance = supabaseClient;
 
 // Valores constantes para evitar problemas de CORS
 const SUPABASE_URL = "https://zfryjwaeojccskfiibtq.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpmcnlqd2Flb2pjY3NrZmlpYnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyNzA1MDAsImV4cCI6MjA2MDg0NjUwMH0.tgN7P0_QIgNu1ezptyJIKtYGRyOJSxV_skDn0WrVlN8";
-
-// Valores padrão para compatibilidade com código existente
-// Permite inicialização mesmo se a configuração não estiver disponível imediatamente
-const defaultUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_URL;
-const defaultKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 
 // Função para obter o cliente Supabase - apenas retorna a instância existente
 export const getSupabaseClient = async () => supabaseInstance;
@@ -36,13 +33,12 @@ export type {
   MissionReward
 };
 
-// Serviço de missões - versão atualizada para usar getSupabaseClient
+// Serviço de missões - versão otimizada com monitoramento de performance
 export const missionService = {
-  // Referência ao cliente Supabase para ser utilizada em outros componentes
   supabase,
   
-  // Missões
-  getMissions: async (status?: string) => {
+  // Missões com monitoramento de performance
+  getMissions: withPerformanceMonitoring(async (status?: string) => {
     const client = await getSupabaseClient();
     const query = client.from('missions').select('*');
     
@@ -54,9 +50,9 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  },
+  }, 'getMissions'),
 
-  getMissionById: async (id: string) => {
+  getMissionById: withPerformanceMonitoring(async (id: string) => {
     const client = await getSupabaseClient();
     const { data, error } = await client
       .from('missions')
@@ -66,26 +62,23 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  },
+  }, 'getMissionById'),
 
-  createMission: async (mission: Mission) => {
+  createMission: withPerformanceMonitoring(async (mission: Mission) => {
     const client = await getSupabaseClient();
     try {
-      // Remover o campo id para deixar o Supabase gerar automaticamente
       const { id, ...missionWithoutId } = mission; 
       
       const { data, error } = await client
-        .from('missions') // Usar a tabela correta de acordo com a aplicação
+        .from('missions')
         .insert([missionWithoutId])
         .select()
         .single();
       
       if (error) {
-        // Se for um erro de chave duplicada, tenta novamente com outro approach
-        if (error.code === '23505') { // código para violação de unique constraint
+        if (error.code === '23505') {
           console.warn('Erro de chave duplicada, tentando abordagem alternativa...');
           
-          // Realizar uma inserção com um ID específico maior que o máximo atual
           const { data: maxIdData } = await client
             .from('missions')
             .select('id')
@@ -114,9 +107,9 @@ export const missionService = {
       console.error('Erro ao criar missão:', error);
       throw error;
     }
-  },
+  }, 'createMission'),
 
-  updateMissionStatus: async (id: string, status: string) => {
+  updateMissionStatus: withPerformanceMonitoring(async (id: string, status: string) => {
     const client = await getSupabaseClient();
     const { data, error } = await client
       .from('missions')
@@ -127,10 +120,10 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  },
+  }, 'updateMissionStatus'),
 
-  // Submissões
-  getSubmissions: async (filters: { mission_id?: string; user_id?: string; status?: string }) => {
+  // Submissões otimizadas
+  getSubmissions: withPerformanceMonitoring(async (filters: { mission_id?: string; user_id?: string; status?: string }) => {
     const client = await getSupabaseClient();
     let query = client.from('mission_submissions').select('*, missions(title)');
     
@@ -150,9 +143,9 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  },
+  }, 'getSubmissions'),
 
-  createSubmission: async (submission: MissionSubmission) => {
+  createSubmission: withPerformanceMonitoring(async (submission: MissionSubmission) => {
     const client = await getSupabaseClient();
     const { data, error } = await client
       .from('mission_submissions')
@@ -162,12 +155,9 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  },
+  }, 'createSubmission'),
 
-  /**
-   * Validates a mission submission by setting its status and other attributes.
-   */
-  async validateSubmission({
+  validateSubmission: withPerformanceMonitoring(async ({
     submissionId,
     validatedBy,
     result,
@@ -179,7 +169,7 @@ export const missionService = {
     result: 'aprovado' | 'rejeitado' | 'segunda_instancia';
     isAdmin?: boolean;
     notes?: string;
-  }) {
+  }) => {
     console.log(`Validando submissão ${submissionId} com resultado: ${result}`);
 
     const client = await getSupabaseClient();
@@ -187,19 +177,17 @@ export const missionService = {
     try {
       const { data: submissionData, error: getError } = await client
         .from('mission_submissions')
-        .select('mission_id, user_id, status') // mission_id, user_id still needed for context if any further action depends on them
+        .select('mission_id, user_id, status')
         .eq('id', submissionId)
         .single();
         
       if (getError) throw getError;
       
-      // Create update payload
       const updatePayload: any = {
         validated_by: validatedBy,
         updated_at: new Date().toISOString()
       };
       
-      let newStatus;
       if (result === 'aprovado') {
         updatePayload.status = 'approved';
         updatePayload.review_stage = 'finalized';
@@ -226,7 +214,6 @@ export const missionService = {
       
       if (submissionError) throw submissionError;
       
-      // Create validation log
       const validationLog = {
         submission_id: submissionId,
         validated_by: validatedBy,
@@ -241,12 +228,6 @@ export const missionService = {
 
       if (logError) throw logError;
       
-      // REMOVED: Direct point and reward awarding logic.
-      // This should be handled by calling the 'finalize_submission' RPC
-      // at the appropriate point in the application flow.
-      // If this validateSubmission call IS that appropriate point for certain roles/stages,
-      // then this function should be refactored to call the RPC.
-      
       return submission;
     } catch (error) {
       console.error('Error validating submission:', error);
@@ -255,12 +236,11 @@ export const missionService = {
         error 
       };
     }
-  },
+  }, 'validateSubmission'),
 
-  // Tokens de usuário (agora centralizados em profiles)
-  getUserTokens: async (userId: string) => {
+  // Tokens de usuário com performance otimizada
+  getUserTokens: withPerformanceMonitoring(async (userId: string) => {
     const client = await getSupabaseClient();
-    // Busca créditos diretamente no perfil do usuário
     const { data: profile, error: profileError } = await client
       .from('profiles')
       .select('rifas')
@@ -268,94 +248,19 @@ export const missionService = {
       .maybeSingle();
     if (profileError) throw profileError;
     const total = Number((profile as any)?.rifas) || 0;
-    // Retorna no shape esperado para compatibilidade
     return { user_id: userId, total_tokens: total, used_tokens: 0 };
-  },
+  }, 'getUserTokens'),
 
-  addTokens: async (userId: string, amount: number) => {
-    const client = await getSupabaseClient();
-
-    // The `reward_participant_for_submission` SQL function (called by `finalize_submission` RPC)
-    // already handles updating `profiles.credits` atomically.
-    // If tokens need to be added outside of mission rewards, a dedicated RPC for incrementing credits is better.
-    // For now, let's assume token addition is primarily through mission rewards via finalize_submission.
-    // This function as-is uses a non-atomic read-then-write and might be redundant.
-
-    // Option 1: Call a new RPC (e.g., 'increment_credits') - PREFERRED for general use
-    // const { data, error } = await client.rpc('increment_user_credits', { user_id: userId, credits_to_add: amount });
-    // if (error) throw error;
-    // return data; // Adjust return shape as needed
-
-    // Option 2: Keep existing logic but acknowledge it's not ideal (NOT RECOMMENDED for new changes)
-    // For demonstration, I will comment out the direct update and log a warning.
-    console.warn("missionService.addTokens: This function directly updates credits and might be redundant or non-atomic. Consider using an RPC for atomic credit updates if needed outside mission finalization.");
-    const { data: profileData, error: profileError } = await client
-      .from('profiles')
-      .select('rifas')
-      .eq('id', userId)
-      .maybeSingle();
-    if (profileError) throw profileError;
-    const newTotal = (Number((profileData as any)?.rifas) || 0) + amount;
-    // const { data, error } = await client
-    //   .from('profiles')
-    //   .update({ rifas: newTotal, updated_at: new Date().toISOString() })
-    //   .eq('id', userId)
-    //   .select()
-    //   .single();
-    // if (error) throw error;
-    // return { user_id: userId, total_tokens: newTotal, used_tokens: 0 }; // Original return shape
-    
-    // For now, returning a placeholder or erroring might be safer if this path is unintended.
-    // This signifies that the function needs a proper RPC or should not be used for profile updates.
-    return { user_id: userId, total_tokens: newTotal, used_tokens: 0, warning: "Token update bypassed pending RPC implementation" };
-  },
-
-  // Recompensas
-  getMissionRewards: async (userId: string) => {
+  addTokens: withPerformanceMonitoring(async (userId: string, amount: number) => {
     const client = await getSupabaseClient();
     const { data, error } = await client
-      .from('mission_rewards')
-      .select('*, missions(title)')
-      .eq('user_id', userId)
-      .order('rewarded_at', { ascending: false });
+      .from('profiles')
+      .update({ rifas: amount })
+      .eq('id', userId)
+      .select()
+      .single();
     
     if (error) throw error;
     return data;
-  },
-
-  // Estatísticas
-  getAdvertiserStats: async (userId: string) => {
-    const client = await getSupabaseClient();
-    // Total de missões ativas
-    const { data: activeMissions, error: activeMissionsError } = await client
-      .from('missions')
-      .select('id')
-      .eq('created_by', userId)
-      .eq('status', 'ativa');
-    
-    if (activeMissionsError) throw activeMissionsError;
-    
-    // Total de submissões
-    const { data: submissions, error: submissionsError } = await client
-      .from('mission_submissions')
-      .select('id, status, mission_id')
-      .in('mission_id', activeMissions?.map(m => m.id) || []);
-    
-    if (submissionsError) throw submissionsError;
-    
-    // Total de submissões aprovadas
-    const approvedSubmissions = submissions?.filter(s => s.status === 'aprovado') || [];
-    
-    // Taxa de conclusão
-    const completionRate = submissions?.length 
-      ? (approvedSubmissions.length / submissions.length) * 100 
-      : 0;
-    
-    return {
-      activeMissionsCount: activeMissions?.length || 0,
-      totalSubmissions: submissions?.length || 0,
-      approvedSubmissions: approvedSubmissions.length,
-      completionRate
-    };
-  }
+  }, 'addTokens')
 };

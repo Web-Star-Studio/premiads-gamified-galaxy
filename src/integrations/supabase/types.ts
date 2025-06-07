@@ -873,6 +873,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json[]
       }
+      get_current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_type: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_cashback_balance: {
         Args: { user_id: string }
         Returns: {
@@ -892,6 +900,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_moderator: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_advertiser_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
