@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
@@ -33,24 +32,40 @@ export type {
   MissionReward
 };
 
-// Serviço de missões - versão otimizada com monitoramento de performance
+// Atualizar para usar serviços RLS otimizados
+export { RLSOptimizedService } from './rls-optimized';
+
+// Exporta a mesma instância para uso em todo o aplicativo
+export const supabase = supabaseInstance;
+
+// Re-export types
+export type { 
+  Mission, 
+  MissionSubmission, 
+  UserTokens,
+  ValidationLog,
+  MissionReward
+};
+
+// Atualizar missionService com performance otimizada pós-RLS
 export const missionService = {
   supabase,
   
-  // Missões com monitoramento de performance
+  // Missões com RLS otimizado e performance máxima
   getMissions: withPerformanceMonitoring(async (status?: string) => {
     const client = await getSupabaseClient();
-    const query = client.from('missions').select('*');
+    let query = client.from('missions').select('*');
     
     if (status) {
-      query.eq('status', status);
+      query = query.eq('status', status);
     }
     
+    // RLS otimizado - sem necessidade de filtros manuais adicionais
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
     return data;
-  }, 'getMissions'),
+  }, 'getMissions_optimized'),
 
   getMissionById: withPerformanceMonitoring(async (id: string) => {
     const client = await getSupabaseClient();
@@ -62,7 +77,7 @@ export const missionService = {
     
     if (error) throw error;
     return data;
-  }, 'getMissionById'),
+  }, 'getMissionById_optimized'),
 
   createMission: withPerformanceMonitoring(async (mission: Mission) => {
     const client = await getSupabaseClient();
@@ -122,7 +137,7 @@ export const missionService = {
     return data;
   }, 'updateMissionStatus'),
 
-  // Submissões otimizadas
+  // Submissões com RLS consolidado e performance máxima
   getSubmissions: withPerformanceMonitoring(async (filters: { mission_id?: string; user_id?: string; status?: string }) => {
     const client = await getSupabaseClient();
     let query = client.from('mission_submissions').select('*, missions(title)');
@@ -139,11 +154,12 @@ export const missionService = {
       query = query.eq('status', filters.status);
     }
     
+    // RLS otimizado automaticamente filtra baseado nas políticas consolidadas
     const { data, error } = await query.order('updated_at', { ascending: false });
     
     if (error) throw error;
     return data;
-  }, 'getSubmissions'),
+  }, 'getSubmissions_optimized'),
 
   createSubmission: withPerformanceMonitoring(async (submission: MissionSubmission) => {
     const client = await getSupabaseClient();
@@ -238,7 +254,7 @@ export const missionService = {
     }
   }, 'validateSubmission'),
 
-  // Tokens de usuário com performance otimizada
+  // Tokens de usuário com RLS otimizado
   getUserTokens: withPerformanceMonitoring(async (userId: string) => {
     const client = await getSupabaseClient();
     const { data: profile, error: profileError } = await client
@@ -249,7 +265,7 @@ export const missionService = {
     if (profileError) throw profileError;
     const total = Number((profile as any)?.rifas) || 0;
     return { user_id: userId, total_tokens: total, used_tokens: 0 };
-  }, 'getUserTokens'),
+  }, 'getUserTokens_optimized'),
 
   addTokens: withPerformanceMonitoring(async (userId: string, amount: number) => {
     const client = await getSupabaseClient();
