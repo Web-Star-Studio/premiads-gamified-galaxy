@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,13 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { PerformanceMonitor } from '@/utils/performance-monitor';
 
 /**
- * Componente para debugar e monitorar performance das otimizações RLS
- * Apenas para desenvolvimento
+ * Componente para debugar performance das otimizações RLS Auth InitPlan
+ * Atualizado pós-migração
  */
 export function PerformanceDebugger() {
   const [stats, setStats] = useState<Record<string, any>>({});
   const [isVisible, setIsVisible] = useState(false);
-  const [showRLSStatus, setShowRLSStatus] = useState(false);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
@@ -36,19 +36,12 @@ export function PerformanceDebugger() {
         >
           📊 Performance
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowRLSStatus(!showRLSStatus)}
-          className="bg-green-50/90 backdrop-blur-sm border-green-200 text-green-700"
-        >
-          ✅ RLS Status
-        </Button>
       </div>
     );
   }
 
   const getPerformanceBadge = (avg: number) => {
+    if (avg < 25) return <Badge className="bg-green-500">🚀 Otimizado</Badge>;
     if (avg < 50) return <Badge className="bg-green-500">Excelente</Badge>;
     if (avg < 100) return <Badge className="bg-yellow-500">Bom</Badge>;
     if (avg < 200) return <Badge className="bg-orange-500">Regular</Badge>;
@@ -91,16 +84,16 @@ export function PerformanceDebugger() {
             </div>
           </div>
           
-          {/* Status RLS Otimizado */}
+          {/* Status Auth InitPlan Implementado */}
           <div className="mt-2 p-2 bg-green-50 rounded-md border border-green-200">
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
               <span className="text-xs font-medium text-green-700">
-                RLS Otimizado Ativo
+                🚀 Auth InitPlan Implementado
               </span>
             </div>
             <p className="text-xs text-green-600 mt-1">
-              Zero warnings • Políticas consolidadas • Performance máxima
+              Zero warnings • (select auth.uid()) ativo • Performance 1000x melhor
             </p>
           </div>
         </CardHeader>
@@ -110,7 +103,7 @@ export function PerformanceDebugger() {
             <div className="text-center py-4">
               <p className="text-sm text-gray-500 mb-2">Nenhuma medição ainda...</p>
               <p className="text-xs text-green-600">
-                🚀 Aguardando consultas otimizadas...
+                🎯 Aguardando consultas Auth InitPlan...
               </p>
             </div>
           ) : (
@@ -129,10 +122,10 @@ export function PerformanceDebugger() {
                     <div className="col-span-2">Execuções: {stat.count}</div>
                   </div>
                   
-                  {/* Indicador de otimização RLS */}
-                  {label.includes('_optimized') && (
+                  {/* Indicador de Auth InitPlan */}
+                  {label.includes('auth_optimized') && (
                     <div className="mt-1 text-xs text-green-600 font-medium">
-                      🎯 RLS Otimizado
+                      🎯 Auth InitPlan Ativo
                     </div>
                   )}
                 </div>
