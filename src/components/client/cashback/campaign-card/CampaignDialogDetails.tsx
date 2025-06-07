@@ -35,7 +35,7 @@ const CampaignDialogDetails: React.FC<CampaignDialogDetailsProps> = ({
       <div className="space-y-2">
         <div className="flex justify-between">
           <span className="text-gray-400">Desconto:</span>
-          <span className="font-semibold text-neon-cyan">{campaign.discount_percentage}%</span>
+          <span className="font-semibold text-neon-cyan">{campaign.cashback_percentage}%</span>
         </div>
         
         <div className="flex justify-between">

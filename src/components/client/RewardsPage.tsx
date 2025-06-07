@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useBadges } from "@/hooks/cliente/useBadges";
 import { BadgeList } from "@/components/badges/BadgeList";
-import { LootBoxList } from "@/components/lootbox/LootBoxList";
+import LootBoxList from "@/components/lootbox/LootBoxList";
 import { useLootBoxRewards } from "@/lib/submissions/useLootBoxRewards";
 import { useUserCredits } from "@/hooks/useUserCredits";
 

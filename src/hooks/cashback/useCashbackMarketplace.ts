@@ -80,45 +80,30 @@ export const useCashbackMarketplace = () => {
         
         toast({
           title: 'Resgate efetuado',
-          description: `Você resgatou R$ ${amount.toFixed(2)} de cashback${redeemedCampaign ? ` com ${redeemedCampaign.discount_percentage}% de desconto` : ''}.`
+          description: `Você resgatou R$ ${amount.toFixed(2)} de cashback${redeemedCampaign ? ` com ${redeemedCampaign.cashback_percentage}% de desconto` : ''}.` // Fixed: Use cashback_percentage
         });
         
-        // Update user cashback balance
-        setUserCashback(prevCashback => prevCashback - amount);
+        // Update local state
+        setUserCashback(prev => prev - amount);
         
         return redemption;
       }
-      return null;
     } catch (error: any) {
-      // Better error handling with more specific messages
-      if (error.message.includes('logado') || error.message.includes('auth')) {
-        toast({
-          title: 'Autenticação necessária',
-          description: 'Você precisa estar logado para resgatar cashback.',
-          variant: 'destructive'
-        });
-      } else if (error.message.includes('saldo') || error.message.includes('balance')) {
-        toast({
-          title: 'Saldo insuficiente',
-          description: 'Você não possui saldo suficiente para este resgate.',
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Erro no resgate',
-          description: error.message || 'Ocorreu um erro ao processar seu resgate.',
-          variant: 'destructive'
-        });
-      }
-      console.error("Cashback redemption error:", error);
-      return null;
+      console.error("Error redeeming cashback:", error);
+      toast({
+        title: 'Erro no resgate',
+        description: error.message || 'Falha ao resgatar cashback',
+        variant: 'destructive'
+      });
     }
+    
+    return null;
   };
 
-  return { 
-    campaigns, 
-    userCashback, 
-    loading, 
-    redeemCashback 
+  return {
+    campaigns,
+    userCashback,
+    loading,
+    redeemCashback
   };
 };

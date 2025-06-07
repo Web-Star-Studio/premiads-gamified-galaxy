@@ -11,13 +11,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'rest123',
     advertiser_logo: '/mock/restaurant-logo.png',
     advertiser_image: '/mock/restaurant-banner.jpg',
-    discount_percentage: 20,
+    cashback_percentage: 20, // Fixed: Use cashback_percentage
     conditions: 'Válido de segunda a quinta-feira',
     min_purchase: 50,
     is_active: true,
     created_at: '2023-01-15T10:00:00Z',
     updated_at: '2023-01-15T10:00:00Z',
-    expires_at: '2025-12-31T23:59:59Z'
+    expires_at: '2025-12-31T23:59:59Z',
+    start_date: '2023-01-15T10:00:00Z',
+    end_date: '2025-12-31T23:59:59Z',
+    category: 'alimentacao'
   },
   {
     id: '2',
@@ -27,13 +30,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'tech456',
     advertiser_logo: '/mock/tech-logo.png',
     advertiser_image: '/mock/tech-banner.jpg',
-    discount_percentage: 10,
+    cashback_percentage: 10, // Fixed: Use cashback_percentage
     conditions: 'Produtos selecionados. Limite de R$200 em cashback',
     min_purchase: 100,
     is_active: true,
     created_at: '2023-02-10T14:30:00Z',
     updated_at: '2023-02-10T14:30:00Z',
-    expires_at: '2025-12-31T23:59:59Z'
+    expires_at: '2025-12-31T23:59:59Z',
+    start_date: '2023-02-10T14:30:00Z',
+    end_date: '2025-12-31T23:59:59Z',
+    category: 'tecnologia'
   },
   {
     id: '3',
@@ -43,13 +49,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'health789',
     advertiser_logo: '/mock/health-logo.png',
     advertiser_image: '/mock/health-banner.jpg',
-    discount_percentage: 15,
+    cashback_percentage: 15, // Fixed: Use cashback_percentage
     conditions: 'Exceto medicamentos controlados',
     min_purchase: 30,
     is_active: true,
     created_at: '2023-03-05T09:15:00Z',
     updated_at: '2023-03-05T09:15:00Z',
-    expires_at: '2025-11-30T23:59:59Z'
+    expires_at: '2025-11-30T23:59:59Z',
+    start_date: '2023-03-05T09:15:00Z',
+    end_date: '2025-11-30T23:59:59Z',
+    category: 'saude'
   },
   {
     id: '4',
@@ -59,13 +68,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'beauty101',
     advertiser_logo: '/mock/beauty-logo.png',
     advertiser_image: '/mock/beauty-banner.jpg',
-    discount_percentage: 25,
+    cashback_percentage: 25, // Fixed: Use cashback_percentage
     conditions: 'Produtos premium selecionados',
     min_purchase: 80,
     is_active: true,
     created_at: '2023-04-20T11:45:00Z',
     updated_at: '2023-04-20T11:45:00Z',
-    expires_at: '2025-10-31T23:59:59Z'
+    expires_at: '2025-10-31T23:59:59Z',
+    start_date: '2023-04-20T11:45:00Z',
+    end_date: '2025-10-31T23:59:59Z',
+    category: 'beleza'
   },
   {
     id: '5',
@@ -75,13 +87,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'service202',
     advertiser_logo: '/mock/service-logo.png',
     advertiser_image: '/mock/service-banner.jpg',
-    discount_percentage: 30,
+    cashback_percentage: 30, // Fixed: Use cashback_percentage
     conditions: 'Primeira contratação. Agenda limitada',
     min_purchase: 120,
     is_active: true,
     created_at: '2023-05-15T13:20:00Z',
     updated_at: '2023-05-15T13:20:00Z',
-    expires_at: '2025-09-30T23:59:59Z'
+    expires_at: '2025-09-30T23:59:59Z',
+    start_date: '2023-05-15T13:20:00Z',
+    end_date: '2025-09-30T23:59:59Z',
+    category: 'outros'
   },
   {
     id: '6',
@@ -91,13 +106,16 @@ export const mockCashbackCampaigns: CashbackCampaign[] = [
     advertiser_id: 'retail303',
     advertiser_logo: '/mock/retail-logo.png',
     advertiser_image: '/mock/retail-banner.jpg',
-    discount_percentage: 5,
+    cashback_percentage: 5, // Fixed: Use cashback_percentage
     conditions: 'Todas as lojas parceiras. Sem limite de cashback',
     min_purchase: 20,
     is_active: true,
     created_at: '2023-06-10T16:40:00Z',
     updated_at: '2023-06-10T16:40:00Z',
-    expires_at: '2025-08-31T23:59:59Z'
+    expires_at: '2025-08-31T23:59:59Z',
+    start_date: '2023-06-10T16:40:00Z',
+    end_date: '2025-08-31T23:59:59Z',
+    category: 'outros'
   }
 ];
 

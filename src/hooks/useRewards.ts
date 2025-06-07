@@ -1,70 +1,60 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface UserRewardsCountProps {
-  userId?: string | null;
+interface Badge {
+  id: string;
+  badge_name: string;
+  badge_description?: string;
+  badge_image_url?: string;
+  earned_at: string;
+  mission_id: string;
 }
 
-export const useRewardsCount = ({ userId }: UserRewardsCountProps) => {
-  const [badgesCount, setBadgesCount] = useState(0);
-  const [lootBoxesCount, setLootBoxesCount] = useState(0);
-  const [unclaimedLootBoxesCount, setUnclaimedLootBoxesCount] = useState(0);
+export const useRewards = (userId: string | null) => {
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRewardsCounts = async () => {
-      if (!userId) {
-        setBadgesCount(0);
-        setLootBoxesCount(0);
-        setUnclaimedLootBoxesCount(0);
-        setLoading(false);
-        return;
-      }
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
+    const fetchRewards = async () => {
       try {
-        // Get badges count
-        const { count: badgesCountResult, error: badgesError } = await supabase
-          .from("user_badges")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId);
+        setLoading(true);
+
+        // Fetch user badges
+        const { data: badgesData, error: badgesError } = await supabase
+          .from('user_badges')
+          .select('*')
+          .eq('user_id', userId)
+          .order('earned_at', { ascending: false });
 
         if (badgesError) throw badgesError;
-        setBadgesCount(badgesCountResult || 0);
 
-        // Get loot boxes count
-        const { count: lootBoxesCountResult, error: lootBoxesError } = await supabase
-          .from("loot_box_rewards")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId);
+        setBadges(badgesData || []);
 
-        if (lootBoxesError) throw lootBoxesError;
-        setLootBoxesCount(lootBoxesCountResult || 0);
-
-        // Get unclaimed loot boxes count
-        const { count: unclaimedCountResult, error: unclaimedError } = await supabase
-          .from("loot_box_rewards")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("is_claimed", false);
-
-        if (unclaimedError) throw unclaimedError;
-        setUnclaimedLootBoxesCount(unclaimedCountResult || 0);
-      } catch (error) {
-        console.error("Error fetching rewards counts:", error);
+      } catch (error: any) {
+        console.error('Error fetching rewards:', error);
+        toast({
+          title: 'Erro ao carregar recompensas',
+          description: error.message || 'Falha ao carregar badges e loot boxes',
+          variant: 'destructive'
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRewardsCounts();
-  }, [userId]);
+    fetchRewards();
+  }, [userId, toast]);
 
   return {
-    badgesCount,
-    lootBoxesCount,
-    unclaimedLootBoxesCount,
-    loading,
+    badges,
+    loading
   };
 };

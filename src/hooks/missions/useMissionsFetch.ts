@@ -1,135 +1,140 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Mission } from '@/types/missions';
 
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useSounds } from "@/hooks/use-sounds";
-import { supabase } from "@/integrations/supabase/client";
-import { Mission, MissionStatus } from "./types";
-import { MissionType } from "@/hooks/useMissionsTypes";
+interface Advertiser {
+  id: string;
+  name: string;
+  logo: string;
+}
 
-export const useMissionsFetch = () => {
-  const [loading, setLoading] = useState(true);
+interface Progress {
+  current: number;
+  total: number;
+}
+
+export interface MissionData {
+  id: string;
+  title: string;
+  description: string;
+  requirements: string[];
+  rifas: number;
+  cashbackReward: number;
+  deadline: string;
+  type: string;
+  businessType: string;
+  targetAudienceGender: string;
+  targetAudienceAgeMin: number | undefined;
+  targetAudienceAgeMax: number | undefined;
+  targetAudienceRegion: string;
+  hasBadge: boolean;
+  hasLootbox: boolean;
+  sequenceBonus: boolean;
+  badgeImageUrl: string;
+  selectedLootBoxRewards: string[];
+  advertiser: Advertiser;
+  progress: Progress;
+  category: string;
+  isCompleted: boolean;
+  hasSubmitted: boolean;
+  totalParticipants: number;
+  completionRate: number;
+  minPurchase: number;
+  startDate: string;
+  endDate: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const useMissionsFetch = (userId?: string) => {
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-  const { playSound } = useSounds();
 
-  // Fetch missions from Supabase
-  useEffect(() => {
-    const fetchMissions = async () => {
+  const fetchMissions = useCallback(async () => {
+    try {
       setLoading(true);
       setError(null);
-      
-      try {
-        // Check if user is authenticated
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !sessionData?.session?.user?.id) {
-          console.log("No authenticated user found - using empty mission data");
-          setMissions([]);
-          setLoading(false);
-          playSound("chime");
-          return;
-        }
-        
-        const userId = sessionData.session.user.id;
-        
-        console.log("Fetching missions for user:", userId);
-        
-        // Get user's submissions first to determine mission status
-        const { data: userSubmissions, error: submissionsError } = await supabase
-          .from("mission_submissions")
-          .select("mission_id, status")
-          .eq("user_id", userId);
-        
-        if (submissionsError) {
-          console.error("Error fetching submissions:", submissionsError);
-          throw submissionsError;
-        }
-        
-        console.log("User submissions:", userSubmissions?.length || 0);
-        
-        // Get all active missions
-        const { data: missionsData, error: missionsError } = await supabase
-          .from("missions")
-          .select("*")
-          .eq("is_active", true);
-        
-        if (missionsError) {
-          console.error("Error fetching missions:", missionsError);
-          throw missionsError;
-        }
 
-        console.log("Missions fetched:", missionsData?.length || 0);
-        
-        // Map missions with their status for the current user
-        const mappedMissions: Mission[] = (missionsData || []).map((mission) => {
-          const submission = userSubmissions?.find(s => s.mission_id === mission.id);
-          
-          let status: MissionStatus = "available";
-          if (submission) {
-            if (submission.status === "approved") {
-              status = "completed";
-            } else if (submission.status === "pending") {
-              status = "pending_approval";
-            } else {
-              status = "in_progress";
-            }
-          }
+      let query = supabase
+        .from('missions')
+        .select(`
+          *
+        `)
+        .eq('is_active', true);
 
-          // Convert requirements from JSON to string array
-          const requirementsArray: string[] = mission.requirements 
-            ? Array.isArray(mission.requirements) 
-              ? mission.requirements.map(req => String(req))
-              : typeof mission.requirements === 'object' 
-                ? Object.values(mission.requirements).map(req => String(req))
-                : [String(mission.requirements)]
-            : [];
+      const { data: missionsData, error: missionsError } = await query;
 
-          return {
-            id: mission.id,
-            title: mission.title,
-            description: mission.description,
-            brand: mission.advertiser_id,
-            type: mission.type as MissionType,
-            tickets_reward: mission.tickets_reward || 0,
-            cashback_reward: mission.cashback_reward || 0,
-            deadline: mission.end_date,
-            status,
-            requirements: requirementsArray,
-            business_type: mission.business_type,
-            target_audience_gender: mission.target_audience_gender,
-            target_audience_age_min: mission.target_audience_age_min,
-            target_audience_age_max: mission.target_audience_age_max,
-            target_audience_region: mission.target_audience_region,
-            has_badge: mission.has_badge || false,
-            has_lootbox: mission.has_lootbox || false,
-            sequence_bonus: mission.sequence_bonus || false,
-            streak_multiplier: mission.streak_multiplier || 1.0,
-            target_filter: mission.target_filter || null,
-            min_purchase: mission.min_purchase || 0
-          };
-        });
-
-        setMissions(mappedMissions);
-        console.log("Mapped missions:", mappedMissions.length);
-        playSound("chime");
-      } catch (error: any) {
-        console.error("Error fetching missions:", error);
-        setError(error.message || "Erro ao buscar missões");
-        toast({
-          title: "Erro ao carregar missões",
-          description: error.message || "Ocorreu um erro ao buscar as missões",
-          variant: "destructive",
-        });
-        // Return empty array instead of mock data
-        setMissions([]);
-      } finally {
-        setLoading(false);
+      if (missionsError) {
+        throw missionsError;
       }
-    };
 
+      if (!missionsData) {
+        setMissions([]);
+        return;
+      }
+
+      // Transform missions data
+      const transformedMissions: Mission[] = missionsData.map(mission => ({
+        id: mission.id,
+        title: mission.title,
+        description: mission.description || '',
+        requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
+        rifas: mission.rifas || 0, // Fixed: Use rifas directly from schema
+        cashbackReward: mission.cashback_reward || 0,
+        deadline: mission.end_date,
+        type: mission.type,
+        businessType: '', // Fixed: No business_type column
+        targetAudienceGender: '', // Fixed: These are in target_filter JSONB
+        targetAudienceAgeMin: undefined,
+        targetAudienceAgeMax: undefined,
+        targetAudienceRegion: '',
+        hasBadge: mission.has_badge || false,
+        hasLootbox: mission.has_lootbox || false,
+        sequenceBonus: mission.sequence_bonus || false,
+        badgeImageUrl: mission.badge_image_url,
+        selectedLootBoxRewards: mission.selected_lootbox_rewards || [],
+        advertiser: {
+          id: mission.advertiser_id || '',
+          name: 'Anunciante',
+          logo: '',
+        },
+        progress: {
+          current: 0,
+          total: mission.max_participants || 100,
+        },
+        category: 'geral',
+        isCompleted: false,
+        hasSubmitted: false,
+        totalParticipants: 0,
+        completionRate: 0,
+        minPurchase: 0, // Fixed: No min_purchase column in missions
+        startDate: mission.start_date || mission.created_at,
+        endDate: mission.end_date || null,
+        isActive: mission.is_active,
+        createdAt: mission.created_at,
+        updatedAt: mission.updated_at
+      }));
+
+      setMissions(transformedMissions);
+    } catch (err: any) {
+      console.error('Error fetching missions:', err);
+      setError(err.message || 'Erro ao carregar missões');
+      setMissions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
     fetchMissions();
-  }, [toast, playSound]);
+  }, [fetchMissions]);
 
-  return { loading, missions, setMissions, error };
+  return {
+    missions,
+    loading,
+    error,
+    refetch: fetchMissions
+  };
 };

@@ -1,118 +1,105 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useSounds } from "@/hooks/use-sounds";
-import { supabase } from "@/integrations/supabase/client";
-import { Mission } from "./types";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useSounds } from '@/hooks/use-sounds';
+import { useRewardAnimations } from '@/utils/rewardAnimations';
 
-export const useMissionSubmit = (setMissions: React.Dispatch<React.SetStateAction<Mission[]>>) => {
-  const [submissionLoading, setSubmissionLoading] = useState(false);
+interface SubmissionData {
+  [key: string]: any;
+}
+
+export const useMissionSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
+  const { showRewardNotification } = useRewardAnimations();
 
-  const submitMission = async (
-    missionId: string,
-    submissionData: any,
-    status: "in_progress" | "pending_approval" = "pending_approval"
-  ): Promise<boolean> => {
-    setSubmissionLoading(true);
-
+  const submitMission = async (missionId: string, submissionData: SubmissionData) => {
+    setIsSubmitting(true);
+    
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !sessionData?.session?.user?.id) {
-        throw new Error("Usuário não autenticado");
+      // Get current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        throw new Error('Usuário não autenticado');
       }
 
-      const userId = sessionData.session.user.id;
+      const userId = userData.user.id;
 
-      // Get mission details
-      const { data: missionData, error: missionError } = await supabase
-        .from("missions")
-        .select("*")
-        .eq("id", missionId)
+      // Check if user has already submitted this mission
+      const { data: existingSubmission, error: checkError } = await supabase
+        .from('mission_submissions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('mission_id', missionId)
         .single();
 
-      if (missionError || !missionData) {
-        throw new Error("Missão não encontrada");
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
       }
 
-      // Check if submission, participation, or reward already exists
-      const [submissionRes, participationRes, rewardRes] = await Promise.all([
-        supabase
-          .from("mission_submissions")
-          .select("id")
-          .eq("mission_id", missionId)
-          .eq("user_id", userId)
-          .maybeSingle(),
-        supabase
-          .from("participations")
-          .select("id")
-          .eq("campaign_id", missionId)
-          .eq("user_id", userId)
-          .maybeSingle(),
-        supabase
-          .from("mission_rewards")
-          .select("id")
-          .eq("mission_id", missionId)
-          .eq("user_id", userId)
-          .maybeSingle(),
-      ]);
-
-      if ((submissionRes.data && submissionRes.data.id) ||
-          (participationRes.data && participationRes.data.id) ||
-          (rewardRes.data && rewardRes.data.id)) {
-        throw new Error("Você já participou desta missão");
+      if (existingSubmission) {
+        throw new Error('Você já enviou uma submissão para esta missão');
       }
 
-      // Create new submission
-      const { data: newSubmission, error: submissionError } = await supabase
-        .from("mission_submissions")
+      // Get mission details
+      const { data: mission, error: missionError } = await supabase
+        .from('missions')
+        .select('*')
+        .eq('id', missionId)
+        .single();
+
+      if (missionError) throw missionError;
+      if (!mission) throw new Error('Missão não encontrada');
+
+      // Submit the mission
+      const { data: submission, error: submitError } = await supabase
+        .from('mission_submissions')
         .insert({
-          mission_id: missionId,
           user_id: userId,
+          mission_id: missionId,
           submission_data: submissionData,
-          status: status,
-          submitted_at: new Date().toISOString(),
+          status: 'pending'
         })
         .select()
         .single();
 
-      if (submissionError) {
-        throw submissionError;
-      }
+      if (submitError) throw submitError;
 
-      // Update missions list to reflect new status
-      setMissions((prevMissions: Mission[]) =>
-        prevMissions.map((mission) =>
-          mission.id === missionId
-            ? { ...mission, status: status === "pending_approval" ? "pending_approval" : "in_progress" }
-            : mission
-        )
-      );
+      // Play success sound
+      playSound('success');
 
-      // Calculate rewards based on mission data
-      const ticketsEarned = missionData.tickets_reward || 0;
-      const cashbackEarned = missionData.cashback_reward || 0;
+      // Show success toast with mission rewards info
+      const rewardsText = mission.rifas > 0 ? `${mission.rifas} rifas` : '';
+      const cashbackText = mission.cashback_reward > 0 ? `R$ ${mission.cashback_reward}` : '';
+      const rewardsInfo = [rewardsText, cashbackText].filter(Boolean).join(' + ');
 
       toast({
-        title: "Missão enviada!",
-        description: `Sua submissão foi enviada para análise. Você receberá ${ticketsEarned} tickets e R$ ${cashbackEarned.toFixed(2)} em cashback após aprovação.`,
+        title: "Submissão enviada com sucesso!",
+        description: rewardsInfo ? `Quando aprovada, você receberá: ${rewardsInfo}` : "Sua submissão está sendo analisada.",
+        variant: "default",
+        className: "bg-gradient-to-br from-green-600/90 to-teal-500/60 text-white border-neon-cyan"
       });
 
-      return true;
+      return { success: true, submission };
     } catch (error: any) {
-      console.error("Error submitting mission:", error);
+      console.error('Error submitting mission:', error);
+      
       toast({
-        title: "Erro ao enviar missão",
-        description: error.message || "Ocorreu um erro ao enviar sua missão",
-        variant: "destructive",
+        title: "Erro ao enviar submissão",
+        description: error.message || "Ocorreu um erro ao enviar sua submissão",
+        variant: "destructive"
       });
-      playSound("error");
-      return false;
+
+      playSound('error');
+      return { success: false, error: error.message };
     } finally {
-      setSubmissionLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  return { submitMission, submissionLoading };
+  return {
+    submitMission,
+    isSubmitting
+  };
 };

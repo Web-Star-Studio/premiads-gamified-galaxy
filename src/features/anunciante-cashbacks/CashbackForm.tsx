@@ -19,8 +19,8 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const schema = z.object({
   title: z.string().min(3, "O título deve ter no mínimo 3 caracteres."),
   description: z.string().min(5, "A descrição deve ter no mínimo 5 caracteres."),
-  cashback_percentage: z.number().min(5).max(100), // Atualizado
-  minimum_purchase: z.number().min(0).nullable(),
+  cashback_percentage: z.number().min(5).max(100),
+  min_purchase: z.number().min(0).nullable(), // Fixed: Changed from minimum_purchase
   end_date: z.string().min(1, "A data de validade é obrigatória."),
   category: z.string().min(1, "A categoria é obrigatória."),
   advertiser_logo: z.any()
@@ -31,11 +31,11 @@ const schema = z.object({
       "Apenas .jpg, .jpeg, .png and .webp são permitidos."
     ),
 }).superRefine((val, ctx) => {
-  if (val.cashback_percentage < 100 && (val.minimum_purchase === null || val.minimum_purchase === undefined)) {
+  if (val.cashback_percentage < 100 && (val.min_purchase === null || val.min_purchase === undefined)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Obrigatório se percentual < 100%',
-      path: ['minimum_purchase']
+      path: ['min_purchase'] // Fixed: Changed from minimum_purchase
     })
   }
 })
@@ -56,12 +56,12 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
     resolver: zodResolver(schema),
     defaultValues: initialData ? {
       ...initialData,
-      minimum_purchase: initialData.min_purchase ?? 0,
+      min_purchase: initialData.min_purchase ?? 0, // Fixed: Use min_purchase
     } : {
       title: '',
       description: '',
-      cashback_percentage: 10, // Atualizado
-      minimum_purchase: 0,
+      cashback_percentage: 10,
+      min_purchase: 0, // Fixed: Changed from minimum_purchase
       end_date: '',
       category: '',
       advertiser_logo: null
@@ -112,8 +112,8 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
         const dataToSave: CreateCashbackInput = {
           title: values.title,
           description: values.description,
-          cashback_percentage: values.cashback_percentage, // Atualizado
-          minimum_purchase: values.minimum_purchase,
+          cashback_percentage: values.cashback_percentage,
+          min_purchase: values.min_purchase, // Fixed: Use min_purchase
           end_date: values.end_date,
           category: values.category,
           advertiser_logo: imageUrl,
@@ -189,16 +189,16 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
           {errors.cashback_percentage && <div className="text-xs text-red-500">{errors.cashback_percentage.message}</div>}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2" htmlFor="minimum_purchase">Valor Mínimo (R$)</label>
+          <label className="block text-sm font-medium mb-2" htmlFor="min_purchase">Valor Mínimo (R$)</label>
           <Input
-            id="minimum_purchase"
+            id="min_purchase"
             type="number"
             step="0.01"
             placeholder="0.00"
-            {...register('minimum_purchase', { valueAsNumber: true, required: false })}
+            {...register('min_purchase', { valueAsNumber: true, required: false })}
             disabled={watchedValues.cashback_percentage === 100}
           />
-          {errors.minimum_purchase && <div className="text-xs text-red-500 mt-1">{errors.minimum_purchase.message}</div>}
+          {errors.min_purchase && <div className="text-xs text-red-500 mt-1">{errors.min_purchase.message}</div>}
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Ícone do Cashback</label>
@@ -220,7 +220,7 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
       <div className="space-y-6 md:col-span-1">
         <label className="block text-sm font-medium">Pré-visualização</label>
         <div className="sticky top-6">
-          <CashbackPreview data={watchedValues} />
+          <CashbackPreview formData={watchedValues} />
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import SubmissionsList from './SubmissionsList';
@@ -239,7 +240,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
     }
   };
   
-  const handleReject = async (submission: Submission, feedback: string = '') => {
+  const handleReject = async (submission: Submission, rejectionReason: string = '') => {
     try {
       const { data: session } = await supabase.auth.getSession();
       const approverId = session?.session?.user?.id;
@@ -262,11 +263,17 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         throw new Error(result.error || 'Erro ao rejeitar submissão');
       }
       
-      // If feedback is provided, update the submission
-      if (feedback) {
+      // If rejection reason is provided, add to submission_data
+      if (rejectionReason) {
+        const currentData = submission.submission_data || {};
         await supabase
           .from('mission_submissions')
-          .update({ feedback })
+          .update({ 
+            submission_data: { 
+              ...currentData, 
+              rejection_reason: rejectionReason 
+            }
+          })
           .eq('id', submission.id);
       }
       
