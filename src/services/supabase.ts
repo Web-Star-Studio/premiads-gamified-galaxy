@@ -35,18 +35,6 @@ export type {
 // Atualizar para usar serviços RLS otimizados
 export { RLSOptimizedService } from './rls-optimized';
 
-// Exporta a mesma instância para uso em todo o aplicativo
-export const supabase = supabaseInstance;
-
-// Re-export types
-export type { 
-  Mission, 
-  MissionSubmission, 
-  UserTokens,
-  ValidationLog,
-  MissionReward
-};
-
 // Atualizar missionService com performance otimizada pós-RLS
 export const missionService = {
   supabase,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
@@ -11,7 +10,7 @@ import { useCashbacks } from './useCashbacks.hook'
 import { CashbackPreview } from './CashbackPreview'
 import { ImageUploader } from '@/components/ui/ImageUploader'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/hooks/use-toast'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
