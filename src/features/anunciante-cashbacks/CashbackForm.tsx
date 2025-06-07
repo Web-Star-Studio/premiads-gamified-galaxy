@@ -1,247 +1,228 @@
 
-import { useState, useEffect } from 'react'
-import { z } from 'zod'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CashbackCampaign, CreateCashbackInput } from './types'
-import { useCashbacks } from './useCashbacks.hook'
-import { CashbackPreview } from './CashbackPreview'
-import { ImageUploader } from '@/components/ui/ImageUploader'
-import { supabase } from '@/integrations/supabase/client'
-import { useToast } from '@/hooks/use-toast'
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-const schema = z.object({
-  title: z.string().min(3, "O título deve ter no mínimo 3 caracteres."),
-  description: z.string().min(5, "A descrição deve ter no mínimo 5 caracteres."),
-  cashback_percentage: z.number().min(5).max(100),
-  min_purchase: z.number().min(0).nullable(),
-  end_date: z.string().min(1, "A data de validade é obrigatória."),
-  category: z.string().min(1, "A categoria é obrigatória."),
-  advertiser_logo: z.any()
-    .refine((file) => file, "A imagem é obrigatória.")
-    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `O tamanho máximo é 2MB.`)
-    .refine(
-      (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
-      "Apenas .jpg, .jpeg, .png and .webp são permitidos."
-    ),
-}).superRefine((val, ctx) => {
-  if (val.cashback_percentage < 100 && (val.min_purchase === null || val.min_purchase === undefined)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Obrigatório se percentual < 100%',
-      path: ['min_purchase']
-    })
-  }
-})
-
-export type FormData = z.infer<typeof schema>
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { useCashbacks } from './useCashbacks.hook';
+import { CashbackCampaign, CreateCashbackInput } from './types';
 
 interface CashbackFormProps {
-  advertiserId: string
-  initialData?: CashbackCampaign | null
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  editCampaign?: CashbackCampaign | null;
+  advertiserId: string;
+  onSuccess?: () => void;
 }
 
-function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps) {
-  const isEdit = !!initialData
-  const { createCashback, updateCashback, isCreating, isUpdating } = useCashbacks(advertiserId)
-  const { toast } = useToast()
+export const CashbackForm: React.FC<CashbackFormProps> = ({
+  isOpen,
+  onClose,
+  editCampaign,
+  advertiserId,
+  onSuccess
+}) => {
+  const { toast } = useToast();
+  const { createCashback, updateCashback, isCreating, isUpdating } = useCashbacks(advertiserId);
   
-  const { register, handleSubmit, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: initialData ? {
-      ...initialData,
-      min_purchase: initialData.min_purchase ?? 0,
-    } : {
-      title: '',
-      description: '',
-      cashback_percentage: 10,
-      min_purchase: 0,
-      end_date: '',
-      category: '',
-      advertiser_logo: null
-    }
-  })
+  const [formData, setFormData] = useState<CreateCashbackInput>({
+    title: '',
+    description: '',
+    cashback_percentage: 5,
+    minimum_purchase: null,
+    end_date: '',
+    category: '',
+    advertiser_id: advertiserId,
+    advertiser_logo: '',
+    is_active: true
+  });
 
-  const watchedValues = watch()
-  
   useEffect(() => {
-    if (initialData?.advertiser_logo) {
-      setValue('advertiser_logo', initialData.advertiser_logo)
+    if (editCampaign) {
+      setFormData({
+        title: editCampaign.title,
+        description: editCampaign.description,
+        cashback_percentage: editCampaign.cashback_percentage,
+        minimum_purchase: editCampaign.min_purchase,
+        end_date: editCampaign.end_date,
+        category: editCampaign.category,
+        advertiser_id: editCampaign.advertiser_id,
+        advertiser_logo: editCampaign.advertiser_logo,
+        is_active: editCampaign.is_active ?? true
+      });
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        cashback_percentage: 5,
+        minimum_purchase: null,
+        end_date: '',
+        category: '',
+        advertiser_id: advertiserId,
+        advertiser_logo: '',
+        is_active: true
+      });
     }
-  }, [initialData, setValue])
+  }, [editCampaign, advertiserId]);
 
-  async function onSubmit(values: FormData) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      let imageUrl = values.advertiser_logo;
-
-      if (values.advertiser_logo && typeof values.advertiser_logo !== 'string') {
-        const file = values.advertiser_logo;
-        const filePath = `public/cashback-icons/${advertiserId}-${Date.now()}-${file.name}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('campaigns')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          throw new Error('Falha no upload da imagem: ' + uploadError.message);
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('campaigns')
-          .getPublicUrl(filePath);
-        
-        imageUrl = publicUrl;
-      }
-
-      if (isEdit) {
-        const dataToSave: CashbackCampaign = {
-          ...initialData,
-          ...values,
-          advertiser_logo: imageUrl,
-          advertiser_id: advertiserId,
-        };
-        await updateCashback(dataToSave);
+      if (editCampaign && editCampaign.id) {
+        await updateCashback({
+          id: editCampaign.id,
+          ...formData
+        });
         toast({
           title: 'Sucesso',
-          description: 'Cashback atualizado com sucesso!'
+          description: 'Campanha de cashback atualizada com sucesso!'
         });
       } else {
-        const dataToSave: CreateCashbackInput = {
-          title: values.title,
-          description: values.description,
-          cashback_percentage: values.cashback_percentage,
-          min_purchase: values.min_purchase,
-          end_date: values.end_date,
-          category: values.category,
-          advertiser_logo: imageUrl,
-          advertiser_id: advertiserId,
-          is_active: true,
-        };
-        await createCashback(dataToSave);
+        await createCashback(formData);
         toast({
-          title: 'Sucesso',
-          description: 'Cashback criado com sucesso!'
+          title: 'Sucesso', 
+          description: 'Campanha de cashback criada com sucesso!'
         });
       }
+      
+      onSuccess?.();
       onClose();
-    } catch (e: any) {
+    } catch (error: any) {
       toast({
         title: 'Erro',
-        description: e.message || 'Erro ao salvar cashback.',
+        description: error.message || 'Erro ao salvar campanha',
         variant: 'destructive'
       });
     }
-  }
+  };
 
-  const isLoading = isSubmitting || isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-      {/* Coluna da Esquerda */}
-      <div className="space-y-6 md:col-span-1">
-        <div>
-          <label className="block text-sm font-medium mb-2" htmlFor="title">Título do Cupom</label>
-          <Input id="title" {...register('title')} placeholder="Ex: 10% OFF em Beleza" />
-          {errors.title && <div className="text-xs text-red-500 mt-1">{errors.title.message}</div>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2" htmlFor="description">Descrição</label>
-          <Input id="description" {...register('description')} placeholder="Descrição breve do seu cupom" />
-          {errors.description && <div className="text-xs text-red-500 mt-1">{errors.description.message}</div>}
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {editCampaign ? 'Editar Campanha' : 'Nova Campanha de Cashback'}
+          </DialogTitle>
+        </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2" htmlFor="end_date">Validade</label>
-            <Input id="end_date" type="date" {...register('end_date')} />
-            {errors.end_date && <div className="text-xs text-red-500 mt-1">{errors.end_date.message}</div>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Categoria</label>
-            <Controller
-              name="category"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alimentacao">Alimentação</SelectItem>
-                    <SelectItem value="moda">Moda</SelectItem>
-                    <SelectItem value="beleza">Beleza</SelectItem>
-                    <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                    <SelectItem value="saude">Saúde</SelectItem>
-                    <SelectItem value="outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+            <Label htmlFor="title">Título</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
             />
-            {errors.category && <div className="text-xs text-red-500 mt-1">{errors.category.message}</div>}
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Percentual de Cashback</label>
-          <input 
-            type="range" 
-            min={5} 
-            max={100} 
-            step={1} 
-            {...register('cashback_percentage', { valueAsNumber: true })} 
-            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer" 
-          />
-          <div className="text-sm mt-1 text-right font-medium">{watchedValues.cashback_percentage}%</div>
-          {errors.cashback_percentage && <div className="text-xs text-red-500">{errors.cashback_percentage.message}</div>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2" htmlFor="min_purchase">Valor Mínimo (R$)</label>
-          <Input
-            id="min_purchase"
-            type="number"
-            step="0.01"
-            placeholder="0.00"
-            {...register('min_purchase', { valueAsNumber: true, required: false })}
-            disabled={watchedValues.cashback_percentage === 100}
-          />
-          {errors.min_purchase && <div className="text-xs text-red-500 mt-1">{errors.min_purchase.message}</div>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Ícone do Cashback</label>
-          <Controller
-            name="advertiser_logo"
-            control={control}
-            render={({ field }) => (
-              <ImageUploader 
-                onFileChange={(file) => field.onChange(file)}
-                initialImage={typeof field.value === 'string' ? field.value : null}
-              />
-            )}
-          />
-          {errors.advertiser_logo && <div className="text-xs text-red-500 mt-1">{errors.advertiser_logo.message as string}</div>}
-        </div>
-      </div>
-      
-      <div className="space-y-6 md:col-span-1">
-        <label className="block text-sm font-medium">Pré-visualização</label>
-        <div className="sticky top-6">
-          <CashbackPreview formData={watchedValues} />
-        </div>
-      </div>
+          <div>
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+            />
+          </div>
 
-      <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-        <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : (isEdit ? 'Salvar Alterações' : 'Criar Cupom')}
-        </Button>
-      </div>
-    </form>
-  )
-}
+          <div>
+            <Label htmlFor="cashback_percentage">Percentual de Cashback (%)</Label>
+            <Input
+              id="cashback_percentage"
+              type="number"
+              min="1"
+              max="100"
+              value={formData.cashback_percentage}
+              onChange={(e) => setFormData({ ...formData, cashback_percentage: Number(e.target.value) })}
+              required
+            />
+          </div>
 
-export default CashbackForm
+          <div>
+            <Label htmlFor="minimum_purchase">Compra Mínima (R$)</Label>
+            <Input
+              id="minimum_purchase"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.minimum_purchase || ''}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                minimum_purchase: e.target.value ? Number(e.target.value) : null 
+              })}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="category">Categoria</Label>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="restaurantes">Restaurantes</SelectItem>
+                <SelectItem value="varejo">Varejo</SelectItem>
+                <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                <SelectItem value="saude">Saúde</SelectItem>
+                <SelectItem value="beleza">Beleza</SelectItem>
+                <SelectItem value="servicos">Serviços</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="end_date">Data de Término</Label>
+            <Input
+              id="end_date"
+              type="date"
+              value={formData.end_date}
+              onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="advertiser_logo">URL do Logo</Label>
+            <Input
+              id="advertiser_logo"
+              type="url"
+              value={formData.advertiser_logo}
+              onChange={(e) => setFormData({ ...formData, advertiser_logo: e.target.value })}
+              placeholder="https://exemplo.com/logo.png"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_active"
+              checked={formData.is_active}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+            />
+            <Label htmlFor="is_active">Campanha ativa</Label>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading} className="flex-1">
+              {isLoading ? 'Salvando...' : editCampaign ? 'Atualizar' : 'Criar'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};

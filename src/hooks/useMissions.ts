@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Mission } from '@/types/mission-unified';
+import { Mission, mapSupabaseMissionToMission } from '@/types/mission-unified';
 import { missionService } from '@/services/supabase';
 
 export interface SubmissionData {
@@ -27,7 +27,8 @@ export const useMissions = (): UseMissionsReturn => {
     try {
       setLoading(true);
       const data = await missionService.getMissions('ativa');
-      setMissions(data as Mission[]);
+      const mappedMissions = data.map(mapSupabaseMissionToMission);
+      setMissions(mappedMissions);
       setError('');
     } catch (err: any) {
       console.error('Error fetching missions:', err);
@@ -50,3 +51,6 @@ export const useMissions = (): UseMissionsReturn => {
     refetch: fetchMissions
   };
 };
+
+// Export Mission type for other components
+export { Mission };
