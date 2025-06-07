@@ -1,113 +1,74 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { UserLevel, UserLevelInfo } from "@/types/levels";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
-export function useUserLevel(points: number, userId?: string) {
+interface UserLevel {
+  level: number;
+  xp: number;
+  xpToNext: number;
+  title: string;
+}
+
+export const useUserLevel = () => {
+  const { user } = useAuth();
+  const [userLevel, setUserLevel] = useState<UserLevel>({
+    level: 1,
+    xp: 0,
+    xpToNext: 100,
+    title: 'Iniciante'
+  });
   const [loading, setLoading] = useState(true);
-  const [levelInfo, setLevelInfo] = useState<UserLevelInfo | null>(null);
-  const [levels, setLevels] = useState<UserLevel[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLevels = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchUserLevel = async () => {
       try {
-        setLoading(true);
+        // Buscar pontos do usuário na tabela profiles
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('points, rifas')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        const points = profile?.points || 0;
+        const rifas = profile?.rifas || 0;
         
-        // Fetch all level definitions
-        const { data: levelsData, error: levelsError } = await supabase
-          .from('user_levels')
-          .select('*')
-          .order('min_points', { ascending: true });
-        
-        if (levelsError) throw levelsError;
-        
-        if (levelsData && levelsData.length > 0) {
-          // Convert the benefits JSON to the correct type
-          const typedLevelsData: UserLevel[] = levelsData.map(level => {
-            // Ensure benefits is properly typed as an object
-            const benefitsObject = typeof level.benefits === 'string' 
-              ? JSON.parse(level.benefits) 
-              : level.benefits;
-              
-            return {
-              id: level.id,
-              name: level.name,
-              min_points: level.min_points,
-              max_points: level.max_points,
-              points_multiplier: level.points_multiplier,
-              icon: level.icon,
-              color: level.color,
-              description: level.description,
-              benefits: {
-                ticket_discount: benefitsObject?.ticket_discount ?? 0,
-                access_to_exclusive_raffles: benefitsObject?.access_to_exclusive_raffles ?? false,
-                priority_support: benefitsObject?.priority_support ?? false,
-                early_access: benefitsObject?.early_access ?? false
-              }
-            };
-          });
-          
-          setLevels(typedLevelsData);
-          
-          // Calculate current level and next level based on points
-          const currentLevel = typedLevelsData.find(
-            level => points >= level.min_points && 
-                   (level.max_points === null || points <= level.max_points)
-          ) as UserLevel;
-          
-          if (!currentLevel) {
-            // Fallback to the first level if nothing else matches
-            setLevelInfo({
-              currentLevel: typedLevelsData[0],
-              nextLevel: typedLevelsData.length > 1 ? typedLevelsData[1] : null,
-              progress: 0,
-              pointsToNextLevel: typedLevelsData.length > 1 ? typedLevelsData[1].min_points - points : 0
-            });
-            setLoading(false);
-            return;
-          }
-          
-          const currentLevelIndex = typedLevelsData.findIndex(level => level.id === currentLevel.id);
-          const nextLevel = currentLevelIndex < typedLevelsData.length - 1 
-                          ? typedLevelsData[currentLevelIndex + 1] as UserLevel 
-                          : null;
-          
-          // Calculate progress as percentage within current level range
-          let progress = 0;
-          let pointsToNextLevel = 0;
-          
-          if (nextLevel) {
-            const rangeSize = nextLevel.min_points - currentLevel.min_points;
-            const pointsInLevel = points - currentLevel.min_points;
-            progress = Math.min(Math.round((pointsInLevel / rangeSize) * 100), 100);
-            pointsToNextLevel = nextLevel.min_points - points;
-          } else {
-            // User is at max level
-            progress = 100;
-            pointsToNextLevel = 0;
-          }
-          
-          setLevelInfo({
-            currentLevel,
-            nextLevel,
-            progress,
-            pointsToNextLevel
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching level data:", err);
-        setError("Não foi possível carregar os dados de nível.");
+        // Calcular nível baseado em pontos + rifas
+        const totalXP = points + (rifas * 10); // 1 rifa = 10 XP
+        const level = Math.floor(totalXP / 100) + 1;
+        const xpInLevel = totalXP % 100;
+        const xpToNext = 100 - xpInLevel;
+
+        // Determinar título baseado no nível
+        let title = 'Iniciante';
+        if (level >= 50) title = 'Lendário';
+        else if (level >= 25) title = 'Mestre';
+        else if (level >= 15) title = 'Especialista';
+        else if (level >= 10) title = 'Veterano';
+        else if (level >= 5) title = 'Experiente';
+
+        setUserLevel({
+          level,
+          xp: xpInLevel,
+          xpToNext,
+          title
+        });
+      } catch (error) {
+        console.error('Error fetching user level:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch if we have points
-    if (points !== undefined) {
-      fetchLevels();
-    }
-  }, [points, userId]);
+    fetchUserLevel();
+  }, [user]);
 
-  return { levelInfo, levels, loading, error };
-}
+  return { userLevel, loading };
+};

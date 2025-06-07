@@ -1,32 +1,29 @@
-import { useCallback } from "react";
 
-type SoundType = "success" | "error" | "notification" | "click" | "reward" | "pop" | "chime";
+import { useCallback } from 'react';
+
+type SoundType = 'pop' | 'success' | 'error' | 'notification' | 'reward' | 'chime' | 'click';
 
 export const useSounds = () => {
-  const playSound = useCallback((type: SoundType) => {
-    // Disable sounds in development automatically due to corrupted placeholder files
-    if (import.meta.env.DEV) {
-      return;
-    }
-
-    const soundUrl = `/sounds/${type}.mp3`;
-    
+  const playSound = useCallback((soundType: SoundType) => {
     try {
-      const audio = new Audio(soundUrl);
-      audio.volume = 0.3; // Lower volume to be less intrusive
+      const audio = new Audio(`/sounds/${soundType}.mp3`);
       
-      // Add error handling for corrupted files
-      audio.addEventListener('error', (e) => {
-        console.error(`Error loading sound ${soundUrl}:`, e);
+      // Adicionar tratamento de erro silencioso
+      audio.addEventListener('error', () => {
+        // Falha silenciosa - não loggar erro no console
       });
       
-      audio.play().catch((error) => {
-        console.log("Sound not played:", error.message);
+      audio.addEventListener('canplaythrough', () => {
+        audio.play().catch(() => {
+          // Falha silenciosa na reprodução
+        });
       });
+      
+      audio.load();
     } catch (error) {
-      console.error("Error playing sound:", error);
+      // Falha silenciosa
     }
   }, []);
-  
+
   return { playSound };
 };

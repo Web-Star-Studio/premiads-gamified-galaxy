@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
@@ -10,7 +11,7 @@ import { useCashbacks } from './useCashbacks.hook'
 import { CashbackPreview } from './CashbackPreview'
 import { ImageUploader } from '@/components/ui/ImageUploader'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -19,7 +20,7 @@ const schema = z.object({
   title: z.string().min(3, "O título deve ter no mínimo 3 caracteres."),
   description: z.string().min(5, "A descrição deve ter no mínimo 5 caracteres."),
   cashback_percentage: z.number().min(5).max(100),
-  min_purchase: z.number().min(0).nullable(), // Fixed: Changed from minimum_purchase
+  min_purchase: z.number().min(0).nullable(),
   end_date: z.string().min(1, "A data de validade é obrigatória."),
   category: z.string().min(1, "A categoria é obrigatória."),
   advertiser_logo: z.any()
@@ -34,7 +35,7 @@ const schema = z.object({
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Obrigatório se percentual < 100%',
-      path: ['min_purchase'] // Fixed: Changed from minimum_purchase
+      path: ['min_purchase']
     })
   }
 })
@@ -50,17 +51,18 @@ interface CashbackFormProps {
 function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps) {
   const isEdit = !!initialData
   const { createCashback, updateCashback, isCreating, isUpdating } = useCashbacks(advertiserId)
+  const { toast } = useToast()
   
   const { register, handleSubmit, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: initialData ? {
       ...initialData,
-      min_purchase: initialData.min_purchase ?? 0, // Fixed: Use min_purchase
+      min_purchase: initialData.min_purchase ?? 0,
     } : {
       title: '',
       description: '',
       cashback_percentage: 10,
-      min_purchase: 0, // Fixed: Changed from minimum_purchase
+      min_purchase: 0,
       end_date: '',
       category: '',
       advertiser_logo: null
@@ -106,13 +108,16 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
           advertiser_id: advertiserId,
         };
         await updateCashback(dataToSave);
-        toast.success('Cashback atualizado com sucesso!');
+        toast({
+          title: 'Sucesso',
+          description: 'Cashback atualizado com sucesso!'
+        });
       } else {
         const dataToSave: CreateCashbackInput = {
           title: values.title,
           description: values.description,
           cashback_percentage: values.cashback_percentage,
-          min_purchase: values.min_purchase, // Fixed: Use min_purchase
+          min_purchase: values.min_purchase,
           end_date: values.end_date,
           category: values.category,
           advertiser_logo: imageUrl,
@@ -120,11 +125,18 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
           is_active: true,
         };
         await createCashback(dataToSave);
-        toast.success('Cashback criado com sucesso!');
+        toast({
+          title: 'Sucesso',
+          description: 'Cashback criado com sucesso!'
+        });
       }
       onClose();
     } catch (e: any) {
-      toast.error(e.message || 'Erro ao salvar cashback.');
+      toast({
+        title: 'Erro',
+        description: e.message || 'Erro ao salvar cashback.',
+        variant: 'destructive'
+      });
     }
   }
 
@@ -215,7 +227,6 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
         </div>
       </div>
       
-      {/* Coluna da Direita (Preview) */}
       <div className="space-y-6 md:col-span-1">
         <label className="block text-sm font-medium">Pré-visualização</label>
         <div className="sticky top-6">
@@ -223,7 +234,6 @@ function CashbackForm({ advertiserId, initialData, onClose }: CashbackFormProps)
         </div>
       </div>
 
-      {/* Ações do Formulário */}
       <div className="md:col-span-2 flex justify-end gap-3 mt-4">
         <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
         <Button type="submit" disabled={isLoading}>

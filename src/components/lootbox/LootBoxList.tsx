@@ -1,97 +1,93 @@
 
-import { useState } from "react";
-import { Gift, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useSounds } from "@/hooks/use-sounds";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Gift, Star, Zap } from 'lucide-react';
 
-interface LootBox {
+export interface LootBoxReward {
   id: string;
-  reward_type: string;
-  reward_amount: number;
-  awarded_at: string;
-  is_claimed?: boolean;
+  name: string;
+  description: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  claimed: boolean;
+  claimedAt?: string;
 }
 
-interface LootBoxListProps {
-  lootBoxes: LootBox[];
+export interface LootBoxListProps {
+  lootBoxes: LootBoxReward[];
+  refreshData: () => Promise<void>;
 }
 
-const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
-  const [claimingId, setClaimingId] = useState<string | null>(null);
-  const { playSound } = useSounds();
-  const { toast } = useToast();
-
-  const handleClaimReward = async (lootBoxId: string, amount: number) => {
-    setClaimingId(lootBoxId);
-    
-    try {
-      // Fixed: Use existing function instead of non-existent 'claim_loot_box_reward'
-      const { data, error } = await supabase
-        .rpc('add_points_to_user', { 
-          p_user_id: (await supabase.auth.getUser()).data.user?.id,
-          p_points_to_add: amount 
-        });
-        
-      if (error) throw error;
-      
-      playSound("reward");
-      toast({
-        title: "Recompensa Recebida!",
-        description: `Você ganhou ${amount} pontos!`,
-      });
-      
-    } catch (err: any) {
-      console.error("Error claiming reward:", err);
-      toast({
-        title: "Erro ao receber recompensa",
-        description: err.message || "Ocorreu um erro ao receber sua recompensa",
-        variant: "destructive",
-      });
-    } finally {
-      setClaimingId(null);
+const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes, refreshData }) => {
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'bg-gray-500';
+      case 'rare': return 'bg-blue-500';
+      case 'epic': return 'bg-purple-500';
+      case 'legendary': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {lootBoxes.map((lootBox) => (
-        <Card key={lootBox.id} className="border-galaxy-purple/30 bg-galaxy-deepPurple/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="relative h-16 w-16 flex-shrink-0 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
-                <Gift className="h-8 w-8 text-neon-cyan" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-medium text-white truncate">
-                  Loot Box
-                </h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  Recompensa: {lootBox.reward_amount} pontos
-                </p>
-                
-                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {new Date(lootBox.awarded_at).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
+  const getRarityIcon = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary': return <Star className="h-4 w-4" />;
+      case 'epic': return <Zap className="h-4 w-4" />;
+      default: return <Gift className="h-4 w-4" />;
+    }
+  };
 
-                {!lootBox.is_claimed && (
-                  <Button
-                    onClick={() => handleClaimReward(lootBox.id, lootBox.reward_amount)}
-                    disabled={claimingId === lootBox.id}
-                    className="mt-3 w-full"
-                    size="sm"
-                  >
-                    {claimingId === lootBox.id ? "Processando..." : "Reivindicar"}
-                  </Button>
-                )}
+  if (lootBoxes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <Gift className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-500 mb-2">Nenhuma loot box disponível</p>
+          <p className="text-sm text-gray-400">Complete missões para ganhar loot boxes!</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {lootBoxes.map((lootBox) => (
+        <Card key={lootBox.id} className={`${lootBox.claimed ? 'opacity-75' : ''}`}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">{lootBox.name}</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge className={`${getRarityColor(lootBox.rarity)} text-white`}>
+                  {getRarityIcon(lootBox.rarity)}
+                  <span className="ml-1 capitalize">{lootBox.rarity}</span>
+                </Badge>
               </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">{lootBox.description}</p>
+            
+            {lootBox.claimed ? (
+              <div className="text-center">
+                <Badge variant="secondary" className="mb-2">
+                  Resgatada
+                </Badge>
+                {lootBox.claimedAt && (
+                  <p className="text-xs text-gray-500">
+                    Resgatada em {new Date(lootBox.claimedAt).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <Button 
+                className="w-full" 
+                onClick={() => refreshData()}
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                Resgatar
+              </Button>
+            )}
           </CardContent>
         </Card>
       ))}
