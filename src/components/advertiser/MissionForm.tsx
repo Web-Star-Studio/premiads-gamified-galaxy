@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -110,7 +109,8 @@ export const MissionForm = () => {
         hasLootbox: hasLootBox,
         sequenceBonus,
         badgeImageUrl,
-        selectedLootBoxRewards: hasLootBox ? selectedLootBoxRewards : undefined
+        selectedLootBoxRewards: hasLootBox ? selectedLootBoxRewards : undefined,
+        rifas: ticketsReward // Fixed: Add rifas property required by CreateMissionParams
       };
 
       console.log("Submitting mission data:", missionData);

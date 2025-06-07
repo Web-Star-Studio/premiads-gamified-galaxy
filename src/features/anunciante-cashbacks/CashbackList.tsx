@@ -1,74 +1,117 @@
-import { useState } from 'react'
-import { useCashbacks } from './useCashbacks.hook'
-import { CashbackCampaign } from './types'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import CashbackForm from './CashbackForm'
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Edit, Trash2, Calendar, Users, Percent } from 'lucide-react';
+import { CashbackCampaign } from './types';
 
 interface CashbackListProps {
-  advertiserId: string
+  campaigns: CashbackCampaign[];
+  onEdit: (campaign: CashbackCampaign) => void;
+  onDelete: (id: string) => void;
+  isLoading?: boolean;
 }
 
-function CashbackList({ advertiserId }: CashbackListProps) {
-  const {
-    campaigns,
-    isLoading,
-    isError,
-    deleteCashback,
-    isDeleting,
-    refetch
-  } = useCashbacks(advertiserId)
-  const [editing, setEditing] = useState<CashbackCampaign | null>(null)
-  const [open, setOpen] = useState(false)
-
-  if (isLoading) return <div className="text-center py-8">Carregando...</div>
-  if (isError) return <div className="text-center py-8 text-red-500">Erro ao carregar cupons.</div>
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Seus Cupons de Cashback</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditing(null)} variant="default">Novo Cupom</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <CashbackForm
-              advertiserId={advertiserId}
-              initialData={editing}
-              onClose={() => {
-                setOpen(false)
-                setEditing(null)
-                refetch()
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {campaigns?.map(campaign => (
-          <div key={campaign.id} className="bg-card rounded-lg shadow p-4 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <img src={campaign.advertiser_logo} alt="Ícone" className="w-10 h-10 rounded-full bg-muted" />
-              <div>
-                <div className="font-semibold">{campaign.title}</div>
-                <div className="text-xs text-muted-foreground">{campaign.category}</div>
+export const CashbackList: React.FC<CashbackListProps> = ({
+  campaigns,
+  onEdit,
+  onDelete,
+  isLoading = false
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <div className="h-40 bg-gray-200 rounded-t-lg"></div>
+            <CardContent className="p-4">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded mb-4"></div>
+              <div className="flex justify-between">
+                <div className="h-8 w-16 bg-gray-200 rounded"></div>
+                <div className="h-8 w-20 bg-gray-200 rounded"></div>
               </div>
-              <span className="ml-auto text-primary font-bold">{campaign.discount_percentage}%</span>
-            </div>
-            <div className="text-sm text-muted-foreground line-clamp-2">{campaign.description}</div>
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" variant="outline" onClick={() => { setEditing(campaign); setOpen(true) }}>Editar</Button>
-              <Button size="sm" variant="destructive" disabled={isDeleting} onClick={() => deleteCashback(campaign.id)}>Remover</Button>
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">
-              Válido até: {new Date(campaign.end_date).toLocaleDateString()}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
-    </div>
-  )
-}
+    );
+  }
 
-export { CashbackList } 
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {campaigns.map((campaign, index) => (
+        <motion.div
+          key={campaign.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+        >
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="relative h-40 bg-gradient-to-br from-purple-500 to-pink-600">
+              <div className="absolute top-2 right-2">
+                <Badge variant={campaign.is_active ? "default" : "secondary"}>
+                  {campaign.is_active ? "Ativa" : "Inativa"}
+                </Badge>
+              </div>
+              <div className="absolute bottom-2 left-2 text-white">
+                <div className="flex items-center gap-1">
+                  <Percent className="h-4 w-4" />
+                  <span className="text-lg font-bold">{campaign.cashback_percentage}%</span> {/* Fixed: Use cashback_percentage */}
+                </div>
+              </div>
+            </div>
+            
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg line-clamp-2">{campaign.title}</CardTitle>
+            </CardHeader>
+            
+            <CardContent className="pt-0">
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                {campaign.description}
+              </p>
+              
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>Até {new Date(campaign.end_date).toLocaleDateString()}</span>
+                </div>
+                {campaign.min_purchase && (
+                  <div className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <span>Min. R$ {campaign.min_purchase}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(campaign)}
+                  className="flex-1"
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDelete(campaign.id)}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Excluir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+export default CashbackList;

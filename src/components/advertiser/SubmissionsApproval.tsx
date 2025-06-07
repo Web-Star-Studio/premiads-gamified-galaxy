@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +61,7 @@ const SubmissionsApproval = () => {
         
         const missionIds = missionsData.map(mission => mission.id);
         
-        // Get pending submissions for these missions
+        // Fixed: Remove 'feedback' column reference - it doesn't exist
         const { data: submissionsData, error: submissionsError } = await supabase
           .from("mission_submissions")
           .select(`
@@ -70,7 +69,6 @@ const SubmissionsApproval = () => {
             status, 
             submission_data, 
             submitted_at, 
-            feedback,
             user_id,
             mission_id
           `)
@@ -125,7 +123,7 @@ const SubmissionsApproval = () => {
             type: submissionType,
             content: submissionContent,
             date: new Date(submission.submitted_at).toLocaleDateString('pt-BR'),
-            comment: submission.feedback || "Sem comentários adicionais."
+            comment: getCommentFromData(submission.submission_data) || "Sem comentários adicionais."
           };
         });
         
@@ -173,8 +171,14 @@ const SubmissionsApproval = () => {
         return data.creative_content || "";
       case "text":
       default:
-        return data.text || data.feedback || data.answer || JSON.stringify(data);
+        return data.text || data.answer || JSON.stringify(data);
     }
+  };
+
+  // Helper function to extract comments from submission data
+  const getCommentFromData = (data: any): string => {
+    if (!data) return "";
+    return data.comment || data.notes || data.description || "";
   };
   
   const handleApprove = async () => {

@@ -3,8 +3,8 @@ export interface CashbackCampaign {
   id: string
   title: string
   description: string
-  cashback_percentage: number // Renomeado de discount_percentage
-  min_purchase: number | null
+  cashback_percentage: number // Fixed: Keep as cashback_percentage
+  min_purchase: number | null // Fixed: Updated from minimum_purchase
   end_date: string
   category: string
   advertiser_logo: string
@@ -20,8 +20,8 @@ export interface CashbackCampaign {
 export interface CreateCashbackInput {
   title: string
   description: string
-  cashback_percentage: number // Atualizado
-  minimum_purchase: number | null
+  cashback_percentage: number // Fixed: Keep as cashback_percentage
+  min_purchase: number | null // Fixed: Updated field name
   end_date: string
   category: string
   advertiser_logo: string

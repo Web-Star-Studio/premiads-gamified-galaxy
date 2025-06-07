@@ -1,62 +1,40 @@
 
-import { useState, useEffect } from 'react'
-import { CashbackCampaign } from './types'
+import { CashbackCampaign } from './types';
+
+const PREVIEW_FIELDS: (keyof CashbackCampaign)[] = [
+  'title',
+  'description', 
+  'cashback_percentage', // Fixed: Use cashback_percentage
+  'category',
+  'end_date',
+  'min_purchase' // Fixed: Use min_purchase instead of minimum_purchase
+];
 
 interface CashbackPreviewProps {
-  data: Partial<Pick<CashbackCampaign, 'title' | 'description' | 'cashback_percentage' | 'minimum_purchase' | 'end_date' | 'category'>> & { advertiser_logo?: any }
+  formData: Partial<CashbackCampaign>;
 }
 
-function CashbackPreview({ data }: CashbackPreviewProps) {
-  const [logoPreview, setLogoPreview] = useState<string | null>(null)
-
-  useEffect(() => {
-    let objectUrl: string | null = null
-    
-    if (data.advertiser_logo) {
-      if (typeof data.advertiser_logo === 'string') {
-        setLogoPreview(data.advertiser_logo)
-      } else if (data.advertiser_logo instanceof File) {
-        objectUrl = URL.createObjectURL(data.advertiser_logo)
-        setLogoPreview(objectUrl)
-      }
-    } else {
-      setLogoPreview(null)
-    }
-
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl)
-      }
-    }
-  }, [data.advertiser_logo])
-
+export const CashbackPreview: React.FC<CashbackPreviewProps> = ({ formData }) => {
   return (
-    <div className="bg-card rounded-lg shadow-lg p-6 flex flex-col gap-4 max-w-sm mx-auto border border-border">
-      <div className="flex items-center gap-4">
-        {logoPreview ? (
-          <img src={logoPreview} alt="Ícone do Anunciante" className="w-14 h-14 rounded-full bg-muted object-cover" />
-        ) : (
-          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-2xl text-muted-foreground">?</div>
-        )}
-        <div className="flex-1">
-          <div className="font-bold text-xl text-foreground truncate">{data.title || 'Título do Cupom'}</div>
-          <div className="text-sm text-muted-foreground capitalize">{data.category || 'Categoria'}</div>
-        </div>
-        <div className="text-primary font-bold text-2xl whitespace-nowrap">{data.cashback_percentage || 0}% CASHBACK</div>
-      </div>
-      <p className="text-sm text-muted-foreground min-h-[40px]">{data.description || 'Descrição do cupom aparecerá aqui.'}</p>
-      <div className="border-t border-border pt-3 mt-2 flex justify-between items-center text-xs text-muted-foreground">
-        <div>
-          <span className="font-semibold">Valor Mínimo:</span>
-          <span className="ml-1">{data.cashback_percentage === 100 ? 'Não aplicável' : `R$ ${Number(data.minimum_purchase || 0).toFixed(2)}`}</span>
-        </div>
-        <div>
-          <span className="font-semibold">Validade:</span>
-          <span className="ml-1">{data.end_date ? new Date(data.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : 'dd/mm/aaaa'}</span>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Preview da Campanha</h3>
+      
+      <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="space-y-3">
+          {PREVIEW_FIELDS.map((field) => (
+            <div key={field} className="flex justify-between">
+              <span className="font-medium capitalize">
+                {field.replace('_', ' ')}:
+              </span>
+              <span className="text-gray-600">
+                {formData[field] || 'Não informado'}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export { CashbackPreview }
+export default CashbackPreview;

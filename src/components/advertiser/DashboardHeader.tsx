@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Bell, Wallet, Star, Info, Plus } from "lucide-react";
@@ -16,7 +17,7 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = () => {
-  const { user } = useUser();
+  const { userName } = useUser(); // Fixed: use userName instead of user
   const { availableCredits: rifas, isLoading } = useUserCredits();
   const navigate = useNavigate();
 
@@ -29,7 +30,7 @@ const DashboardHeader = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">
-            Olá, {user?.name || 'Anunciante'}!
+            Olá, {userName || 'Anunciante'}!
           </h1>
           <p className="text-gray-400">Bem-vindo ao seu Dashboard de Anunciante</p>
         </div>

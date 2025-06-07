@@ -64,7 +64,7 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
         <Card className="h-full overflow-hidden glass-panel-hover border-neon-cyan/20 hover:shadow-[0_0_15px_rgba(0,255,231,0.2)]">
           <CampaignImage
             image={campaign.advertiser_logo}
-            discountPercentage={campaign.cashback_percentage} // Atualizado
+            discountPercentage={campaign.cashback_percentage} // Fixed: Use cashback_percentage
           />
           
           <CampaignHeader

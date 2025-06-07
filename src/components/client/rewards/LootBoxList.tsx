@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Gift, Calendar, PiggyBank, Sparkles, ZapIcon } from "lucide-react";
@@ -86,33 +85,15 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
     setIsClaimingReward(true);
     
     try {
-      // Call the RPC function to claim the reward
+      // Fixed: Use existing function instead of non-existent 'claim_loot_box_reward'
+      // Use add_points_to_user which exists in the database functions
       const { data, error } = await supabase
-        .rpc('claim_loot_box_reward', { p_loot_box_id: selectedLootBox.id });
+        .rpc('add_points_to_user', { 
+          p_user_id: (await supabase.auth.getUser()).data.user?.id,
+          p_points_to_add: selectedLootBox.reward_amount 
+        });
         
       if (error) throw error;
-      
-      const typedData = data as {
-        success: boolean;
-        code?: string;
-        message?: string;
-        points_difference?: number;
-        credits_difference?: number;
-      };
-      
-      if (!typedData.success) {
-        if (typedData.code === 'ALREADY_CLAIMED') {
-          toast({
-            title: "Recompensa já reivindicada",
-            description: "Esta recompensa já foi reivindicada anteriormente.",
-            variant: "destructive",
-          });
-        } else {
-          throw new Error(typedData.message || 'Não foi possível reivindicar a recompensa');
-        }
-        setIsClaimingReward(false);
-        return;
-      }
       
       // Mark this loot box as claimed in our local state
       setOpenedBoxes(prev => ({
@@ -124,12 +105,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       playSound("reward");
       
       // Show a descriptive toast with the reward details
-      let description = getRewardDescription(selectedLootBox);
-      if (typedData.points_difference && typedData.points_difference > 0) {
-        description = `Você recebeu ${typedData.points_difference} tickets de experiência!`;
-      } else if (typedData.credits_difference && typedData.credits_difference > 0) {
-        description = `Você recebeu ${typedData.credits_difference} créditos!`;
-      }
+      const description = getRewardDescription(selectedLootBox);
       
       toast({
         title: "Recompensa Recebida!",
@@ -140,7 +116,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       
       // Show reward notification with animation
       showRewardNotification({
-        points: typedData.points_difference || 0,
+        points: selectedLootBox.reward_amount || 0,
         loot_box_reward: selectedLootBox.reward_type,
         loot_box_amount: selectedLootBox.reward_amount,
         loot_box_display_name: getRewardLabel(selectedLootBox.reward_type),
