@@ -4,7 +4,7 @@ import ActiveMissions from "@/components/dashboard/ActiveMissions";
 import { useMissions } from "@/hooks/useMissions";
 
 const MissionsSection = () => {
-  const { missions, loading, selectedMission, setSelectedMission } = useMissions();
+  const { missions, loading, selectedMission, setSelectedMission } = useMissions({});
 
   if (loading) {
     return (
