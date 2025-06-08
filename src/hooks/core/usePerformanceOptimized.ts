@@ -7,12 +7,12 @@ export const usePerformanceOptimized = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Configurações globais de performance para React Query
+    // Configurações globais de performance para React Query v5
     queryClient.setDefaultOptions({
       queries: {
         // Cache agressivo para reduzir calls
         staleTime: 5 * 60 * 1000, // 5 minutos
-        cacheTime: 10 * 60 * 1000, // 10 minutos
+        gcTime: 10 * 60 * 1000, // 10 minutos (React Query v5)
         
         // Reduzir refetch automático
         refetchOnWindowFocus: false,

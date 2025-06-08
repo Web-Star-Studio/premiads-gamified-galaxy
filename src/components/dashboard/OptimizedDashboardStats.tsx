@@ -27,25 +27,25 @@ export const OptimizedDashboardStats = React.memo(() => {
   const statCards = [
     {
       title: 'Rifas',
-      value: stats.rifas,
+      value: stats.rifas || 0,
       icon: Coins,
       color: 'text-yellow-400'
     },
     {
       title: 'Cashback',
-      value: `R$ ${stats.cashback_balance.toFixed(2)}`,
+      value: `R$ ${(stats.cashback_balance || 0).toFixed(2)}`,
       icon: TrendingUp,
       color: 'text-green-400'
     },
     {
       title: 'Missões Completas',
-      value: stats.missions_completed,
+      value: stats.missions_completed || 0,
       icon: Target,
       color: 'text-blue-400'
     },
     {
       title: 'Total Ganho',
-      value: stats.total_earned_rifas,
+      value: stats.total_earned_rifas || 0,
       icon: Trophy,
       color: 'text-purple-400'
     }

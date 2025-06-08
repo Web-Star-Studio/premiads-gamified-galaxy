@@ -8,9 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOptimizedMissions } from '@/hooks/core/useOptimizedMissions';
 import { useSounds } from '@/hooks/use-sounds';
+import type { OptimizedMission } from '@/types/optimized';
 
 interface OptimizedMissionsCarouselProps {
-  onSelectMission?: (mission: any) => void;
+  onSelectMission?: (mission: OptimizedMission) => void;
 }
 
 export const OptimizedMissionsCarousel = React.memo<OptimizedMissionsCarouselProps>(({ 
@@ -30,7 +31,7 @@ export const OptimizedMissionsCarousel = React.memo<OptimizedMissionsCarouselPro
     playSound("pop");
   }, [missions.length, playSound]);
 
-  const handleMissionClick = useCallback((mission: any) => {
+  const handleMissionClick = useCallback((mission: OptimizedMission) => {
     playSound("chime");
     onSelectMission?.(mission);
   }, [onSelectMission, playSound]);

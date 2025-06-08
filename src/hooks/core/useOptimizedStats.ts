@@ -2,13 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-
-interface UserStats {
-  rifas: number;
-  cashback_balance: number;
-  missions_completed: number;
-  total_earned_rifas: number;
-}
+import type { UserStats } from '@/types/optimized';
 
 export const useOptimizedStats = () => {
   const { user } = useAuth();
@@ -23,12 +17,20 @@ export const useOptimizedStats = () => {
       });
 
       if (error) throw error;
-      return data as UserStats;
+      
+      // Type assertion with proper fallbacks
+      const stats = data as UserStats;
+      return {
+        rifas: stats?.rifas || 0,
+        cashback_balance: stats?.cashback_balance || 0,
+        missions_completed: stats?.missions_completed || 0,
+        total_earned_rifas: stats?.total_earned_rifas || 0
+      };
     },
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutos - stats mudam mais
-    cacheTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos (React Query v5)
     refetchOnWindowFocus: false,
-    refetchInterval: 5 * 60 * 1000, // Atualiza a cada 5 minutos
+    refetchInterval: 5 * 60 * 1000,
   });
 };

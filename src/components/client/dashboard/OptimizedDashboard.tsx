@@ -28,6 +28,10 @@ export const OptimizedDashboard = React.memo(() => {
     );
   }
 
+  const profile = userData?.profile;
+  const totalBadges = userData?.total_badges || 0;
+  const completedMissions = userData?.completed_missions_count || 0;
+
   return (
     <div className="space-y-6 p-6">
       <motion.div
@@ -36,11 +40,11 @@ export const OptimizedDashboard = React.memo(() => {
         className="space-y-2"
       >
         <h1 className="text-2xl font-bold text-white">
-          Olá, {userData?.profile.full_name || 'Participante'}! 👋
+          Olá, {profile?.full_name || 'Participante'}! 👋
         </h1>
         <p className="text-gray-400">
-          Você tem {userData?.total_badges || 0} badges e completou{' '}
-          {userData?.completed_missions_count || 0} missões
+          Você tem {totalBadges} badges e completou{' '}
+          {completedMissions} missões
         </p>
       </motion.div>
 
