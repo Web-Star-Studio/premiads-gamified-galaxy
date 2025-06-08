@@ -210,9 +210,8 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
         decision: 'approve',
-        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+        stage: (submission.status === 'returned_to_advertiser' || submission.status === 'pending_approval') ? 'advertiser_second' : 'advertiser_first',
       });
       
       if (!result.success || result.error) {
@@ -242,21 +241,13 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   
   const handleReject = async (submission: Submission, rejectionReason: string = '') => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const approverId = session?.session?.user?.id;
-      
-      if (!approverId) {
-        throw new Error('Usuário não autenticado');
-      }
-      
       console.log(`Rejecting submission ${submission.id}, second instance: ${submission.second_instance}`);
       
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
         decision: 'reject',
-        stage: submission.second_instance ? 'advertiser_second' : 'advertiser_first'
+        stage: (submission.status === 'returned_to_advertiser' || submission.status === 'pending_approval') ? 'advertiser_second' : 'advertiser_first',
       });
       
       if (!result.success || result.error) {
