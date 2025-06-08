@@ -8,6 +8,7 @@ import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
 import { useAdvertiserCampaigns } from '@/hooks/useAdvertiserCampaigns';
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CampaignsListProps {
   initialFilter?: string | null;
@@ -21,6 +22,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const { playSound } = useSounds();
   const { toast } = useToast();
   const { campaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
+  const queryClient = useQueryClient();
   
   // Set initial filter when prop changes
   useEffect(() => {
@@ -46,6 +48,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       
       // Refresh list after delete
       refreshCampaigns();
+      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      
       playSound("error");
       toast({
         title: "Campanha removida",
@@ -74,6 +78,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     
     // Refresh list to reflect changes
     refreshCampaigns();
+    queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
   };
   
   const handleEdit = (campaign: any) => {

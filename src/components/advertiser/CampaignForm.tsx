@@ -1,5 +1,5 @@
+
 import React from 'react';
-import { useCampaignForm } from '@/hooks/use-campaign-form';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { FormProgress } from './campaign-form/FormProgress';
 import { FormNavigation } from './campaign-form/FormNavigation';
@@ -9,9 +9,14 @@ import RewardsStep from './campaign-form/RewardsStep';
 import DatesStep from './campaign-form/DatesStep';
 import { Campaign } from './campaignData';
 import { useSounds } from '@/hooks/use-sounds';
-import { FormData } from './campaign-form/types';
+import { FormData, initialFormData } from './campaign-form/types';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import useCampaignOperations from '@/hooks/advertiser/useCampaignOperations';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useUserCredits } from '@/hooks/useUserCredits';
 
 interface CampaignFormProps {
   onClose: () => void;
@@ -20,31 +25,111 @@ interface CampaignFormProps {
 
 const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   const { playSound } = useSounds();
-  const {
-    formData,
-    updateFormData,
-    currentStep,
-    totalSteps,
-    goToNextStep,
-    goToPreviousStep,
-    isSubmitting,
-    handleSubmit,
-    isFormValid
-  } = useCampaignForm({
-    editCampaign,
-    onClose: () => {
-      playSound('pop');
-      onClose();
-    }
-  });
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { createCampaign, updateCampaign, isSubmitting } = useCampaignOperations();
+  const { userCredits, refreshCredits } = useUserCredits();
   
-  // Step titles for progress indicator
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>(
+    editCampaign ? {
+      ...initialFormData,
+      title: editCampaign.title || '',
+      description: editCampaign.description || '',
+      type: editCampaign.type || '',
+      audience: editCampaign.target_audience || 'all',
+      requirements: editCampaign.requirements || '',
+      startDate: editCampaign.start_date ? new Date(editCampaign.start_date) : new Date(),
+      endDate: editCampaign.end_date ? new Date(editCampaign.end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      hasBadges: editCampaign.has_badge || false,
+      hasLootBox: editCampaign.has_lootbox || false,
+      streakBonus: editCampaign.sequence_bonus || false,
+      streakMultiplier: editCampaign.streak_multiplier || 1.2,
+      rifas: editCampaign.rifas || 10,
+      ticketsReward: editCampaign.tickets_reward || 0,
+      cashbackReward: editCampaign.cashback_reward || 0,
+      maxParticipants: editCampaign.max_participants || 100,
+      cashbackAmountPerRaffle: editCampaign.cashback_amount_per_raffle || 5.00,
+      targetFilter: editCampaign.target_filter || initialFormData.targetFilter,
+      badgeImageUrl: editCampaign.badge_image_url || null,
+      selectedLootBoxRewards: editCampaign.selected_lootbox_rewards || initialFormData.selectedLootBoxRewards,
+      formSchema: editCampaign.form_schema || []
+    } : initialFormData
+  );
+
+  // Refresh credits when component mounts
+  useEffect(() => {
+    refreshCredits();
+  }, [refreshCredits]);
+  
+  const totalSteps = 4;
   const steps = [
     "Informações Básicas",
     "Requisitos",
     "Recompensas", 
     "Datas"
   ];
+  
+  const updateFormData = (field: keyof FormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const goToNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+      playSound('pop');
+    }
+  };
+  
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+      playSound('pop');
+    }
+  };
+  
+  const handleSubmit = async () => {
+    // Calcular custo total
+    const totalCost = formData.rifas * (formData.maxParticipants || 100);
+    
+    // Verificar saldo antes de submeter
+    if (!editCampaign && userCredits < totalCost) {
+      toast({
+        title: 'Saldo insuficiente',
+        description: `Você precisa de ${totalCost} rifas para criar esta campanha. Saldo atual: ${userCredits} rifas.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      let success;
+      
+      if (editCampaign) {
+        success = await updateCampaign(editCampaign.id, formData);
+      } else {
+        success = await createCampaign(formData);
+      }
+      
+      if (success) {
+        playSound('success');
+        // Refresh credits after successful creation
+        setTimeout(() => {
+          refreshCredits();
+          navigate("/anunciante/campanhas");
+        }, 1500);
+      }
+      
+    } catch (error: any) {
+      console.error("Erro ao salvar campanha:", error);
+      toast({
+        title: "Erro ao salvar campanha",
+        description: error.message || "Ocorreu um erro ao salvar a campanha",
+        variant: "destructive",
+      });
+      playSound('error');
+    }
+  };
   
   // Render the appropriate step content
   const renderStepContent = () => {
@@ -71,6 +156,12 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
   };
   
   const isLastStep = currentStep === totalSteps;
+  const isFormValid = () => {
+    return formData.title && formData.description && formData.startDate && formData.endDate;
+  };
+  
+  // Calcular custo total para exibição
+  const totalCost = formData.rifas * (formData.maxParticipants || 100);
   
   return (
     <Card className="bg-galaxy-darkPurple border-galaxy-purple">
@@ -79,6 +170,27 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
           step={currentStep} 
           title={steps[currentStep - 1]} 
         />
+        
+        {/* Mostrar informações de custo e saldo */}
+        <div className="bg-galaxy-dark/50 p-3 rounded-lg border border-galaxy-purple/30">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-muted-foreground">Custo total da campanha:</span>
+            <span className="font-semibold text-neon-cyan">
+              {totalCost.toLocaleString()} rifas
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-sm mt-1">
+            <span className="text-muted-foreground">Seu saldo atual:</span>
+            <span className={`font-semibold ${userCredits >= totalCost ? 'text-green-400' : 'text-red-400'}`}>
+              {userCredits.toLocaleString()} rifas
+            </span>
+          </div>
+          {!editCampaign && userCredits < totalCost && (
+            <div className="text-xs text-red-400 mt-2">
+              ⚠️ Saldo insuficiente para criar esta campanha
+            </div>
+          )}
+        </div>
       </CardHeader>
       
       <CardContent>
@@ -97,10 +209,10 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || !isFormValid()}
+              disabled={isSubmitting || !isFormValid() || (!editCampaign && userCredits < totalCost)}
               className="gap-2"
             >
-              {isSubmitting ? 'Processando...' : 'Concluir'}
+              {isSubmitting ? 'Processando...' : editCampaign ? 'Atualizar' : 'Criar Campanha'}
               {!isSubmitting && <Save className="h-4 w-4" />}
             </Button>
           </div>

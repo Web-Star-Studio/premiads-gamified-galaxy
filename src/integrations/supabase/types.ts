@@ -824,9 +824,53 @@ export type Database = {
         Args: { user_id: string; reward: number }
         Returns: undefined
       }
+      admin_reject_submission: {
+        Args: { p_submission_id: string; p_admin_id: string }
+        Returns: undefined
+      }
+      admin_return_submission_to_advertiser: {
+        Args: { p_submission_id: string; p_admin_id: string }
+        Returns: undefined
+      }
+      approve_submission_first_instance: {
+        Args: { p_submission_id: string; p_advertiser_id: string }
+        Returns: undefined
+      }
+      approve_submission_second_instance: {
+        Args: { p_submission_id: string; p_advertiser_id: string }
+        Returns: undefined
+      }
       confirm_rifa_purchase: {
         Args: { p_purchase_id: string }
         Returns: undefined
+      }
+      create_campaign_atomic: {
+        Args: {
+          p_title: string
+          p_description: string
+          p_type: string
+          p_target_audience: string
+          p_requirements: Json
+          p_start_date: string
+          p_end_date: string
+          p_has_badge: boolean
+          p_has_lootbox: boolean
+          p_sequence_bonus: boolean
+          p_streak_multiplier: number
+          p_random_points: boolean
+          p_points_range: number[]
+          p_rifas: number
+          p_tickets_reward: number
+          p_cashback_reward: number
+          p_max_participants: number
+          p_cashback_amount_per_raffle: number
+          p_target_filter: Json
+          p_badge_image_url: string
+          p_min_purchase: number
+          p_selected_lootbox_rewards: string[]
+          p_form_schema: Json
+        }
+        Returns: string
       }
       crm_dashboard: {
         Args: {
@@ -940,12 +984,24 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      reject_submission_second_instance: {
+        Args: { p_submission_id: string; p_advertiser_id: string }
+        Returns: undefined
+      }
+      reject_submission_to_second_instance: {
+        Args: { p_submission_id: string; p_advertiser_id: string }
+        Returns: undefined
+      }
       retroactively_award_badges: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       reward_participant_for_submission: {
         Args: { submission_id: string }
+        Returns: undefined
+      }
+      unlock_crm_participant_details: {
+        Args: { p_advertiser_id: string; p_participant_id: string }
         Returns: undefined
       }
       update_user_status: {
