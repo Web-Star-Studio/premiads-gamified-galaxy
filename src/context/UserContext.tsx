@@ -1,12 +1,14 @@
+
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserProfile {
   id: string;
   full_name?: string;
   avatar_url?: string;
   email?: string;
+  user_type?: string;
   // Add other profile fields here
 }
 

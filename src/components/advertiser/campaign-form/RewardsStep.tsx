@@ -1,345 +1,171 @@
-import { memo, useEffect, useState } from "react";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { FormData } from "./types";
-import { useUserCredits } from '@/hooks/useUserCredits';
-import { Card, CardContent } from "@/components/ui/card";
-import { Info, AlertTriangle } from "lucide-react";
+
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { FormData } from './types';
+import { useUserCredits } from '@/hooks/useUserCredits';
+import { Loader2 } from 'lucide-react';
 
 interface RewardsStepProps {
-  /** Current form data */
   formData: FormData;
-  /** Function to update form data */
-  updateFormData: (field: string, value: any) => void;
+  updateFormData: (field: keyof FormData, value: any) => void;
 }
 
-/**
- * Mission rewards configuration step
- * Manages rifas, badges, and other reward options
- */
-const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
-  const { availableCredits: totalRifasDisponiveis, isLoading, error } = useUserCredits();
-  const [uploadingPrizeImage, setUploadingPrizeImage] = useState(false);
-  const [prizeImagePreview, setPrizeImagePreview] = useState<string | null>(formData.extraPrizeImageUrl || null);
-  const { toast } = useToast();
+const RewardsStep: React.FC<RewardsStepProps> = ({ formData, updateFormData }) => {
+  const { userCredits, loading } = useUserCredits();
   
-  const [maxRifas, setMaxRifas] = useState(totalRifasDisponiveis);
-  const [maxParticipants, setMaxParticipants] = useState(10000); // Default max
-  
-  const minRifas = 1;
-  const minParticipants = 10;
-  const rifasStep = 1;
-
-  const totalRifasAtribuidas = formData.rifas * formData.maxParticipants;
-  const excedeLimite = totalRifasAtribuidas > totalRifasDisponiveis;
-
-  useEffect(() => {
-    if (error) console.error('Erro ao carregar créditos:', error)
-  }, [error]);
-
-  useEffect(() => {
-    if (totalRifasDisponiveis > 0) {
-      // Quando "Rifas por Participante" muda, ajusta o máximo de participantes
-      if (formData.rifas > 0) {
-        const newMaxParticipants = Math.floor(totalRifasDisponiveis / formData.rifas);
-        setMaxParticipants(Math.max(newMaxParticipants, minParticipants));
-
-        if (formData.maxParticipants > newMaxParticipants) {
-          updateFormData("maxParticipants", Math.max(newMaxParticipants, minParticipants));
-        }
-      } else {
-        setMaxParticipants(10000); // Reset to default if rifas is 0
-      }
-    }
-  }, [formData.rifas, totalRifasDisponiveis, updateFormData]);
-
-  useEffect(() => {
-    if (totalRifasDisponiveis > 0) {
-      // Quando "Máximo de Participantes" muda, ajusta o máximo de rifas por participante
-      if (formData.maxParticipants > 0) {
-        const newMaxRifas = Math.floor(totalRifasDisponiveis / formData.maxParticipants);
-        setMaxRifas(Math.max(newMaxRifas, minRifas));
-
-        if (formData.rifas > newMaxRifas) {
-          updateFormData("rifas", Math.max(newMaxRifas, minRifas));
-        }
-      } else {
-        setMaxRifas(totalRifasDisponiveis); // Reset to total available if no participants
-      }
-    }
-  }, [formData.maxParticipants, totalRifasDisponiveis, updateFormData]);
-
-  // Handle prize image upload
-  const handlePrizeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.includes('image/')) {
-      toast({
-        title: 'Formato inválido',
-        description: 'Envie uma imagem (png, jpg, svg...)',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (ev) => setPrizeImagePreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
-
-    try {
-      setUploadingPrizeImage(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuário não autenticado')
-
-      const fileName = `${user.id}/${Date.now()}_${file.name}`
-      const { data, error } = await supabase.storage.from('extra_prizes').upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
-      if (error) throw error
-
-      const { data: publicUrlData } = supabase.storage.from('extra_prizes').getPublicUrl(data.path)
-
-      updateFormData('extraPrizeImageUrl', publicUrlData.publicUrl)
-      toast({ title: 'Imagem enviada com sucesso' })
-    } catch (err: any) {
-      console.error('Erro ao enviar imagem do prêmio:', err)
-      toast({ title: 'Erro ao enviar imagem', description: err.message, variant: 'destructive' })
-    } finally {
-      setUploadingPrizeImage(false)
-    }
-  }
-
-  const handleRemovePrizeImage = () => {
-    setPrizeImagePreview(null)
-    updateFormData('extraPrizeImageUrl', null)
-  }
+  const totalCost = formData.rifas * (formData.maxParticipants || 100);
+  const hasInsufficientBalance = userCredits < totalCost;
 
   return (
     <div className="space-y-6">
-      {isLoading ? (
-        <div className="text-center py-4">Carregando informações de créditos...</div>
-      ) : (
-        <>
-          <Card className="bg-yellow-900/20 border-yellow-500/30">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="text-yellow-400 h-4 w-4" />
-                <span className="text-sm font-medium text-yellow-400">Saldo disponível: {totalRifasDisponiveis} créditos</span>
+      <Card className="bg-galaxy-darkPurple border-galaxy-purple">
+        <CardHeader>
+          <CardTitle className="text-white">Recompensas da Campanha</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Balance Display */}
+          {loading ? (
+            <div className="flex items-center gap-2 p-3 bg-galaxy-dark/50 rounded-lg border border-galaxy-purple/30">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Carregando saldo...</span>
+            </div>
+          ) : (
+            <div className="bg-galaxy-dark/50 p-3 rounded-lg border border-galaxy-purple/30">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Custo total:</span>
+                <span className="font-semibold text-neon-cyan">
+                  {totalCost.toLocaleString()} rifas
+                </span>
               </div>
-              <p className="text-xs text-gray-400">
-                Os créditos são consumidos quando a campanha é publicada.
-                Cada rifa atribuída à missão consome 1 crédito da sua conta.
-              </p>
-            </CardContent>
-          </Card>
-
-          {excedeLimite && (
-            <Card className="bg-destructive/20 border-destructive/50">
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="text-destructive h-4 w-4" />
-                  <span className="text-sm font-medium text-destructive">Limite de Rifas Excedido</span>
+              <div className="flex justify-between items-center text-sm mt-1">
+                <span className="text-muted-foreground">Seu saldo:</span>
+                <span className={`font-semibold ${hasInsufficientBalance ? 'text-red-400' : 'text-green-400'}`}>
+                  {userCredits.toLocaleString()} rifas
+                </span>
+              </div>
+              {hasInsufficientBalance && (
+                <div className="text-xs text-red-400 mt-2">
+                  ⚠️ Saldo insuficiente para esta configuração
                 </div>
-                <p className="text-xs text-red-400">
-                  A combinação de rifas por participante e o máximo de participantes ({totalRifasAtribuidas}) 
-                  ultrapassa seu saldo de {totalRifasDisponiveis} rifas. Ajuste os valores para continuar.
-                </p>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           )}
 
-          <Card className="bg-green-900/20 border-green-500/30">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Info className="text-green-400 h-4 w-4" />
-                <span className="text-sm font-medium text-green-400">Sistema de Cashback</span>
-              </div>
-              <p className="text-xs text-gray-400">
-                Para cada rifa disponibilizada na campanha, os participantes poderão resgatar cashback em dinheiro. 
-                Cada rifa vale <strong className="text-green-400">R$ 5,00</strong> de cashback.
-                Defina quantos cashbacks estarão disponíveis para resgate.
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="rifas-slider" className="text-sm font-medium">Rifas por Participante</label>
-              <div className="flex items-center space-x-3">
-                <>
-                  <span className="text-sm text-yellow-400">{formData.rifas}</span>
-                  <Input
-                    id="rifas-input"
-                    type="number"
-                    min={minRifas}
-                    max={maxRifas}
-                    step={rifasStep}
-                    value={formData.rifas}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10)
-                      if (!isNaN(val))
-                        {updateFormData("rifas", Math.min(Math.max(val, minRifas), maxRifas))}
-                    }}
-                    className="w-24 bg-gray-800 border-gray-700 focus:border-yellow-400 text-right"
-                    disabled={totalRifasDisponiveis === 0}
-                  />
-                </>
-              </div>
-            </div>
-            <Slider
-              id="rifas-slider"
-              value={[formData.rifas]}
-              min={minRifas}
-              max={maxRifas}
-              step={rifasStep}
-              disabled={totalRifasDisponiveis === 0}
-              onValueChange={(value) => updateFormData("rifas", value[0])}
-              className="py-4"
-              aria-valuemin={minRifas}
-              aria-valuemax={maxRifas}
-              aria-valuenow={formData.rifas}
-              aria-valuetext={`${formData.rifas} rifas`}
+          {/* Rifas per participant */}
+          <div>
+            <Label htmlFor="rifas" className="text-white">Rifas por participante</Label>
+            <Input
+              id="rifas"
+              type="number"
+              min="1"
+              value={formData.rifas}
+              onChange={(e) => updateFormData('rifas', parseInt(e.target.value) || 1)}
+              className="bg-galaxy-dark border-galaxy-purple text-white"
             />
-            <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-md p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Info className="text-yellow-400 h-4 w-4" />
-                <span className="text-sm font-medium text-yellow-400">Rifas da Missão</span>
-              </div>
-              <p className="text-xs text-gray-400">
-                Define quantas rifas cada participante receberá ao concluir esta missão.
-                Este valor será debitado do seu saldo de créditos no momento da criação da campanha.
-                {formData.rifas > 0 && (
-                  <span className="block mt-1 text-yellow-300">
-                    ⚠️ {formData.rifas} créditos serão debitados da sua conta.
-                  </span>
-                )}
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Quantidade de rifas que cada participante receberá ao completar a missão
+            </p>
           </div>
 
-          {/* Controle de Participantes Máximos */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label htmlFor="participants-slider" className="text-sm font-medium">Máximo de Participantes</label>
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-pink-400">{formData.maxParticipants}</span>
-                <Input
-                  id="participants-input"
-                  type="number"
-                  min={minParticipants}
-                  max={maxParticipants}
-                  step={10}
-                  value={formData.maxParticipants}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10)
-                    if (!isNaN(val))
-                      {updateFormData("maxParticipants", Math.min(Math.max(val, minParticipants), maxParticipants))}
-                  }}
-                  className="w-24 bg-gray-800 border-gray-700 focus:border-pink-400 text-right"
-                />
-              </div>
-            </div>
-            <Slider
-              id="participants-slider"
-              value={[formData.maxParticipants]}
-              min={minParticipants}
-              max={maxParticipants}
-              step={10}
-              onValueChange={(value) => updateFormData("maxParticipants", value[0])}
-              className="py-4"
-              aria-valuemin={minParticipants}
-              aria-valuemax={maxParticipants}
-              aria-valuenow={formData.maxParticipants}
-              aria-valuetext={`${formData.maxParticipants} participantes máximos`}
+          {/* Cashback reward */}
+          <div>
+            <Label htmlFor="cashbackReward" className="text-white">Recompensa em Cashback (R$)</Label>
+            <Input
+              id="cashbackReward"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.cashbackReward}
+              onChange={(e) => updateFormData('cashbackReward', parseFloat(e.target.value) || 0)}
+              className="bg-galaxy-dark border-galaxy-purple text-white"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Valor em reais que cada participante receberá como cashback
+            </p>
           </div>
 
-          <div className="flex items-center justify-between px-1 py-2">
-            <div className="space-y-1">
-              <p className="text-sm font-medium" id="extra-prize-label">Prêmio Extra</p>
-              <p className="text-xs text-gray-400">Ofereça um prêmio adicional para os participantes</p>
+          {/* Max participants */}
+          <div>
+            <Label htmlFor="maxParticipants" className="text-white">Máximo de participantes</Label>
+            <Input
+              id="maxParticipants"
+              type="number"
+              min="1"
+              value={formData.maxParticipants}
+              onChange={(e) => updateFormData('maxParticipants', parseInt(e.target.value) || 100)}
+              className="bg-galaxy-dark border-galaxy-purple text-white"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Número máximo de pessoas que podem participar desta campanha
+            </p>
+          </div>
+
+          {/* Badges */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-white">Badges de conquista</Label>
+              <p className="text-xs text-muted-foreground">
+                Participantes ganham badges ao completar a missão
+              </p>
             </div>
             <Switch
-              id="extra-prize"
-              checked={formData.hasLootBox}
-              onCheckedChange={(checked) => updateFormData("hasLootBox", checked)}
-              aria-labelledby="extra-prize-label"
+              checked={formData.hasBadges}
+              onCheckedChange={(checked) => updateFormData('hasBadges', checked)}
             />
           </div>
 
-          {formData.hasLootBox && (
-            <div className="space-y-4 bg-galaxy-purple/10 rounded-md p-4">
-              <div className="space-y-2">
-                <label htmlFor="prize-name" className="text-sm font-medium">Nome do Prêmio</label>
-                <Input
-                  id="prize-name"
-                  placeholder="Ex: Camiseta exclusiva PremiAds"
-                  value={formData.extraPrizeName || ''}
-                  onChange={(e) => updateFormData('extraPrizeName', e.target.value)}
-                />
-              </div>
+          {/* Loot Box */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-white">Loot Box</Label>
+              <p className="text-xs text-muted-foreground">
+                Recompensas extras aleatórias para participantes
+              </p>
+            </div>
+            <Switch
+              checked={formData.hasLootBox}
+              onCheckedChange={(checked) => updateFormData('hasLootBox', checked)}
+            />
+          </div>
 
-              <div className="space-y-2">
-                <label htmlFor="prize-description" className="text-sm font-medium">Descrição</label>
-                <Textarea
-                  id="prize-description"
-                  placeholder="Descreva o prêmio extra..."
-                  value={formData.extraPrizeDescription || ''}
-                  onChange={(e) => updateFormData('extraPrizeDescription', e.target.value)}
-                  rows={3}
-                />
-              </div>
+          {/* Streak Bonus */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-white">Bônus de sequência</Label>
+              <p className="text-xs text-muted-foreground">
+                Participantes ganham bônus por completar missões consecutivas
+              </p>
+            </div>
+            <Switch
+              checked={formData.streakBonus}
+              onCheckedChange={(checked) => updateFormData('streakBonus', checked)}
+            />
+          </div>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Imagem do Prêmio</p>
-                {prizeImagePreview ? (
-                  <div className="relative w-32 h-32 mx-auto">
-                    <img src={prizeImagePreview} alt="Preview do prêmio" className="w-full h-full object-contain" />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6"
-                      onClick={handleRemovePrizeImage}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-galaxy-purple/40 rounded-md p-4 text-center">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                    <div className="mt-2">
-                      <label htmlFor="prize-image-upload" className="cursor-pointer text-neon-cyan hover:underline">
-                        Enviar imagem do prêmio
-                      </label>
-                      <input
-                        id="prize-image-upload"
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={handlePrizeImageUpload}
-                        disabled={uploadingPrizeImage}
-                      />
-                      <p className="text-xs text-gray-400 mt-1">PNG ou JPG (máx 2MB)</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+          {formData.streakBonus && (
+            <div>
+              <Label htmlFor="streakMultiplier" className="text-white">Multiplicador de sequência</Label>
+              <Input
+                id="streakMultiplier"
+                type="number"
+                min="1"
+                step="0.1"
+                value={formData.streakMultiplier}
+                onChange={(e) => updateFormData('streakMultiplier', parseFloat(e.target.value) || 1.2)}
+                className="bg-galaxy-dark border-galaxy-purple text-white"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Multiplicador aplicado às recompensas para participantes em sequência
+              </p>
             </div>
           )}
-        </>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default memo(RewardsStep);
-
-
+export default RewardsStep;

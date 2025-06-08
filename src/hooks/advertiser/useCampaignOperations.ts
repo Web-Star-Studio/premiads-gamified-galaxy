@@ -50,7 +50,7 @@ const useCampaignOperations = () => {
         p_title: formData.title,
         p_description: formData.description,
         p_type: formData.type,
-        p_target_audience: formData.audience, // Corrigido: usar target_audience
+        p_target_audience: formData.audience,
         p_requirements: formData.requirements,
         p_start_date: formatDate(formData.startDate),
         p_end_date: formatDate(formData.endDate),
@@ -58,10 +58,7 @@ const useCampaignOperations = () => {
         p_has_lootbox: formData.hasLootBox,
         p_sequence_bonus: formData.streakBonus,
         p_streak_multiplier: formData.streakMultiplier,
-        p_random_points: formData.randomPoints,
-        p_points_range: formData.pointsRange,
         p_rifas: formData.rifas,
-        p_tickets_reward: formData.ticketsReward,
         p_cashback_reward: formData.cashbackReward,
         p_max_participants: formData.maxParticipants || 100,
         p_cashback_amount_per_raffle: formData.cashbackAmountPerRaffle || 5.00,
@@ -131,7 +128,7 @@ const useCampaignOperations = () => {
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        target_audience: formData.audience, // Corrigido: usar target_audience
+        target_audience: formData.audience,
         requirements: formData.requirements,
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
@@ -142,7 +139,6 @@ const useCampaignOperations = () => {
         badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
         rifas: formData.rifas,
-        tickets_reward: formData.ticketsReward,
         cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()
