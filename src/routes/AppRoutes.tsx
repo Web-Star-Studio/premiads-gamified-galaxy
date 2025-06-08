@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -44,10 +43,16 @@ const AppRoutes = () => {
       <Routes>
         {/* Redirect root path for authenticated users */}
         {shouldRedirect() && (
-          <Route 
-            index 
-            element={<Navigate to={getDashboardPath()} replace />} 
-          />
+          <>
+            <Route 
+              index 
+              element={<Navigate to={getDashboardPath()} replace />} 
+            />
+            <Route
+              path="/auth"
+              element={<Navigate to={getDashboardPath()} replace />}
+            />
+          </>
         )}
         
         {/* Public routes with suspense loading */}
