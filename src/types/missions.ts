@@ -32,7 +32,7 @@ export interface Submission extends MissionSubmission {
 }
 
 // Mission interface with types that match the database schema
-export interface LegacyMission {
+export interface Mission {
   id: string;
   title: string;
   description?: string;

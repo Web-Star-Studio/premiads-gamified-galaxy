@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { 
-  LegacyMission, 
+  Mission, 
   MissionSubmission, 
   UserTokens,
   ValidationLog,
@@ -25,7 +25,7 @@ export const supabase = supabaseInstance;
 
 // Re-export types
 export type { 
-  LegacyMission, 
+  Mission, 
   MissionSubmission, 
   UserTokens,
   ValidationLog,
@@ -67,7 +67,7 @@ export const missionService = {
     return data;
   }, 'getMissionById_optimized'),
 
-  createMission: withPerformanceMonitoring(async (mission: LegacyMission) => {
+  createMission: withPerformanceMonitoring(async (mission: Mission) => {
     const client = await getSupabaseClient();
     try {
       const { id, ...missionWithoutId } = mission; 

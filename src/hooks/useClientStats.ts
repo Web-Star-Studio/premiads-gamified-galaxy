@@ -1,9 +1,7 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { useDataStore } from '@/stores/dataStore';
 import { queryKeys } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/authStore';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface ClientStats {
   rifas: number;
@@ -26,40 +24,12 @@ export function useClientStats() {
         return clientStats;
       }
 
-      // Fetch real data if user is authenticated
-      if (user?.id) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('rifas, cashback_balance')
-            .eq('id', user.id)
-            .single();
-
-          if (error) throw error;
-
-          const stats: ClientStats = {
-            rifas: profile?.rifas || 0,
-            cashback: profile?.cashback_balance || 0,
-            completedMissions: 0, // TODO: Calculate from mission_rewards
-            totalEarnings: (profile?.rifas || 0) + (profile?.cashback_balance || 0)
-          };
-
-          // Cache the result
-          setClientStats(stats);
-          useDataStore.getState().setLastFetch('clientStats', Date.now());
-          
-          return stats;
-        } catch (error) {
-          console.error('Error fetching client stats:', error);
-        }
-      }
-
-      // Fallback data
+      // Mock data for now - replace with actual API call
       const stats: ClientStats = {
-        rifas: 0,
-        cashback: 0,
-        completedMissions: 0,
-        totalEarnings: 0
+        rifas: 150,
+        cashback: 25.50,
+        completedMissions: 8,
+        totalEarnings: 175.50
       };
 
       // Cache the result
