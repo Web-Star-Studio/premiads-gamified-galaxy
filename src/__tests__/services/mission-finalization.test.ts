@@ -15,19 +15,6 @@ vi.mock('@/integrations/supabase/client', () => {
     })
   );
   
-  // Add mock methods to mockRpc so we can override return values in tests
-  mockRpc.mockResolvedValueOnce = vi.fn().mockImplementation((value) => {
-    mockRpc.mockImplementationOnce(() => Promise.resolve(value || {
-      data: {
-        status: 'approved',
-        points_awarded: 100,
-        participant_id: 'test-participant-id'
-      },
-      error: null
-    }));
-    return mockRpc;
-  });
-  
   return {
     supabase: {
       from: vi.fn(() => ({
@@ -65,7 +52,7 @@ vi.mock('@/integrations/supabase/client', () => {
             }))
           }))
         }))
-      }),
+      })),
       auth: {
         getUser: vi.fn(() => Promise.resolve({
           data: { user: { id: 'test-approver-id' } },
@@ -104,7 +91,7 @@ describe('Mission Finalization Flow', () => {
       const notes = 'Good job!';
 
       // Mock the Supabase response for the validateSubmission function
-      supabase.from = vi.fn().mockImplementation((table) => {
+      const mockFrom = vi.fn().mockImplementation((table) => {
         if (table === 'mission_submissions') {
           return {
             select: () => ({
@@ -141,6 +128,8 @@ describe('Mission Finalization Flow', () => {
         };
       });
 
+      supabase.from = mockFrom;
+
       // Act
       await missionService.validateSubmission(
         submissionId,
@@ -151,7 +140,6 @@ describe('Mission Finalization Flow', () => {
       );
 
       // Assert
-      // Check that RPC was called with correct parameters
       expect(supabase.rpc).toHaveBeenCalledWith(
         'finalize_submission',
         {

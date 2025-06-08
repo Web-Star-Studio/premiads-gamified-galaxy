@@ -1,80 +1,88 @@
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { UserType } from "@/types/auth";
-
-interface UserContextType {
-  userType: UserType;
-  userName: string;
-  isOverlayOpen: boolean;
-  setUserType: (type: UserType) => void;
-  setUserName: (name: string) => void;
-  setIsOverlayOpen: (isOpen: boolean) => void;
-  resetUserInfo: () => void;
+interface UserProfile {
+  id: string;
+  full_name?: string;
+  avatar_url?: string;
+  email?: string;
+  // Add other profile fields here
 }
 
-const defaultContextValue: UserContextType = {
-  userType: "participante",
-  userName: "",
-  isOverlayOpen: true,
-  setUserType: () => {},
-  setUserName: () => {},
-  setIsOverlayOpen: () => {},
-  resetUserInfo: () => {},
-};
+interface UserContextType {
+  userProfile: UserProfile | null;
+  userName: string;
+  loading: boolean;
+  refreshUserProfile: () => Promise<void>;
+}
 
-const UserContext = createContext<UserContextType>(defaultContextValue);
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const useUser = () => useContext(UserContext);
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage if available
-  const [userType, setUserTypeState] = useState<UserType>(() => {
-    const savedType = localStorage.getItem("userType");
-    return (savedType as UserType) || "participante";
-  });
-  
-  const [userName, setUserNameState] = useState<string>(() => localStorage.getItem("userName") || "");
-  
-  const [isOverlayOpen, setIsOverlayOpenState] = useState<boolean>(() => {
-    // Show overlay if no username is set
-    const savedName = localStorage.getItem("userName");
-    return !savedName || savedName === "";
-  });
+  const fetchUserProfile = useCallback(async () => {
+    if (!user?.id) {
+      console.log('No user ID, clearing profile');
+      setUserProfile(null);
+      setLoading(false);
+      return;
+    }
 
-  // Update localStorage when state changes
-  const setUserType = (type: UserType) => {
-    localStorage.setItem("userType", type);
-    setUserTypeState(type);
-  };
+    try {
+      setLoading(true);
+      console.log('Fetching user profile for:', user.id);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-  const setUserName = (name: string) => {
-    localStorage.setItem("userName", name);
-    setUserNameState(name);
-  };
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        setUserProfile(null);
+      } else {
+        console.log('Fetched user profile:', data);
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      setUserProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
-  const setIsOverlayOpen = (isOpen: boolean) => {
-    setIsOverlayOpenState(isOpen);
-  };
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
-  const resetUserInfo = () => {
-    localStorage.removeItem("userName");
-    setUserNameState("");
-    setIsOverlayOpen(true);
+  const userName = userProfile?.full_name || user?.email?.split('@')[0] || 'Usuário';
+
+  const refreshUserProfile = async () => {
+    await fetchUserProfile();
   };
 
   return (
-    <UserContext.Provider
-      value={{
-        userType,
-        userName,
-        isOverlayOpen,
-        setUserType,
-        setUserName,
-        setIsOverlayOpen,
-        resetUserInfo,
-      }}
-    >
+    <UserContext.Provider value={{ 
+      userProfile, 
+      userName, 
+      loading, 
+      refreshUserProfile: fetchUserProfile 
+    }}>
       {children}
     </UserContext.Provider>
   );
+};
+
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
 };

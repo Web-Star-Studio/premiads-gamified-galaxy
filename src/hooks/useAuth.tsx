@@ -1,87 +1,87 @@
-
-import { createContext, useContext, ReactNode } from "react";
-import { User } from "@supabase/supabase-js";
-import { useAuthSession } from "./useAuthSession";
-import { useAuthMethods } from "./useAuthMethods";
-import { SignUpCredentials, SignInCredentials } from "@/types/auth";
-
-interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  currentUser: User | null;
-  user: User | null;
-  loading: boolean;
-  signIn: (credentials: SignInCredentials) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (credentials: SignUpCredentials) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, loading: sessionLoading } = useAuthSession();
-  const { 
-    loading: methodsLoading, 
-    signIn: signInMethod, 
-    signOut: signOutMethod, 
-    signUp: signUpMethod,
-    resetPassword: resetPasswordMethod,
-    updatePassword: updatePasswordMethod
-  } = useAuthMethods();
-  
-  const isLoading = sessionLoading || methodsLoading;
-  
-  // Adapt the return types to match the interface
-  const signIn = async (credentials: SignInCredentials): Promise<void> => {
-    await signInMethod(credentials);
-  };
-
-  const signUp = async (credentials: SignUpCredentials): Promise<void> => {
-    await signUpMethod(credentials);
-  };
-
-  const signOut = async (): Promise<void> => {
-    await signOutMethod();
-  };
-  
-  const resetPassword = async (email: string): Promise<void> => {
-    await resetPasswordMethod(email);
-  };
-  
-  const updatePassword = async (password: string): Promise<void> => {
-    await updatePasswordMethod(password);
-  };
-  
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated: !!user,
-        isLoading,
-        currentUser: user,
-        user, // Alias for currentUser
-        loading: isLoading, // Alias for isLoading
-        signIn,
-        signOut,
-        signUp,
-        resetPassword,
-        updatePassword
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  
-  return context;
-};
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export type { SignUpCredentials, SignInCredentials };
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        } else {
+          console.log('Initial session:', session?.user?.id);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = useCallback(async (email: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) throw error;
+      alert('Check your email for the login link!');
+    } catch (error: any) {
+      alert(error.error_description || error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signUp = useCallback(async (email: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({ email, options: { emailRedirectTo: `${window.location.origin}/cliente` } });
+      if (error) throw error;
+      alert('Check your email for the sign up link!');
+    } catch (error: any) {
+      alert(error.error_description || error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      alert(error.error_description || error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+  };
+};

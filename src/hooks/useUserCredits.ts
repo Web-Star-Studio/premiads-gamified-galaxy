@@ -3,19 +3,30 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export const useUserCredits = () => {
+interface UserCreditsData {
+  userCredits: number;
+  availableCredits: number;
+  totalCredits: number;
+  loading: boolean;
+}
+
+export const useUserCredits = (): UserCreditsData & { refreshCredits: () => Promise<void> } => {
   const [userCredits, setUserCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   const fetchCredits = async () => {
-    if (!user) {
+    if (!user?.id) {
+      console.log('No user ID available, setting credits to 0');
       setUserCredits(0);
       setLoading(false);
       return;
     }
 
     try {
+      setLoading(true);
+      console.log('Fetching credits for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('rifas')
@@ -26,10 +37,12 @@ export const useUserCredits = () => {
         console.error('Error fetching user credits:', error);
         setUserCredits(0);
       } else {
-        setUserCredits(data?.rifas || 0);
+        const rifasCount = data?.rifas || 0;
+        console.log('Fetched rifas count:', rifasCount);
+        setUserCredits(rifasCount);
       }
     } catch (error) {
-      console.error('Error fetching user credits:', error);
+      console.error('Error in fetchCredits:', error);
       setUserCredits(0);
     } finally {
       setLoading(false);
@@ -41,11 +54,14 @@ export const useUserCredits = () => {
   };
 
   useEffect(() => {
+    console.log('useUserCredits: user changed', user?.id);
     fetchCredits();
-  }, [user]);
+  }, [user?.id]);
 
   return {
     userCredits,
+    availableCredits: userCredits,
+    totalCredits: userCredits,
     loading,
     refreshCredits
   };

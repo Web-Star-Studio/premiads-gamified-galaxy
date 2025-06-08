@@ -1,3 +1,4 @@
+
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { Loader2 } from 'lucide-react';
 
@@ -15,13 +16,13 @@ export function CreditsDisplay({
   showLabel = true,
   className = '' 
 }: CreditsDisplayProps) {
-  const { availableCredits, totalCredits, isLoading } = useUserCredits();
+  const { availableCredits, totalCredits, loading } = useUserCredits();
   
   const displayValue = showTotal ? totalCredits : availableCredits;
   
   return (
     <div className={`flex items-center gap-1 ${className}`}>
-      {isLoading ? (
+      {loading ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
       ) : (
         <>
@@ -31,4 +32,4 @@ export function CreditsDisplay({
       )}
     </div>
   );
-} 
+}
