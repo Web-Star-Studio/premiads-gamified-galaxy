@@ -19,8 +19,8 @@ export const useOptimizedMissions = (limit = 10, offset = 0) => {
 
       if (error) throw error;
       
-      // Handle the response format from our new RPC function
-      const response = Array.isArray(data) ? data[0] : data;
+      // Type assertion with proper fallbacks
+      const response = data as OptimizedMissionsResponse;
       return {
         missions: response?.missions || [],
         total_count: response?.total_count || 0

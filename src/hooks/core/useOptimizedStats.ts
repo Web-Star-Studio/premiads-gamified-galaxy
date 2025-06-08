@@ -18,8 +18,8 @@ export const useOptimizedStats = () => {
 
       if (error) throw error;
       
-      // Handle the response format from our new RPC function
-      const stats = Array.isArray(data) ? data[0] : data;
+      // Type assertion with proper fallbacks
+      const stats = data as UserStats;
       return {
         rifas: stats?.rifas || 0,
         cashback_balance: stats?.cashback_balance || 0,

@@ -1,40 +1,24 @@
 
-export interface LevelInfo {
-  level: number;
+export interface UserLevel {
+  id: number;
   name: string;
+  min_points: number;
+  max_points: number | null;
+  points_multiplier: number;
   icon: string;
   color: string;
-  requiredPoints: number;
+  description: string;
+  benefits: {
+    ticket_discount: number;
+    access_to_exclusive_raffles: boolean;
+    priority_support: boolean;
+    early_access: boolean;
+  };
 }
 
 export interface UserLevelInfo {
-  currentLevel: {
-    id: number;
-    min_points: number;
-    max_points: number;
-    name: string;
-    icon: string;
-    color: string;
-    level: number;
-  };
-  nextLevel?: {
-    id: number;
-    min_points: number;
-    max_points: number;
-    name: string;
-    icon: string;
-    color: string;
-    level: number;
-  };
+  currentLevel: UserLevel;
+  nextLevel: UserLevel | null;
   progress: number;
-  pointsToNext: number;
   pointsToNextLevel: number;
 }
-
-export const LEVEL_SYSTEM = [
-  { level: 1, name: "Iniciante", icon: "🌱", color: "#10B981", requiredPoints: 0 },
-  { level: 2, name: "Explorador", icon: "🧭", color: "#3B82F6", requiredPoints: 100 },
-  { level: 3, name: "Aventureiro", icon: "⚔️", color: "#8B5CF6", requiredPoints: 250 },
-  { level: 4, name: "Especialista", icon: "🏆", color: "#F59E0B", requiredPoints: 500 },
-  { level: 5, name: "Mestre", icon: "👑", color: "#EF4444", requiredPoints: 1000 }
-];

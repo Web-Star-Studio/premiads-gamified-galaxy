@@ -39,8 +39,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       level: levelInfo.nextLevel.level
     } : undefined,
     progress: levelInfo.progress,
-    pointsToNext: levelInfo.pointsToNext || 0,
-    pointsToNextLevel: levelInfo.pointsToNext || 0
+    pointsToNext: levelInfo.pointsToNext
   } : undefined;
   
   return (

@@ -18,8 +18,8 @@ export const useOptimizedUserData = () => {
 
       if (error) throw error;
       
-      // Handle the response format from our new RPC function
-      const userData = Array.isArray(data) ? data[0] : data;
+      // Type assertion with proper fallbacks
+      const userData = data as OptimizedUserData;
       return {
         profile: userData?.profile || {
           id: user.id,
