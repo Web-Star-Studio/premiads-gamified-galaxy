@@ -2,7 +2,29 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { OptimizedUserData } from '@/types/optimized';
+
+interface OptimizedUserData {
+  profile: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+    rifas: number;
+    cashback_balance: number;
+    user_type: string;
+    profile_completed: boolean;
+  };
+  recent_rewards: Array<{
+    id: string;
+    rifas_earned: number;
+    cashback_earned: number;
+    rewarded_at: string;
+    mission_title: string;
+    mission_type: string;
+  }>;
+  active_submissions_count: number;
+  completed_missions_count: number;
+  total_badges: number;
+}
 
 export const useOptimizedUserData = () => {
   const { user } = useAuth();
@@ -12,32 +34,17 @@ export const useOptimizedUserData = () => {
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // Usar a nova função RPC para buscar todos os dados em 1 chamada
       const { data, error } = await supabase.rpc('get_user_dashboard_data', {
         p_user_id: user.id
       });
 
       if (error) throw error;
-      
-      // Type assertion with proper fallbacks
-      const userData = data as OptimizedUserData;
-      return {
-        profile: userData?.profile || {
-          id: user.id,
-          full_name: '',
-          rifas: 0,
-          cashback_balance: 0,
-          user_type: 'participante',
-          profile_completed: false
-        },
-        recent_rewards: userData?.recent_rewards || [],
-        active_submissions_count: userData?.active_submissions_count || 0,
-        completed_missions_count: userData?.completed_missions_count || 0,
-        total_badges: userData?.total_badges || 0
-      };
+      return data as OptimizedUserData;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos (React Query v5)
+    staleTime: 5 * 60 * 1000, // 5 minutos - cache agressivo
+    cacheTime: 10 * 60 * 1000, // 10 minutos
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });

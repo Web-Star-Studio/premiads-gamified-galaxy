@@ -1,11 +1,30 @@
 
+export interface CashbackCampaign {
+  id: string;
+  title: string;
+  description: string;
+  cashback_percentage: number;
+  min_purchase?: number | null;
+  start_date?: string;
+  end_date: string;
+  category: string;
+  advertiser_id: string;
+  advertiser_name?: string;
+  advertiser_logo: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  expires_at?: string;
+}
+
 export interface CreateCashbackInput {
   title: string;
   description: string;
-  advertiser_name: string;
   cashback_percentage: number;
-  start_date: string;
+  minimum_purchase?: number | null;
   end_date: string;
-  minimum_purchase?: number; // Tornar opcional para resolver o erro
-  category?: string;
+  category: string;
+  advertiser_id: string;
+  advertiser_logo: string;
+  is_active: boolean;
 }

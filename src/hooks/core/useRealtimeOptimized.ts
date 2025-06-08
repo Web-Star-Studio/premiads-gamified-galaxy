@@ -3,16 +3,7 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
-
-// Debounce personalizado mais eficiente
-const useDebounce = (callback: Function, delay: number) => {
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  
-  return (...args: any[]) => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => callback(...args), delay);
-  };
-};
+import { debounce } from 'lodash';
 
 export const useRealtimeOptimized = () => {
   const { user } = useAuth();
@@ -22,12 +13,12 @@ export const useRealtimeOptimized = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Debounce para evitar muitas invalidações - mais agressivo
-    const debouncedInvalidate = useDebounce((queryKeys: string[]) => {
+    // Debounce para evitar muitas invalidações
+    const debouncedInvalidate = debounce((queryKeys: string[]) => {
       queryKeys.forEach(key => {
         queryClient.invalidateQueries({ queryKey: [key, user.id] });
       });
-    }, 1000); // 1 segundo de debounce
+    }, 500);
 
     // Canal único para todas as subscriptions do usuário
     const channel = supabase
@@ -76,6 +67,7 @@ export const useRealtimeOptimized = () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
+      debouncedInvalidate.cancel();
     };
   }, [user?.id, queryClient]);
 };

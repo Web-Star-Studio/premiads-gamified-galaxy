@@ -18,30 +18,6 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
   const effectivePoints = totalPoints || stats?.rifas || 0;
   const { levelInfo, loading: levelLoading } = useUserLevel(effectivePoints);
   
-  // Convert to the expected format
-  const userLevelInfo = levelInfo ? {
-    currentLevel: {
-      id: levelInfo.currentLevel.level,
-      min_points: levelInfo.currentLevel.requiredPoints,
-      max_points: levelInfo.nextLevel?.requiredPoints || levelInfo.currentLevel.requiredPoints + 1000,
-      name: levelInfo.currentLevel.name,
-      icon: levelInfo.currentLevel.icon,
-      color: levelInfo.currentLevel.color,
-      level: levelInfo.currentLevel.level
-    },
-    nextLevel: levelInfo.nextLevel ? {
-      id: levelInfo.nextLevel.level,
-      min_points: levelInfo.nextLevel.requiredPoints,
-      max_points: levelInfo.nextLevel.requiredPoints + 1000,
-      name: levelInfo.nextLevel.name,
-      icon: levelInfo.nextLevel.icon,
-      color: levelInfo.nextLevel.color,
-      level: levelInfo.nextLevel.level
-    } : undefined,
-    progress: levelInfo.progress,
-    pointsToNext: levelInfo.pointsToNext
-  } : undefined;
-  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -78,8 +54,8 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
         </Tooltip>
       </TooltipProvider>
       
-      {!levelLoading && userLevelInfo && (
-        <UserLevel levelInfo={userLevelInfo} />
+      {!levelLoading && levelInfo && (
+        <UserLevel levelInfo={levelInfo} />
       )}
       
       <TicketsButton />

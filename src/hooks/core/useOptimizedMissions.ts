@@ -3,7 +3,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo } from 'react';
-import type { OptimizedMissionsResponse, OptimizedMission } from '@/types/optimized';
+
+interface OptimizedMission {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  rifas: number;
+  cashback_reward: number;
+  has_badge: boolean;
+  has_lootbox: boolean;
+  end_date: string;
+  advertiser_id: string;
+  advertiser_name: string;
+  advertiser_avatar: string;
+}
 
 export const useOptimizedMissions = (limit = 10, offset = 0) => {
   const { user } = useAuth();
@@ -18,17 +32,11 @@ export const useOptimizedMissions = (limit = 10, offset = 0) => {
       });
 
       if (error) throw error;
-      
-      // Type assertion with proper fallbacks
-      const response = data as OptimizedMissionsResponse;
-      return {
-        missions: response?.missions || [],
-        total_count: response?.total_count || 0
-      };
+      return data;
     },
     enabled: !!user,
-    staleTime: 10 * 60 * 1000, // 10 minutos
-    gcTime: 30 * 60 * 1000, // 30 minutos (React Query v5)
+    staleTime: 10 * 60 * 1000, // 10 minutos - missões mudam pouco
+    cacheTime: 30 * 60 * 1000, // 30 minutos
     refetchOnWindowFocus: false,
   });
 
