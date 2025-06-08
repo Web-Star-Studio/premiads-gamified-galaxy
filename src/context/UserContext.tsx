@@ -15,14 +15,20 @@ interface UserProfile {
 interface UserContextType {
   userProfile: UserProfile | null;
   userName: string;
+  userType: string;
   loading: boolean;
   refreshUserProfile: () => Promise<void>;
+  setUserType: (type: string) => void;
+  setUserName: (name: string) => void;
+  setIsOverlayOpen: (open: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userType, setUserType] = useState('participante');
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -50,6 +56,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.log('Fetched user profile:', data);
         setUserProfile(data);
+        if (data.user_type) {
+          setUserType(data.user_type);
+        }
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -69,12 +78,22 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchUserProfile();
   };
 
+  const setUserName = (name: string) => {
+    if (userProfile) {
+      setUserProfile({ ...userProfile, full_name: name });
+    }
+  };
+
   return (
     <UserContext.Provider value={{ 
       userProfile, 
       userName, 
+      userType,
       loading, 
-      refreshUserProfile: fetchUserProfile 
+      refreshUserProfile: fetchUserProfile,
+      setUserType,
+      setUserName,
+      setIsOverlayOpen
     }}>
       {children}
     </UserContext.Provider>

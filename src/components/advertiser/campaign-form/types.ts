@@ -1,4 +1,11 @@
 
+export interface FormField {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file';
+  options?: string[];
+}
+
 export interface FormData {
   title: string;
   description: string;
@@ -19,7 +26,7 @@ export interface FormData {
   badgeImageUrl: string | null;
   minPurchase: number;
   selectedLootBoxRewards: string[];
-  formSchema: any[];
+  formSchema: FormField[];
 }
 
 export const initialFormData: FormData = {
