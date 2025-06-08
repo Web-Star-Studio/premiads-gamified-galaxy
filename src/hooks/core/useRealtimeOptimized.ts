@@ -1,41 +1,49 @@
 
-import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+
+// Debounce personalizado mais eficiente
+const useDebounce = (callback: Function, delay: number) => {
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  
+  return (...args: any[]) => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => callback(...args), delay);
+  };
+};
 
 export const useRealtimeOptimized = () => {
-  const queryClient = useQueryClient();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('Setting up optimized realtime subscriptions for user:', user.id);
+    // Debounce para evitar muitas invalidações - mais agressivo
+    const debouncedInvalidate = useDebounce((queryKeys: string[]) => {
+      queryKeys.forEach(key => {
+        queryClient.invalidateQueries({ queryKey: [key, user.id] });
+      });
+    }, 1000); // 1 segundo de debounce
 
-    // Subscription para mission_rewards
-    const rewardsSubscription = supabase
-      .channel('mission_rewards_realtime')
+    // Canal único para todas as subscriptions do usuário
+    const channel = supabase
+      .channel(`user-updates-${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'mission_rewards',
-          filter: `user_id=eq.${user.id}`
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('Mission reward realtime update:', payload);
-          // Invalidar queries relacionadas
-          queryClient.invalidateQueries({ queryKey: ['user-stats-fast', user.id] });
-          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
+        () => {
+          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
         }
       )
-      .subscribe();
-
-    // Subscription para mission_submissions
-    const submissionsSubscription = supabase
-      .channel('mission_submissions_realtime')
       .on(
         'postgres_changes',
         {
@@ -44,37 +52,30 @@ export const useRealtimeOptimized = () => {
           table: 'mission_submissions',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('Mission submission realtime update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
+        () => {
+          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
         }
       )
-      .subscribe();
-
-    // Subscription para profiles (atualizações de rifas/cashback)
-    const profilesSubscription = supabase
-      .channel('profiles_realtime')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
+          table: 'mission_rewards',
+          filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          console.log('Profile realtime update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['user-stats-fast', user.id] });
-          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
+        () => {
+          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
         }
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      console.log('Cleaning up realtime subscriptions');
-      rewardsSubscription.unsubscribe();
-      submissionsSubscription.unsubscribe();
-      profilesSubscription.unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, [user?.id, queryClient]);
 };

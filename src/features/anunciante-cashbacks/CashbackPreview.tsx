@@ -4,10 +4,10 @@ import { CashbackCampaign } from './types';
 const PREVIEW_FIELDS: (keyof CashbackCampaign)[] = [
   'title',
   'description', 
-  'cashback_percentage',
+  'cashback_percentage', // Fixed: Use cashback_percentage
   'category',
   'end_date',
-  'minimum_purchase'
+  'min_purchase' // Fixed: Use min_purchase instead of minimum_purchase
 ];
 
 interface CashbackPreviewProps {

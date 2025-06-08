@@ -65,12 +65,12 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
           </h3>
         </div>
         <div className="text-sm text-neon-cyan">
-          {currentLevel.points_multiplier || 1.0}x tickets
+          {currentLevel.points_multiplier}x tickets
         </div>
       </div>
       
       <p className="text-sm text-gray-400 mb-3">
-        {currentLevel.description || 'Continue completando missões para subir de nível!'}
+        {currentLevel.description}
       </p>
       
       {nextLevel && (
@@ -104,10 +104,10 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
                 <div className="flex items-center gap-2">
                   <BenefitIcon 
                     type="ticket_discount" 
-                    active={(currentLevel.benefits?.ticket_discount || 0) > 0}
+                    active={currentLevel.benefits.ticket_discount > 0}
                   />
                   <span className="text-xs">
-                    {currentLevel.benefits?.ticket_discount || 0}% desconto
+                    {currentLevel.benefits.ticket_discount}% desconto
                   </span>
                 </div>
               </TooltipTrigger>
@@ -121,7 +121,7 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
                 <div className="flex items-center gap-2">
                   <BenefitIcon 
                     type="access_to_exclusive_raffles" 
-                    active={currentLevel.benefits?.access_to_exclusive_raffles || false}
+                    active={currentLevel.benefits.access_to_exclusive_raffles}
                   />
                   <span className="text-xs">
                     Sorteios exclusivos
@@ -138,7 +138,7 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
                 <div className="flex items-center gap-2">
                   <BenefitIcon 
                     type="priority_support" 
-                    active={currentLevel.benefits?.priority_support || false}
+                    active={currentLevel.benefits.priority_support}
                   />
                   <span className="text-xs">
                     Suporte prioritário
@@ -155,7 +155,7 @@ const UserLevel = ({ levelInfo }: UserLevelProps) => {
                 <div className="flex items-center gap-2">
                   <BenefitIcon 
                     type="early_access" 
-                    active={currentLevel.benefits?.early_access || false}
+                    active={currentLevel.benefits.early_access}
                   />
                   <span className="text-xs">
                     Acesso antecipado

@@ -11,55 +11,19 @@ export const useOptimizedMissions = (limit = 10, offset = 0) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['optimized-missions', limit, offset],
     queryFn: async () => {
-      // Usar query direta enquanto RPC não está disponível
-      const { data: missions, error } = await supabase
-        .from('missions')
-        .select(`
-          id,
-          title,
-          description,
-          type,
-          rifas,
-          cashback_reward,
-          has_badge,
-          has_lootbox,
-          end_date,
-          advertiser_id,
-          profiles!inner(full_name, avatar_url)
-        `)
-        .eq('status', 'ativa')
-        .eq('is_active', true)
-        .range(offset, offset + limit - 1);
+      const { data, error } = await supabase.rpc('get_filtered_missions', {
+        p_status: 'ativa',
+        p_limit: limit,
+        p_offset: offset
+      });
 
       if (error) throw error;
-
-      // Contar total
-      const { count, error: countError } = await supabase
-        .from('missions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'ativa')
-        .eq('is_active', true);
-
-      if (countError) throw countError;
-
-      const formattedMissions = missions?.map(mission => ({
-        id: mission.id,
-        title: mission.title,
-        description: mission.description,
-        type: mission.type,
-        rifas: mission.rifas,
-        cashback_reward: mission.cashback_reward,
-        has_badge: mission.has_badge,
-        has_lootbox: mission.has_lootbox,
-        end_date: mission.end_date,
-        advertiser_id: mission.advertiser_id,
-        advertiser_name: (mission.profiles as any)?.full_name || 'Anunciante',
-        advertiser_avatar: (mission.profiles as any)?.avatar_url || ''
-      })) || [];
-
+      
+      // Handle the response format from our new RPC function
+      const response = Array.isArray(data) ? data[0] : data;
       return {
-        missions: formattedMissions,
-        total_count: count || 0
+        missions: response?.missions || [],
+        total_count: response?.total_count || 0
       };
     },
     enabled: !!user,

@@ -12,31 +12,19 @@ export const useOptimizedStats = () => {
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      // Usar query direta enquanto RPC não está disponível
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('rifas, cashback_balance')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await supabase.rpc('get_user_stats_fast', {
+        p_user_id: user.id
+      });
 
       if (error) throw error;
-
-      // Buscar missões completadas
-      const { data: rewards, error: rewardsError } = await supabase
-        .from('mission_rewards')
-        .select('rifas_earned')
-        .eq('user_id', user.id);
-
-      if (rewardsError) throw rewardsError;
-
-      const missionsCompleted = rewards?.length || 0;
-      const totalEarnedRifas = rewards?.reduce((sum, r) => sum + (r.rifas_earned || 0), 0) || 0;
-
+      
+      // Handle the response format from our new RPC function
+      const stats = Array.isArray(data) ? data[0] : data;
       return {
-        rifas: profile?.rifas || 0,
-        cashback_balance: profile?.cashback_balance || 0,
-        missions_completed: missionsCompleted,
-        total_earned_rifas: totalEarnedRifas
+        rifas: stats?.rifas || 0,
+        cashback_balance: stats?.cashback_balance || 0,
+        missions_completed: stats?.missions_completed || 0,
+        total_earned_rifas: stats?.total_earned_rifas || 0
       };
     },
     enabled: !!user?.id,

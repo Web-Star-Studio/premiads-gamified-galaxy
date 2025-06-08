@@ -27,10 +27,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       name: levelInfo.currentLevel.name,
       icon: levelInfo.currentLevel.icon,
       color: levelInfo.currentLevel.color,
-      level: levelInfo.currentLevel.level,
-      description: levelInfo.currentLevel.description,
-      points_multiplier: levelInfo.currentLevel.points_multiplier,
-      benefits: levelInfo.currentLevel.benefits
+      level: levelInfo.currentLevel.level
     },
     nextLevel: levelInfo.nextLevel ? {
       id: levelInfo.nextLevel.level,
@@ -39,10 +36,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       name: levelInfo.nextLevel.name,
       icon: levelInfo.nextLevel.icon,
       color: levelInfo.nextLevel.color,
-      level: levelInfo.nextLevel.level,
-      description: levelInfo.nextLevel.description,
-      points_multiplier: levelInfo.nextLevel.points_multiplier,
-      benefits: levelInfo.nextLevel.benefits
+      level: levelInfo.nextLevel.level
     } : undefined,
     progress: levelInfo.progress,
     pointsToNext: levelInfo.pointsToNext || 0,

@@ -148,38 +148,3 @@ export function getEstimatedTime(mission: Pick<Mission, 'type' | 'requirements'>
       return 'Não estimado';
   }
 }
-
-// Para compatibilidade com missionTypeLabels obsoleto
-export function mapSupabaseMissionToMission(data: any): Mission {
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    type: data.type,
-    tickets_reward: data.tickets_reward || 0,
-    cashback_reward: data.cashback_reward || 0,
-    cost_in_tokens: data.cost_in_tokens || 0,
-    requirements: data.requirements || [],
-    status: data.status,
-    start_date: data.start_date,
-    end_date: data.end_date,
-    advertiser_id: data.advertiser_id,
-    created_by: data.created_by,
-    is_active: data.is_active,
-    streak_bonus: data.streak_bonus,
-    streak_multiplier: data.streak_multiplier,
-    target_audience: data.target_audience,
-    target_audience_gender: data.target_audience_gender,
-    target_audience_age_min: data.target_audience_age_min,
-    target_audience_age_max: data.target_audience_age_max,
-    target_audience_region: data.target_audience_region,
-    target_filter: data.target_filter,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
-    deadline: data.deadline,
-    has_badge: data.has_badge,
-    has_lootbox: data.has_lootbox,
-    brand: data.brand,
-    rifas: data.rifas
-  };
-}
