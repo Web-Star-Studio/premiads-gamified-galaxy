@@ -15,6 +15,7 @@ export interface CashbackCampaign {
   created_at: string;
   updated_at: string;
   advertiser_id?: string;
+  expires_at?: string;
 }
 
 export interface CreateCashbackInput {

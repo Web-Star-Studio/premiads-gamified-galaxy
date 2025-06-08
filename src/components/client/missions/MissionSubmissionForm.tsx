@@ -48,7 +48,7 @@ const MissionSubmissionForm: React.FC<MissionSubmissionFormProps> = ({
             />
           </div>
 
-          {mission.type === 'foto' && (
+          {mission.type === 'photo' && (
             <div>
               <Label htmlFor="photo">Upload da Foto</Label>
               <Input

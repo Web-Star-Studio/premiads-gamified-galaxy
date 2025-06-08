@@ -1,61 +1,21 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient } from '@tanstack/react-query';
-
-// Debounce personalizado mais eficiente
-const useDebounce = (callback: Function, delay: number) => {
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  
-  return (...args: any[]) => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => callback(...args), delay);
-  };
-};
 
 export const useRealtimeOptimized = () => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const channelRef = useRef<any>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user?.id) return;
 
-    // Debounce para evitar muitas invalidações - mais agressivo
-    const debouncedInvalidate = useDebounce((queryKeys: string[]) => {
-      queryKeys.forEach(key => {
-        queryClient.invalidateQueries({ queryKey: [key, user.id] });
-      });
-    }, 1000); // 1 segundo de debounce
+    console.log('Setting up optimized realtime subscriptions for user:', user.id);
 
-    // Canal único para todas as subscriptions do usuário
-    const channel = supabase
-      .channel(`user-updates-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        },
-        () => {
-          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mission_submissions',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
-        }
-      )
+    // Subscription para mission_rewards
+    const rewardsSubscription = supabase
+      .channel('mission_rewards_realtime')
       .on(
         'postgres_changes',
         {
@@ -64,18 +24,57 @@ export const useRealtimeOptimized = () => {
           table: 'mission_rewards',
           filter: `user_id=eq.${user.id}`
         },
-        () => {
-          debouncedInvalidate(['optimized-user-data', 'user-stats-fast']);
+        (payload) => {
+          console.log('Mission reward realtime update:', payload);
+          // Invalidar queries relacionadas
+          queryClient.invalidateQueries({ queryKey: ['user-stats-fast', user.id] });
+          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
         }
       )
       .subscribe();
 
-    channelRef.current = channel;
+    // Subscription para mission_submissions
+    const submissionsSubscription = supabase
+      .channel('mission_submissions_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mission_submissions',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Mission submission realtime update:', payload);
+          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
+        }
+      )
+      .subscribe();
+
+    // Subscription para profiles (atualizações de rifas/cashback)
+    const profilesSubscription = supabase
+      .channel('profiles_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Profile realtime update:', payload);
+          queryClient.invalidateQueries({ queryKey: ['user-stats-fast', user.id] });
+          queryClient.invalidateQueries({ queryKey: ['optimized-user-data', user.id] });
+        }
+      )
+      .subscribe();
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
+      console.log('Cleaning up realtime subscriptions');
+      rewardsSubscription.unsubscribe();
+      submissionsSubscription.unsubscribe();
+      profilesSubscription.unsubscribe();
     };
   }, [user?.id, queryClient]);
 };
