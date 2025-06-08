@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -79,7 +80,10 @@ export const useAuth = () => {
 
   return {
     user,
+    currentUser: user,
     loading,
+    isLoading: loading,
+    isAuthenticated: !!user,
     signIn,
     signUp,
     signOut,

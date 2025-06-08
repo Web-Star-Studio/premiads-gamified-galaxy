@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { FormData, initialFormData } from './campaign-form/types';
-import { FormProgress } from './campaign-form/FormProgress';
-import { FormNavigation } from './campaign-form/FormNavigation';
+import FormProgress from './campaign-form/FormProgress';
+import FormNavigation from './campaign-form/FormNavigation';
 import BasicInfoStep from './campaign-form/BasicInfoStep';
 import RequirementsStep from './campaign-form/RequirementsStep';
 import RewardsStep from './campaign-form/RewardsStep';
@@ -15,7 +15,11 @@ import DatesStep from './campaign-form/DatesStep';
 import useCampaignOperations from '@/hooks/advertiser/useCampaignOperations';
 import { useToast } from '@/hooks/use-toast';
 
-const CampaignForm = () => {
+interface CampaignFormProps {
+  onClose?: () => void;
+}
+
+const CampaignForm: React.FC<CampaignFormProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const navigate = useNavigate();
@@ -37,7 +41,11 @@ const CampaignForm = () => {
     try {
       const success = await createCampaign(formData);
       if (success) {
-        navigate('/anunciante/campanhas');
+        if (onClose) {
+          onClose();
+        } else {
+          navigate('/anunciante/campanhas');
+        }
       }
     } catch (error) {
       console.error('Error submitting campaign:', error);
@@ -58,7 +66,7 @@ const CampaignForm = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/anunciante/campanhas')}
+            onClick={() => onClose ? onClose() : navigate('/anunciante/campanhas')}
             className="text-white hover:bg-galaxy-purple/20"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -71,7 +79,7 @@ const CampaignForm = () => {
             <CardTitle className="text-white">
               {steps[currentStep].title}
             </CardTitle>
-            <FormProgress currentStep={currentStep} totalSteps={steps.length} />
+            <FormProgress step={currentStep} totalSteps={steps.length} />
           </CardHeader>
           <CardContent>
             <motion.div
@@ -88,7 +96,7 @@ const CampaignForm = () => {
             </motion.div>
 
             <FormNavigation
-              currentStep={currentStep}
+              step={currentStep}
               totalSteps={steps.length}
               onNext={() => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))}
               onPrevious={() => setCurrentStep(prev => Math.max(prev - 1, 0))}

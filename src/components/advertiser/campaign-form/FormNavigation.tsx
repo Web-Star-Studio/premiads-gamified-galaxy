@@ -1,77 +1,67 @@
 
-import React from "react";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 interface FormNavigationProps {
-  /** Current step number */
   step: number;
-  /** Total number of steps in the form */
   totalSteps: number;
-  /** Handle next button click */
-  handleNext: () => void;
-  /** Handle back button click */
-  handleBack: () => void;
-  /** Handle form cancellation */
-  onClose: () => void;
-  /** Whether the next button should be disabled */
-  isNextDisabled?: boolean;
+  onNext: () => void;
+  onPrevious: () => void;
+  onSubmit: () => Promise<void>;
+  isSubmitting: boolean;
 }
 
-export const FormNavigation = ({
+const FormNavigation: React.FC<FormNavigationProps> = ({
   step,
   totalSteps,
-  handleNext,
-  handleBack,
-  onClose,
-  isNextDisabled = false
-}: FormNavigationProps) => {
-  const isLastStep = step === totalSteps;
-  const isFirstStep = step === 1;
-  
+  onNext,
+  onPrevious,
+  onSubmit,
+  isSubmitting
+}) => {
+  const isFirstStep = step === 0;
+  const isLastStep = step === totalSteps - 1;
+
   return (
-    <div className="mt-8 flex justify-between items-center w-full">
+    <div className="flex justify-between pt-6">
       <Button
+        type="button"
         variant="outline"
-        onClick={handleBack}
-        disabled={isFirstStep}
-        className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
-        aria-label="Voltar para o passo anterior"
+        onClick={onPrevious}
+        disabled={isFirstStep || isSubmitting}
       >
-        <ChevronLeft className="w-4 h-4 mr-1" aria-hidden="true" />
-        Voltar
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Anterior
       </Button>
-      
-      <div className="flex gap-2">
+
+      {isLastStep ? (
         <Button
-          variant="ghost"
-          onClick={onClose}
-          className="text-gray-400 hover:text-white"
-          aria-label="Cancelar e fechar formulário"
+          type="button"
+          onClick={onSubmit}
+          disabled={isSubmitting}
         >
-          <X className="w-4 h-4 mr-1" aria-hidden="true" />
-          Cancelar
-        </Button>
-        
-        <Button
-          onClick={handleNext}
-          disabled={isNextDisabled}
-          className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
-          aria-label={isLastStep ? "Concluir e salvar campanha" : "Avançar para o próximo passo"}
-        >
-          {isLastStep ? (
-            <>
-              <Check className="w-4 h-4 mr-1" aria-hidden="true" />
-              Concluir
-            </>
+          {isSubmitting ? (
+            "Criando..."
           ) : (
             <>
-              Próximo
-              <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
+              <Check className="w-4 h-4 mr-2" />
+              Criar Campanha
             </>
           )}
         </Button>
-      </div>
+      ) : (
+        <Button
+          type="button"
+          onClick={onNext}
+          disabled={isSubmitting}
+        >
+          Próximo
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      )}
     </div>
   );
 };
+
+export default FormNavigation;

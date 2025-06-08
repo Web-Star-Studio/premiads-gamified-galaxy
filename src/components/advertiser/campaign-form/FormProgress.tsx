@@ -1,37 +1,24 @@
 
-import React from "react";
+import React from 'react';
+import { Progress } from "@/components/ui/progress";
 
 interface FormProgressProps {
-  /** Current step number (1-4) */
   step: number;
-  /** Title of the current step */
-  title: string;
+  totalSteps: number;
 }
 
-export const FormProgress = ({ step, title }: FormProgressProps) => {
-  // Array of step numbers for proper accessibility
-  const steps = [1, 2, 3, 4];
-  
+const FormProgress: React.FC<FormProgressProps> = ({ step, totalSteps }) => {
+  const progress = ((step + 1) / totalSteps) * 100;
+
   return (
-    <div aria-live="polite">
-      <h3 className="text-xl font-heading" id="form-step-title">{title}</h3>
-      <div 
-        className="flex items-center mt-2" 
-        role="progressbar" 
-        aria-valuemin={1} 
-        aria-valuemax={4} 
-        aria-valuenow={step}
-        aria-labelledby="form-step-title"
-      >
-        {steps.map((stepNumber) => (
-          <div 
-            key={stepNumber}
-            className={`h-1 w-1/4 ${stepNumber <= step ? "bg-neon-cyan" : "bg-gray-700"}`}
-            aria-hidden="true"
-          />
-        ))}
+    <div className="w-full">
+      <div className="flex justify-between text-sm text-muted-foreground mb-2">
+        <span>Passo {step + 1} de {totalSteps}</span>
+        <span>{Math.round(progress)}%</span>
       </div>
-      <p className="sr-only">Passo {step} de 4</p>
+      <Progress value={progress} className="w-full" />
     </div>
   );
 };
+
+export default FormProgress;

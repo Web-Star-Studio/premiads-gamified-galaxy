@@ -11,6 +11,10 @@ import { FormField } from './types';
 interface SurveyFormBuilderProps {
   fields: FormField[];
   onFieldsChange: (fields: FormField[]) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  formData?: any;
+  updateFormData?: (field: string, value: any) => void;
 }
 
 const SurveyFormBuilder: React.FC<SurveyFormBuilderProps> = ({ fields, onFieldsChange }) => {
