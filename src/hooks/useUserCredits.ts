@@ -8,6 +8,7 @@ interface UserCreditsData {
   availableCredits: number;
   totalCredits: number;
   loading: boolean;
+  isLoading: boolean; // Add alias for compatibility
 }
 
 export const useUserCredits = (): UserCreditsData & { refreshCredits: () => Promise<void> } => {
@@ -63,6 +64,7 @@ export const useUserCredits = (): UserCreditsData & { refreshCredits: () => Prom
     availableCredits: userCredits,
     totalCredits: userCredits,
     loading,
+    isLoading: loading, // Add alias for compatibility
     refreshCredits
   };
 };

@@ -1,233 +1,104 @@
 
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { FormData, initialFormData } from './campaign-form/types';
 import { FormProgress } from './campaign-form/FormProgress';
 import { FormNavigation } from './campaign-form/FormNavigation';
 import BasicInfoStep from './campaign-form/BasicInfoStep';
 import RequirementsStep from './campaign-form/RequirementsStep';
 import RewardsStep from './campaign-form/RewardsStep';
 import DatesStep from './campaign-form/DatesStep';
-import { Campaign } from './campaignData';
-import { useSounds } from '@/hooks/use-sounds';
-import { FormData, initialFormData } from './campaign-form/types';
-import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import useCampaignOperations from '@/hooks/advertiser/useCampaignOperations';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { useUserCredits } from '@/hooks/useUserCredits';
 
-interface CampaignFormProps {
-  onClose: () => void;
-  editCampaign?: Campaign | null;
-}
-
-const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
-  const { playSound } = useSounds();
-  const { toast } = useToast();
+const CampaignForm = () => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const navigate = useNavigate();
-  const { createCampaign, updateCampaign, isSubmitting } = useCampaignOperations();
-  const { userCredits, refreshCredits } = useUserCredits();
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>(
-    editCampaign ? {
-      ...initialFormData,
-      title: editCampaign.title || '',
-      description: editCampaign.description || '',
-      type: editCampaign.type || '',
-      audience: editCampaign.target_audience || 'all',
-      requirements: editCampaign.requirements || '',
-      startDate: editCampaign.start_date ? new Date(editCampaign.start_date) : new Date(),
-      endDate: editCampaign.end_date ? new Date(editCampaign.end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      hasBadges: editCampaign.has_badge || false,
-      hasLootBox: editCampaign.has_lootbox || false,
-      streakBonus: editCampaign.sequence_bonus || false,
-      streakMultiplier: editCampaign.streak_multiplier || 1.2,
-      rifas: editCampaign.rifas || 10,
-      ticketsReward: editCampaign.tickets_reward || 0,
-      cashbackReward: editCampaign.cashback_reward || 0,
-      maxParticipants: editCampaign.max_participants || 100,
-      cashbackAmountPerRaffle: editCampaign.cashback_amount_per_raffle || 5.00,
-      targetFilter: editCampaign.target_filter || initialFormData.targetFilter,
-      badgeImageUrl: editCampaign.badge_image_url || null,
-      selectedLootBoxRewards: editCampaign.selected_lootbox_rewards || initialFormData.selectedLootBoxRewards,
-      formSchema: editCampaign.form_schema || []
-    } : initialFormData
-  );
+  const { createCampaign, isSubmitting } = useCampaignOperations();
+  const { toast } = useToast();
 
-  // Refresh credits when component mounts
-  useEffect(() => {
-    refreshCredits();
-  }, [refreshCredits]);
-  
-  const totalSteps = 4;
   const steps = [
-    "Informações Básicas",
-    "Requisitos",
-    "Recompensas", 
-    "Datas"
+    { title: 'Informações Básicas', component: BasicInfoStep },
+    { title: 'Requisitos', component: RequirementsStep },
+    { title: 'Recompensas', component: RewardsStep },
+    { title: 'Datas', component: DatesStep },
   ];
-  
+
   const updateFormData = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-  
-  const goToNextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
-      playSound('pop');
-    }
-  };
-  
-  const goToPreviousStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-      playSound('pop');
-    }
-  };
-  
+
   const handleSubmit = async () => {
-    // Calcular custo total
-    const totalCost = formData.rifas * (formData.maxParticipants || 100);
-    
-    // Verificar saldo antes de submeter
-    if (!editCampaign && userCredits < totalCost) {
+    try {
+      const success = await createCampaign(formData);
+      if (success) {
+        navigate('/anunciante/campanhas');
+      }
+    } catch (error) {
+      console.error('Error submitting campaign:', error);
       toast({
-        title: 'Saldo insuficiente',
-        description: `Você precisa de ${totalCost} rifas para criar esta campanha. Saldo atual: ${userCredits} rifas.`,
+        title: 'Erro',
+        description: 'Falha ao criar campanha. Tente novamente.',
         variant: 'destructive',
       });
-      return;
-    }
-    
-    try {
-      let success;
-      
-      if (editCampaign) {
-        success = await updateCampaign(editCampaign.id, formData);
-      } else {
-        success = await createCampaign(formData);
-      }
-      
-      if (success) {
-        playSound('success');
-        // Refresh credits after successful creation
-        setTimeout(() => {
-          refreshCredits();
-          navigate("/anunciante/campanhas");
-        }, 1500);
-      }
-      
-    } catch (error: any) {
-      console.error("Erro ao salvar campanha:", error);
-      toast({
-        title: "Erro ao salvar campanha",
-        description: error.message || "Ocorreu um erro ao salvar a campanha",
-        variant: "destructive",
-      });
-      playSound('error');
     }
   };
-  
-  // Render the appropriate step content
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return <BasicInfoStep 
-                formData={formData} 
-                updateFormData={updateFormData} />;
-      case 2:
-        return <RequirementsStep 
-                formData={formData} 
-                updateFormData={updateFormData} />;
-      case 3:
-        return <RewardsStep 
-                formData={formData} 
-                updateFormData={updateFormData} />;
-      case 4:
-        return <DatesStep 
-                formData={formData} 
-                updateFormData={updateFormData} />;
-      default:
-        return null;
-    }
-  };
-  
-  const isLastStep = currentStep === totalSteps;
-  const isFormValid = () => {
-    return formData.title && formData.description && formData.startDate && formData.endDate;
-  };
-  
-  // Calcular custo total para exibição
-  const totalCost = formData.rifas * (formData.maxParticipants || 100);
-  
+
+  const CurrentStepComponent = steps[currentStep].component;
+
   return (
-    <Card className="bg-galaxy-darkPurple border-galaxy-purple">
-      <CardHeader className="pb-4">
-        <FormProgress 
-          step={currentStep} 
-          title={steps[currentStep - 1]} 
-        />
-        
-        {/* Mostrar informações de custo e saldo */}
-        <div className="bg-galaxy-dark/50 p-3 rounded-lg border border-galaxy-purple/30">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">Custo total da campanha:</span>
-            <span className="font-semibold text-neon-cyan">
-              {totalCost.toLocaleString()} rifas
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-sm mt-1">
-            <span className="text-muted-foreground">Seu saldo atual:</span>
-            <span className={`font-semibold ${userCredits >= totalCost ? 'text-green-400' : 'text-red-400'}`}>
-              {userCredits.toLocaleString()} rifas
-            </span>
-          </div>
-          {!editCampaign && userCredits < totalCost && (
-            <div className="text-xs text-red-400 mt-2">
-              ⚠️ Saldo insuficiente para criar esta campanha
-            </div>
-          )}
+    <div className="min-h-screen bg-galaxy-dark p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/anunciante/campanhas')}
+            className="text-white hover:bg-galaxy-purple/20"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-3xl font-bold text-white">Nova Campanha</h1>
         </div>
-      </CardHeader>
-      
-      <CardContent>
-        {renderStepContent()}
-      </CardContent>
-      
-      <CardFooter className="flex justify-between border-t border-galaxy-purple/20 pt-4">
-        {isLastStep ? (
-          <div className="flex w-full justify-between">
-            <Button
-              variant="outline"
-              onClick={goToPreviousStep}
-              disabled={isSubmitting}
+
+        <Card className="bg-galaxy-darkPurple border-galaxy-purple">
+          <CardHeader>
+            <CardTitle className="text-white">
+              {steps[currentStep].title}
+            </CardTitle>
+            <FormProgress currentStep={currentStep} totalSteps={steps.length} />
+          </CardHeader>
+          <CardContent>
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              Voltar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !isFormValid() || (!editCampaign && userCredits < totalCost)}
-              className="gap-2"
-            >
-              {isSubmitting ? 'Processando...' : editCampaign ? 'Atualizar' : 'Criar Campanha'}
-              {!isSubmitting && <Save className="h-4 w-4" />}
-            </Button>
-          </div>
-        ) : (
-          <FormNavigation 
-            step={currentStep}
-            totalSteps={steps.length}
-            handleBack={goToPreviousStep}
-            handleNext={goToNextStep}
-            onClose={onClose}
-            isNextDisabled={false}
-          />
-        )}
-      </CardFooter>
-    </Card>
+              <CurrentStepComponent
+                formData={formData}
+                updateFormData={updateFormData}
+              />
+            </motion.div>
+
+            <FormNavigation
+              currentStep={currentStep}
+              totalSteps={steps.length}
+              onNext={() => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))}
+              onPrevious={() => setCurrentStep(prev => Math.max(prev - 1, 0))}
+              onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
