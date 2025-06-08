@@ -4,36 +4,67 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Trophy, Clock, CheckCircle } from "lucide-react";
+import { Clock, PlayCircle, Timer } from "lucide-react";
 
 const DailyChallenge = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const [progress, setProgress] = useState(65);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState("5h 23m");
-
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 3,
+    minutes: 0,
+    seconds: 0
+  });
+  const [isActive, setIsActive] = useState(false);
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       playSound("chime");
-    }, 600);
+    }, 1200);
     
     return () => clearTimeout(timer);
   }, [playSound]);
-
-  const completeChallenge = () => {
-    if (isCompleted) return;
+  
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
     
-    setProgress(100);
-    setIsCompleted(true);
-    playSound("reward");
+    if (isActive) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => {
+          const totalSeconds = prev.hours * 3600 + prev.minutes * 60 + prev.seconds - 1;
+          
+          if (totalSeconds <= 0) {
+            clearInterval(interval);
+            setIsActive(false);
+            toast({
+              title: "Desafio concluído!",
+              description: "Você completou o desafio diário",
+            });
+            playSound("reward");
+            return { hours: 0, minutes: 0, seconds: 0 };
+          }
+          
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+          
+          return { hours, minutes, seconds };
+        });
+      }, 1000);
+    }
     
+    return () => clearInterval(interval);
+  }, [isActive, toast, playSound]);
+  
+  const startChallenge = () => {
+    setIsActive(true);
+    playSound("pop");
     toast({
-      title: "Desafio concluído!",
-      description: "Você ganhou 250 tickets extras!",
+      title: "Desafio iniciado!",
+      description: "Complete o desafio antes do tempo acabar",
     });
   };
+  
+  const formatTime = (value: number) => value.toString().padStart(2, '0');
 
   return (
     <motion.div
@@ -44,45 +75,50 @@ const DailyChallenge = () => {
     >
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold font-heading">Desafio do Dia</h2>
-        <Trophy className="w-5 h-5 text-neon-lime" />
+        <Timer className="w-5 h-5 text-neon-pink" />
       </div>
       
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-medium text-white mb-2">Quiz Relâmpago</h3>
-          <p className="text-sm text-gray-400">
-            Responda 10 perguntas rápidas sobre nossos produtos
-          </p>
+      <div className="text-center py-3">
+        <h3 className="font-medium mb-2">Quiz Relâmpago</h3>
+        <p className="text-sm text-gray-400 mb-4">
+          Responda 10 perguntas rápidas sobre nossos produtos
+        </p>
+        
+        <div className="flex justify-center items-center space-x-2 my-4">
+          <div className="flex flex-col items-center justify-center w-16 h-16 bg-galaxy-deepPurple/50 rounded-lg">
+            <span className="text-xl font-bold">{formatTime(timeLeft.hours)}</span>
+            <span className="text-xs text-gray-400">horas</span>
+          </div>
+          <span className="text-xl font-bold text-neon-cyan">:</span>
+          <div className="flex flex-col items-center justify-center w-16 h-16 bg-galaxy-deepPurple/50 rounded-lg">
+            <span className="text-xl font-bold">{formatTime(timeLeft.minutes)}</span>
+            <span className="text-xs text-gray-400">min</span>
+          </div>
+          <span className="text-xl font-bold text-neon-cyan">:</span>
+          <div className="flex flex-col items-center justify-center w-16 h-16 bg-galaxy-deepPurple/50 rounded-lg">
+            <span className="text-xl font-bold">{formatTime(timeLeft.seconds)}</span>
+            <span className="text-xs text-gray-400">seg</span>
+          </div>
         </div>
         
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-400">Progresso</span>
-          <span className="text-neon-cyan">{progress}%</span>
-        </div>
-        
-        <Progress value={progress} className="h-2" />
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Clock className="w-4 h-4" />
+        <div className="flex items-center justify-between mt-1 mb-2">
+          <div className="flex items-center text-sm text-gray-400">
+            <Clock className="w-4 h-4 mr-1" />
             <span>Duração: 3h</span>
           </div>
-          <span className="text-sm font-medium text-neon-pink">250 tickets</span>
+          <div className="text-sm">
+            <span className="font-medium text-neon-pink">250</span>
+            <span className="text-gray-400 text-xs ml-1">tickets</span>
+          </div>
         </div>
         
         <Button 
-          onClick={completeChallenge} 
-          disabled={isCompleted}
-          className={`w-full ${isCompleted ? 'bg-green-600' : 'neon-button'}`}
+          onClick={startChallenge} 
+          disabled={isActive}
+          className="neon-button mt-2 w-full"
         >
-          {isCompleted ? (
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              <span>Desafio Concluído</span>
-            </div>
-          ) : (
-            "Iniciar Desafio"
-          )}
+          <PlayCircle className="w-4 h-4 mr-2" />
+          {isActive ? "Em andamento" : "Iniciar Desafio"}
         </Button>
       </div>
     </motion.div>

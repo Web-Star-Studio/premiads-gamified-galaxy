@@ -1,4 +1,3 @@
-
 import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, Trophy, Users } from "lucide-react";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSounds } from "@/hooks/use-sounds";
-import { Mission } from "@/hooks/missions/types";
+import { Mission } from "@/types/mission-unified";
 
 interface MissionsCarouselProps {
   missions: Mission[];
@@ -89,7 +88,7 @@ const MissionsCarousel = memo<MissionsCarouselProps>(({ missions, onSelectMissio
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-semibold text-white line-clamp-1">{mission.title}</h4>
-                    <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
+                    <p className="text-sm text-gray-400">{mission.advertiser_id ? `Anunciante #${mission.advertiser_id}` : "PremiAds"}</p>
                   </div>
                   <Badge 
                     variant="secondary"

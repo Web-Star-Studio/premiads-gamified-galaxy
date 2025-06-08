@@ -1,65 +1,109 @@
 
-import { motion } from "framer-motion";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import { useClientDashboard } from "@/hooks/useClientDashboard";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import ClientSidebar from "@/components/client/dashboard/ClientSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import ClientHeader from "@/components/client/ClientHeader";
+import LoadingState from "@/components/client/dashboard/LoadingState";
 import PointsSection from "@/components/client/dashboard/PointsSection";
 import MissionsSection from "@/components/client/dashboard/MissionsSection";
 import SidePanel from "@/components/client/dashboard/SidePanel";
-import { useClientDashboard } from "@/hooks/useClientDashboard";
-import { useNavigate } from "react-router-dom";
+import SupportTools from "@/components/client/SupportTools";
+import OnboardingModal from "@/components/client/OnboardingModal";
+import SessionTimeoutWarning from "@/components/client/SessionTimeoutWarning";
+import ProfilePreview from "@/components/client/profile/ProfilePreview";
+import BrandsPreview from "@/components/client/brand/BrandsPreview";
+import CashbackPreview from "@/components/client/cashback/CashbackPreview";
+import ProfileCompletionBanner from "@/components/client/dashboard/ProfileCompletionBanner";
+import { useMediaQuery } from "@/hooks/use-mobile";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
-  const { userName, loading } = useClientDashboard(navigate);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const { toast } = useToast();
+  
+  const {
+    userName,
+    points,
+    streak,
+    loading,
+    showOnboarding,
+    setShowOnboarding,
+    handleExtendSession,
+    handleSessionTimeout,
+    authError,
+    isProfileCompleted,
+    profileData
+  } = useClientDashboard(navigate);
+
+  useEffect(() => {
+    // Check for authentication errors
+    if (authError) {
+      toast({
+        title: "Erro de autenticação",
+        description: authError,
+        variant: "destructive",
+      });
+    }
+  }, [authError, toast]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-galaxy-dark">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
-          <p className="text-gray-400">Carregando dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-galaxy-dark">
+    <SidebarProvider defaultOpen={!isMobile}>
+      <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
         <ClientSidebar userName={userName} />
-        
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <DashboardHeader userName={userName} />
+        <SidebarInset className="overflow-y-auto pb-20">
+          <ClientHeader />
+          
+          <div className="container px-4 py-8 mx-auto">
+            {/* Profile Completion Banner - Only show if profile is not completed */}
+            {!isProfileCompleted && <ProfileCompletionBanner />}
             
-            <motion.div 
-              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* Left Column - Points and User Level */}
-              <div className="lg:col-span-1">
-                <PointsSection />
-              </div>
+            <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2 lg:grid-cols-3">
+              {/* Points & Tickets Section */}
+              <PointsSection totalPoints={points} />
               
-              {/* Center Column - Missions */}
-              <div className="lg:col-span-2 space-y-6">
-                <MissionsSection />
-              </div>
-            </motion.div>
-            
-            {/* Bottom Section - Side Panel Components */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
+              {/* Missions Sections */}
+              <MissionsSection />
+              
+              {/* Daily Challenge & Sorte do Dia */}
               <SidePanel />
-            </motion.div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-3">
+              {/* Profile Preview */}
+              <ProfilePreview profileData={profileData} />
+              
+              {/* Cashback Preview */}
+              <CashbackPreview />
+              
+              {/* Brands Preview */}
+              <BrandsPreview />
+            </div>
           </div>
-        </main>
+          
+          {/* Support tools */}
+          <SupportTools />
+          
+          {/* Onboarding modal */}
+          <OnboardingModal 
+            isOpen={showOnboarding} 
+            onClose={() => setShowOnboarding(false)} 
+          />
+          
+          {/* Session timeout warning */}
+          <SessionTimeoutWarning 
+            timeoutDuration={5 * 60 * 1000} // 5 minutes for demo (normally 30 minutes)
+            warningTime={1 * 60 * 1000} // 1 minute warning for demo
+            onExtend={handleExtendSession}
+            onTimeout={handleSessionTimeout}
+          />
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );
