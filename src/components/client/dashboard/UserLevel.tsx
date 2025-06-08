@@ -1,174 +1,166 @@
 
-import React from "react";
-import { motion } from "framer-motion";
-import { UserLevelInfo } from "@/types/levels";
-import { Award, ChevronRight, Gift, Star, Clock, Diamond, Crown } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Trophy, Star, Gift, Zap } from 'lucide-react';
+import { UserLevelInfo } from '@/types/levels';
 
 interface UserLevelProps {
   levelInfo: UserLevelInfo;
 }
 
-const LevelIcon = ({ iconName, color }: { iconName: string; color: string }) => {
-  const iconStyle = { color };
-  
-  switch (iconName) {
-    case 'award':
-      return <Award className="w-5 h-5" style={iconStyle} />;
-    case 'award-trophy':
-      return <Award className="w-5 h-5" style={iconStyle} />;
-    case 'crown':
-      return <Crown className="w-5 h-5" style={iconStyle} />;
-    case 'diamond':
-      return <Diamond className="w-5 h-5" style={iconStyle} />;
-    case 'crown-jewel':
-      return <Crown className="w-5 h-5" style={iconStyle} />;
-    default:
-      return <Star className="w-5 h-5" style={iconStyle} />;
-  }
-};
+const UserLevel: React.FC<UserLevelProps> = ({ levelInfo }) => {
+  const { currentLevel, nextLevel, progress, pointsToNext } = levelInfo;
 
-const BenefitIcon = ({ type, active }: { type: string; active: boolean }) => {
-  const iconColor = active ? "text-neon-lime" : "text-gray-500";
-  
-  switch (type) {
-    case "ticket_discount":
-      return <Gift className={`w-4 h-4 ${iconColor}`} />;
-    case "priority_support":
-      return <Award className={`w-4 h-4 ${iconColor}`} />;
-    case "early_access":
-      return <Clock className={`w-4 h-4 ${iconColor}`} />;
-    case "access_to_exclusive_raffles":
-      return <Star className={`w-4 h-4 ${iconColor}`} />;
-    default:
-      return <Star className={`w-4 h-4 ${iconColor}`} />;
-  }
-};
+  const getLevelIcon = (level: number) => {
+    switch (level) {
+      case 1: return "🌱";
+      case 2: return "🔍";
+      case 3: return "⚡";
+      case 4: return "🏆";
+      case 5: return "👑";
+      case 6: return "🌟";
+      default: return "⭐";
+    }
+  };
 
-const UserLevel = ({ levelInfo }: UserLevelProps) => {
-  const { currentLevel, nextLevel, progress, pointsToNextLevel } = levelInfo;
-  
+  const getMultiplierText = (multiplier?: number) => {
+    if (!multiplier || multiplier === 1) return "";
+    return `${multiplier}x`;
+  };
+
+  const getBenefitIcon = (benefit: string) => {
+    if (benefit.includes('cashback') || benefit.includes('Cashback')) return <Gift className="w-3 h-3" />;
+    if (benefit.includes('streak') || benefit.includes('Streak')) return <Zap className="w-3 h-3" />;
+    if (benefit.includes('premium') || benefit.includes('Premium')) return <Star className="w-3 h-3" />;
+    return <Trophy className="w-3 h-3" />;
+  };
+
   return (
     <motion.div
-      className="glass-panel p-4 overflow-hidden relative"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.1 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-purple-glow opacity-20 -z-10 animate-float"></div>
-      
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <LevelIcon iconName={currentLevel.icon} color={currentLevel.color} />
-          <h3 className="font-bold text-lg" style={{ color: currentLevel.color }}>
-            {currentLevel.name}
-          </h3>
-        </div>
-        <div className="text-sm text-neon-cyan">
-          {currentLevel.points_multiplier}x tickets
-        </div>
-      </div>
-      
-      <p className="text-sm text-gray-400 mb-3">
-        {currentLevel.description}
-      </p>
-      
-      {nextLevel && (
-        <div className="mb-3">
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-400">Progresso para {nextLevel.name}</span>
-            <span className="text-neon-cyan">{progress}%</span>
-          </div>
-          <div className="bg-galaxy-deepPurple/50 h-2 rounded-full overflow-hidden">
-            <div 
-              className="h-full rounded-full" 
+      <Card className="glass-panel border-galaxy-purple/30 overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-3">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold"
+                style={{ 
+                  backgroundColor: `${currentLevel.color}20`,
+                  border: `2px solid ${currentLevel.color}`,
+                  color: currentLevel.color
+                }}
+              >
+                {getLevelIcon(currentLevel.level)}
+              </div>
+              <div>
+                <h3 className="font-semibold text-white text-sm">{currentLevel.name}</h3>
+                <p className="text-xs text-gray-400">
+                  Nível {currentLevel.level}
+                  {currentLevel.points_multiplier && currentLevel.points_multiplier > 1 && (
+                    <span className="ml-1 text-neon-cyan">
+                      • {getMultiplierText(currentLevel.points_multiplier)} multiplicador
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            
+            <Badge 
+              variant="secondary"
+              className="text-xs"
               style={{ 
-                width: `${progress}%`,
-                backgroundColor: nextLevel.color,
-                boxShadow: `0 0 8px ${nextLevel.color}`
+                backgroundColor: `${currentLevel.color}20`,
+                color: currentLevel.color,
+                borderColor: currentLevel.color
               }}
-            ></div>
+            >
+              Ativo
+            </Badge>
           </div>
-          <div className="text-right text-xs text-gray-500 mt-1">
-            Faltam {pointsToNextLevel} tickets
-          </div>
-        </div>
-      )}
-      
-      <div className="border-t border-galaxy-purple/20 pt-3 mt-2">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">Benefícios do nível:</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <BenefitIcon 
-                    type="ticket_discount" 
-                    active={currentLevel.benefits.ticket_discount > 0}
-                  />
-                  <span className="text-xs">
-                    {currentLevel.benefits.ticket_discount}% desconto
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Desconto na compra de tickets</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <BenefitIcon 
-                    type="access_to_exclusive_raffles" 
-                    active={currentLevel.benefits.access_to_exclusive_raffles}
-                  />
-                  <span className="text-xs">
-                    Sorteios exclusivos
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Acesso a sorteios exclusivos para seu nível</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <BenefitIcon 
-                    type="priority_support" 
-                    active={currentLevel.benefits.priority_support}
-                  />
-                  <span className="text-xs">
-                    Suporte prioritário
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Atendimento prioritário da equipe de suporte</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <BenefitIcon 
-                    type="early_access" 
-                    active={currentLevel.benefits.early_access}
-                  />
-                  <span className="text-xs">
-                    Acesso antecipado
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Acesso antecipado a novos recursos e promoções</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
+
+          {currentLevel.description && (
+            <p className="text-xs text-gray-300 mb-3 leading-relaxed">
+              {currentLevel.description}
+            </p>
+          )}
+
+          {nextLevel ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">
+                  Progresso para {nextLevel.name}
+                </span>
+                <span className="font-medium text-neon-cyan">
+                  {pointsToNext} pontos restantes
+                </span>
+              </div>
+              
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                <Progress 
+                  value={progress} 
+                  className="h-2 bg-galaxy-deepPurple/50"
+                  indicatorClassName="bg-gradient-to-r from-[#8A2387] via-[#E94057] to-[#F27121]"
+                />
+              </motion.div>
+              
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>{currentLevel.name}</span>
+                <span>{nextLevel.name}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-2 px-3 bg-galaxy-deepPurple/50 rounded-md border border-neon-pink/30">
+              <span className="text-sm text-neon-pink font-medium">🎉 Nível máximo atingido!</span>
+            </div>
+          )}
+
+          {/* Benefits Section */}
+          {currentLevel.benefits && currentLevel.benefits.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-galaxy-purple/30">
+              <h4 className="text-xs font-medium text-gray-300 mb-2 flex items-center">
+                <Gift className="w-3 h-3 mr-1" />
+                Benefícios Ativos
+              </h4>
+              <div className="space-y-1">
+                {currentLevel.benefits.slice(0, 2).map((benefit, index) => (
+                  <div key={index} className="flex items-center text-xs text-gray-400">
+                    {getBenefitIcon(benefit)}
+                    <span className="ml-2">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Next Level Preview */}
+          {nextLevel && nextLevel.benefits && nextLevel.benefits.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-galaxy-purple/20">
+              <h4 className="text-xs font-medium text-gray-400 mb-2 flex items-center">
+                <Star className="w-3 h-3 mr-1" />
+                Próximos Benefícios
+              </h4>
+              <div className="space-y-1">
+                {nextLevel.benefits.slice(0, 2).map((benefit, index) => (
+                  <div key={index} className="flex items-center text-xs text-gray-500">
+                    {getBenefitIcon(benefit)}
+                    <span className="ml-2">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

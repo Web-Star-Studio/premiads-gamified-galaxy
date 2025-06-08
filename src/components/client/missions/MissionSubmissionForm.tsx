@@ -1,202 +1,193 @@
-import React, { useState } from "react";
-import { Camera, X, MapPin } from "lucide-react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Mission } from "@/hooks/useMissions";
 import { useToast } from "@/hooks/use-toast";
-import { MissionType } from "@/hooks/useMissionsTypes";
+import { useSounds } from "@/hooks/use-sounds";
+import ImageUploader from "@/components/ui/ImageUploader";
 
 interface MissionSubmissionFormProps {
-  mission: Mission | null;
-  loading: boolean;
-  onSubmit: (submissionData: any) => void;
+  mission: {
+    id: string;
+    title: string;
+    type: string;
+    requirements?: string[];
+  };
+  onSubmit: (missionId: string, data: any, status: "in_progress" | "pending_approval") => Promise<boolean>;
+  onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmissionFormProps) => {
-  const [missionAnswer, setMissionAnswer] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+const MissionSubmissionForm = ({ 
+  mission, 
+  onSubmit, 
+  onCancel, 
+  isSubmitting = false 
+}: MissionSubmissionFormProps) => {
+  const [formData, setFormData] = useState({
+    photos: [] as string[],
+    description: "",
+    links: "",
+    additionalInfo: ""
+  });
+
   const { toast } = useToast();
+  const { playSound } = useSounds();
 
-  if (!mission) return null;
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleClearImage = () => {
-    setImagePreview(null);
-  };
-
-  const handleSubmit = () => {
-    // Prepare submission data based on mission type
-    let submissionData = {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (mission.type === "form" || mission.type === "survey") {
-      submissionData = { answer: missionAnswer };
-    } else if (mission.type === "photo" || mission.type === "video") {
-      if (!imagePreview) {
-        toast({
-          title: "Arquivo necessário",
-          description: "Por favor, envie uma imagem ou vídeo para concluir esta missão.",
-          variant: "destructive",
-        });
-        return;
-      }
-      submissionData = { mediaUrl: imagePreview };
-    } else if (mission.type === "social") {
-      submissionData = { shareLink: missionAnswer };
-    } else if (mission.type === "checkin") {
-      submissionData = { checkin: true };
+    if (!formData.description.trim()) {
+      toast({
+        title: "Descrição obrigatória",
+        description: "Por favor, adicione uma descrição da sua submissão.",
+        variant: "destructive"
+      });
+      return;
     }
+
+    // For photo missions, require at least one photo
+    if (mission.type === "photo" && formData.photos.length === 0) {
+      toast({
+        title: "Foto obrigatória",
+        description: "Para missões de foto, é necessário enviar pelo menos uma imagem.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const success = await onSubmit(mission.id, formData, "pending_approval");
     
-    onSubmit(submissionData);
+    if (success) {
+      playSound("success");
+      setFormData({
+        photos: [],
+        description: "",
+        links: "",
+        additionalInfo: ""
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    playSound("pop");
+    onCancel();
   };
 
   return (
-    <div className="space-y-4 my-4">
-      {(mission.type === "form" || mission.type === "survey") && (
-        <div className="space-y-2">
-          <Label htmlFor="answer">Sua resposta</Label>
-          <Textarea 
-            id="answer"
-            placeholder="Digite sua resposta aqui..."
-            className="min-h-[150px]"
-            value={missionAnswer}
-            onChange={(e) => setMissionAnswer(e.target.value)}
-          />
-        </div>
-      )}
-      
-      {(mission.type === "photo" || mission.type === "video") && (
-        <div className="space-y-2">
-          <Label>Enviar {mission.type === "photo" ? "foto" : "vídeo"}</Label>
-          {imagePreview ? (
-            <div className="relative">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="max-h-[200px] w-full object-cover rounded-md" 
-              />
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="absolute top-2 right-2"
-                onClick={handleClearImage}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="border-2 border-dashed border-gray-400 rounded-md p-6 text-center">
-              <Camera className="mx-auto h-8 w-8 text-gray-400" />
-              <div className="mt-2">
-                <label htmlFor="file-upload" className="cursor-pointer text-neon-cyan hover:underline">
-                  Clique para enviar
-                </label>
-                <input
-                  id="file-upload"
-                  name="file-upload"
-                  type="file"
-                  className="sr-only"
-                  accept={mission.type === "photo" ? "image/*" : "video/*"}
-                  onChange={handleImageUpload}
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                {mission.type === "photo" 
-                  ? "PNG, JPG ou GIF até 5MB" 
-                  : "MP4 ou MOV até 50MB"}
-              </p>
-            </div>
-          )}
-          
-          {mission.type === "photo" && (
-            <p className="text-sm text-gray-400">
-              Dica: Certifique-se de que a foto esteja bem iluminada e claramente mostrando o produto.
-            </p>
-          )}
-        </div>
-      )}
-      
-      {(mission.type === "social") && (
-        <div className="space-y-2">
-          <Label htmlFor="share-link">Link da postagem</Label>
-          <Input
-            id="share-link"
-            placeholder="Cole o link da sua postagem aqui..."
-            value={missionAnswer}
-            onChange={(e) => setMissionAnswer(e.target.value)}
-          />
-          <p className="text-sm text-gray-400">
-            Cole o link da sua postagem nas redes sociais contendo a hashtag solicitada.
-          </p>
-        </div>
-      )}
-      
-      {(mission.type === "checkin") && (
-        <div className="space-y-2">
-          <Label>Check-in na loja</Label>
-          <div className="bg-galaxy-deepPurple/80 rounded-md p-4">
-            <p className="text-center">
-              Pressione o botão abaixo para realizar check-in usando sua localização atual
-            </p>
-            <Button className="w-full mt-4">
-              <MapPin className="w-4 h-4 mr-2" />
-              Fazer Check-in
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      <div className="flex items-start space-x-2 pt-4">
-        <Checkbox 
-          id="terms" 
-          checked={agreedToTerms}
-          onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-        />
-        <div className="grid gap-1.5 leading-none">
-          <Label
-            htmlFor="terms"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Declaro que li e concordo com os termos de submissão
-          </Label>
-          <p className="text-sm text-gray-400">
-            Autorizo o uso do conteúdo enviado para fins promocionais.
-          </p>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-galaxy-deepPurple/20 rounded-lg border border-galaxy-purple/30">
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          Submeter Missão: {mission.title}
+        </h3>
+        <p className="text-sm text-gray-400">
+          Preencha os campos abaixo para enviar sua participação na missão.
+        </p>
       </div>
-      
-      <div className="pt-4 flex justify-end space-x-2">
-        <Button 
-          variant="outline" 
-          onClick={() => onSubmit(null)}
+
+      {/* Photo Upload for photo missions */}
+      {mission.type === "photo" && (
+        <div className="space-y-2">
+          <Label htmlFor="photos" className="text-white">
+            Fotos <span className="text-red-400">*</span>
+          </Label>
+          <ImageUploader
+            onImagesChange={(images) => 
+              setFormData(prev => ({ ...prev, photos: images }))
+            }
+            maxImages={5}
+            accept="image/*"
+          />
+          <p className="text-xs text-gray-400">
+            Envie até 5 fotos relacionadas à missão (PNG, JPG, JPEG)
+          </p>
+        </div>
+      )}
+
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-white">
+          Descrição <span className="text-red-400">*</span>
+        </Label>
+        <Textarea
+          id="description"
+          placeholder="Descreva como você completou a missão..."
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          className="min-h-[100px] bg-galaxy-darkPurple border-galaxy-purple text-white"
+          required
+        />
+      </div>
+
+      {/* Links */}
+      <div className="space-y-2">
+        <Label htmlFor="links" className="text-white">
+          Links (opcional)
+        </Label>
+        <Input
+          id="links"
+          type="url"
+          placeholder="https://..."
+          value={formData.links}
+          onChange={(e) => setFormData(prev => ({ ...prev, links: e.target.value }))}
+          className="bg-galaxy-darkPurple border-galaxy-purple text-white"
+        />
+        <p className="text-xs text-gray-400">
+          Adicione links relevantes para comprovar a missão
+        </p>
+      </div>
+
+      {/* Additional Info */}
+      <div className="space-y-2">
+        <Label htmlFor="additionalInfo" className="text-white">
+          Informações Adicionais (opcional)
+        </Label>
+        <Textarea
+          id="additionalInfo"
+          placeholder="Informações extras que considera relevantes..."
+          value={formData.additionalInfo}
+          onChange={(e) => setFormData(prev => ({ ...prev, additionalInfo: e.target.value }))}
+          className="min-h-[80px] bg-galaxy-darkPurple border-galaxy-purple text-white"
+        />
+      </div>
+
+      {/* Requirements */}
+      {mission.requirements && mission.requirements.length > 0 && (
+        <div className="p-4 bg-galaxy-darkPurple/40 rounded-lg border border-galaxy-purple/20">
+          <h4 className="text-sm font-medium text-white mb-2">Requisitos da Missão:</h4>
+          <ul className="space-y-1">
+            {mission.requirements.map((requirement, index) => (
+              <li key={index} className="text-xs text-gray-300 flex items-start">
+                <span className="text-neon-cyan mr-2">•</span>
+                {requirement}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-4 pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex-1 bg-gradient-to-r from-neon-cyan to-neon-blue hover:from-neon-cyan/80 hover:to-neon-blue/80"
+        >
+          {isSubmitting ? "Enviando..." : "Enviar Submissão"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={isSubmitting}
+          className="flex-1 border-galaxy-purple text-white hover:bg-galaxy-purple/20"
         >
           Cancelar
         </Button>
-        <Button 
-          onClick={handleSubmit}
-          disabled={
-            (mission.type !== "checkin" && !missionAnswer && !imagePreview) || 
-            !agreedToTerms || 
-            loading
-          }
-        >
-          {loading ? "Enviando..." : "Enviar"}
-        </Button>
       </div>
-    </div>
+    </form>
   );
 };
 

@@ -1,9 +1,28 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
-import { Mission, UseMissionsOptions } from "@/hooks/missions/types";
-import { useMissionSubmit } from "@/hooks/missions/useMissionSubmit";
+
+export interface Mission {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  rifas: number;
+  cashback_reward: number;
+  status: "available" | "in_progress" | "pending" | "completed";
+  requirements: string[];
+  has_badge: boolean;
+  has_lootbox: boolean;
+  sequence_bonus: boolean;
+  brand?: string;
+  tickets_reward?: number;
+}
+
+export interface UseMissionsOptions {
+  initialFilter?: "available" | "in_progress" | "pending" | "completed";
+}
 
 export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions = {}) => {
   const [loading, setLoading] = useState(true);
@@ -12,15 +31,6 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   const [currentFilter, setFilter] = useState<"available" | "in_progress" | "pending" | "completed">(initialFilter);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const { submitMission, submissionLoading } = useMissionSubmit(setMissions);
-
-  // Define filter to status mapping
-  const filterToStatus = {
-    available: "available",
-    in_progress: "in_progress",
-    pending: "pending",
-    completed: "completed"
-  };
 
   // Fetch missions based on current filter
   const fetchMissions = useCallback(async () => {
@@ -71,8 +81,18 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         }
         
         return {
-          ...mission,
+          id: mission.id,
+          title: mission.title,
+          description: mission.description || '',
+          type: mission.type,
+          rifas: mission.rifas || 0,
+          cashback_reward: mission.cashback_reward || 0,
           status,
+          requirements: mission.requirements || [],
+          has_badge: mission.has_badge || false,
+          has_lootbox: mission.has_lootbox || false,
+          sequence_bonus: mission.sequence_bonus || false,
+          tickets_reward: mission.rifas || 0
         } as Mission;
       });
       
@@ -108,13 +128,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
 
   // Get missions filtered by current filter
   const getFilteredMissions = useCallback(() => {
-    const statusFilter = filterToStatus[currentFilter];
-    
-    return missions.filter((mission) => 
-      // If the filter is "available", we want missions with status "available"
-      // For other filters, match the corresponding status
-       mission.status === statusFilter
-    );
+    return missions.filter((mission) => mission.status === currentFilter);
   }, [missions, currentFilter]);
 
   // Submit a mission with specific status
@@ -123,16 +137,41 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     submissionData: any, 
     status: "in_progress" | "pending_approval" = "pending_approval"
   ) => {
-    const success = await submitMission(missionId, submissionData, status);
-    
-    if (success) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      const { error } = await supabase
+        .from("mission_submissions")
+        .insert({
+          mission_id: missionId,
+          user_id: sessionData.session.user.id,
+          submission_data: submissionData,
+          status: status === "pending_approval" ? "pending" : status
+        });
+
+      if (error) throw error;
+
       playSound("success");
-      
+      toast({
+        title: "Missão enviada!",
+        description: "Sua submissão foi enviada para análise.",
+      });
+
       // Refresh missions after submission
       fetchMissions();
+      return true;
+    } catch (error) {
+      console.error("Error submitting mission:", error);
+      toast({
+        title: "Erro ao enviar missão",
+        description: "Não foi possível enviar sua submissão. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
     }
-    
-    return success;
   };
 
   return {
@@ -144,7 +183,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     currentFilter,
     setFilter,
     submitMission: handleSubmitMission,
-    submissionLoading,
+    submissionLoading: false,
     refreshMissions: fetchMissions
   };
 };
