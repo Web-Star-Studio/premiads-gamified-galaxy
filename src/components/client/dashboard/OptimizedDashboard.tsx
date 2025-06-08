@@ -1,74 +1,66 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { OptimizedDashboardStats } from '@/components/dashboard/OptimizedDashboardStats';
-import { OptimizedMissionsCarousel } from '@/components/dashboard/OptimizedMissionsCarousel';
-import { RecentRewardsSection } from '@/components/client/dashboard/RecentRewardsSection';
-import { useOptimizedUserData } from '@/hooks/core/useOptimizedUserData';
-import { useRealtimeOptimized } from '@/hooks/core/useRealtimeOptimized';
-import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from "framer-motion";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import ClientSidebar from "@/components/client/dashboard/ClientSidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import PointsSection from "@/components/client/dashboard/PointsSection";
+import MissionsSection from "@/components/client/dashboard/MissionsSection";
+import SidePanel from "@/components/client/dashboard/SidePanel";
+import { useClientDashboard } from "@/hooks/useClientDashboard";
+import { useNavigate } from "react-router-dom";
 
-export const OptimizedDashboard = React.memo(() => {
-  const { data: userData, isLoading } = useOptimizedUserData();
-  
-  // Habilitar realtime otimizado apenas para este dashboard
-  useRealtimeOptimized();
+export const OptimizedDashboard = () => {
+  const navigate = useNavigate();
+  const { userName, loading } = useClientDashboard(navigate);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
+      <div className="min-h-screen flex items-center justify-center bg-galaxy-dark">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando dashboard...</p>
         </div>
-        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-2"
-      >
-        <h1 className="text-2xl font-bold text-white">
-          Olá, {userData?.profile.full_name || 'Participante'}! 👋
-        </h1>
-        <p className="text-gray-400">
-          Você tem {userData?.total_badges || 0} badges e completou{' '}
-          {userData?.completed_missions_count || 0} missões
-        </p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <OptimizedDashboardStats />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <OptimizedMissionsCarousel />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <RecentRewardsSection />
-      </motion.div>
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-galaxy-dark">
+        <ClientSidebar userName={userName} />
+        
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <DashboardHeader userName={userName} />
+            
+            <motion.div 
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* Left Column - Points and User Level */}
+              <div className="lg:col-span-1">
+                <PointsSection />
+              </div>
+              
+              {/* Center Column - Missions */}
+              <div className="lg:col-span-2 space-y-6">
+                <MissionsSection />
+              </div>
+            </motion.div>
+            
+            {/* Bottom Section - Side Panel Components */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <SidePanel />
+            </motion.div>
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
-});
-
-OptimizedDashboard.displayName = 'OptimizedDashboard';
+};
