@@ -22,15 +22,6 @@ export interface FormData {
   formSchema: any[];
 }
 
-export interface FormField {
-  id: string;
-  type: 'text' | 'email' | 'number' | 'select' | 'textarea' | 'checkbox' | 'radio';
-  label: string;
-  required: boolean;
-  options?: string[];
-  placeholder?: string;
-}
-
 export const initialFormData: FormData = {
   title: '',
   description: '',

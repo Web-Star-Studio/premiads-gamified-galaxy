@@ -15,12 +15,7 @@ interface UserProfile {
 interface UserContextType {
   userProfile: UserProfile | null;
   userName: string;
-  userType: string;
   loading: boolean;
-  isOverlayOpen: boolean;
-  setIsOverlayOpen: (open: boolean) => void;
-  setUserType: (type: string) => void;
-  setUserName: (name: string) => void;
   refreshUserProfile: () => Promise<void>;
 }
 
@@ -29,7 +24,6 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const { user } = useAuth();
 
   const fetchUserProfile = useCallback(async () => {
@@ -70,19 +64,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchUserProfile]);
 
   const userName = userProfile?.full_name || user?.email?.split('@')[0] || 'Usuário';
-  const userType = userProfile?.user_type || 'participante';
-
-  const setUserType = (type: string) => {
-    if (userProfile) {
-      setUserProfile({ ...userProfile, user_type: type });
-    }
-  };
-
-  const setUserName = (name: string) => {
-    if (userProfile) {
-      setUserProfile({ ...userProfile, full_name: name });
-    }
-  };
 
   const refreshUserProfile = async () => {
     await fetchUserProfile();
@@ -91,13 +72,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <UserContext.Provider value={{ 
       userProfile, 
-      userName,
-      userType,
-      loading,
-      isOverlayOpen,
-      setIsOverlayOpen,
-      setUserType,
-      setUserName,
+      userName, 
+      loading, 
       refreshUserProfile: fetchUserProfile 
     }}>
       {children}
