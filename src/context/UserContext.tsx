@@ -9,7 +9,6 @@ interface UserProfile {
   avatar_url?: string;
   email?: string;
   user_type?: string;
-  // Add other profile fields here
 }
 
 interface UserContextType {
@@ -21,6 +20,7 @@ interface UserContextType {
   setUserType: (type: string) => void;
   setUserName: (name: string) => void;
   setIsOverlayOpen: (open: boolean) => void;
+  isOverlayOpen: boolean;
   resetUserInfo: () => void;
 }
 
@@ -101,6 +101,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserType,
       setUserName,
       setIsOverlayOpen,
+      isOverlayOpen,
       resetUserInfo
     }}>
       {children}
