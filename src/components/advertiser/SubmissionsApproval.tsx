@@ -49,7 +49,7 @@ const SubmissionsApproval = () => {
         const { data: missionsData, error: missionsError } = await supabase
           .from("missions")
           .select("id, title")
-          .eq("advertiser_id", userId);
+          .eq("created_by", userId);
           
         if (missionsError) throw missionsError;
         
@@ -73,7 +73,7 @@ const SubmissionsApproval = () => {
             mission_id
           `)
           .in("mission_id", missionIds)
-          .eq("status", "pending")
+          .eq("status", "pending_approval")
           .order("submitted_at", { ascending: false });
           
         if (submissionsError) throw submissionsError;
@@ -187,17 +187,10 @@ const SubmissionsApproval = () => {
     setProcessing(true);
     try {
       const submission = submissions[currentIndex];
-      const { data: sessionData } = await supabase.auth.getSession();
-      const approverId = sessionData?.session?.user?.id;
       
-      if (!approverId) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Usar a função finalizeMissionSubmission para aprovar a submissão
+      // Use the finalizeMissionSubmission function for approval
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
         decision: 'approve',
         stage: 'advertiser_first'
       });
@@ -239,17 +232,10 @@ const SubmissionsApproval = () => {
     setProcessing(true);
     try {
       const submission = submissions[currentIndex];
-      const { data: sessionData } = await supabase.auth.getSession();
-      const approverId = sessionData?.session?.user?.id;
       
-      if (!approverId) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Usar a função finalizeMissionSubmission para rejeitar a submissão
+      // Use the finalizeMissionSubmission function for rejection
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
         decision: 'reject',
         stage: 'advertiser_first'
       });

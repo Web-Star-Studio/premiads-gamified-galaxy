@@ -1,228 +1,215 @@
-
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useCashbacks } from './useCashbacks.hook';
-import { CashbackCampaign, CreateCashbackInput } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { CreateCashbackInput } from './types';
 
 interface CashbackFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  editCampaign?: CashbackCampaign | null;
-  advertiserId: string;
   onSuccess?: () => void;
 }
 
-export const CashbackForm: React.FC<CashbackFormProps> = ({
-  isOpen,
-  onClose,
-  editCampaign,
-  advertiserId,
-  onSuccess
-}) => {
-  const { toast } = useToast();
-  const { createCashback, updateCashback, isCreating, isUpdating } = useCashbacks(advertiserId);
-  
+const CashbackForm = ({ onSuccess }: CashbackFormProps) => {
   const [formData, setFormData] = useState<CreateCashbackInput>({
     title: '',
     description: '',
-    cashback_percentage: 5,
-    minimum_purchase: null,
-    end_date: '',
+    cashback_percentage: 0,
+    minimum_purchase: 0,
     category: '',
-    advertiser_id: advertiserId,
-    advertiser_logo: '',
-    is_active: true
+    start_date: '',
+    end_date: ''
   });
-
-  useEffect(() => {
-    if (editCampaign) {
-      setFormData({
-        title: editCampaign.title,
-        description: editCampaign.description,
-        cashback_percentage: editCampaign.cashback_percentage,
-        minimum_purchase: editCampaign.min_purchase,
-        end_date: editCampaign.end_date,
-        category: editCampaign.category,
-        advertiser_id: editCampaign.advertiser_id,
-        advertiser_logo: editCampaign.advertiser_logo,
-        is_active: editCampaign.is_active ?? true
-      });
-    } else {
-      setFormData({
-        title: '',
-        description: '',
-        cashback_percentage: 5,
-        minimum_purchase: null,
-        end_date: '',
-        category: '',
-        advertiser_id: advertiserId,
-        advertiser_logo: '',
-        is_active: true
-      });
-    }
-  }, [editCampaign, advertiserId]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     try {
-      if (editCampaign && editCampaign.id) {
-        await updateCashback({
-          id: editCampaign.id,
-          ...formData
-        });
-        toast({
-          title: 'Sucesso',
-          description: 'Campanha de cashback atualizada com sucesso!'
-        });
-      } else {
-        await createCashback(formData);
-        toast({
-          title: 'Sucesso', 
-          description: 'Campanha de cashback criada com sucesso!'
-        });
-      }
-      
-      onSuccess?.();
-      onClose();
-    } catch (error: any) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { error } = await supabase
+        .from('cashback_campaigns')
+        .insert([{
+          title: formData.title,
+          description: formData.description,
+          cashback_percentage: formData.cashback_percentage,
+          min_purchase: formData.minimum_purchase || 0,
+          category: formData.category,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          advertiser_id: user.id,
+          is_active: true
+        }]);
+
+      if (error) throw error;
+
       toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao salvar campanha',
-        variant: 'destructive'
+        title: 'Campanha criada com sucesso!',
+        description: 'Sua campanha de cashback foi criada e está ativa.',
       });
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        cashback_percentage: 0,
+        minimum_purchase: 0,
+        category: '',
+        start_date: '',
+        end_date: ''
+      });
+
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating cashback campaign:', error);
+      toast({
+        title: 'Erro ao criar campanha',
+        description: error.message || 'Ocorreu um erro ao criar a campanha',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const isLoading = isCreating || isUpdating;
+  const categories = [
+    { value: 'varejo', label: 'Varejo' },
+    { value: 'servicos', label: 'Serviços' },
+    { value: 'alimentacao', label: 'Alimentação' },
+    { value: 'entretenimento', label: 'Entretenimento' },
+    { value: 'outros', label: 'Outros' },
+  ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {editCampaign ? 'Editar Campanha' : 'Nova Campanha de Cashback'}
-          </DialogTitle>
-        </DialogHeader>
-        
+    <Card className="border-galaxy-purple/30 bg-galaxy-darkPurple/80 backdrop-blur-sm">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl font-heading neon-text-cyan">
+          Criar Campanha de Cashback
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Título</Label>
+            <Label htmlFor="title" className="text-white">
+              Título da Campanha
+            </Label>
             <Input
               id="title"
+              type="text"
+              placeholder="Ex: Cashback de Natal"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
               required
             />
           </div>
-
           <div>
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description" className="text-white">
+              Descrição
+            </Label>
             <Textarea
               id="description"
+              placeholder="Ex: Ganhe 10% de volta em todas as compras"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 min-h-[100px]"
               required
             />
           </div>
-
           <div>
-            <Label htmlFor="cashback_percentage">Percentual de Cashback (%)</Label>
+            <Label htmlFor="cashback_percentage" className="text-white">
+              Porcentagem de Cashback
+            </Label>
             <Input
               id="cashback_percentage"
               type="number"
-              min="1"
-              max="100"
-              value={formData.cashback_percentage}
+              placeholder="Ex: 10"
+              value={formData.cashback_percentage === 0 ? '' : formData.cashback_percentage}
               onChange={(e) => setFormData({ ...formData, cashback_percentage: Number(e.target.value) })}
+              className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
               required
             />
           </div>
-
           <div>
-            <Label htmlFor="minimum_purchase">Compra Mínima (R$)</Label>
+            <Label htmlFor="minimum_purchase" className="text-white">
+              Valor Mínimo da Compra
+            </Label>
             <Input
               id="minimum_purchase"
               type="number"
-              min="0"
-              step="0.01"
-              value={formData.minimum_purchase || ''}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                minimum_purchase: e.target.value ? Number(e.target.value) : null 
-              })}
+              placeholder="Ex: 50"
+              value={formData.minimum_purchase === 0 ? '' : formData.minimum_purchase}
+              onChange={(e) => setFormData({ ...formData, minimum_purchase: Number(e.target.value) })}
+              className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
+              required
             />
           </div>
-
           <div>
-            <Label htmlFor="category">Categoria</Label>
-            <Select 
-              value={formData.category} 
+            <Label htmlFor="category" className="text-white">
+              Categoria
+            </Label>
+            <Select
               onValueChange={(value) => setFormData({ ...formData, category: value })}
-              required
+              defaultValue={formData.category}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-galaxy-deepPurple/50 border-galaxy-purple/30">
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="restaurantes">Restaurantes</SelectItem>
-                <SelectItem value="varejo">Varejo</SelectItem>
-                <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                <SelectItem value="saude">Saúde</SelectItem>
-                <SelectItem value="beleza">Beleza</SelectItem>
-                <SelectItem value="servicos">Serviços</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <Label htmlFor="end_date">Data de Término</Label>
-            <Input
-              id="end_date"
-              type="date"
-              value={formData.end_date}
-              onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="start_date" className="text-white">
+                Data de Início
+              </Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="end_date" className="text-white">
+                Data de Término
+              </Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
+                required
+              />
+            </div>
           </div>
-
-          <div>
-            <Label htmlFor="advertiser_logo">URL do Logo</Label>
-            <Input
-              id="advertiser_logo"
-              type="url"
-              value={formData.advertiser_logo}
-              onChange={(e) => setFormData({ ...formData, advertiser_logo: e.target.value })}
-              placeholder="https://exemplo.com/logo.png"
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is_active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-            />
-            <Label htmlFor="is_active">Campanha ativa</Label>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? 'Salvando...' : editCampaign ? 'Atualizar' : 'Criar'}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-neon-cyan to-neon-pink hover:from-neon-cyan/80 hover:to-neon-pink/80"
+            disabled={loading}
+          >
+            {loading ? 'Criando...' : 'Criar Campanha'}
+          </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 };
+
+export default CashbackForm;
