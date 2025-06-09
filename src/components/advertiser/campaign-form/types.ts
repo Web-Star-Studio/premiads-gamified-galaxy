@@ -2,8 +2,10 @@
 export interface FormField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file';
+  type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file' | 'email' | 'number' | 'radio';
   options?: string[];
+  required?: boolean;
+  placeholder?: string;
 }
 
 export interface FormData {

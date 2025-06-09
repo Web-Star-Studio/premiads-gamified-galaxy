@@ -21,6 +21,7 @@ interface UserContextType {
   setUserType: (type: string) => void;
   setUserName: (name: string) => void;
   setIsOverlayOpen: (open: boolean) => void;
+  resetUserInfo: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -84,6 +85,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetUserInfo = () => {
+    setUserProfile(null);
+    setUserType('participante');
+    setIsOverlayOpen(false);
+  };
+
   return (
     <UserContext.Provider value={{ 
       userProfile, 
@@ -93,7 +100,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       refreshUserProfile: fetchUserProfile,
       setUserType,
       setUserName,
-      setIsOverlayOpen
+      setIsOverlayOpen,
+      resetUserInfo
     }}>
       {children}
     </UserContext.Provider>

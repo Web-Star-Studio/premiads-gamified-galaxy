@@ -7,7 +7,9 @@ interface UserCreditsData {
   userCredits: number;
   availableCredits: number;
   totalCredits: number;
+  usedCredits: number;
   loading: boolean;
+  isLoading: boolean;
 }
 
 export const useUserCredits = (): UserCreditsData & { refreshCredits: () => Promise<void> } => {
@@ -62,7 +64,9 @@ export const useUserCredits = (): UserCreditsData & { refreshCredits: () => Prom
     userCredits,
     availableCredits: userCredits,
     totalCredits: userCredits,
+    usedCredits: 0,
     loading,
+    isLoading: loading,
     refreshCredits
   };
 };
