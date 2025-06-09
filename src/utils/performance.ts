@@ -1,5 +1,5 @@
 
-import React, { useCallback, useRef, Suspense } from 'react';
+import React, { useCallback, useRef, useMemo } from 'react';
 
 // Performance utilities for optimization
 export const useDebounce = <T extends (...args: any[]) => any>(
@@ -56,9 +56,9 @@ export const withSuspense = <P extends object>(
   fallback: React.ReactNode = <div>Loading...</div>
 ) => {
   return React.memo((props: P) => (
-    <Suspense fallback={fallback}>
+    <React.Suspense fallback={fallback}>
       <Component {...props} />
-    </Suspense>
+    </React.Suspense>
   ));
 };
 
@@ -67,7 +67,7 @@ export const useMemoizedProps = <T>(
   factory: () => T,
   deps: React.DependencyList
 ): T => {
-  return React.useMemo(factory, deps);
+  return useMemo(factory, deps);
 };
 
 // Preload route utility
@@ -86,4 +86,35 @@ export const measurePerformance = <T>(
   const end = performance.now();
   console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
   return result;
+};
+
+// Virtual scrolling hook for large lists
+export const useVirtualScrolling = <T>(
+  items: T[],
+  itemHeight: number,
+  containerHeight: number
+) => {
+  const [scrollTop, setScrollTop] = React.useState(0);
+  
+  const visibleItems = useMemo(() => {
+    const startIndex = Math.floor(scrollTop / itemHeight);
+    const endIndex = Math.min(
+      startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+      items.length
+    );
+    
+    return {
+      items: items.slice(startIndex, endIndex),
+      startIndex,
+      totalHeight: items.length * itemHeight,
+      offsetY: startIndex * itemHeight
+    };
+  }, [items, itemHeight, containerHeight, scrollTop]);
+  
+  return {
+    ...visibleItems,
+    onScroll: (e: React.UIEvent<HTMLDivElement>) => {
+      setScrollTop(e.currentTarget.scrollTop);
+    }
+  };
 };
