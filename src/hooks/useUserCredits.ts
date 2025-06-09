@@ -46,7 +46,13 @@ export const useUserCredits = () => {
 
   return {
     userCredits,
+    availableCredits: userCredits, // Alias para compatibilidade
+    totalCredits: userCredits, // Alias para compatibilidade
+    usedCredits: 0, // Placeholder para compatibilidade
     loading,
+    isLoading: loading, // Alias para compatibilidade
+    error: null, // Placeholder para compatibilidade
+    availableCashback: 0, // Placeholder para compatibilidade
     refreshCredits
   };
 };
