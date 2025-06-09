@@ -15,7 +15,7 @@ const formatDate = (date: Date | string): string => {
   return date;
 };
 
-const useCampaignOperations = () => {
+export const useCampaignOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +45,16 @@ const useCampaignOperations = () => {
         maxParticipants: formData.maxParticipants
       });
 
+      // Convert FormField[] to JSON-compatible format
+      const formSchemaJson = formData.formSchema.map(field => ({
+        id: field.id,
+        label: field.label,
+        type: field.type,
+        options: field.options || [],
+        required: field.required || false,
+        placeholder: field.placeholder || ''
+      }));
+
       // Usar a função RPC atômica para criar a campanha e debitar rifas
       const { data: campaignId, error } = await supabase.rpc('create_campaign_atomic', {
         p_title: formData.title,
@@ -66,7 +76,7 @@ const useCampaignOperations = () => {
         p_badge_image_url: formData.badgeImageUrl,
         p_min_purchase: formData.minPurchase || 0,
         p_selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
-        p_form_schema: formData.formSchema || []
+        p_form_schema: formSchemaJson
       });
 
       if (error) {

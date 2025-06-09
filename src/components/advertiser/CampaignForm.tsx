@@ -8,7 +8,7 @@ import RequirementsStep from './campaign-form/RequirementsStep';
 import DatesStep from './campaign-form/DatesStep';
 import RewardsStep from './campaign-form/RewardsStep';
 import { FormData, initialFormData } from './campaign-form/types';
-import { useCampaignOperations } from '@/hooks/advertiser/useCampaignOperations';
+import useCampaignOperations from '@/hooks/advertiser/useCampaignOperations';
 import { toast } from '@/hooks/use-toast';
 
 interface CampaignFormProps {
@@ -25,7 +25,7 @@ const CampaignForm: React.FC<CampaignFormProps> = ({ onClose, editCampaign }) =>
         ...editCampaign,
         startDate: editCampaign.startDate ? new Date(editCampaign.startDate) : new Date(),
         endDate: editCampaign.endDate ? new Date(editCampaign.endDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        requirements: typeof editCampaign.requirements === 'string' ? editCampaign.requirements : '',
+        requirements: typeof editCampaign.requirements === 'string' ? editCampaign.requirements : (editCampaign.requirements || []).join('\n'),
       };
     }
     return initialFormData;
@@ -120,10 +120,11 @@ const CampaignForm: React.FC<CampaignFormProps> = ({ onClose, editCampaign }) =>
         
         <FormNavigation
           step={currentStep}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
+          totalSteps={4}
+          handleNext={handleNext}
+          handleBack={handlePrevious}
+          onClose={() => onClose?.()}
+          isNextDisabled={isSubmitting}
         />
       </CardContent>
     </Card>
