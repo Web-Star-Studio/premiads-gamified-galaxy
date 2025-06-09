@@ -1,8 +1,7 @@
 
-// Performance utilities for optimization
-import { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, Suspense } from 'react';
 
-// Debounce hook for expensive operations
+// Performance utilities for optimization
 export const useDebounce = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
@@ -44,15 +43,47 @@ export const useThrottle = <T extends (...args: any[]) => any>(
   );
 };
 
-// Lazy import utility
+// Lazy import utility with proper Suspense wrapper
 export const lazyImport = <T extends React.ComponentType<any>>(
   importFn: () => Promise<{ default: T }>
 ) => {
   return React.lazy(importFn);
 };
 
+// HOC for wrapping components with Suspense
+export const withSuspense = <P extends object>(
+  Component: React.ComponentType<P>,
+  fallback: React.ReactNode = <div>Loading...</div>
+) => {
+  return React.memo((props: P) => (
+    <Suspense fallback={fallback}>
+      <Component {...props} />
+    </Suspense>
+  ));
+};
+
+// Memoization helper for complex props
+export const useMemoizedProps = <T>(
+  factory: () => T,
+  deps: React.DependencyList
+): T => {
+  return React.useMemo(factory, deps);
+};
+
 // Preload route utility
 export const preloadRoute = (routeImport: () => Promise<any>) => {
   const componentImport = routeImport();
   return componentImport;
+};
+
+// Performance timing utility
+export const measurePerformance = <T>(
+  name: string,
+  fn: () => T
+): T => {
+  const start = performance.now();
+  const result = fn();
+  const end = performance.now();
+  console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
+  return result;
 };
