@@ -14,38 +14,26 @@ const transformLotteryData = (formData: LotteryFormValues): Omit<Lottery, 'id'> 
     title: formData.name,
     description: formData.description,
     detailed_description: formData.detailedDescription,
-    detailedDescription: formData.detailedDescription,
     prize_type: formData.prizeType,
-    prizeType: formData.prizeType,
     prize_value: formData.prizeValue,
-    prizeValue: formData.prizeValue,
-    imageUrl: formData.imageUrl || '',
     image_url: formData.imageUrl || '',
     start_date: formData.startDate.toISOString(),
-    startDate: formData.startDate.toISOString(),
     end_date: endDate.toISOString(),
-    endDate: endDate.toISOString(),
     draw_date: endDate.toISOString(),
-    drawDate: endDate.toISOString(),
     status: formData.status,
     numbers_total: formData.numbersTotal,
-    numbersTotal: formData.numbersTotal,
-    tickets_reward: formData.pointsPerNumber,
-    type: 'regular',
-    pointsPerNumber: formData.pointsPerNumber,
-    minPoints: formData.minPoints,
-    progress: 0,
-    numbersSold: 0,
-    numbers: [],
-    prizes: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    points_per_number: formData.pointsPerNumber,
+    min_points: formData.minPoints,
     number_range: {
       min: formData.numberRange.min,
       max: formData.numberRange.max
     },
-    isAutoScheduled: formData.isAutoScheduled,
-    winner: null
+    is_auto_scheduled: formData.isAutoScheduled,
+    progress: 0,
+    numbers_sold: 0,
+    winner: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
 };
 
@@ -72,7 +60,6 @@ export const raffleService = {
           .from('lottery-images')
           .getPublicUrl(filePath);
           
-        raffleData.imageUrl = publicUrlData.publicUrl;
         raffleData.image_url = publicUrlData.publicUrl;
       }
       
@@ -119,7 +106,7 @@ export const raffleService = {
           .from('lottery-images')
           .getPublicUrl(filePath);
           
-        updates.imageUrl = publicUrlData.publicUrl;
+        updates.image_url = publicUrlData.publicUrl;
       }
       
       // Prepare update data
@@ -127,65 +114,41 @@ export const raffleService = {
         updated_at: new Date().toISOString()
       };
       
-      // Map form values to database fields
+      // Map form values to database fields using snake_case only
       if (updates.name) {
         updateData.name = updates.name;
         updateData.title = updates.name;
       }
       
       if (updates.description) updateData.description = updates.description;
-      if (updates.detailedDescription) {
-        updateData.detailed_description = updates.detailedDescription;
-        updateData.detailedDescription = updates.detailedDescription;
-      }
+      if (updates.detailedDescription) updateData.detailed_description = updates.detailedDescription;
       
-      if (updates.prizeType) {
-        updateData.prize_type = updates.prizeType;
-        updateData.prizeType = updates.prizeType;
-      }
+      if (updates.prizeType) updateData.prize_type = updates.prizeType;
       
-      if (updates.prizeValue !== undefined) {
-        updateData.prize_value = updates.prizeValue;
-        updateData.prizeValue = updates.prizeValue;
-      }
+      if (updates.prizeValue !== undefined) updateData.prize_value = updates.prizeValue;
       
-      if (updates.imageUrl) {
-        updateData.imageUrl = updates.imageUrl;
-        updateData.image_url = updates.imageUrl;
-      }
+      if (updates.image_url) updateData.image_url = updates.image_url;
       
-      if (updates.startDate) {
-        updateData.start_date = updates.startDate.toISOString();
-        updateData.startDate = updates.startDate.toISOString();
-      }
+      if (updates.start_date) updateData.start_date = updates.start_date;
       
-      if (updates.endDate) {
-        updateData.end_date = updates.endDate.toISOString();
-        updateData.endDate = updates.endDate.toISOString();
-      }
+      if (updates.end_date) updateData.end_date = updates.end_date;
       
       if (updates.status) updateData.status = updates.status;
       
-      if (updates.numbersTotal !== undefined) {
-        updateData.numbers_total = updates.numbersTotal;
-        updateData.numbersTotal = updates.numbersTotal;
-      }
+      if (updates.numbers_total !== undefined) updateData.numbers_total = updates.numbers_total;
       
-      if (updates.pointsPerNumber !== undefined) {
-        updateData.tickets_reward = updates.pointsPerNumber;
-        updateData.pointsPerNumber = updates.pointsPerNumber;
-      }
+      if (updates.points_per_number !== undefined) updateData.points_per_number = updates.points_per_number;
       
-      if (updates.minPoints !== undefined) updateData.minPoints = updates.minPoints;
+      if (updates.min_points !== undefined) updateData.min_points = updates.min_points;
       
-      if (updates.numberRange) {
+      if (updates.number_range) {
         updateData.number_range = {
-          min: updates.numberRange.min,
-          max: updates.numberRange.max
+          min: updates.number_range.min,
+          max: updates.number_range.max
         };
       }
       
-      if (updates.isAutoScheduled !== undefined) updateData.isAutoScheduled = updates.isAutoScheduled;
+      if (updates.is_auto_scheduled !== undefined) updateData.is_auto_scheduled = updates.is_auto_scheduled;
       
       // Update raffle in database
       const { data, error } = await supabase
@@ -295,7 +258,7 @@ export const raffleService = {
       
       // Generate winning number
       const min = raffle.number_range?.min || 1;
-      const max = raffle.number_range?.max || raffle.numbersTotal;
+      const max = raffle.number_range?.max || raffle.numbers_total;
       const winningNumber = await raffleService.generateRandomNumber(min, max);
       
       // Find participant with the winning number
@@ -337,7 +300,7 @@ export const raffleService = {
             user_id: winnerId,
             winning_number: winningNumber,
             prize_name: raffle.name,
-            prize_value: raffle.prizeValue
+            prize_value: raffle.prize_value
           });
           
         if (winnerError) throw winnerError;
@@ -402,7 +365,7 @@ export const raffleService = {
       
       // Generate unique numbers for the user
       const min = raffle.number_range?.min || 1;
-      const max = raffle.number_range?.max || raffle.numbersTotal;
+      const max = raffle.number_range?.max || raffle.numbers_total;
       
       // Check existing numbers already assigned to other participants
       const { data: existingParticipations, error: participationsError } = await supabase
@@ -479,13 +442,13 @@ export const raffleService = {
         .eq('lottery_id', raffleId)).data || [];
       
       const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
-      const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbersTotal) * 100));
+      const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
       
       await supabase
         .from('lotteries')
         .update({
           progress,
-          numbersSold: totalNumbersSold,
+          numbers_sold: totalNumbersSold,
           updated_at: new Date().toISOString()
         })
         .eq('id', raffleId);
