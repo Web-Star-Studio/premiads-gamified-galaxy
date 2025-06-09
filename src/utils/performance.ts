@@ -55,12 +55,12 @@ export const withSuspense = <P extends object>(
   Component: React.ComponentType<P>,
   fallback?: React.ReactNode
 ) => {
-  const defaultFallback = fallback || <div>Loading...</div>;
+  const defaultFallback = fallback || React.createElement('div', null, 'Loading...');
   
   return React.memo((props: P) => (
-    <React.Suspense fallback={defaultFallback}>
-      <Component {...props} />
-    </React.Suspense>
+    React.createElement(React.Suspense, { fallback: defaultFallback },
+      React.createElement(Component, props)
+    )
   ));
 };
 
