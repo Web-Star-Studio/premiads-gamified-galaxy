@@ -59,6 +59,33 @@ class PerformanceMonitor {
     return { avg, min, max, count: measurements.length };
   }
 
+  static getAllStats() {
+    const result: Record<string, any> = {};
+    
+    for (const [label, measurements] of this.measurements.entries()) {
+      if (measurements.length === 0) continue;
+      
+      const sorted = [...measurements].sort((a, b) => a - b);
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+      const sum = sorted.reduce((a, b) => a + b, 0);
+      const average = sum / sorted.length;
+      const median = sorted.length % 2 === 0
+        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+        : sorted[Math.floor(sorted.length / 2)];
+        
+      result[label] = {
+        min,
+        max,
+        average,
+        median,
+        count: measurements.length
+      };
+    }
+    
+    return result;
+  }
+
   static logPerformanceReport(): void {
     console.group('⚡ Performance Report');
     
@@ -77,10 +104,24 @@ class PerformanceMonitor {
     console.groupEnd();
   }
 
+  static clear(): void {
+    this.clearMeasurements();
+  }
+
   static clearMeasurements(): void {
     this.measurements.clear();
     this.pendingMeasurements.clear();
   }
+}
+
+// Higher-order function to wrap async operations with performance monitoring
+export function withPerformanceMonitoring<T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  label: string
+): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+  return async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    return PerformanceMonitor.measureAsync(label, () => fn(...args)) as ReturnType<T>;
+  };
 }
 
 export { PerformanceMonitor };

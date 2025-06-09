@@ -1,12 +1,13 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { HelmetProvider } from 'react-helmet-async';
 import { PerformanceProvider } from '@/components/performance/PerformanceProvider';
 import { RoutePreloader } from '@/components/progressive/RoutePreloader';
 import LoadingScreen from '@/components/LoadingScreen';
+import { AuthProvider } from '@/hooks/useAuth';
 
 // Create optimized query client with performance settings
 const createOptimizedQueryClient = () => new QueryClient({
@@ -60,15 +61,19 @@ export const OptimizedProviders: React.FC<OptimizedProvidersProps> = ({ children
               enableSystem
               disableTransitionOnChange
             >
-              <RoutePreloader routes={routeImports} />
-              {children}
-              <Toaster 
-                position="top-right"
-                richColors
-                closeButton
-                expand={false}
-                duration={4000}
-              />
+              <HelmetProvider>
+                <AuthProvider>
+                  <RoutePreloader routes={routeImports} />
+                  {children}
+                  <Toaster 
+                    position="top-right"
+                    richColors
+                    closeButton
+                    expand={false}
+                    duration={4000}
+                  />
+                </AuthProvider>
+              </HelmetProvider>
             </ThemeProvider>
           </PerformanceProvider>
         </QueryClientProvider>
