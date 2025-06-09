@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Gift } from "lucide-react";
 import { useSounds } from "@/hooks/use-sounds";
-import { RAFFLES } from "./hooks/data/mockRaffles";
+import { Lottery } from "@/types/lottery";
 import { 
   SearchBar, 
   RafflesList 
@@ -12,36 +11,31 @@ import { formatTimeRemaining, getRarityColor } from "./utils/raffleUtils";
 interface RaffleListProps {
   onSelectRaffle: (raffleId: number) => void;
   selectedRaffleId: number | null;
+  raffles: Lottery[];
 }
 
-const RaffleList = ({ onSelectRaffle, selectedRaffleId }: RaffleListProps) => {
+const RaffleList = ({ onSelectRaffle, selectedRaffleId, raffles }: RaffleListProps) => {
   const { playSound } = useSounds();
-  const [activeRaffles, setActiveRaffles] = useState(RAFFLES);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredRaffles, setFilteredRaffles] = useState(RAFFLES);
+  const [filteredRaffles, setFilteredRaffles] = useState<Lottery[]>(raffles);
   
   useEffect(() => {
-    // In a real app, we would fetch raffles from the API
-    const timer = setTimeout(() => {
-      console.log("Raffles loaded:", RAFFLES.length);
-      playSound("chime");
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [playSound]);
+    console.log("Raffles loaded:", raffles.length);
+    setFilteredRaffles(raffles);
+  }, [raffles]);
   
   useEffect(() => {
     // Filter raffles based on search term
     if (searchTerm.trim() === "") {
-      setFilteredRaffles(activeRaffles);
+      setFilteredRaffles(raffles);
     } else {
-      const filtered = activeRaffles.filter(raffle => 
+      const filtered = raffles.filter(raffle => 
         raffle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         raffle.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredRaffles(filtered);
     }
-  }, [searchTerm, activeRaffles]);
+  }, [searchTerm, raffles]);
   
   const handleSelectRaffle = (id: number) => {
     console.log("Selecting raffle with ID:", id);

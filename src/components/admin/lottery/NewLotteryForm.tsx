@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,9 +9,11 @@ import { lotteryFormSchema, LotteryFormValues, Lottery } from './types';
 import BasicInfoSection from './form-sections/BasicInfoSection';
 import DateSelectionSection from './form-sections/DateSelectionSection';
 import StatusSelectionSection from './form-sections/StatusSelectionSection';
-import NumbersSection from './form-sections/NumbersSection';
+import NumberRangeSection from './form-sections/NumberRangeSection';
 import FormActions from './form-sections/FormActions';
 import { Card } from '@/components/ui/card';
+import NumberGenerator from './NumberGenerator';
+import raffleService from '@/services/raffles';
 
 interface NewLotteryFormProps {
   onSuccess: (lottery: Lottery) => void;
@@ -21,6 +22,7 @@ interface NewLotteryFormProps {
 
 const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNumberGenerator, setShowNumberGenerator] = useState(false);
   const { playSound } = useSounds();
   
   const form = useForm<LotteryFormValues>({
@@ -38,8 +40,29 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
       numbersTotal: 1000,
       pointsPerNumber: 100,
       minPoints: 0,
+      numberRange: {
+        min: 1,
+        max: 10000
+      },
+      isAutoScheduled: true,
     },
   });
+  
+  const onTestGenerator = () => {
+    const { min, max } = form.getValues().numberRange;
+    
+    if (min >= max) {
+      toast({
+        title: 'Erro',
+        description: 'O número mínimo deve ser menor que o máximo.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setShowNumberGenerator(true);
+    playSound('pop');
+  };
   
   const onSubmit = async (values: LotteryFormValues) => {
     setIsSubmitting(true);
@@ -51,43 +74,8 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
     }
     
     try {
-      // Simulando um atraso de rede
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Criar novo sorteio (simulado)
-      const newLottery: Lottery = {
-        id: `${Date.now()}`, // Usar timestamp como ID temporário
-        title: values.name,
-        name: values.name,
-        description: values.description,
-        detailed_description: values.detailedDescription,
-        detailedDescription: values.detailedDescription,
-        prize_type: values.prizeType,
-        prizeType: values.prizeType,
-        prize_value: values.prizeValue,
-        prizeValue: values.prizeValue,
-        type: 'regular',
-        imageUrl: values.imageUrl,
-        start_date: format(values.startDate, 'yyyy-MM-dd'),
-        startDate: format(values.startDate, 'yyyy-MM-dd'),
-        end_date: format(values.endDate, 'yyyy-MM-dd'),
-        endDate: format(values.endDate, 'yyyy-MM-dd'),
-        draw_date: values.drawDate ? format(values.drawDate, 'yyyy-MM-dd') : format(values.endDate, 'yyyy-MM-dd'),
-        drawDate: values.drawDate ? format(values.drawDate, 'yyyy-MM-dd') : format(values.endDate, 'yyyy-MM-dd'),
-        status: values.status,
-        numbers_total: values.numbersTotal,
-        numbersTotal: values.numbersTotal,
-        tickets_reward: values.pointsPerNumber,
-        pointsPerNumber: values.pointsPerNumber,
-        minPoints: values.minPoints,
-        prizes: [], // Começar sem prêmios
-        progress: 0, // 0% inicial
-        numbersSold: 0, // Nenhum número vendido inicialmente
-        numbers: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        winner: null
-      };
+      // Upload image and create raffle
+      const newLottery = await raffleService.createRaffle(values, values.imageFile);
       
       toast({
         title: 'Sorteio criado',
@@ -120,20 +108,29 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 p-4">
-          <BasicInfoSection form={form} />
-          <div className="my-8 border-t border-galaxy-purple/10"></div>
-          <NumbersSection form={form} />
-          <div className="my-8 border-t border-galaxy-purple/10"></div>
-          <DateSelectionSection form={form} />
-          <div className="my-8 border-t border-galaxy-purple/10"></div>
-          <StatusSelectionSection form={form} />
-        </Card>
-        <FormActions isSubmitting={isSubmitting} onCancel={onCancel} />
-      </form>
-    </Form>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 p-4">
+            <BasicInfoSection form={form} />
+            <div className="my-8 border-t border-galaxy-purple/10"></div>
+            <NumberRangeSection form={form} onTestGenerator={onTestGenerator} />
+            <div className="my-8 border-t border-galaxy-purple/10"></div>
+            <DateSelectionSection form={form} />
+            <div className="my-8 border-t border-galaxy-purple/10"></div>
+            <StatusSelectionSection form={form} />
+          </Card>
+          <FormActions isSubmitting={isSubmitting} onCancel={onCancel} />
+        </form>
+      </Form>
+      
+      <NumberGenerator 
+        isVisible={showNumberGenerator}
+        onClose={() => setShowNumberGenerator(false)}
+        min={form.getValues().numberRange.min}
+        max={form.getValues().numberRange.max}
+      />
+    </>
   );
 };
 

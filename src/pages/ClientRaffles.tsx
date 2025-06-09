@@ -10,7 +10,8 @@ import RaffleDetails from "@/components/client/raffles/RaffleDetails";
 import TicketConversion from "@/components/client/raffles/TicketConversion";
 import ParticipationHistory from "@/components/client/raffles/ParticipationHistory";
 import { useSounds } from "@/hooks/use-sounds";
-import { RAFFLES } from "@/components/client/raffles/hooks/data/mockRaffles";
+import { fetchActiveRaffles } from "@/components/client/raffles/hooks/api/fetchRaffleData";
+import { Lottery } from "@/types/lottery";
 import SupportTools from "@/components/client/SupportTools";
 import Particles from "@/components/Particles";
 
@@ -20,23 +21,42 @@ const ClientRaffles = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(true);
+  const [raffles, setRaffles] = useState<Lottery[]>([]);
   const [selectedRaffleId, setSelectedRaffleId] = useState<number | null>(null);
 
+  // Load raffles from service
   useEffect(() => {
-    // Simulate loading
-    const loadTimer = setTimeout(() => {
-      setLoading(false);
-      // Play welcome sound when page loads
-      playSound("chime");
-      
-      // Only auto-select the first raffle if there are any available
-      if (RAFFLES.length > 0 && !selectedRaffleId) {
-        console.log("Auto-selecting first raffle:", RAFFLES[0].id);
-        setSelectedRaffleId(RAFFLES[0].id);
+    async function loadRaffles() {
+      setLoading(true);
+      try {
+        // Fetch active raffles from service
+        const activeRaffles = await fetchActiveRaffles();
+        setRaffles(activeRaffles);
+        
+        // Auto-select the first raffle if there are any available
+        if (activeRaffles.length > 0 && !selectedRaffleId) {
+          console.log("Auto-selecting first raffle:", activeRaffles[0].id);
+          setSelectedRaffleId(Number(activeRaffles[0].id));
+        }
+        
+        // Play welcome sound when page loads
+        playSound("chime");
+      } catch (error) {
+        console.error("Error loading raffles:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os sorteios disponíveis.",
+          variant: "destructive"
+        });
+      } finally {
+        // Simulate loading delay
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
       }
-    }, 1200);
-
-    return () => clearTimeout(loadTimer);
+    }
+    
+    loadRaffles();
   }, [userType, navigate, toast, playSound, selectedRaffleId]);
 
   const handleSelectRaffle = (raffleId: number) => {
@@ -104,6 +124,7 @@ const ClientRaffles = () => {
                   <RaffleList 
                     onSelectRaffle={handleSelectRaffle} 
                     selectedRaffleId={selectedRaffleId}
+                    raffles={raffles}
                   />
                 </motion.div>
                 
@@ -117,7 +138,7 @@ const ClientRaffles = () => {
                     <RaffleDetails raffleId={selectedRaffleId} />
                   ) : (
                     <div className="glass-card p-8 text-center h-full flex flex-col items-center justify-center">
-                      {RAFFLES.length > 0 ? (
+                      {raffles.length > 0 ? (
                         <motion.div
                           initial={{ scale: 0.8 }}
                           animate={{ scale: 1 }}
@@ -146,10 +167,10 @@ const ClientRaffles = () => {
                         </div>
                       )}
                       <h3 className="text-xl font-heading mt-6">
-                        {RAFFLES.length > 0 ? 'Selecione um Sorteio' : 'Sem Sorteios Disponíveis'}
+                        {raffles.length > 0 ? 'Selecione um Sorteio' : 'Sem Sorteios Disponíveis'}
                       </h3>
                       <p className="text-gray-400 mt-2 max-w-md">
-                        {RAFFLES.length > 0 
+                        {raffles.length > 0 
                           ? 'Escolha um dos sorteios disponíveis para ver detalhes e participar com seus tickets.'
                           : 'No momento não há sorteios ativos. Novos sorteios serão anunciados em breve.'}
                       </p>

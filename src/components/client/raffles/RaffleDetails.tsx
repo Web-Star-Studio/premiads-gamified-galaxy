@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useRaffleData } from "./hooks/useRaffleData";
 import { LoadingState, ErrorState } from "./components/detail-states";
@@ -10,8 +9,16 @@ interface RaffleDetailsProps {
 }
 
 const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
-  // Fetch raffle data
-  const { raffle, isLoading, countdownInfo } = useRaffleData(raffleId);
+  // Fetch raffle data with our enhanced hook
+  const { 
+    raffle, 
+    isLoading, 
+    countdownInfo,
+    userNumbers,
+    availableTickets,
+    participationLoading,
+    participateInRaffle 
+  } = useRaffleData(raffleId);
   const { toast } = useToast();
   
   // Loading state
@@ -26,11 +33,15 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
   
   console.log("Rendering raffle details for raffle:", raffle.id, raffle.name);
 
-  // Renderizar o conteúdo do sorteio com os dados carregados
+  // Render the raffle details with our enhanced components
   return (
     <RaffleDetailsContent 
       raffle={raffle}
       countdownInfo={countdownInfo}
+      userNumbers={userNumbers}
+      availableTickets={availableTickets}
+      participationLoading={participationLoading}
+      participateInRaffle={participateInRaffle}
     />
   );
 };

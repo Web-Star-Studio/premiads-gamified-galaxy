@@ -1,17 +1,42 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from 'react-hook-form';
 import { LotteryFormValues } from '../types';
 import { motion } from 'framer-motion';
+import { Upload, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface BasicInfoSectionProps {
   form: UseFormReturn<LotteryFormValues>;
 }
 
-const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => (
+const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue('imageFile', file);
+      
+      // Create a preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      
+      // Clear the URL field since we're using a file
+      form.setValue('imageUrl', '');
+      
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const clearImagePreview = () => {
+    setPreviewUrl(null);
+    form.setValue('imageFile', undefined);
+  };
+
+  return (
     <motion.div 
       className="space-y-4"
       initial={{ opacity: 0, y: 10 }}
@@ -65,16 +90,51 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => (
         <div className="md:col-span-2">
           <FormField
             control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
+            name="imageFile"
+            render={({ field: { value, onChange, ...field } }) => (
               <FormItem>
-                <FormLabel>URL da Imagem</FormLabel>
+                <FormLabel>Imagem do Prêmio</FormLabel>
                 <FormControl>
-                  <Input 
-                    {...field} 
-                    placeholder="https://exemplo.com/imagem.jpg" 
-                    className="bg-galaxy-dark/50 border-galaxy-purple/20"
-                  />
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        {...field}
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <label 
+                        htmlFor="image-upload" 
+                        className="flex items-center justify-center h-10 px-4 py-2 rounded-md border border-galaxy-purple/30 bg-galaxy-dark/50 text-sm cursor-pointer transition-colors hover:bg-galaxy-purple/10 hover:border-galaxy-purple/50"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        Escolher imagem
+                      </label>
+                      {previewUrl && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={clearImagePreview}
+                          className="border-galaxy-purple/30 hover:bg-red-600/20 hover:border-red-500/50"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remover
+                        </Button>
+                      )}
+                    </div>
+                    {previewUrl && (
+                      <div className="mt-2 relative w-full max-w-xs">
+                        <img 
+                          src={previewUrl} 
+                          alt="Preview" 
+                          className="w-full h-auto max-h-32 object-contain rounded-md border border-galaxy-purple/30" 
+                        />
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,5 +202,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => (
       />
     </motion.div>
   );
+}
 
 export default BasicInfoSection;

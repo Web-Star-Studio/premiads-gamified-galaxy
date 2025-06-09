@@ -12,6 +12,7 @@ export interface Lottery {
   prize_value: number;
   prizeValue: number;
   imageUrl?: string;
+  image_url?: string;
   start_date: string;
   startDate: string;
   end_date: string;
@@ -38,11 +39,21 @@ export interface Lottery {
     probability: number;
   }>;
   /**
+   * Number range configuration for the lottery
+   */
+  number_range?: {
+    min: number;
+    max: number;
+  };
+  /**
    * When true, the raffle will be automatically drawn after either selling out
-   * or reaching the minimum number of tickets (48 h cooldown).  Used only on
-   * the admin form UI – not persisted in the DB.
+   * or reaching the minimum number of tickets (72h after start date).
    */
   isAutoScheduled?: boolean;
+  /**
+   * The winning number after the draw is complete
+   */
+  winning_number?: number;
 }
 
 export const lotteryFormSchema = z.object({
@@ -52,6 +63,7 @@ export const lotteryFormSchema = z.object({
   prizeType: z.string().min(1, "Tipo de prêmio é obrigatório"),
   prizeValue: z.number().min(0, "Valor do prêmio deve ser positivo"),
   imageUrl: z.string().optional(),
+  imageFile: z.instanceof(File).optional(),
   startDate: z.date(),
   endDate: z.date(),
   drawDate: z.date().optional(),
@@ -59,8 +71,35 @@ export const lotteryFormSchema = z.object({
   numbersTotal: z.number().min(1, "Total de números deve ser positivo"),
   pointsPerNumber: z.number().min(1, "Pontos por número deve ser positivo"),
   minPoints: z.number().min(0, "Pontos mínimos deve ser positivo"),
+  // Number range
+  numberRange: z.object({
+    min: z.number().min(1),
+    max: z.number().min(1)
+  }).refine(data => data.max > data.min, {
+    message: "O número máximo deve ser maior que o mínimo",
+    path: ["max"]
+  }),
   // Toggle for automatic scheduling
-  isAutoScheduled: z.boolean().default(false)
+  isAutoScheduled: z.boolean().default(true)
 });
 
 export type LotteryFormValues = z.infer<typeof lotteryFormSchema>;
+
+export interface LotteryParticipation {
+  id: string;
+  user_id: string;
+  lottery_id: string;
+  numbers: number[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LotteryWinner {
+  id: string;
+  lottery_id: string;
+  user_id: string;
+  winning_number: number;
+  prize_name: string;
+  prize_value: number;
+  created_at: string;
+}

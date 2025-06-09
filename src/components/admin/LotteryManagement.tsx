@@ -12,149 +12,75 @@ import LotteryDetails from "@/components/admin/lottery/LotteryDetails";
 import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
+import raffleService from "@/services/raffles";
 
 const LotteryManagement = () => {
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
-  const [lotteries, setLotteries] = useState<Lottery[]>([
-    {
-      id: "1",
-      title: "Sorteio Semanal de Pontos",
-      name: "Sorteio Semanal de Pontos",
-      description: "Sorteio semanal com prêmios incríveis para os participantes mais ativos",
-      detailed_description: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
-      detailedDescription: "Um sorteio especial que acontece toda semana, oferecendo prêmios exclusivos para quem participa ativamente da plataforma.",
-      type: "regular",
-      tickets_reward: 100,
-      numbers_total: 1000,
-      numbersTotal: 1000,
-      status: "active" as const,
-      start_date: "2025-01-15T00:00:00Z",
-      startDate: "2025-01-15T00:00:00Z",
-      end_date: "2025-01-22T23:59:59Z",
-      endDate: "2025-01-22T23:59:59Z",
-      draw_date: "2025-01-23T20:00:00Z",
-      drawDate: "2025-01-23T20:00:00Z",
-      prize_type: "electronics",
-      prizeType: "electronics",
-      prize_value: 2500,
-      prizeValue: 2500,
-      pointsPerNumber: 10,
-      minPoints: 100,
-      imageUrl: "",
-      winner: null,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-      numbers: [],
-      progress: 45,
-      numbersSold: 450,
-      prizes: [
-        { id: 1, name: "Smartphone Premium", rarity: "legendary", probability: 5 },
-        { id: 2, name: "Fone Bluetooth", rarity: "rare", probability: 20 },
-        { id: 3, name: "Pontos Bonus", rarity: "common", probability: 75 }
-      ]
-    },
-    {
-      id: "2",
-      title: "Loot Box Especial",
-      name: "Loot Box Especial",
-      description: "Participe e concorra a prêmios exclusivos em nossa Loot Box especial",
-      detailed_description: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
-      detailedDescription: "Uma oportunidade única de ganhar itens raros e valiosos. Cada Loot Box contém prêmios incríveis, desde créditos até itens exclusivos.",
-      type: "lootbox",
-      tickets_reward: 50,
-      numbers_total: 500,
-      numbersTotal: 500,
-      status: "pending" as const,
-      start_date: "2025-02-01T00:00:00Z",
-      startDate: "2025-02-01T00:00:00Z",
-      end_date: "2025-02-15T23:59:59Z",
-      endDate: "2025-02-15T23:59:59Z",
-      draw_date: "2025-02-16T20:00:00Z",
-      drawDate: "2025-02-16T20:00:00Z",
-      prize_type: "items",
-      prizeType: "items",
-      prize_value: 100,
-      prizeValue: 100,
-      pointsPerNumber: 5,
-      minPoints: 50,
-      imageUrl: "",
-      winner: null,
-      created_at: "2025-01-20T00:00:00Z",
-      updated_at: "2025-01-20T00:00:00Z",
-      numbers: [],
-      progress: 20,
-      numbersSold: 100,
-      prizes: [
-        { id: 4, name: "Espada Ancestral", rarity: "epic", probability: 10 },
-        { id: 5, name: "Poção de Mana", rarity: "uncommon", probability: 30 },
-        { id: 6, name: "Créditos", rarity: "common", probability: 60 }
-      ]
-    },
-    {
-      id: "3",
-      title: "Promoção de Aniversário",
-      name: "Promoção de Aniversário",
-      description: "Comemore conosco e concorra a prêmios incríveis em nosso sorteio de aniversário",
-      detailed_description: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
-      detailedDescription: "Em celebração ao nosso aniversário, estamos sorteando prêmios exclusivos para nossos clientes mais fiéis. Participe e concorra!",
-      type: "special",
-      tickets_reward: 200,
-      numbers_total: 2000,
-      numbersTotal: 2000,
-      status: "completed" as const,
-      start_date: "2025-03-01T00:00:00Z",
-      startDate: "2025-03-01T00:00:00Z",
-      end_date: "2025-03-15T23:59:59Z",
-      endDate: "2025-03-15T23:59:59Z",
-      draw_date: "2025-03-16T20:00:00Z",
-      drawDate: "2025-03-16T20:00:00Z",
-      prize_type: "travel",
-      prizeType: "travel",
-      prize_value: 5000,
-      prizeValue: 5000,
-      pointsPerNumber: 20,
-      minPoints: 200,
-      imageUrl: "",
-      winner: {
-        id: "user123",
-        name: "Maria Silva",
-        avatar: "https://example.com/avatar.jpg"
-      },
-      created_at: "2025-02-15T00:00:00Z",
-      updated_at: "2025-02-15T00:00:00Z",
-      numbers: [],
-      progress: 100,
-      numbersSold: 2000,
-      prizes: [
-        { id: 7, name: "Viagem para o Caribe", rarity: "legendary", probability: 5 },
-        { id: 8, name: "Estadia em Hotel de Luxo", rarity: "rare", probability: 15 },
-        { id: 9, name: "Jantar em Restaurante", rarity: "common", probability: 80 }
-      ]
-    }
-  ]);
+  const [lotteries, setLotteries] = useState<Lottery[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const { playSound } = useSounds();
 
+  // Fetch lotteries from service
+  useEffect(() => {
+    async function fetchLotteries() {
+      setIsLoading(true);
+      try {
+        const data = await raffleService.getRaffles();
+        setLotteries(data);
+      } catch (error) {
+        console.error("Error fetching lotteries:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os sorteios.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchLotteries();
+  }, []);
+
   const handleLotteryCreated = (newLottery: Lottery) => {
     setLotteries([...lotteries, newLottery]);
+    setSelectedLottery(newLottery);
     toast({
       title: "Sorteio criado!",
       description: "O sorteio foi criado com sucesso.",
     });
   };
 
-  const handleStatusChange = (lotteryId: string, newStatus: Lottery['status']) => {
-    setLotteries(lotteries.map(lottery => {
-      if (lottery.id === lotteryId) {
-        return { ...lottery, status: newStatus };
+  const handleStatusChange = async (lotteryId: string, newStatus: Lottery['status']) => {
+    try {
+      const updatedLottery = await raffleService.updateRaffleStatus(lotteryId, newStatus);
+      
+      if (updatedLottery) {
+        setLotteries(lotteries.map(lottery => {
+          if (lottery.id === lotteryId) {
+            return updatedLottery;
+          }
+          return lottery;
+        }));
+        
+        setSelectedLottery(updatedLottery);
+        
+        toast({
+          title: "Status atualizado!",
+          description: "O status do sorteio foi atualizado com sucesso.",
+        });
+        
+        playSound("success");
       }
-      return lottery;
-    }));
-    setSelectedLottery(lotteries.find(lottery => lottery.id === lotteryId) || null);
-    toast({
-      title: "Status atualizado!",
-      description: "O status do sorteio foi atualizado com sucesso.",
-    });
+    } catch (error) {
+      console.error("Error updating lottery status:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do sorteio.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditLottery = (lottery: Lottery) => {
@@ -164,14 +90,92 @@ const LotteryManagement = () => {
     });
   };
 
-  const handleDeleteLottery = (lotteryId: string) => {
-    setLotteries(lotteries.filter(lottery => lottery.id !== lotteryId));
-    setSelectedLottery(null);
-    toast({
-      title: "Sorteio excluído!",
-      description: "O sorteio foi excluído com sucesso.",
-    });
+  const handleDeleteLottery = async (lotteryId: string) => {
+    try {
+      const success = await raffleService.deleteRaffle(lotteryId);
+      
+      if (success) {
+        setLotteries(lotteries.filter(lottery => lottery.id !== lotteryId));
+        
+        if (selectedLottery?.id === lotteryId) {
+          setSelectedLottery(null);
+        }
+        
+        toast({
+          title: "Sorteio excluído!",
+          description: "O sorteio foi excluído com sucesso.",
+        });
+        
+        playSound("delete");
+      }
+    } catch (error) {
+      console.error("Error deleting lottery:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o sorteio.",
+        variant: "destructive"
+      });
+    }
   };
+
+  const handleDrawRaffle = async (lotteryId: string) => {
+    try {
+      // Call the edge function to draw the raffle
+      const response = await fetch('/api/draw-raffle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raffleId: lotteryId }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Refresh the lotteries list
+        const updatedLotteries = await raffleService.getRaffles();
+        setLotteries(updatedLotteries);
+        
+        // Update the selected lottery
+        const updatedLottery = await raffleService.getRaffleById(lotteryId);
+        if (updatedLottery) {
+          setSelectedLottery(updatedLottery);
+        }
+        
+        toast({
+          title: "Sorteio realizado!",
+          description: result.message || "O sorteio foi realizado com sucesso.",
+        });
+        
+        playSound("reward");
+      } else {
+        throw new Error(result.error || "Erro ao realizar o sorteio");
+      }
+    } catch (error) {
+      console.error("Error drawing raffle:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível realizar o sorteio.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 relative">
+              <div className="absolute inset-0 rounded-full border-4 border-t-neon-cyan border-galaxy-purple animate-spin"></div>
+              <div className="absolute inset-2 rounded-full border-4 border-t-neon-pink border-galaxy-purple animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            <h2 className="text-xl font-heading">Carregando sorteios...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -195,6 +199,7 @@ const LotteryManagement = () => {
             <LotteryDetails
               selectedLottery={selectedLottery}
               onStatusChange={handleStatusChange}
+              onDrawRaffle={handleDrawRaffle}
             />
           ) : (
             <EmptyState onNewLotteryClick={() => setShowNewDialog(true)} />
