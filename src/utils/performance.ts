@@ -30,12 +30,12 @@ export const withSuspense = <T extends object>(
   Component: React.ComponentType<T>,
   fallback?: React.ComponentType
 ) => {
-  const FallbackComponent = fallback || (() => <div>Loading...</div>);
+  const FallbackComponent = fallback || (() => React.createElement('div', null, 'Loading...'));
   
-  return (props: T) => (
-    <Suspense fallback={<FallbackComponent />}>
-      <Component {...props} />
-    </Suspense>
+  return (props: T) => React.createElement(
+    Suspense,
+    { fallback: React.createElement(FallbackComponent) },
+    React.createElement(Component, props)
   );
 };
 
