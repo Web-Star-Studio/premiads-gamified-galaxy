@@ -845,54 +845,31 @@ export type Database = {
         Returns: undefined
       }
       create_campaign_atomic: {
-        Args:
-          | {
-              p_title: string
-              p_description: string
-              p_type: string
-              p_target_audience: string
-              p_requirements: Json
-              p_start_date: string
-              p_end_date: string
-              p_has_badge: boolean
-              p_has_lootbox: boolean
-              p_sequence_bonus: boolean
-              p_streak_multiplier: number
-              p_random_points: boolean
-              p_points_range: number[]
-              p_rifas: number
-              p_tickets_reward: number
-              p_cashback_reward: number
-              p_max_participants: number
-              p_cashback_amount_per_raffle: number
-              p_target_filter: Json
-              p_badge_image_url: string
-              p_min_purchase: number
-              p_selected_lootbox_rewards: string[]
-              p_form_schema: Json
-            }
-          | {
-              p_title: string
-              p_description: string
-              p_type: string
-              p_target_audience: string
-              p_requirements: Json
-              p_start_date: string
-              p_end_date: string
-              p_has_badge: boolean
-              p_has_lootbox: boolean
-              p_sequence_bonus: boolean
-              p_streak_multiplier: number
-              p_rifas: number
-              p_cashback_reward: number
-              p_max_participants: number
-              p_cashback_amount_per_raffle: number
-              p_target_filter: Json
-              p_badge_image_url: string
-              p_min_purchase: number
-              p_selected_lootbox_rewards: string[]
-              p_form_schema: Json
-            }
+        Args: {
+          p_title: string
+          p_description: string
+          p_type: string
+          p_target_audience: string
+          p_requirements: Json
+          p_start_date: string
+          p_end_date: string
+          p_has_badge: boolean
+          p_has_lootbox: boolean
+          p_sequence_bonus: boolean
+          p_streak_multiplier: number
+          p_random_points: boolean
+          p_points_range: number[]
+          p_rifas: number
+          p_tickets_reward: number
+          p_cashback_reward: number
+          p_max_participants: number
+          p_cashback_amount_per_raffle: number
+          p_target_filter: Json
+          p_badge_image_url: string
+          p_min_purchase: number
+          p_selected_lootbox_rewards: string[]
+          p_form_schema: Json
+        }
         Returns: string
       }
       crm_dashboard: {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -53,11 +52,11 @@ const ClientMissions = () => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredMissions = missions.filter(mission => {
-    const hasTitle = mission.title && mission.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const hasDescription = mission.description && mission.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return hasTitle || hasDescription;
-  });
+  const filteredMissions = missions.filter(mission => 
+    mission.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (mission.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+    mission.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleMissionClick = (mission: any) => {
     setSelectedMission(mission);

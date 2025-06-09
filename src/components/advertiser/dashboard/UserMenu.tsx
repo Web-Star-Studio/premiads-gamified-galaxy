@@ -1,4 +1,3 @@
-
 import React from "react";
 import { User, Info, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const UserMenu = () => {
-  const { availableCredits: rifas, loading } = useUserCredits();
+  const { availableCredits: rifas, isLoading } = useUserCredits();
   
   return (
     <DropdownMenu>
@@ -41,7 +40,7 @@ const UserMenu = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-white">Rifas Disponíveis</span>
               <span className="text-sm font-semibold text-neon-cyan">
-                {loading ? (
+                {isLoading ? (
                   <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                 ) : (
                   rifas

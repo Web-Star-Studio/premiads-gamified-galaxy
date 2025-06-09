@@ -55,22 +55,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       </TooltipProvider>
       
       {!levelLoading && levelInfo && (
-        <UserLevel levelInfo={{
-          currentLevel: {
-            id: levelInfo.currentLevel.level,
-            name: levelInfo.currentLevel.name,
-            min_points: levelInfo.currentLevel.minPoints,
-            max_points: levelInfo.currentLevel.maxPoints,
-            level: levelInfo.currentLevel.level,
-            minPoints: levelInfo.currentLevel.minPoints,
-            maxPoints: levelInfo.currentLevel.maxPoints,
-            color: levelInfo.currentLevel.color,
-            icon: levelInfo.currentLevel.icon
-          },
-          progress: levelInfo.progress,
-          pointsToNext: levelInfo.pointsToNext,
-          nextLevel: levelInfo.nextLevel
-        }} />
+        <UserLevel levelInfo={levelInfo} />
       )}
       
       <TicketsButton />

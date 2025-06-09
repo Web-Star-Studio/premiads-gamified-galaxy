@@ -10,16 +10,20 @@ import { useUser } from "@/context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+interface DashboardHeaderProps {
+  userName: string;
+  credits?: number;
+  isPremium?: boolean;
+}
+
 const DashboardHeader = () => {
-  const { userName } = useUser();
-  const { userCredits, loading } = useUserCredits();
+  const { userName } = useUser(); // Fixed: use userName instead of user
+  const { availableCredits: rifas, isLoading } = useUserCredits();
   const navigate = useNavigate();
 
   const handleCreditsPurchase = () => {
     navigate("/anunciante/creditos");
   };
-
-  console.log('DashboardHeader: rifas =', userCredits, 'loading =', loading);
 
   return (
     <div className="bg-galaxy-dark border-b border-galaxy-purple/30 p-4">
@@ -35,29 +39,27 @@ const DashboardHeader = () => {
           <div className="text-right">
             <div className="flex items-center space-x-2">
               <div className="text-lg font-bold text-white">
-                {loading ? (
+                {isLoading ? (
                   <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                 ) : (
-                  `${userCredits} Rifas`
+                  `${rifas} Rifas`
                 )}
               </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="cursor-help">
-                      <Info className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
-                    <div className="space-y-1 text-xs">
-                      <p className="font-medium text-sm">Conversão de valores</p>
-                      <p>100 rifas = R$5,00</p>
-                      <p>Cada rifa vale R$0,05</p>
-                      <p className="text-gray-400 mt-1">Rifas usadas para campanhas e promoções</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <Info className="h-4 w-4 text-gray-400" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-galaxy-darkPurple border-galaxy-purple p-3 max-w-xs">
+                  <div className="space-y-1 text-xs">
+                    <p className="font-medium text-sm">Conversão de valores</p>
+                    <p>100 rifas = R$5,00</p>
+                    <p>Cada rifa vale R$0,05</p>
+                    <p className="text-gray-400 mt-1">Rifas usadas para campanhas e promoções</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           

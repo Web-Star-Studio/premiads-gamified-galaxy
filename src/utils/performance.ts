@@ -1,42 +1,58 @@
 
-import React, { Suspense, lazy, memo, useMemo, useCallback } from 'react';
+// Performance utilities for optimization
+import { useCallback, useRef } from 'react';
 
-export const lazyImport = <T extends object>(
-  importFunc: () => Promise<T>,
-  namedExport?: keyof T
-) => {
-  return lazy(() => {
-    const promise = importFunc();
-    if (namedExport == null) {
-      return promise;
-    } else {
-      return promise.then((module) => ({ default: module[namedExport] }));
-    }
-  });
-};
+// Debounce hook for expensive operations
+export const useDebounce = <T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): T => {
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
-export const optimizeComponent = <T extends object>(
-  Component: React.ComponentType<T>,
-  displayName?: string
-) => {
-  const MemoizedComponent = memo(Component);
-  if (displayName) {
-    MemoizedComponent.displayName = displayName;
-  }
-  return MemoizedComponent;
-};
-
-export const withSuspense = <T extends object>(
-  Component: React.ComponentType<T>,
-  fallback?: React.ComponentType
-) => {
-  const FallbackComponent = fallback || (() => React.createElement('div', null, 'Loading...'));
-  
-  return (props: T) => React.createElement(
-    Suspense,
-    { fallback: React.createElement(FallbackComponent) },
-    React.createElement(Component, props)
+  return useCallback(
+    ((...args: any[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    }) as T,
+    [callback, delay]
   );
 };
 
-export { useMemo, useCallback, memo };
+// Throttle hook for scroll/resize events
+export const useThrottle = <T extends (...args: any[]) => any>(
+  callback: T,
+  limit: number
+): T => {
+  const inThrottle = useRef<boolean>(false);
+
+  return useCallback(
+    ((...args: any[]) => {
+      if (!inThrottle.current) {
+        callback(...args);
+        inThrottle.current = true;
+        setTimeout(() => {
+          inThrottle.current = false;
+        }, limit);
+      }
+    }) as T,
+    [callback, limit]
+  );
+};
+
+// Lazy import utility
+export const lazyImport = <T extends React.ComponentType<any>>(
+  importFn: () => Promise<{ default: T }>
+) => {
+  return React.lazy(importFn);
+};
+
+// Preload route utility
+export const preloadRoute = (routeImport: () => Promise<any>) => {
+  const componentImport = routeImport();
+  return componentImport;
+};

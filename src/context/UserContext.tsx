@@ -1,118 +1,80 @@
 
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-
-interface UserProfile {
-  id: string;
-  full_name?: string;
-  avatar_url?: string;
-  email?: string;
-  user_type?: string;
-}
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { UserType } from "@/types/auth";
 
 interface UserContextType {
-  userProfile: UserProfile | null;
+  userType: UserType;
   userName: string;
-  userType: string;
-  loading: boolean;
-  refreshUserProfile: () => Promise<void>;
-  setUserType: (type: string) => void;
-  setUserName: (name: string) => void;
-  setIsOverlayOpen: (open: boolean) => void;
   isOverlayOpen: boolean;
+  setUserType: (type: UserType) => void;
+  setUserName: (name: string) => void;
+  setIsOverlayOpen: (isOpen: boolean) => void;
   resetUserInfo: () => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const defaultContextValue: UserContextType = {
+  userType: "participante",
+  userName: "",
+  isOverlayOpen: true,
+  setUserType: () => {},
+  setUserName: () => {},
+  setIsOverlayOpen: () => {},
+  resetUserInfo: () => {},
+};
 
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [userType, setUserType] = useState('participante');
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+const UserContext = createContext<UserContextType>(defaultContextValue);
 
-  const fetchUserProfile = useCallback(async () => {
-    if (!user?.id) {
-      console.log('No user ID, clearing profile');
-      setUserProfile(null);
-      setLoading(false);
-      return;
-    }
+export const useUser = () => useContext(UserContext);
 
-    try {
-      setLoading(true);
-      console.log('Fetching user profile for:', user.id);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Initialize state from localStorage if available
+  const [userType, setUserTypeState] = useState<UserType>(() => {
+    const savedType = localStorage.getItem("userType");
+    return (savedType as UserType) || "participante";
+  });
+  
+  const [userName, setUserNameState] = useState<string>(() => localStorage.getItem("userName") || "");
+  
+  const [isOverlayOpen, setIsOverlayOpenState] = useState<boolean>(() => {
+    // Show overlay if no username is set
+    const savedName = localStorage.getItem("userName");
+    return !savedName || savedName === "";
+  });
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        setUserProfile(null);
-      } else {
-        console.log('Fetched user profile:', data);
-        setUserProfile(data);
-        if (data.user_type) {
-          setUserType(data.user_type);
-        }
-      }
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      setUserProfile(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
-
-  const userName = userProfile?.full_name || user?.email?.split('@')[0] || 'Usuário';
-
-  const refreshUserProfile = async () => {
-    await fetchUserProfile();
+  // Update localStorage when state changes
+  const setUserType = (type: UserType) => {
+    localStorage.setItem("userType", type);
+    setUserTypeState(type);
   };
 
   const setUserName = (name: string) => {
-    if (userProfile) {
-      setUserProfile({ ...userProfile, full_name: name });
-    }
+    localStorage.setItem("userName", name);
+    setUserNameState(name);
+  };
+
+  const setIsOverlayOpen = (isOpen: boolean) => {
+    setIsOverlayOpenState(isOpen);
   };
 
   const resetUserInfo = () => {
-    setUserProfile(null);
-    setUserType('participante');
-    setIsOverlayOpen(false);
+    localStorage.removeItem("userName");
+    setUserNameState("");
+    setIsOverlayOpen(true);
   };
 
   return (
-    <UserContext.Provider value={{ 
-      userProfile, 
-      userName, 
-      userType,
-      loading, 
-      refreshUserProfile: fetchUserProfile,
-      setUserType,
-      setUserName,
-      setIsOverlayOpen,
-      isOverlayOpen,
-      resetUserInfo
-    }}>
+    <UserContext.Provider
+      value={{
+        userType,
+        userName,
+        isOverlayOpen,
+        setUserType,
+        setUserName,
+        setIsOverlayOpen,
+        resetUserInfo,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
-};
-
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
 };

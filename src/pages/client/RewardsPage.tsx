@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Gift, Clock3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,38 +29,26 @@ const RewardsPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Since loot_box_rewards table doesn't exist in the schema, 
-      // we'll use mission_rewards as a fallback
-      const { data: rewardsData, error: rewardsError } = await supabase
-        .from("mission_rewards")
+      // Fetch loot boxes with mission details
+      const { data: lootBoxesData, error: lootBoxesError } = await supabase
+        .from("loot_box_rewards")
         .select(`
           id,
-          rifas_earned,
-          cashback_earned,
-          rewarded_at,
+          reward_type,
+          reward_amount,
+          awarded_at,
           mission_id,
-          missions:mission_id(title)
+          missions:missions(title)
         `)
         .eq("user_id", user.id)
-        .order("rewarded_at", { ascending: false });
+        .order("awarded_at", { ascending: false });
 
-      if (rewardsError) {
-        console.error("Error fetching rewards:", rewardsError);
-        throw rewardsError;
+      if (lootBoxesError) {
+        console.error("Error fetching loot boxes:", lootBoxesError);
+        throw lootBoxesError;
       }
-      
-      // Transform mission_rewards to look like loot box rewards
-      const transformedRewards = (rewardsData || []).map(reward => ({
-        id: reward.id,
-        reward_type: reward.rifas_earned > 0 ? 'rifas' : 'cashback',
-        reward_amount: reward.rifas_earned || reward.cashback_earned || 0,
-        awarded_at: reward.rewarded_at,
-        mission_id: reward.mission_id,
-        missions: reward.missions
-      }));
-      
-      setLootBoxes(transformedRewards);
-      if (transformedRewards && transformedRewards.length > 0) playSound("chime");
+      setLootBoxes(lootBoxesData || []);
+      if (lootBoxesData && lootBoxesData.length > 0) playSound("chime");
     } catch (error: any) {
       console.error("Error fetching rewards:", error);
       toast({
@@ -76,14 +63,15 @@ const RewardsPage = () => {
 
   useEffect(() => {
     fetchRewards();
-    // Set up real-time subscription for mission_rewards
-    const rewardsSubscription = supabase
-      .channel('mission_rewards_changes')
+    // Realtime subscription for loot boxes only
+    const lootBoxesSubscription = supabase
+      .channel('loot_box_changes')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'mission_rewards'
+          table: 'loot_box_rewards',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
         }, 
         (payload) => {
           fetchRewards();
@@ -94,7 +82,7 @@ const RewardsPage = () => {
     const refreshInterval = setInterval(fetchRewards, 30000);
     return () => {
       clearInterval(refreshInterval);
-      rewardsSubscription.unsubscribe();
+      lootBoxesSubscription.unsubscribe();
     };
   }, [location.key, toast, playSound]);
 

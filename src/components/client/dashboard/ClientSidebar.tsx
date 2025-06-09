@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, Award, Bell, PiggyBank } from 'lucide-react';
@@ -24,7 +23,7 @@ interface ClientSidebarProps {
 const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' }) => {
   const location = useLocation();
   const { signOut } = useAuth();
-  const { availableCredits: rifas, loading } = useUserCredits();
+  const { availableCredits: rifas, availableCashback: cashback, isLoading } = useUserCredits();
   
   const isActive = (path: string) => 
     // Account for both exact matches and nested routes
@@ -51,12 +50,12 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
           <div className="flex items-center gap-2">
             <Wallet className="w-4 h-4 text-neon-cyan" />
             <span className="text-xs text-gray-300">Rifas</span>
-            <span className="ml-auto text-sm font-semibold text-neon-cyan">{loading ? '...' : rifas}</span>
+            <span className="ml-auto text-sm font-semibold text-neon-cyan">{isLoading ? '...' : rifas}</span>
           </div>
           <div className="flex items-center gap-2">
             <PiggyBank className="w-4 h-4 text-green-400" />
             <span className="text-xs text-gray-300">Cashback</span>
-            <span className="ml-auto text-sm font-semibold text-green-400">{loading ? '...' : formatCurrency(0)}</span>
+            <span className="ml-auto text-sm font-semibold text-green-400">{isLoading ? '...' : formatCurrency(cashback)}</span>
           </div>
         </div>
       </SidebarHeader>
@@ -196,11 +195,8 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
   );
 };
 
-function formatCurrency(value: number | undefined): string {
-  if (value === undefined || value === null || isNaN(value)) {
-    return 'R$ 0,00';
-  }
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export default ClientSidebar;

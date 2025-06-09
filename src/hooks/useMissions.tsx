@@ -1,14 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
-import { UseMissionsOptions } from "@/hooks/missions/types";
+import { Mission, UseMissionsOptions } from "@/hooks/missions/types";
 import { useMissionSubmit } from "@/hooks/missions/useMissionSubmit";
-
-// Export Mission type from mission-unified
-export type { Mission } from "@/types/mission-unified";
-import type { Mission } from "@/types/mission-unified";
 
 export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions = {}) => {
   const [loading, setLoading] = useState(true);

@@ -15,7 +15,7 @@ const formatDate = (date: Date | string): string => {
   return date;
 };
 
-export const useCampaignOperations = () => {
+const useCampaignOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,22 +45,12 @@ export const useCampaignOperations = () => {
         maxParticipants: formData.maxParticipants
       });
 
-      // Convert FormField[] to JSON-compatible format
-      const formSchemaJson = formData.formSchema.map(field => ({
-        id: field.id,
-        label: field.label,
-        type: field.type,
-        options: field.options || [],
-        required: field.required || false,
-        placeholder: field.placeholder || ''
-      }));
-
       // Usar a função RPC atômica para criar a campanha e debitar rifas
       const { data: campaignId, error } = await supabase.rpc('create_campaign_atomic', {
         p_title: formData.title,
         p_description: formData.description,
         p_type: formData.type,
-        p_target_audience: formData.audience,
+        p_target_audience: formData.audience, // Corrigido: usar target_audience
         p_requirements: formData.requirements,
         p_start_date: formatDate(formData.startDate),
         p_end_date: formatDate(formData.endDate),
@@ -68,7 +58,10 @@ export const useCampaignOperations = () => {
         p_has_lootbox: formData.hasLootBox,
         p_sequence_bonus: formData.streakBonus,
         p_streak_multiplier: formData.streakMultiplier,
+        p_random_points: formData.randomPoints,
+        p_points_range: formData.pointsRange,
         p_rifas: formData.rifas,
+        p_tickets_reward: formData.ticketsReward,
         p_cashback_reward: formData.cashbackReward,
         p_max_participants: formData.maxParticipants || 100,
         p_cashback_amount_per_raffle: formData.cashbackAmountPerRaffle || 5.00,
@@ -76,7 +69,7 @@ export const useCampaignOperations = () => {
         p_badge_image_url: formData.badgeImageUrl,
         p_min_purchase: formData.minPurchase || 0,
         p_selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
-        p_form_schema: formSchemaJson
+        p_form_schema: formData.formSchema || []
       });
 
       if (error) {
@@ -138,7 +131,7 @@ export const useCampaignOperations = () => {
         title: formData.title,
         description: formData.description,
         type: formData.type,
-        target_audience: formData.audience,
+        target_audience: formData.audience, // Corrigido: usar target_audience
         requirements: formData.requirements,
         start_date: formatDate(formData.startDate),
         end_date: formatDate(formData.endDate),
@@ -149,6 +142,7 @@ export const useCampaignOperations = () => {
         badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
         rifas: formData.rifas,
+        tickets_reward: formData.ticketsReward,
         cashback_reward: formData.cashbackReward,
         target_filter: formData.targetFilter || {},
         updated_at: new Date().toISOString()

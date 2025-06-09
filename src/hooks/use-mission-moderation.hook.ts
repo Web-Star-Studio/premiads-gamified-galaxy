@@ -1,50 +1,85 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration';
+import { useToast } from './use-toast';
 
-export function useMissionModeration() {
+export type ValidationResult = 'approve' | 'reject';
+
+export const useMissionModeration = () => {
+  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const moderateMission = useMutation({
-    mutationFn: async ({ submissionId, decision, stage }: {
-      submissionId: string;
-      decision: 'approve' | 'reject';
-      stage: 'advertiser_first' | 'admin' | 'advertiser_second';
-    }) => {
+  const handleSubmission = async ({
+    submissionId,
+    decision,
+    stage,
+    feedback
+  }: {
+    submissionId: string;
+    decision: 'approve' | 'reject';
+    stage: 'advertiser_first' | 'admin' | 'advertiser_second';
+    feedback?: string;
+  }) => {
+    if (!submissionId) {
+      toast({
+        title: 'Erro',
+        description: 'ID da submissão é obrigatório',
+        variant: 'destructive',
+      });
+      return { success: false };
+    }
+
+    setProcessing(true);
+
+    try {
+      // Get current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData.user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const approverId = userData.user.id;
+
+      // Process submission
       const result = await finalizeMissionSubmission({
         submissionId,
+        approverId,
         decision,
-        stage
+        stage,
+        feedback
       });
 
       if (!result.success) {
-        throw new Error(result.error || 'Erro ao moderar submissão');
+        throw new Error(result.error || 'Erro ao processar submissão');
       }
 
-      return result;
-    },
-    onSuccess: (data) => {
+      const successMessage = decision === 'approve' 
+        ? 'Submissão aprovada com sucesso' 
+        : 'Submissão rejeitada';
+
       toast({
-        title: 'Moderação realizada com sucesso',
-        description: 'A submissão foi processada.',
+        title: 'Sucesso',
+        description: successMessage,
       });
-      
-      queryClient.invalidateQueries({ queryKey: ['submissions'] });
-    },
-    onError: (error: any) => {
+
+      return result;
+    } catch (error: any) {
+      console.error('Error handling submission:', error);
       toast({
-        title: 'Erro na moderação',
-        description: error.message || 'Ocorreu um erro ao moderar a submissão',
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao processar a submissão',
         variant: 'destructive',
       });
-    },
-  });
+      return { success: false };
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   return {
-    moderateMission: moderateMission.mutate,
-    isLoading: moderateMission.isPending,
+    processing,
+    handleSubmission
   };
-}
+};

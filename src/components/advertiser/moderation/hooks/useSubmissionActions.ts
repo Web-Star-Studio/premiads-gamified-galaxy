@@ -1,9 +1,7 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-export type ValidationStage = 'advertiser_first' | 'admin' | 'advertiser_second';
+import { finalizeMissionSubmission, ValidationStage } from "@/lib/submissions/missionModeration";
 
 export function useSubmissionActions() {
   const { toast } = useToast();
@@ -14,24 +12,23 @@ export function useSubmissionActions() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase.rpc('finalize_submission', {
-        p_submission_id: submissionId,
-        p_approver_id: user.id,
-        p_decision: 'approve',
-        p_stage: stage
+      const result = await finalizeMissionSubmission({
+        submissionId,
+        approverId: user.id,
+        decision: 'approve',
+        stage
       });
 
-      if (error) throw error;
-
-      if (data) {
+      if (result.success && result.result) {
         toast({
           title: "Submissão aprovada",
-          description: `Usuário recebeu recompensas.`,
+          description: `Usuário recebeu ${result.result.badge_earned ? 'badge e ' : ''}recompensas.`,
         });
 
+        // Invalidate queries to refresh the data
         await queryClient.invalidateQueries({ queryKey: ['submissions'] });
       } else {
-        throw new Error('Erro ao processar aprovação');
+        throw new Error(result.error || 'Erro ao aprovar submissão');
       }
     } catch (error: any) {
       console.error('Error approving submission:', error);
@@ -48,21 +45,25 @@ export function useSubmissionActions() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase.rpc('finalize_submission', {
-        p_submission_id: submissionId,
-        p_approver_id: user.id,
-        p_decision: 'reject',
-        p_stage: stage
+      const result = await finalizeMissionSubmission({
+        submissionId,
+        approverId: user.id,
+        decision: 'reject',
+        stage,
+        feedback
       });
 
-      if (error) throw error;
+      if (result.success) {
+        toast({
+          title: "Submissão rejeitada",
+          description: "Submissão foi rejeitada com sucesso.",
+        });
 
-      toast({
-        title: "Submissão rejeitada",
-        description: "Submissão foi rejeitada com sucesso.",
-      });
-
-      await queryClient.invalidateQueries({ queryKey: ['submissions'] });
+        // Invalidate queries to refresh the data
+        await queryClient.invalidateQueries({ queryKey: ['submissions'] });
+      } else {
+        throw new Error(result.error || 'Erro ao rejeitar submissão');
+      }
     } catch (error: any) {
       console.error('Error rejecting submission:', error);
       toast({

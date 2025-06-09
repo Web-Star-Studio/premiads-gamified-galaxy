@@ -1,133 +1,349 @@
-
-import React, { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FormData } from './types';
-import SurveyFormBuilder from './SurveyFormBuilder';
+import { memo, useState, useEffect } from "react";
+import { 
+  FileText, 
+  Camera, 
+  Video, 
+  MapPin, 
+  Share, 
+  Tag, 
+  BarChart3, 
+  Star,
+  Users
+} from "lucide-react";
+import { FormData } from "./types";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription
+} from "@/components/ui/card";
+import { 
+  MissionType, 
+  missionTypeLabels, 
+  missionTypeDescriptions 
+} from "@/hooks/useMissionsTypes";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import SurveyFormBuilder from "./SurveyFormBuilder";
 
 interface BasicInfoStepProps {
+  /** Current form data */
   formData: FormData;
+  /** Function to update form data */
   updateFormData: (field: string, value: any) => void;
 }
 
-const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formData, updateFormData }) => {
-  const [isFormBuilderOpen, setIsFormBuilderOpen] = useState(false);
+// Map to get the appropriate icon for each mission type
+const getMissionTypeIcon = (type: MissionType) => {
+  const icons = {
+    form: <FileText className="h-5 w-5" />,
+    photo: <Camera className="h-5 w-5" />,
+    video: <Video className="h-5 w-5" />,
+    checkin: <MapPin className="h-5 w-5" />,
+    social: <Share className="h-5 w-5" />,
+    coupon: <Tag className="h-5 w-5" />,
+    survey: <BarChart3 className="h-5 w-5" />,
+    review: <Star className="h-5 w-5" />
+  };
+  
+  return icons[type] || <FileText className="h-5 w-5" />;
+};
 
-  const campaignTypes = [
-    { value: 'enquete', label: 'Enquete' },
-    { value: 'formulario', label: 'Formulário' },
-    { value: 'foto', label: 'Foto' },
-    { value: 'video', label: 'Vídeo' },
-    { value: 'avaliacao', label: 'Avaliação' },
-    { value: 'compartilhamento', label: 'Compartilhamento' },
-    { value: 'cupom', label: 'Cupom' },
-    { value: 'checkin', label: 'Check-in' },
-    { value: 'outro', label: 'Outro' }
+/**
+ * Mission basic information form step
+ * Collects title, description, mission type and target audience
+ */
+const BasicInfoStep = ({ formData, updateFormData }: BasicInfoStepProps) => {
+  const [builderOpen, setBuilderOpen] = useState(false)
+  useEffect(() => {
+    if (formData.type === 'survey') setBuilderOpen(true)
+  }, [formData.type])
+
+  // All available mission types (removed 'form' centralization)
+  const missionTypes: MissionType[] = [
+    "photo", "video", "checkin", "social", "coupon", "survey", "review"
+  ];
+  
+  // All target audience options
+  const targetAudiences = [
+    { value: "todos", label: "Todos os usuários" },
+    { value: "novos", label: "Novos usuários" },
+    { value: "nivel3", label: "Usuários nível 3 ou superior" }
   ];
 
+  // Enhanced audience targeting options
+  const ageRanges = [
+    { value: "18-24", label: "18-24 anos" },
+    { value: "25-34", label: "25-34 anos" },
+    { value: "35-44", label: "35-44 anos" },
+    { value: "45+", label: "45+ anos" }
+  ];
+
+  const regions = [
+    { value: "norte", label: "Norte" },
+    { value: "nordeste", label: "Nordeste" },
+    { value: "centro-oeste", label: "Centro-Oeste" },
+    { value: "sudeste", label: "Sudeste" },
+    { value: "sul", label: "Sul" }
+  ];
+
+  const interests = [
+    { value: "esportes", label: "Esportes" },
+    { value: "comida", label: "Comida" },
+    { value: "lazer", label: "Lazer" },
+    { value: "moda", label: "Moda" },
+    { value: "beleza", label: "Beleza" },
+    { value: "educacao", label: "Educação" },
+    { value: "jogos", label: "Jogos" },
+    { value: "restaurantes", label: "Restaurantes" },
+    { value: "eventos", label: "Eventos" },
+    { value: "turismo", label: "Turismo" },
+    { value: "tecnologia", label: "Tecnologia" },
+    { value: "saude", label: "Saúde" },
+    { value: "financas", label: "Finanças" },
+    { value: "arte-cultura", label: "Arte e Cultura" }
+  ];
+
+  // Handle audience filter changes
+  const handleAudienceFilterChange = (filterType: string, value: string | string[]) => {
+    const currentFilter = formData.targetFilter || {};
+    updateFormData("targetFilter", {
+      ...currentFilter,
+      [filterType]: value
+    });
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="title" className="text-white">
-            Título da Campanha *
-          </Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => updateFormData('title', e.target.value)}
-            placeholder="Digite o título da sua campanha"
-            className="bg-galaxy-deepPurple/50 border-galaxy-purple/30"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="description" className="text-white">
-            Descrição *
-          </Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => updateFormData('description', e.target.value)}
-            placeholder="Descreva o que os participantes devem fazer"
-            className="bg-galaxy-deepPurple/50 border-galaxy-purple/30 min-h-[100px]"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="type" className="text-white">
-            Tipo de Campanha *
-          </Label>
-          <Select value={formData.type} onValueChange={(value) => updateFormData('type', value)}>
-            <SelectTrigger className="bg-galaxy-deepPurple/50 border-galaxy-purple/30">
-              <SelectValue placeholder="Selecione o tipo de campanha" />
-            </SelectTrigger>
-            <SelectContent>
-              {campaignTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="audience" className="text-white">
-            Público-alvo
-          </Label>
-          <Select value={formData.audience} onValueChange={(value) => updateFormData('audience', value)}>
-            <SelectTrigger className="bg-galaxy-deepPurple/50 border-galaxy-purple/30">
-              <SelectValue placeholder="Selecione o público-alvo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os usuários</SelectItem>
-              <SelectItem value="18-25">18-25 anos</SelectItem>
-              <SelectItem value="26-35">26-35 anos</SelectItem>
-              <SelectItem value="36-45">36-45 anos</SelectItem>
-              <SelectItem value="46+">46+ anos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {(formData.type === 'formulario' || formData.type === 'enquete') && (
-          <div>
-            <Label className="text-white mb-2 block">
-              Formulário Personalizado
-            </Label>
-            <Dialog open={isFormBuilderOpen} onOpenChange={setIsFormBuilderOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-galaxy-deepPurple/50 border-galaxy-purple/30"
-                >
-                  {formData.formSchema.length > 0 
-                    ? `${formData.formSchema.length} campos configurados` 
-                    : 'Configurar Formulário'
-                  }
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-galaxy-darkPurple border-galaxy-purple/50">
-                <DialogHeader>
-                  <DialogTitle className="text-white">Construtor de Formulário</DialogTitle>
-                </DialogHeader>
+      <div className="space-y-3">
+        <label htmlFor="title" className="text-sm font-medium">Título da Missão</label>
+        <Input
+          id="title"
+          placeholder="Ex: Compartilhe nossa marca nas redes sociais"
+          value={formData.title}
+          onChange={(e) => updateFormData("title", e.target.value)}
+          className="bg-gray-800 border-gray-700 focus:border-neon-cyan w-full"
+        />
+      </div>
+      
+      <div className="space-y-3">
+        <label htmlFor="description" className="text-sm font-medium">Descrição</label>
+        <Textarea
+          id="description"
+          placeholder="Descreva o que os usuários precisam fazer para completar esta missão"
+          value={formData.description}
+          onChange={(e) => updateFormData("description", e.target.value)}
+          className="bg-gray-800 border-gray-700 focus:border-neon-cyan min-h-[100px] w-full"
+        />
+      </div>
+      
+      <div className="space-y-3">
+        <label className="text-sm font-medium">Tipo de Missão</label>
+        
+        {formData.type ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div className="flex items-center space-x-4">
+              <Card 
+                className="bg-galaxy-purple/10 border border-galaxy-purple/40 cursor-pointer"
+                onClick={() => updateFormData("type", "")}
+              >
+                <CardContent className="flex items-center p-4">
+                  <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
+                    {getMissionTypeIcon(formData.type as MissionType)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">{missionTypeLabels[formData.type as MissionType]}</h4>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {missionTypeDescriptions[formData.type as MissionType]}
+                    </CardDescription>
+                  </div>
+                </CardContent>
+              </Card>
+              {formData.type === 'survey' && (
                 <SurveyFormBuilder
-                  fields={formData.formSchema}
-                  onChange={(fields) => updateFormData('formSchema', fields)}
+                  formData={formData}
+                  updateFormData={updateFormData}
+                  open={builderOpen}
+                  onOpenChange={setBuilderOpen}
                 />
-              </DialogContent>
-            </Dialog>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => updateFormData("type", "")}
+              className="text-sm text-galaxy-blue hover:text-neon-cyan transition-colors"
+            >
+              Mudar tipo
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {missionTypes.map((type) => (
+              <Card 
+                key={type}
+                className="bg-galaxy-darkPurple border border-galaxy-purple/20 hover:border-galaxy-purple/40 cursor-pointer"
+                onClick={() => updateFormData("type", type)}
+              >
+                <CardContent className="flex items-center p-4">
+                  <div className="mr-3 w-10 h-10 rounded-full bg-galaxy-purple/20 flex items-center justify-center">
+                    {getMissionTypeIcon(type)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium">{missionTypeLabels[type]}</h4>
+                    <CardDescription className="text-xs line-clamp-2">
+                      {missionTypeDescriptions[type]}
+                    </CardDescription>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>
+      
+      <div className="space-y-3">
+        <label htmlFor="audience" className="text-sm font-medium">Público Alvo</label>
+        <Select
+          value={formData.audience}
+          onValueChange={(value) => updateFormData("audience", value)}
+        >
+          <SelectTrigger className="bg-gray-800 border-gray-700 focus:border-neon-cyan w-full">
+            <SelectValue placeholder="Selecione o público alvo" />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-gray-700">
+            {targetAudiences.map((audience) => (
+              <SelectItem key={audience.value} value={audience.value}>
+                {audience.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="bg-galaxy-darkPurple/50 border-galaxy-purple/20">
+        <CardContent className="pt-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-neon-cyan" />
+            <h4 className="text-sm font-medium">Filtros Avançados de Público</h4>
+          </div>
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="age" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Faixa Etária</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {ageRanges.map((age) => (
+                    <div key={age.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`age-${age.value}`} 
+                        checked={(formData.targetFilter?.age as string[])?.includes(age.value)}
+                        onCheckedChange={(checked) => {
+                          const currentAges = (formData.targetFilter?.age as string[]) || [];
+                          const newAges = checked 
+                            ? [...currentAges, age.value]
+                            : currentAges.filter(a => a !== age.value);
+                          handleAudienceFilterChange('age', newAges);
+                        }}
+                      />
+                      <Label htmlFor={`age-${age.value}`} className="text-sm">
+                        {age.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="region" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Região</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {regions.map((region) => (
+                    <div key={region.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`region-${region.value}`} 
+                        checked={(formData.targetFilter?.region as string[])?.includes(region.value)}
+                        onCheckedChange={(checked) => {
+                          const currentRegions = (formData.targetFilter?.region as string[]) || [];
+                          const newRegions = checked 
+                            ? [...currentRegions, region.value]
+                            : currentRegions.filter(r => r !== region.value);
+                          handleAudienceFilterChange('region', newRegions);
+                        }}
+                      />
+                      <Label htmlFor={`region-${region.value}`} className="text-sm">
+                        {region.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="interests" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Interesses</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {interests.map((interest) => (
+                    <div key={interest.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`interest-${interest.value}`} 
+                        checked={(formData.targetFilter?.interests as string[])?.includes(interest.value)}
+                        onCheckedChange={(checked) => {
+                          const currentInterests = (formData.targetFilter?.interests as string[]) || [];
+                          const newInterests = checked 
+                            ? [...currentInterests, interest.value]
+                            : currentInterests.filter(i => i !== interest.value);
+                          handleAudienceFilterChange('interests', newInterests);
+                        }}
+                      />
+                      <Label htmlFor={`interest-${interest.value}`} className="text-sm">
+                        {interest.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="gender" className="border-galaxy-purple/20">
+              <AccordionTrigger className="text-sm py-2">Gênero</AccordionTrigger>
+              <AccordionContent>
+                <RadioGroup 
+                  value={formData.targetFilter?.gender as string || "all"}
+                  onValueChange={(value) => handleAudienceFilterChange('gender', value)}
+                  className="flex flex-col space-y-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="gender-all" />
+                    <Label htmlFor="gender-all" className="text-sm">Todos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="male" id="gender-male" />
+                    <Label htmlFor="gender-male" className="text-sm">Masculino</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="female" id="gender-female" />
+                    <Label htmlFor="gender-female" className="text-sm">Feminino</Label>
+                  </div>
+                </RadioGroup>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default BasicInfoStep;
+export default memo(BasicInfoStep);

@@ -1,10 +1,32 @@
-
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { supabase } from '@/integrations/supabase/client';
+import { missionService } from '@/services/supabase';
 
 // Mock the Supabase client
 vi.mock('@/integrations/supabase/client', () => {
-  const mockRpc = vi.fn();
+  const mockRpc = vi.fn().mockImplementation(() => 
+    Promise.resolve({
+      data: {
+        status: 'approved',
+        points_awarded: 100,
+        participant_id: 'test-participant-id'
+      },
+      error: null
+    })
+  );
+  
+  // Add mock methods to mockRpc so we can override return values in tests
+  mockRpc.mockResolvedValueOnce = vi.fn().mockImplementation((value) => {
+    mockRpc.mockImplementationOnce(() => Promise.resolve(value || {
+      data: {
+        status: 'approved',
+        points_awarded: 100,
+        participant_id: 'test-participant-id'
+      },
+      error: null
+    }));
+    return mockRpc;
+  });
   
   return {
     supabase: {
@@ -43,7 +65,7 @@ vi.mock('@/integrations/supabase/client', () => {
             }))
           }))
         }))
-      })),
+      }),
       auth: {
         getUser: vi.fn(() => Promise.resolve({
           data: { user: { id: 'test-approver-id' } },
@@ -59,9 +81,12 @@ describe('Mission Finalization Flow', () => {
   let queryClientMock: any;
 
   beforeEach(() => {
+    // Mock the queryClient for invalidateQueries
     queryClientMock = {
       invalidateQueries: vi.fn()
     };
+
+    // Reset all mocks between tests
     vi.clearAllMocks();
   });
 
@@ -70,182 +95,365 @@ describe('Mission Finalization Flow', () => {
   });
 
   describe('validateSubmission function', () => {
-    it('should call finalize_submission RPC with correct parameters', async () => {
+    it('should call finalize_submission RPC instead of directly updating database', async () => {
+      // Arrange
       const submissionId = 'test-submission-id';
       const validatedBy = 'test-approver-id';
-      const result = 'approved';
+      const result = 'aprovado';
       const isAdmin = false;
       const notes = 'Good job!';
 
-      const mockRpc = vi.mocked(supabase.rpc);
-      mockRpc.mockResolvedValueOnce({
-        data: {
-          status: 'approved',
-          rifas_awarded: 100,
-          participant_id: 'test-participant-id'
-        },
-        error: null
+      // Mock the Supabase response for the validateSubmission function
+      supabase.from = vi.fn().mockImplementation((table) => {
+        if (table === 'mission_submissions') {
+          return {
+            select: () => ({
+              eq: () => ({
+                single: () => Promise.resolve({
+                  data: {
+                    mission_id: 'test-mission-id',
+                    user_id: 'test-participant-id',
+                    status: 'pending'
+                  },
+                  error: null
+                })
+              })
+            }),
+            update: () => ({
+              eq: () => ({
+                select: () => ({
+                  single: () => Promise.resolve({
+                    data: {
+                      id: submissionId,
+                      status: 'approved'
+                    },
+                    error: null
+                  })
+                })
+              })
+            })
+          };
+        }
+        return {
+          select: vi.fn(),
+          update: vi.fn(),
+          insert: vi.fn()
+        };
       });
 
-      const validateSubmission = async (
-        submissionId: string,
-        validatedBy: string,
-        result: string,
-        isAdmin: boolean,
-        notes?: string
-      ) => {
-        const { data, error } = await supabase.rpc('finalize_submission', {
-          p_submission_id: submissionId,
-          p_approver_id: validatedBy,
-          p_decision: result === 'approved' ? 'approve' : 'reject',
-          p_stage: isAdmin ? 'admin' : 'advertiser_first'
-        });
+      // Act
+      await missionService.validateSubmission(
+        submissionId,
+        validatedBy,
+        result,
+        isAdmin,
+        notes
+      );
 
-        if (error) throw error;
-        return data;
-      };
-
-      await validateSubmission(submissionId, validatedBy, result, isAdmin, notes);
-
-      expect(mockRpc).toHaveBeenCalledWith(
+      // Assert
+      // Check that RPC was called with correct parameters
+      expect(supabase.rpc).toHaveBeenCalledWith(
         'finalize_submission',
         {
           p_submission_id: submissionId,
           p_approver_id: validatedBy,
-          p_decision: 'approve',
-          p_stage: 'advertiser_first'
+          p_is_approved: true,
+          p_stage: 'advertiser_first',
+          p_feedback: notes
         }
       );
     });
 
     it('should handle rejection correctly', async () => {
+      // Arrange
       const submissionId = 'test-submission-id';
       const validatedBy = 'test-approver-id';
-      const result = 'rejected';
+      const result = 'rejeitado';
       const isAdmin = false;
       const notes = 'Not meeting requirements';
 
-      const mockRpc = vi.mocked(supabase.rpc);
-      mockRpc.mockResolvedValueOnce({
-        data: {
-          status: 'rejected',
-          rifas_awarded: 0,
-          participant_id: 'test-participant-id'
-        },
-        error: null
+      // Mock the Supabase response
+      supabase.from = vi.fn().mockImplementation((table) => {
+        if (table === 'mission_submissions') {
+          return {
+            select: () => ({
+              eq: () => ({
+                single: () => Promise.resolve({
+                  data: {
+                    mission_id: 'test-mission-id',
+                    user_id: 'test-participant-id',
+                    status: 'pending'
+                  },
+                  error: null
+                })
+              })
+            }),
+            update: () => ({
+              eq: () => ({
+                select: () => ({
+                  single: () => Promise.resolve({
+                    data: {
+                      id: submissionId,
+                      status: 'rejected'
+                    },
+                    error: null
+                  })
+                })
+              })
+            })
+          };
+        }
+        return {
+          select: vi.fn(),
+          update: vi.fn(),
+          insert: vi.fn()
+        };
       });
 
-      const validateSubmission = async (
-        submissionId: string,
-        validatedBy: string,
-        result: string,
-        isAdmin: boolean,
-        notes?: string
-      ) => {
-        const { data, error } = await supabase.rpc('finalize_submission', {
-          p_submission_id: submissionId,
-          p_approver_id: validatedBy,
-          p_decision: result === 'approved' ? 'approve' : 'reject',
-          p_stage: isAdmin ? 'admin' : 'advertiser_first'
-        });
+      // Act
+      await missionService.validateSubmission(
+        submissionId,
+        validatedBy,
+        result,
+        isAdmin,
+        notes
+      );
 
-        if (error) throw error;
-        return data;
-      };
-
-      await validateSubmission(submissionId, validatedBy, result, isAdmin, notes);
-
-      expect(mockRpc).toHaveBeenCalledWith(
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
         'finalize_submission',
         {
           p_submission_id: submissionId,
           p_approver_id: validatedBy,
-          p_decision: 'reject',
-          p_stage: 'advertiser_first'
+          p_is_approved: false,
+          p_stage: 'advertiser_first',
+          p_feedback: notes
         }
       );
     });
 
     it('should handle admin approvals with correct stage', async () => {
+      // Arrange
       const submissionId = 'test-submission-id';
       const validatedBy = 'test-admin-id';
-      const result = 'approved';
+      const result = 'aprovado';
       const isAdmin = true;
       const notes = 'Approved by admin';
 
-      const mockRpc = vi.mocked(supabase.rpc);
-      mockRpc.mockResolvedValueOnce({
-        data: {
-          status: 'approved',
-          rifas_awarded: 100,
-          participant_id: 'test-participant-id'
-        },
-        error: null
-      });
+      // Act
+      await missionService.validateSubmission(
+        submissionId,
+        validatedBy,
+        result,
+        isAdmin,
+        notes
+      );
 
-      const validateSubmission = async (
-        submissionId: string,
-        validatedBy: string,
-        result: string,
-        isAdmin: boolean,
-        notes?: string
-      ) => {
-        const { data, error } = await supabase.rpc('finalize_submission', {
-          p_submission_id: submissionId,
-          p_approver_id: validatedBy,
-          p_decision: result === 'approved' ? 'approve' : 'reject',
-          p_stage: isAdmin ? 'admin' : 'advertiser_first'
-        });
-
-        if (error) throw error;
-        return data;
-      };
-
-      await validateSubmission(submissionId, validatedBy, result, isAdmin, notes);
-
-      expect(mockRpc).toHaveBeenCalledWith(
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
         'finalize_submission',
         {
           p_submission_id: submissionId,
           p_approver_id: validatedBy,
-          p_decision: 'approve',
-          p_stage: 'admin'
+          p_is_approved: true,
+          p_stage: 'admin',
+          p_feedback: notes
         }
       );
     });
   });
 
-  describe('addTokens function', () => {
-    it('should call add_tokens_to_user function instead of increment_user_credits', async () => {
-      const userId = 'test-user-id';
-      const amount = -10;
+  describe('finalizeMissionSubmission function', () => {
+    it('should invalidate participant profile queries on successful approval', async () => {
+      // Arrange
+      const submission = {
+        id: 'test-submission-id',
+        user_id: 'test-participant-id'
+      };
+      const approverId = 'test-approver-id';
+      const isApproved = true;
+      const feedback = 'Great job!';
       
-      const mockRpc = vi.mocked(supabase.rpc);
-      mockRpc.mockResolvedValueOnce({
+      // Mock RPC response
+      supabase.rpc.mockResolvedValueOnce({
         data: {
-          user_id: userId,
-          new_total: 90
+          status: 'approved',
+          points_awarded: 100,
+          participant_id: 'test-participant-id'
         },
         error: null
       });
 
-      const addTokens = async (userId: string, amount: number) => {
-        const { data, error } = await supabase.rpc('add_tokens_to_user', {
-          user_id: userId,
-          reward: amount
+      // Create a mock for finalizeMissionSubmission to test
+      const finalizeMissionSubmission = async (
+        submissionId: string,
+        approverId: string,
+        isApproved: boolean,
+        stage: string = 'advertiser_first',
+        feedback?: string
+      ) => {
+        const { data, error } = await supabase.rpc('finalize_submission', {
+          p_submission_id: submissionId,
+          p_approver_id: approverId,
+          p_is_approved: isApproved,
+          p_stage: stage,
+          p_feedback: feedback
         });
 
         if (error) throw error;
+
+        if (data && data.participant_id && isApproved) {
+          queryClientMock.invalidateQueries({ queryKey: ['userProfile', data.participant_id] });
+        }
+
         return data;
       };
 
-      await addTokens(userId, amount);
+      // Act
+      await finalizeMissionSubmission(
+        submission.id,
+        approverId,
+        isApproved,
+        'advertiser_first',
+        feedback
+      );
 
-      expect(mockRpc).toHaveBeenCalledWith(
-        'add_tokens_to_user',
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        'finalize_submission',
         {
+          p_submission_id: submission.id,
+          p_approver_id: approverId,
+          p_is_approved: isApproved,
+          p_stage: 'advertiser_first',
+          p_feedback: feedback
+        }
+      );
+      expect(queryClientMock.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['userProfile', 'test-participant-id']
+      });
+    });
+
+    it('should not invalidate queries on rejection', async () => {
+      // Arrange
+      const submission = {
+        id: 'test-submission-id',
+        user_id: 'test-participant-id'
+      };
+      const approverId = 'test-approver-id';
+      const isApproved = false;
+      const feedback = 'Needs improvement';
+      
+      // Mock RPC response for rejection
+      supabase.rpc.mockResolvedValueOnce({
+        data: {
+          status: 'rejected',
+          points_awarded: 0,
+          participant_id: 'test-participant-id'
+        },
+        error: null
+      });
+
+      // Use the same mock function
+      const finalizeMissionSubmission = async (
+        submissionId: string,
+        approverId: string,
+        isApproved: boolean,
+        stage: string = 'advertiser_first',
+        feedback?: string
+      ) => {
+        const { data, error } = await supabase.rpc('finalize_submission', {
+          p_submission_id: submissionId,
+          p_approver_id: approverId,
+          p_is_approved: isApproved,
+          p_stage: stage,
+          p_feedback: feedback
+        });
+
+        if (error) throw error;
+
+        if (data && data.participant_id && isApproved) {
+          queryClientMock.invalidateQueries({ queryKey: ['userProfile', data.participant_id] });
+        }
+
+        return data;
+      };
+
+      // Act
+      await finalizeMissionSubmission(
+        submission.id,
+        approverId,
+        isApproved,
+        'advertiser_first',
+        feedback
+      );
+
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        'finalize_submission',
+        {
+          p_submission_id: submission.id,
+          p_approver_id: approverId,
+          p_is_approved: isApproved,
+          p_stage: 'advertiser_first',
+          p_feedback: feedback
+        }
+      );
+      expect(queryClientMock.invalidateQueries).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('addTokens function', () => {
+    it('should call increment_user_credits RPC instead of directly updating database', async () => {
+      // Arrange
+      const userId = 'test-user-id';
+      const amount = -10; // Deducting tokens
+      
+      // Mock the RPC response
+      supabase.rpc.mockResolvedValueOnce({
+        data: {
           user_id: userId,
-          reward: amount
+          new_total: 90 // Assuming user had 100 credits before
+        },
+        error: null
+      });
+
+      // Act
+      await missionService.addTokens(userId, amount);
+
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        'increment_user_credits',
+        {
+          p_user_id: userId,
+          p_amount: amount
+        }
+      );
+    });
+
+    it('should handle positive token addition correctly', async () => {
+      // Arrange
+      const userId = 'test-user-id';
+      const amount = 20; // Adding tokens
+      
+      // Mock the RPC response
+      supabase.rpc.mockResolvedValueOnce({
+        data: {
+          user_id: userId,
+          new_total: 120 // Assuming user had 100 credits before
+        },
+        error: null
+      });
+
+      // Act
+      await missionService.addTokens(userId, amount);
+
+      // Assert
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        'increment_user_credits',
+        {
+          p_user_id: userId,
+          p_amount: amount
         }
       );
     });
