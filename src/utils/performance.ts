@@ -53,10 +53,12 @@ export const lazyImport = <T extends React.ComponentType<any>>(
 // HOC for wrapping components with Suspense
 export const withSuspense = <P extends object>(
   Component: React.ComponentType<P>,
-  fallback: React.ReactNode = <div>Loading...</div>
+  fallback?: React.ReactNode
 ) => {
+  const defaultFallback = fallback || <div>Loading...</div>;
+  
   return React.memo((props: P) => (
-    <React.Suspense fallback={fallback}>
+    <React.Suspense fallback={defaultFallback}>
       <Component {...props} />
     </React.Suspense>
   ));
