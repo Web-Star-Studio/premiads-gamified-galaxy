@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -86,17 +87,17 @@ serve(async (req: Request) => {
 
     switch (action) {
       case "ADVERTISER_APPROVE_FIRST_INSTANCE":
-        if (!userProfile.user_type || userProfile.user_type.trim() !== "anunciante") {
-          console.error(`Permission check failed for action '${action}': Expected 'anunciante', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or user_type is invalid for this action.");
+        if (!userProfile.user_type || userProfile.user_type.trim() !== "advertiser") {
+          console.error(`Permission check failed for action '${action}': Expected 'advertiser', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
+          throw new Error("Permission denied: User is not an 'advertiser' or user_type is invalid for this action.");
         }
         rpcName = "approve_submission_first_instance";
         rpcParams.p_advertiser_id = userId;
         break;
       case "ADVERTISER_REJECT_TO_SECOND_INSTANCE":
-        if (!userProfile.user_type || userProfile.user_type.trim() !== "anunciante") {
-          console.error(`Permission check failed for action '${action}': Expected 'anunciante', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or user_type is invalid for this action.");
+        if (!userProfile.user_type || userProfile.user_type.trim() !== "advertiser") {
+          console.error(`Permission check failed for action '${action}': Expected 'advertiser', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
+          throw new Error("Permission denied: User is not an 'advertiser' or user_type is invalid for this action.");
         }
         rpcName = "reject_submission_to_second_instance";
         rpcParams.p_advertiser_id = userId;
@@ -118,17 +119,17 @@ serve(async (req: Request) => {
         rpcParams.p_admin_id = userId;
         break;
       case "ADVERTISER_APPROVE_SECOND_INSTANCE":
-        if (!userProfile.user_type || userProfile.user_type.trim() !== "anunciante") {
-          console.error(`Permission check failed for action '${action}': Expected 'anunciante', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or user_type is invalid for this action.");
+        if (!userProfile.user_type || userProfile.user_type.trim() !== "advertiser") {
+          console.error(`Permission check failed for action '${action}': Expected 'advertiser', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
+          throw new Error("Permission denied: User is not an 'advertiser' or user_type is invalid for this action.");
         }
         rpcName = "approve_submission_second_instance";
         rpcParams.p_advertiser_id = userId;
         break;
       case "ADVERTISER_REJECT_SECOND_INSTANCE":
-        if (!userProfile.user_type || userProfile.user_type.trim() !== "anunciante") {
-          console.error(`Permission check failed for action '${action}': Expected 'anunciante', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or user_type is invalid for this action.");
+        if (!userProfile.user_type || userProfile.user_type.trim() !== "advertiser") {
+          console.error(`Permission check failed for action '${action}': Expected 'advertiser', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
+          throw new Error("Permission denied: User is not an 'advertiser' or user_type is invalid for this action.");
         }
         rpcName = "reject_submission_second_instance";
         rpcParams.p_advertiser_id = userId;

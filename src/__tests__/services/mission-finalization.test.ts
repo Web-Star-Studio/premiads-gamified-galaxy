@@ -92,5 +92,23 @@ describe('Mission Finalization Service', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('Ação de moderação inválida');
     });
+
+    it('should handle permission denied errors', async () => {
+      const mockError = {
+        data: null,
+        error: { message: "Permission denied: User is not an 'advertiser'" },
+      };
+
+      vi.mocked(supabase.functions.invoke).mockResolvedValue(mockError);
+
+      const result = await finalizeMissionSubmission({
+        submissionId: 'test-submission-id',
+        decision: 'approve',
+        stage: 'advertiser_first',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Permission denied: User is not an 'advertiser'");
+    });
   });
 });
