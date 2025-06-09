@@ -6,9 +6,35 @@ import { BasicInfoSection } from "./sections/BasicInfoSection";
 import { AdditionalInfoSection } from "./sections/AdditionalInfoSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
 import { FormFooter } from "./sections/FormFooter";
+import { useEffect, useState } from "react";
 
 const ProfileForm = () => {
   const { form, loading, pointsAwarded, hasCompletedBefore, onSubmit } = useProfileForm();
+  const [isFormComplete, setIsFormComplete] = useState(false);
+
+  // Check if all required fields are filled
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      const values = data;
+      const complete = !!(
+        values.ageRange &&
+        values.location &&
+        values.profession &&
+        values.maritalStatus &&
+        values.gender &&
+        values.interests?.length > 0 &&
+        values.serviceUsageFrequency &&
+        values.transportationType &&
+        values.digitalPlatforms?.length > 0 &&
+        values.householdSize &&
+        values.educationLevel &&
+        values.sustainabilityInterest
+      );
+      setIsFormComplete(complete);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   return (
     <motion.div
@@ -36,7 +62,7 @@ const ProfileForm = () => {
             <SocialLinksSection form={form} />
           </div>
           
-          <FormFooter loading={loading} />
+          <FormFooter loading={loading} isFormComplete={isFormComplete} />
         </form>
       </Form>
     </motion.div>

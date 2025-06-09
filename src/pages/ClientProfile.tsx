@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,16 +18,12 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
-// Form schemas for validation
+// Form schemas for validation - removed social media fields from personal info
 const personalInfoSchema = z.object({
   fullName: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
   location: z.string().optional(),
-  instagramUrl: z.string().url().optional().or(z.literal('').optional()),
-  tiktokUrl: z.string().url().optional().or(z.literal('').optional()),
-  youtubeUrl: z.string().url().optional().or(z.literal('').optional()),
-  twitterUrl: z.string().url().optional().or(z.literal('').optional()),
 });
 
 const preferenceSchema = z.object({
@@ -43,21 +39,84 @@ const ClientProfile = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
   const [loading, setLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [fetchError, setFetchError] = useState("");
 
   // Initialize form with current user data
   const personalInfoForm = useForm<z.infer<typeof personalInfoSchema>>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
       fullName: userName,
-      email: "usuario@example.com", // Placeholder
+      email: "",
       phone: "",
       location: "",
-      instagramUrl: '',
-      tiktokUrl: '',
-      youtubeUrl: '',
-      twitterUrl: '',
     },
   });
+
+  // Fetch user data from Supabase when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setFetchError("");
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+          console.log("No authenticated session");
+          return;
+        }
+
+        const userId = session.user.id;
+        const userEmail = session.user.email || "";
+        setUserEmail(userEmail);
+        
+        // Set email value immediately from session
+        personalInfoForm.setValue("email", userEmail);
+
+        // Fetch profile data - don't query for location column since it doesn't exist
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('profile_data, full_name, phone')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile data:", error);
+          setFetchError(`Erro ao carregar dados: ${error.message}`);
+          return;
+        }
+        
+        if (profileData) {
+          // Set form values from database
+          personalInfoForm.setValue("fullName", profileData.full_name || userName);
+          personalInfoForm.setValue("phone", profileData.phone || "");
+          
+          // Try to get location from profile_data if it exists there
+          if (profileData.profile_data && typeof profileData.profile_data === 'object') {
+            const profileDataObj = profileData.profile_data as Record<string, any>;
+            
+            // Try multiple possible paths for location data
+            let locationValue = "";
+            if (profileDataObj.location) {
+              locationValue = profileDataObj.location;
+            } else if (profileDataObj.personalInfo?.location) {
+              locationValue = profileDataObj.personalInfo.location;
+            }
+            
+            personalInfoForm.setValue("location", locationValue);
+          }
+          
+          // Update user name in context if needed
+          if (profileData.full_name && profileData.full_name !== userName) {
+            setUserName(profileData.full_name);
+          }
+        }
+      } catch (error: any) {
+        console.error("Error fetching user data:", error);
+        setFetchError(`Erro ao carregar dados: ${error.message || "Erro desconhecido"}`);
+      }
+    };
+
+    fetchUserData();
+  }, [personalInfoForm, setUserName, userName]);
 
   const preferencesForm = useForm<z.infer<typeof preferenceSchema>>({
     resolver: zodResolver(preferenceSchema),
@@ -77,30 +136,31 @@ const ClientProfile = () => {
 
       const userId = session.user.id;
 
-      // Obter dados atuais
-      const { data: currentProfile } = await supabase
+      // Fetch current profile data to preserve profile_data structure
+      const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('profile_data')
         .eq('id', userId)
         .single();
-
+      
+      if (fetchError) throw fetchError;
+      
+      // Update profile_data with the new location value
       const updatedProfileData = {
         ...((currentProfile?.profile_data as Record<string, any>) || {}),
         personalInfo: {
-          fullName: values.fullName,
-          email: values.email,
-          phone: values.phone,
+          ...((currentProfile?.profile_data as Record<string, any>)?.personalInfo || {}),
           location: values.location,
-          instagramUrl: values.instagramUrl,
-          tiktokUrl: values.tiktokUrl,
-          youtubeUrl: values.youtubeUrl,
-          twitterUrl: values.twitterUrl,
-        }
+        },
+        location: values.location, // Store in both places for compatibility
       };
 
+      // Update profile with the fields we know exist
       const { error } = await supabase
         .from('profiles')
         .update({
+          full_name: values.fullName,
+          phone: values.phone,
           profile_data: updatedProfileData,
           updated_at: new Date().toISOString()
         })
@@ -169,7 +229,7 @@ const ClientProfile = () => {
     try {
       // First verify the current password
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: "usuario@example.com", // You would need the actual user email here
+        email: userEmail, // Use the actual user email
         password: currentPassword
       });
       
@@ -245,6 +305,11 @@ const ClientProfile = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {fetchError && (
+                    <div className="mb-4 p-3 rounded-md bg-red-500/20 border border-red-500/30 text-sm text-white">
+                      {fetchError}
+                    </div>
+                  )}
                   <form onSubmit={personalInfoForm.handleSubmit(handlePersonalInfoSubmit)} className="space-y-6">
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -270,10 +335,12 @@ const ClientProfile = () => {
                           <Input
                             id="email"
                             placeholder="Seu endereço de email"
-                            className="pl-10"
+                            className="pl-10 bg-galaxy-deepPurple/80 text-gray-300"
+                            disabled
                             {...personalInfoForm.register("email")}
                           />
                         </div>
+                        <p className="text-xs text-gray-400">O email é gerenciado pela sua conta e não pode ser alterado aqui.</p>
                         {personalInfoForm.formState.errors.email && (
                           <p className="text-sm text-destructive">{personalInfoForm.formState.errors.email.message}</p>
                         )}
@@ -302,61 +369,6 @@ const ClientProfile = () => {
                             className="pl-10"
                             {...personalInfoForm.register("location")}
                           />
-                        </div>
-                      </div>
-
-                      {/* Redes Sociais */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Instagram */}
-                        <div className="space-y-2">
-                          <Label htmlFor="instagramUrl">Instagram</Label>
-                          <div className="relative">
-                            <Input
-                              id="instagramUrl"
-                              placeholder="https://instagram.com/usuario"
-                              className="pl-3"
-                              {...personalInfoForm.register("instagramUrl")}
-                            />
-                          </div>
-                        </div>
-
-                        {/* TikTok */}
-                        <div className="space-y-2">
-                          <Label htmlFor="tiktokUrl">TikTok</Label>
-                          <div className="relative">
-                            <Input
-                              id="tiktokUrl"
-                              placeholder="https://www.tiktok.com/@usuario"
-                              className="pl-3"
-                              {...personalInfoForm.register("tiktokUrl")}
-                            />
-                          </div>
-                        </div>
-
-                        {/* YouTube */}
-                        <div className="space-y-2">
-                          <Label htmlFor="youtubeUrl">YouTube</Label>
-                          <div className="relative">
-                            <Input
-                              id="youtubeUrl"
-                              placeholder="https://www.youtube.com/@canal"
-                              className="pl-3"
-                              {...personalInfoForm.register("youtubeUrl")}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Twitter */}
-                        <div className="space-y-2">
-                          <Label htmlFor="twitterUrl">Twitter / X</Label>
-                          <div className="relative">
-                            <Input
-                              id="twitterUrl"
-                              placeholder="https://twitter.com/usuario"
-                              className="pl-3"
-                              {...personalInfoForm.register("twitterUrl")}
-                            />
-                          </div>
                         </div>
                       </div>
                     </div>
