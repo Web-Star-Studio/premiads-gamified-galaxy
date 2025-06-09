@@ -1,5 +1,5 @@
 
-import React, { useCallback, useRef, useMemo } from 'react';
+import React, { useCallback, useRef, useMemo, useState } from 'react';
 
 // Performance utilities for optimization
 export const useDebounce = <T extends (...args: any[]) => any>(
@@ -94,7 +94,7 @@ export const useVirtualScrolling = <T>(
   itemHeight: number,
   containerHeight: number
 ) => {
-  const [scrollTop, setScrollTop] = React.useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
   
   const visibleItems = useMemo(() => {
     const startIndex = Math.floor(scrollTop / itemHeight);
@@ -117,4 +117,38 @@ export const useVirtualScrolling = <T>(
       setScrollTop(e.currentTarget.scrollTop);
     }
   };
+};
+
+// Progressive loading hooks
+export const useProgressiveLoading = (delay: number = 100) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  return isVisible;
+};
+
+// Intersection Observer hook for lazy loading
+export const useIntersectionObserver = (
+  options: IntersectionObserverInit = {}
+) => {
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsIntersecting(entry.isIntersecting);
+    }, options);
+
+    if (targetRef.current) {
+      observer.observe(targetRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [options]);
+
+  return { targetRef, isIntersecting };
 };
