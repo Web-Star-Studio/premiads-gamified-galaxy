@@ -1,5 +1,5 @@
 
-import { Suspense, lazy, memo, useMemo, useCallback } from 'react';
+import React, { Suspense, lazy, memo, useMemo, useCallback } from 'react';
 
 export const lazyImport = <T extends object>(
   importFunc: () => Promise<T>,
@@ -28,10 +28,12 @@ export const optimizeComponent = <T extends object>(
 
 export const withSuspense = <T extends object>(
   Component: React.ComponentType<T>,
-  fallback: React.ComponentType = () => <div>Loading...</div>
+  fallback?: React.ComponentType
 ) => {
+  const FallbackComponent = fallback || (() => <div>Loading...</div>);
+  
   return (props: T) => (
-    <Suspense fallback={<fallback />}>
+    <Suspense fallback={<FallbackComponent />}>
       <Component {...props} />
     </Suspense>
   );
