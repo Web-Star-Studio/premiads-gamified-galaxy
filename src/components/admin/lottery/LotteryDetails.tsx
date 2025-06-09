@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Award, Play, Pause, Edit, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PrizeTable from './PrizeTable';
-import SpinningWheel from './SpinningWheel';
+import RandomNumberGenerator from './RandomNumberGenerator';
 import { Lottery } from './types';
 import { toastInfo } from "@/utils/toast";
 import { motion } from 'framer-motion';
@@ -14,11 +13,13 @@ import { useSounds } from '@/hooks/use-sounds';
 interface LotteryDetailsProps {
   selectedLottery: Lottery;
   onStatusChange: (id: string, newStatus: string) => void;
+  onDrawRaffle: (id: string) => Promise<void>;
 }
 
 const LotteryDetails: React.FC<LotteryDetailsProps> = ({ 
   selectedLottery,
-  onStatusChange
+  onStatusChange,
+  onDrawRaffle
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { playSound } = useSounds();
@@ -142,7 +143,7 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PrizeTable prizes={selectedLottery.prizes || []} isCompleted={selectedLottery.status === 'completed'} />
-        <SpinningWheel selectedLottery={selectedLottery} />
+        <RandomNumberGenerator selectedLottery={selectedLottery} onDrawRaffle={onDrawRaffle} />
       </div>
       
       {(!selectedLottery.prizes || selectedLottery.prizes.length === 0) && (

@@ -3,7 +3,7 @@ import { Lottery, LotteryFormValues, LotteryParticipation } from '@/types/lotter
 import { withPerformanceMonitoring } from '@/utils/performance-monitor';
 
 // Helper function to transform form data to Supabase structure
-const transformLotteryData = (formData: LotteryFormValues): Omit<Lottery, 'id'> => {
+const transformLotteryData = (formData: LotteryFormValues) => {
   // Calculate end date as 72 hours after start date if auto-scheduled
   const endDate = formData.isAutoScheduled 
     ? new Date(formData.startDate.getTime() + (72 * 60 * 60 * 1000)) 
@@ -47,17 +47,17 @@ export const raffleService = {
       // Handle image upload if provided
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const filePath = `raffle-images/${Date.now()}.${fileExt}`;
+        const filePath = `${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('lottery-images')
+          .from('raffle-images')
           .upload(filePath, imageFile);
           
         if (uploadError) throw uploadError;
         
         // Get public URL for the uploaded image
         const { data: publicUrlData } = supabase.storage
-          .from('lottery-images')
+          .from('raffle-images')
           .getPublicUrl(filePath);
           
         raffleData.image_url = publicUrlData.publicUrl;
@@ -93,17 +93,17 @@ export const raffleService = {
       // Handle image upload if provided
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const filePath = `raffle-images/${Date.now()}.${fileExt}`;
+        const filePath = `${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('lottery-images')
+          .from('raffle-images')
           .upload(filePath, imageFile);
           
         if (uploadError) throw uploadError;
         
         // Get public URL for the uploaded image
         const { data: publicUrlData } = supabase.storage
-          .from('lottery-images')
+          .from('raffle-images')
           .getPublicUrl(filePath);
           
         updates.image_url = publicUrlData.publicUrl;

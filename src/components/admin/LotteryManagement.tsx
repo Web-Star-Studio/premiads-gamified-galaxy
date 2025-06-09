@@ -13,6 +13,7 @@ import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
 import raffleService from "@/services/raffles";
+import { supabase } from '@/integrations/supabase/client'
 
 const LotteryManagement = () => {
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
@@ -106,7 +107,7 @@ const LotteryManagement = () => {
           description: "O sorteio foi excluído com sucesso.",
         });
         
-        playSound("delete");
+        playSound("success");
       }
     } catch (error) {
       console.error("Error deleting lottery:", error);
@@ -120,42 +121,31 @@ const LotteryManagement = () => {
 
   const handleDrawRaffle = async (lotteryId: string) => {
     try {
-      // Call the edge function to draw the raffle
-      const response = await fetch('/api/draw-raffle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ raffleId: lotteryId }),
+      // Invoke Supabase Edge Function to draw the raffle
+      const { data: result, error } = await supabase.functions.invoke('draw-raffle', {
+        body: { raffleId: lotteryId },
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        // Refresh the lotteries list
-        const updatedLotteries = await raffleService.getRaffles();
-        setLotteries(updatedLotteries);
-        
-        // Update the selected lottery
-        const updatedLottery = await raffleService.getRaffleById(lotteryId);
-        if (updatedLottery) {
-          setSelectedLottery(updatedLottery);
-        }
-        
-        toast({
-          title: "Sorteio realizado!",
-          description: result.message || "O sorteio foi realizado com sucesso.",
-        });
-        
-        playSound("reward");
-      } else {
-        throw new Error(result.error || "Erro ao realizar o sorteio");
-      }
+      if (error) throw error;
+      
+      // Refresh the lotteries list
+      const updatedLotteries = await raffleService.getRaffles();
+      setLotteries(updatedLotteries);
+      
+      // Update the selected lottery
+      const updatedLottery = await raffleService.getRaffleById(lotteryId);
+      if (updatedLottery) setSelectedLottery(updatedLottery);
+      
+      // Show success toast
+      toast({
+        title: "Sorteio realizado!",
+        description: (result as any).message || "O sorteio foi realizado com sucesso.",
+      });
+      playSound("reward");
     } catch (error) {
       console.error("Error drawing raffle:", error);
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível realizar o sorteio.",
+        description: (error as any).message || "Não foi possível realizar o sorteio.",
         variant: "destructive"
       });
     }
