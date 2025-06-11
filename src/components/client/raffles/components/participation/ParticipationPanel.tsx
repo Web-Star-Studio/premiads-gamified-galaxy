@@ -28,8 +28,8 @@ export const ParticipationPanel: React.FC<ParticipationPanelProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <div className="mb-4">
-            <p className="text-gray-400 mb-2">Você possui <span className="font-bold text-neon-cyan">{availableTickets}</span> tickets disponíveis</p>
-            <p className="text-sm text-gray-500">Cada número custa {pointsPerNumber} pontos</p>
+            <p className="text-gray-400 mb-2">Você possui <span className="font-bold text-neon-cyan">{availableTickets}</span> rifas disponíveis</p>
+            <p className="text-sm text-gray-500">Cada número custa 1 rifa</p>
           </div>
           
           <div className="flex items-center mb-4">
@@ -69,7 +69,7 @@ export const ParticipationPanel: React.FC<ParticipationPanelProps> = ({
               </li>
               <li className="flex justify-between">
                 <span className="text-gray-400">Custo total:</span>
-                <span className="font-bold">{ticketAmount * pointsPerNumber} pontos</span>
+                <span className="font-bold">{ticketAmount} rifas</span>
               </li>
             </ul>
           </div>

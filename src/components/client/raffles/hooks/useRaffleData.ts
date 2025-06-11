@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUser } from '@/context/UserContext';
 import raffleService from '@/services/raffles';
 import { Lottery, LotteryParticipation } from '@/types/lottery';
@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSounds } from '@/hooks/use-sounds';
 import { differenceInSeconds, parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface CountdownInfo {
   days: number;
@@ -17,7 +18,7 @@ export interface CountdownInfo {
   formattedDate: string;
 }
 
-// Mock user tokens for now - in a real implementation, this would come from a UserTokens context
+// Interface para os tokens do usuário
 interface UserTokens {
   rifas: number;
   points: number;
@@ -25,86 +26,29 @@ interface UserTokens {
 
 export function useRaffleData(raffleId: number | string) {
   const [raffle, setRaffle] = useState<Lottery | null>(null);
-  const [participation, setParticipation] = useState<LotteryParticipation | null>(null);
-  const [countdownInfo, setCountdownInfo] = useState<CountdownInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [participationLoading, setParticipationLoading] = useState(false);
+  const [participation, setParticipation] = useState<LotteryParticipation | null>(null);
   const [userNumbers, setUserNumbers] = useState<number[]>([]);
+  const [countdownInfo, setCountdownInfo] = useState<CountdownInfo | null>(null);
   const [availableTickets, setAvailableTickets] = useState(0);
+  const [participationLoading, setParticipationLoading] = useState(false);
+  
   // Using mock data until we have proper user token management
   const [userTokens, setUserTokens] = useState<UserTokens>({ rifas: 10, points: 100 });
   const { userName } = useUser(); // Just using userName from context
-  const userId = "mock-user-id"; // Mock user ID
+  const { user } = useAuth(); // Get authenticated user from auth context
+  const userId = user?.id; // Use real user ID from authentication
   const { toast } = useToast();
   const { playSound } = useSounds();
+  
+  // Use ref to prevent unnecessary renders
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const endDateRef = useRef<string | null>(null);
 
-  // Fetch raffle data
-  useEffect(() => {
-    async function fetchRaffleData() {
-      setIsLoading(true);
-      try {
-        const data = await raffleService.getRaffleById(String(raffleId));
-        if (data) {
-          setRaffle(data);
-          
-          // Calculate countdown
-          if (data.end_date) {
-            updateCountdown(data.end_date);
-            const intervalId = setInterval(() => {
-              updateCountdown(data.end_date);
-            }, 1000);
-            
-            return () => clearInterval(intervalId);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching raffle:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os dados do sorteio.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  // Memoize updateCountdown to prevent recreating on each render
+  const updateCountdown = useCallback((endDateStr: string) => {
+    if (!endDateStr) return;
     
-    if (raffleId) {
-      fetchRaffleData();
-    }
-  }, [raffleId, toast]);
-
-  // Fetch user participation
-  useEffect(() => {
-    async function fetchUserParticipation() {
-      if (!userId || !raffleId) return;
-      
-      try {
-        // Fetch user participations
-        const participations = await raffleService.getUserParticipations(userId);
-        const userParticipation = participations.find(p => p.participation.lottery_id === String(raffleId));
-        
-        if (userParticipation) {
-          setParticipation(userParticipation.participation);
-          setUserNumbers(userParticipation.participation.numbers);
-        } else {
-          setParticipation(null);
-          setUserNumbers([]);
-        }
-        
-        // For now, just set a fixed number of available tickets
-        setAvailableTickets(userTokens.rifas);
-      } catch (error) {
-        console.error("Error fetching user participation:", error);
-      }
-    }
-    
-    if (userId && raffleId) {
-      fetchUserParticipation();
-    }
-  }, [userId, raffleId, userTokens.rifas]);
-
-  function updateCountdown(endDateStr: string) {
     const endDate = parseISO(endDateStr);
     const now = new Date();
     const diff = differenceInSeconds(endDate, now);
@@ -123,13 +67,103 @@ export function useRaffleData(raffleId: number | string) {
       isExpired: diff <= 0,
       formattedDate: format(endDate, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
     });
-  }
+  }, []);
+
+  // Fetch raffle data
+  useEffect(() => {
+    async function fetchRaffleData() {
+      setIsLoading(true);
+      try {
+        const data = await raffleService.getRaffleById(String(raffleId));
+        if (data) {
+          setRaffle(data);
+          
+          // Calculate countdown
+          if (data.end_date) {
+            // Store end date in ref to use in interval
+            endDateRef.current = data.end_date;
+            updateCountdown(data.end_date);
+            
+            // Clear any existing interval
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+            }
+            
+            // Set up new interval
+            intervalRef.current = setInterval(() => {
+              if (endDateRef.current) {
+                updateCountdown(endDateRef.current);
+              }
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching raffle:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do sorteio.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    if (raffleId) {
+      fetchRaffleData();
+    }
+    
+    // Cleanup interval on unmount or raffleId change
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [raffleId, toast, updateCountdown]);
+
+  // Fetch user participation and rifas
+  useEffect(() => {
+    async function fetchUserParticipation() {
+      if (!userId || !raffleId) return;
+      
+      try {
+        // Fetch user participations
+        const participations = await raffleService.getUserParticipations(userId);
+        const userParticipation = participations.find(p => p.participation.lottery_id === String(raffleId));
+        
+        if (userParticipation) {
+          setParticipation(userParticipation.participation);
+          setUserNumbers(userParticipation.participation.numbers);
+        } else {
+          setParticipation(null);
+          setUserNumbers([]);
+        }
+        
+        // Fetch user's rifas from profile
+        const userProfile = await raffleService.getUserProfile(userId);
+        if (userProfile) {
+          setUserTokens({
+            rifas: userProfile.rifas || 0,
+            points: userProfile.points || 0
+          });
+          setAvailableTickets(userProfile.rifas || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching user participation:", error);
+      }
+    }
+    
+    if (userId && raffleId) {
+      fetchUserParticipation();
+    }
+  }, [userId, raffleId]);
 
   async function participateInRaffle(numberOfTickets: number) {
     if (!userId || !raffleId || !raffle) {
       toast({
         title: "Erro",
-        description: "Não foi possível participar do sorteio.",
+        description: "Não foi possível participar do sorteio. Verifique se você está logado.",
         variant: "destructive"
       });
       return;
@@ -138,7 +172,7 @@ export function useRaffleData(raffleId: number | string) {
     if (numberOfTickets <= 0) {
       toast({
         title: "Erro",
-        description: "Você precisa escolher pelo menos 1 ticket.",
+        description: "Você precisa escolher pelo menos 1 rifa.",
         variant: "destructive"
       });
       return;
@@ -146,8 +180,19 @@ export function useRaffleData(raffleId: number | string) {
     
     if (availableTickets < numberOfTickets) {
       toast({
-        title: "Tickets insuficientes",
-        description: "Você não tem tickets suficientes para participar.",
+        title: "Rifas insuficientes",
+        description: "Você não tem rifas suficientes para participar.",
+        variant: "destructive"
+      });
+      playSound("error");
+      return;
+    }
+    
+    // Verificar se o número total de participações não ultrapassa o limite do sorteio
+    if (raffle.numbers_total && userNumbers.length + numberOfTickets > raffle.numbers_total) {
+      toast({
+        title: "Limite excedido",
+        description: `Este sorteio permite no máximo ${raffle.numbers_total} números por participante.`,
         variant: "destructive"
       });
       playSound("error");
@@ -169,10 +214,10 @@ export function useRaffleData(raffleId: number | string) {
       setUserNumbers(result.numbers);
       
       // Update user tokens
-      setUserTokens({
-        ...userTokens,
-        rifas: userTokens.rifas - numberOfTickets
-      });
+      setUserTokens(prev => ({
+        ...prev,
+        rifas: prev.rifas - numberOfTickets
+      }));
       
       setAvailableTickets(prev => prev - numberOfTickets);
       
@@ -186,7 +231,7 @@ export function useRaffleData(raffleId: number | string) {
       console.error("Error participating in raffle:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível participar do sorteio.",
+        description: error instanceof Error ? error.message : "Não foi possível participar do sorteio.",
         variant: "destructive"
       });
       playSound("error");

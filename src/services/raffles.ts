@@ -350,7 +350,7 @@ export const raffleService = {
         throw new Error('Este sorteio não está ativo');
       }
       
-      // Check if user has enough tickets
+      // Check if user has enough rifas
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('rifas')
@@ -360,14 +360,14 @@ export const raffleService = {
       if (profileError) throw profileError;
       
       if (!profile || profile.rifas < numberOfTickets) {
-        throw new Error('Você não tem tickets suficientes para participar');
+        throw new Error('Você não tem rifas suficientes para participar');
       }
       
       // Generate unique numbers for the user
-      const min = raffle.number_range?.min || 1;
-      const max = raffle.number_range?.max || raffle.numbers_total;
+      const min = 1;
+      const max = raffle.numbers_total;
       
-      // Check existing numbers already assigned to other participants
+      // Check existing numbers already assigned to any participants in this raffle
       const { data: existingParticipations, error: participationsError } = await supabase
         .from('lottery_participants')
         .select('numbers')
@@ -378,18 +378,26 @@ export const raffleService = {
       // Flatten all existing numbers
       const assignedNumbers = existingParticipations?.flatMap(p => p.numbers) || [];
       
-      // Generate unique numbers for this user
-      const userNumbers: number[] = [];
-      while (userNumbers.length < numberOfTickets) {
-        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-        
-        // Only add if not already assigned
-        if (!assignedNumbers.includes(randomNumber) && !userNumbers.includes(randomNumber)) {
-          userNumbers.push(randomNumber);
+      // Get all available numbers (those not yet assigned)
+      let availableNumbers: number[] = [];
+      for (let i = min; i <= max; i++) {
+        if (!assignedNumbers.includes(i)) {
+          availableNumbers.push(i);
         }
       }
       
-      // Check if user already has a participation
+      // Check if there are enough available numbers
+      if (availableNumbers.length < numberOfTickets) {
+        throw new Error(`Apenas ${availableNumbers.length} números disponíveis neste sorteio`);
+      }
+      
+      // Shuffle available numbers to get random ones
+      availableNumbers = availableNumbers.sort(() => Math.random() - 0.5);
+      
+      // Select required number of tickets
+      const userNumbers = availableNumbers.slice(0, numberOfTickets);
+      
+      // Check if user already has a participation in this raffle
       const { data: existingParticipation, error: existingError } = await supabase
         .from('lottery_participants')
         .select('*')
@@ -399,69 +407,95 @@ export const raffleService = {
         
       let participation;
       
-      if (!existingError && existingParticipation) {
-        // Update existing participation
-        const updatedNumbers = [...existingParticipation.numbers, ...userNumbers];
-        
-        const { data, error } = await supabase
-          .from('lottery_participants')
-          .update({
-            numbers: updatedNumbers,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingParticipation.id)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        participation = data;
-      } else {
-        // Create new participation
-        const { data, error } = await supabase
-          .from('lottery_participants')
-          .insert({
-            user_id: userId,
-            lottery_id: raffleId,
-            numbers: userNumbers,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        participation = data;
+      // Begin transaction using RPC
+      const { data: transaction, error: transactionError } = await supabase.rpc('participate_in_raffle', {
+        p_user_id: userId,
+        p_lottery_id: raffleId,
+        p_numbers: userNumbers,
+        p_tickets_used: numberOfTickets
+      });
+      
+      if (transactionError) {
+        throw new Error(`Erro ao participar do sorteio: ${transactionError.message}`);
       }
       
-      // Update raffle progress
-      const totalParticipants = (await supabase
+      // If no RPC is available, fall back to separate operations (less safe)
+      if (!transaction) {
+        // Start a manual transaction
+        if (!existingError && existingParticipation) {
+          // Update existing participation
+          const updatedNumbers = [...existingParticipation.numbers, ...userNumbers];
+          
+          const { data, error } = await supabase
+            .from('lottery_participants')
+            .update({
+              numbers: updatedNumbers,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingParticipation.id)
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          participation = data;
+        } else {
+          // Create new participation
+          const { data, error } = await supabase
+            .from('lottery_participants')
+            .insert({
+              user_id: userId,
+              lottery_id: raffleId,
+              numbers: userNumbers,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          participation = data;
+        }
+        
+        // Update raffle progress
+        const totalParticipants = (await supabase
+          .from('lottery_participants')
+          .select('numbers')
+          .eq('lottery_id', raffleId)).data || [];
+        
+        const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
+        const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
+        
+        await supabase
+          .from('lotteries')
+          .update({
+            progress,
+            numbers_sold: totalNumbersSold,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', raffleId);
+          
+        // Deduct rifas from user
+        await supabase
+          .from('profiles')
+          .update({
+            rifas: profile.rifas - numberOfTickets
+          })
+          .eq('id', userId);
+      }
+      
+      // Get updated participation data
+      const { data: updatedParticipation, error: updatedError } = await supabase
         .from('lottery_participants')
-        .select('numbers')
-        .eq('lottery_id', raffleId)).data || [];
-      
-      const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
-      const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
-      
-      await supabase
-        .from('lotteries')
-        .update({
-          progress,
-          numbers_sold: totalNumbersSold,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', raffleId);
+        .select('*')
+        .eq('lottery_id', raffleId)
+        .eq('user_id', userId)
+        .single();
         
-      // Deduct tickets from user
-      await supabase
-        .from('profiles')
-        .update({
-          rifas: profile.rifas - numberOfTickets
-        })
-        .eq('id', userId);
-        
-      return participation;
+      if (updatedError) throw updatedError;
+      
+      return updatedParticipation;
     } catch (error) {
       console.error('Error participating in raffle:', error);
       throw error;
@@ -496,7 +530,28 @@ export const raffleService = {
       console.error('Error fetching user participations:', error);
       return [];
     }
-  }, 'getUserParticipations')
+  }, 'getUserParticipations'),
+  
+  // Buscar perfil do usuário com suas rifas
+  getUserProfile: withPerformanceMonitoring(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('rifas, cashback_balance')
+        .eq('id', userId)
+        .single();
+        
+      if (error) throw error;
+      
+      return {
+        rifas: data?.rifas || 0,
+        points: data?.cashback_balance || 0
+      };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return { rifas: 0, points: 0 };
+    }
+  }, 'getUserProfile')
 };
 
 export default raffleService; 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useRaffleData } from "./hooks/useRaffleData";
 import { LoadingState, ErrorState } from "./components/detail-states";
 import RaffleDetailsContent from "./components/detail-container/RaffleDetailsContent";
@@ -9,6 +9,9 @@ interface RaffleDetailsProps {
 }
 
 const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
+  // Ref to track if we've already logged this raffle
+  const hasLoggedRef = useRef(false);
+  
   // Fetch raffle data with our enhanced hook
   const { 
     raffle, 
@@ -21,6 +24,14 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
   } = useRaffleData(raffleId);
   const { toast } = useToast();
   
+  // Log only once when raffle loads
+  useEffect(() => {
+    if (raffle && !hasLoggedRef.current) {
+      console.log("Rendering raffle details for raffle:", raffle.id, raffle.name);
+      hasLoggedRef.current = true;
+    }
+  }, [raffle]);
+  
   // Loading state
   if (isLoading) {
     return <LoadingState />;
@@ -31,8 +42,6 @@ const RaffleDetails = ({ raffleId }: RaffleDetailsProps) => {
     return <ErrorState />;
   }
   
-  console.log("Rendering raffle details for raffle:", raffle.id, raffle.name);
-
   // Render the raffle details with our enhanced components
   return (
     <RaffleDetailsContent 
