@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Timer, Users, Award } from "lucide-react";
@@ -61,7 +60,7 @@ const RaffleListItem = ({
               {raffle.isAutoScheduled && raffle.minPointsReachedAt ? (
                 <span>Sorteio em: {formatTimeRemaining(raffle.drawDate)}</span>
               ) : (
-                <span>Meta: {raffle.minPoints.toLocaleString('pt-BR')} tickets</span>
+                <span>Meta: {raffle.minPoints !== undefined ? raffle.minPoints.toLocaleString('pt-BR') : '0'} tickets</span>
               )}
             </div>
             <div className="flex items-center">
@@ -85,15 +84,19 @@ const RaffleListItem = ({
             </div>
             
             <div className="flex flex-wrap gap-1">
-              {raffle.prizes.map((prize: any, index: number) => (
-                <span 
-                  key={index}
-                  className={`text-xs ${getRarityColor(prize.rarity)}`}
-                >
-                  {prize.name}
-                  {index < raffle.prizes.length - 1 && " • "}
-                </span>
-              ))}
+              {raffle.prizes && Array.isArray(raffle.prizes) ? (
+                raffle.prizes.map((prize: any, index: number) => (
+                  <span 
+                    key={index}
+                    className={`text-xs ${getRarityColor(prize.rarity)}`}
+                  >
+                    {prize.name}
+                    {index < raffle.prizes.length - 1 && " • "}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-neon-cyan">{raffle.prize_type || raffle.prizeType || "Prêmio Surpresa"}</span>
+              )}
             </div>
           </div>
         </div>
