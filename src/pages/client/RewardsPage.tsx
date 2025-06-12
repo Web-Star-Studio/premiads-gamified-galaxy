@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Gift, Clock3 } from "lucide-react";
+import { Gift, Clock3, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -12,43 +12,80 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Player } from "@lottiefiles/react-lottie-player";
 import LootBoxList from "@/components/client/rewards/LootBoxList";
+import RaffleWinnersList from "@/components/client/rewards/RaffleWinnersList";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { raffleService } from "@/services/raffles";
 
 const RewardsPage = () => {
   const [loading, setLoading] = useState(true);
   const [lootBoxes, setLootBoxes] = useState<any[]>([]);
+  const [raffleWinners, setRaffleWinners] = useState<any[]>([]);
   const { toast } = useToast();
   const { playSound } = useSounds();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const fetchRewards = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Fetch loot boxes with mission details
-      const { data: lootBoxesData, error: lootBoxesError } = await supabase
-        .from("loot_box_rewards")
+      // Fetch mission rewards for the user
+      const { data: missionRewardsData, error: lootBoxesError } = await supabase
+        .from('mission_rewards')
         .select(`
           id,
-          reward_type,
-          reward_amount,
-          awarded_at,
+          rifas_earned,
+          cashback_earned,
+          rewarded_at,
           mission_id,
-          missions:missions(title)
+          missions (title),
+          mission_submissions!inner (user_id)
         `)
-        .eq("user_id", user.id)
-        .order("awarded_at", { ascending: false });
+        .eq('mission_submissions.user_id', user.id)
+        .order('rewarded_at', { ascending: false });
 
       if (lootBoxesError) {
-        console.error("Error fetching loot boxes:", lootBoxesError);
+        console.error("Error fetching mission rewards:", lootBoxesError);
         throw lootBoxesError;
       }
-      setLootBoxes(lootBoxesData || []);
-      if (lootBoxesData && lootBoxesData.length > 0) playSound("chime");
+
+      const transformedLootBoxes = (missionRewardsData || []).flatMap(reward => {
+        const rewards = [];
+        if (reward.rifas_earned > 0) {
+          rewards.push({
+            id: `${reward.id}-rifas`,
+            reward_type: 'Rifas',
+            reward_amount: reward.rifas_earned,
+            awarded_at: reward.rewarded_at,
+            missions: reward.missions
+          });
+        }
+        if (reward.cashback_earned > 0) {
+          rewards.push({
+            id: `${reward.id}-cashback`,
+            reward_type: 'Cashback',
+            reward_amount: reward.cashback_earned,
+            awarded_at: reward.rewarded_at,
+            missions: reward.missions
+          });
+        }
+        return rewards;
+      });
+      
+      setLootBoxes(transformedLootBoxes);
+      
+      // Fetch raffle prizes won by the user
+      const raffleWinnersData = await raffleService.getUserWonRaffles(user.id);
+      setRaffleWinners(raffleWinnersData);
+      
+      // Play sound if user has rewards
+      if ((transformedLootBoxes.length > 0) || raffleWinnersData.length > 0) {
+        playSound("chime");
+      }
     } catch (error: any) {
       console.error("Error fetching rewards:", error);
       toast({
@@ -70,7 +107,7 @@ const RewardsPage = () => {
         { 
           event: '*', 
           schema: 'public', 
-          table: 'loot_box_rewards',
+          table: 'mission_rewards',
           filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
         }, 
         (payload) => {
@@ -79,12 +116,31 @@ const RewardsPage = () => {
         }
       )
       .subscribe();
+    
+    // Realtime subscription for lottery winners
+    const lotteryWinnersSubscription = supabase
+      .channel('lottery_winners_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'lottery_winners',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
+        }, 
+        (payload) => {
+          fetchRewards();
+          playSound('reward');
+        }
+      )
+      .subscribe();
+      
     const refreshInterval = setInterval(fetchRewards, 30000);
     return () => {
       clearInterval(refreshInterval);
       lootBoxesSubscription.unsubscribe();
+      lotteryWinnersSubscription.unsubscribe();
     };
-  }, [location.key, toast, playSound]);
+  }, [location.key, toast, playSound, user?.id]);
 
   const handleRefresh = () => {
     fetchRewards();
@@ -117,13 +173,22 @@ const RewardsPage = () => {
                 </Button>
               </div>
             </div>
-            <Tabs defaultValue="lootboxes" className="mt-6">
+            <Tabs defaultValue="raffle-prizes" className="mt-6">
               <TabsList className="bg-galaxy-deepPurple/40 border border-galaxy-purple/30">
+                <TabsTrigger value="raffle-prizes" className="data-[state=active]:bg-neon-cyan/20 data-[state=active]:text-white">
+                  <Trophy className="mr-2 h-4 w-4" />
+                  Sorteios Ganhos
+                </TabsTrigger>
                 <TabsTrigger value="lootboxes" className="data-[state=active]:bg-neon-cyan/20 data-[state=active]:text-white">
                   <Gift className="mr-2 h-4 w-4" />
-                  Prêmios
+                  Prêmios de Missões
                 </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="raffle-prizes" className="mt-6">
+                <RaffleWinnersList winners={raffleWinners} loading={loading} />
+              </TabsContent>
+              
               <TabsContent value="lootboxes" className="mt-6">
                 {loading ? (
                   <div className="flex justify-center items-center h-40">

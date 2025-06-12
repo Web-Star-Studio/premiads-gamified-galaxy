@@ -556,7 +556,28 @@ export const raffleService = {
       console.error('Error fetching user profile:', error);
       return { rifas: 0, points: 0 };
     }
-  }, 'getUserProfile')
+  }, 'getUserProfile'),
+  
+  getUserWonRaffles: withPerformanceMonitoring(async (userId: string) => {
+    try {
+      // Buscar os sorteios ganhos pelo usuário com detalhes do sorteio
+      const { data, error } = await supabase
+        .from('lottery_winners')
+        .select(`
+          *,
+          raffle:lotteries(*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching user won raffles:', error);
+      return [];
+    }
+  }, 'getUserWonRaffles')
 };
 
 export default raffleService; 
