@@ -403,24 +403,28 @@ export const raffleService = {
         .select('*')
         .eq('lottery_id', raffleId)
         .eq('user_id', userId)
-        .single();
-        
+        .maybeSingle();
+       
       let participation;
       
       // Begin transaction using RPC
-      const { data: transaction, error: transactionError } = await supabase.rpc('participate_in_raffle', {
-        p_user_id: userId,
-        p_lottery_id: raffleId,
-        p_numbers: userNumbers,
-        p_tickets_used: numberOfTickets
-      });
-      
-      if (transactionError) {
-        throw new Error(`Erro ao participar do sorteio: ${transactionError.message}`);
+      let rpcFailed = false;
+      try {
+        const { data: transaction, error: transactionError } = await supabase.rpc('participate_in_raffle', {
+          p_user_id: userId,
+          p_lottery_id: raffleId,
+          p_numbers: userNumbers,
+          p_tickets_used: numberOfTickets
+        });
+        if (transactionError) rpcFailed = true;
+        if (transaction) participation = transaction as any;
+      } catch (rpcError) {
+        rpcFailed = true;
+        console.warn('RPC participate_in_raffle falhou, caindo para lógica manual:', rpcError);
       }
       
-      // If no RPC is available, fall back to separate operations (less safe)
-      if (!transaction) {
+      // Caso RPC falhe, use fallback manual
+      if (rpcFailed || !participation) {
         // Start a manual transaction
         if (!existingError && existingParticipation) {
           // Update existing participation
@@ -491,9 +495,10 @@ export const raffleService = {
         .select('*')
         .eq('lottery_id', raffleId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
         
       if (updatedError) throw updatedError;
+      if (!updatedParticipation) throw new Error('Participação não encontrada após atualização.');
       
       return updatedParticipation;
     } catch (error) {

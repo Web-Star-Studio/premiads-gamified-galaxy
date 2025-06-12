@@ -121,10 +121,42 @@ const LotteryManagement = () => {
 
   const handleDrawRaffle = async (lotteryId: string) => {
     try {
+      // First check if there are participants for this lottery
+      const { data: participants, error: participantsError } = await supabase
+        .from('lottery_participants')
+        .select('user_id, numbers')
+        .eq('lottery_id', lotteryId);
+      
+      if (participantsError) {
+        throw new Error(`Erro ao verificar participantes: ${participantsError.message}`);
+      }
+      
+      // If no participants, show error message and exit
+      if (!participants || participants.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Não há participantes com números válidos para este sorteio.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check if there are actual numbers assigned to participants
+      const hasValidNumbers = participants.some(p => p.numbers && p.numbers.length > 0);
+      if (!hasValidNumbers) {
+        toast({
+          title: "Erro",
+          description: "Nenhum participante possui números válidos para sorteio.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Invoke Supabase Edge Function to draw the raffle
       const { data: result, error } = await supabase.functions.invoke('draw-raffle', {
-        body: { raffleId: lotteryId },
+        body: { raffleId: lotteryId }, // Ensure correct parameter name as expected by the edge function
       });
+      
       if (error) throw error;
       
       // Refresh the lotteries list
@@ -138,14 +170,14 @@ const LotteryManagement = () => {
       // Show success toast
       toast({
         title: "Sorteio realizado!",
-        description: (result as any).message || "O sorteio foi realizado com sucesso.",
+        description: (result as any)?.message || "O sorteio foi realizado com sucesso.",
       });
       playSound("reward");
     } catch (error) {
       console.error("Error drawing raffle:", error);
       toast({
         title: "Erro",
-        description: (error as any).message || "Não foi possível realizar o sorteio.",
+        description: error instanceof Error ? error.message : "Não foi possível realizar o sorteio.",
         variant: "destructive"
       });
     }
