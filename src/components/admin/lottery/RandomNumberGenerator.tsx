@@ -78,15 +78,17 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
       // Aguarda um momento para mostrar o resultado
       setTimeout(() => {
         setIsGenerating(false);
-        // Se tiver sido definido o número vencedor, mostra-o
-        if (selectedLottery.winning_number) {
-          setWinningNumber(selectedLottery.winning_number);
-        }
+        // O `selectedLottery` será atualizado pelo componente pai, 
+        // mas podemos forçar a exibição do número retornado se a lógica fosse ajustada para isso.
+        // Por enquanto, confiamos na re-renderização.
+        setWinningNumber(selectedLottery.winning_number);
       }, 1000);
     } catch (error) {
       console.error("Erro ao finalizar o sorteio:", error);
+      // Qualquer erro agora interrompe o processo
       setIsGenerating(false);
-      toastError("Erro", "Ocorreu um erro ao finalizar o sorteio.");
+      setShowDialog(false);
+      // O toast de erro já foi exibido pelo componente `LotteryManagement`
     }
   };
   

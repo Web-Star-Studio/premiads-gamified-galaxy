@@ -157,7 +157,23 @@ const LotteryManagement = () => {
         body: { raffleId: lotteryId }, // Ensure correct parameter name as expected by the edge function
       });
       
-      if (error) throw error;
+      if (error) {
+        // A função agora só deve falhar em caso de erros reais, não por falta de ganhador.
+        // O caso de "nenhum número válido" ainda pode retornar 400.
+        let errorMessage = "Não foi possível realizar o sorteio.";
+        if (error.message && error.message.includes("Nenhum participante com números válidos")) {
+          errorMessage = "Sorteio não pode ser realizado: nenhum participante possui números.";
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        toast({
+          title: "Erro no Sorteio",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        throw error; // Propaga o erro para o `RandomNumberGenerator`
+      }
       
       // Refresh the lotteries list
       const updatedLotteries = await raffleService.getRaffles();
@@ -175,11 +191,9 @@ const LotteryManagement = () => {
       playSound("reward");
     } catch (error) {
       console.error("Error drawing raffle:", error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível realizar o sorteio.",
-        variant: "destructive"
-      });
+      // O toast já foi tratado acima, mas o catch previne que o erro quebre a aplicação.
+      // E relançamos o erro para que o componente filho possa parar o estado de "loading".
+      throw error;
     }
   };
 

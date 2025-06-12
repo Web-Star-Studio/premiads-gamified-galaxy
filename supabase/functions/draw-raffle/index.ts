@@ -126,21 +126,44 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const min = raffle.number_range?.min || 1;
-    const max = raffle.number_range?.max || raffle.numbers_total;
-    const winningNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-
-    let winnerId: string | null = null;
+    // Create a flat list of all numbers from all participants, keeping track of the owner
+    const allNumbers: { number: number, userId: string }[] = [];
     for (const participant of participants) {
-      if (participant.numbers.includes(winningNumber)) {
-        winnerId = participant.user_id;
-        break;
+      if (participant.numbers && Array.isArray(participant.numbers)) {
+        for (const num of participant.numbers) {
+          const parsedNum = typeof num === 'string' ? parseInt(num, 10) : num;
+          if (!isNaN(parsedNum)) {
+            allNumbers.push({ number: parsedNum, userId: participant.user_id });
+          }
+        }
       }
     }
+    
+    // If no participants have any valid numbers, we can't draw a winner.
+    if (allNumbers.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Nenhum participante com números válidos para o sorteio.",
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' } }
+      );
+    }
 
+    // Select a random winning entry from the aggregated list
+    const randomIndex = Math.floor(Math.random() * allNumbers.length);
+    const winningEntry = allNumbers[randomIndex];
+    const winningNumber = winningEntry.number;
+    const winnerId = winningEntry.userId;
+
+    // Update raffle with winner info
     const { error: updateError } = await supabaseClient
       .from("lotteries")
-      .update({ status: "completed", winning_number: winningNumber, winner: winnerId ? { id: winnerId } : null, updated_at: new Date().toISOString() })
+      .update({ 
+        status: "completed", 
+        winning_number: winningNumber, 
+        winner: { id: winnerId }, 
+        updated_at: new Date().toISOString() 
+      })
       .eq("id", raffleId);
 
     if (updateError) {
@@ -150,20 +173,31 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (winnerId) {
-      const { error: winnerError } = await supabaseClient
-        .from("lottery_winners")
-        .insert({ lottery_id: raffleId, user_id: winnerId, winning_number: winningNumber, prize_name: raffle.name, prize_value: raffle.prize_value });
-      if (winnerError) {
-        return new Response(
-          JSON.stringify({ error: "Error creating winner record", details: winnerError }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    // Create winner record
+    const { error: winnerError } = await supabaseClient
+      .from("lottery_winners")
+      .insert({ 
+        lottery_id: raffleId, 
+        user_id: winnerId, 
+        winning_number: winningNumber, 
+        prize_name: raffle.name, 
+        prize_value: raffle.prize_value 
+      });
+      
+    if (winnerError) {
+      return new Response(
+        JSON.stringify({ error: "Error creating winner record", details: winnerError }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
-      JSON.stringify({ success: true, winning_number: winningNumber, winner_id: winnerId, message: winnerId ? "Raffle successfully drawn with a winner!" : "Raffle successfully drawn, but no winner was found for the winning number." }),
+      JSON.stringify({ 
+        success: true, 
+        winning_number: winningNumber, 
+        winner_id: winnerId, 
+        message: "Sorteio realizado com sucesso! Ganhador encontrado." 
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' } }
     );
   } catch (error) {
