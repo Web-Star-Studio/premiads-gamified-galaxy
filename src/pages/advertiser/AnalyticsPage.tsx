@@ -7,7 +7,10 @@ import { useMediaQuery } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSounds } from "@/hooks/use-sounds";
-import EngagementCharts from "@/components/advertiser/EngagementCharts";
+import DynamicEngagementCharts from "@/components/advertiser/DynamicEngagementCharts";
+import DynamicCampaignChart from "@/components/advertiser/DynamicCampaignChart";
+import DynamicAudienceChart from "@/components/advertiser/DynamicAudienceChart";
+import DynamicROIChart from "@/components/advertiser/DynamicROIChart";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Download, Filter, RefreshCw } from "lucide-react";
@@ -109,7 +112,7 @@ const AnalyticsPage = () => {
               
               <TabsContent value="overview">
                 <div className="space-y-6 mb-8">
-                  <EngagementCharts showExtended={true} />
+                  <DynamicEngagementCharts showExtended={true} dateRange={dateRange} />
                 </div>
               </TabsContent>
               
@@ -119,17 +122,7 @@ const AnalyticsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader className="px-6">
-                      <CardTitle>Desempenho de Campanhas</CardTitle>
-                      <CardDescription>Comparativo entre suas campanhas ativas</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-6">
-                      <div className="h-96 flex items-center justify-center text-muted-foreground">
-                        Gráfico de desempenho comparativo de campanhas
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DynamicCampaignChart />
                 </motion.div>
               </TabsContent>
               
@@ -139,17 +132,7 @@ const AnalyticsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader className="px-6">
-                      <CardTitle>Análise de Audiência</CardTitle>
-                      <CardDescription>Perfil dos usuários que participam das suas campanhas</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-6">
-                      <div className="h-96 flex items-center justify-center text-muted-foreground">
-                        Gráficos de demografia e comportamento da audiência
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DynamicAudienceChart />
                 </motion.div>
               </TabsContent>
               
@@ -159,17 +142,7 @@ const AnalyticsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardHeader className="px-6">
-                      <CardTitle>Retorno sobre Investimento</CardTitle>
-                      <CardDescription>Análise de custo-benefício das suas campanhas</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-6">
-                      <div className="h-96 flex items-center justify-center text-muted-foreground">
-                        Gráficos de ROI por campanha e por período
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <DynamicROIChart />
                 </motion.div>
               </TabsContent>
             </Tabs>
