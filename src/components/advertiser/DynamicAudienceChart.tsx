@@ -25,100 +25,78 @@ function DynamicAudienceChart() {
 
   const COLORS = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5A2B', '#EC4899']
 
-  const fetchData = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuário não autenticado')
-
-      // Buscar usuários únicos que participaram das missions do anunciante
-      const { data: participants, error: participantsError } = await supabase
-        .from('mission_submissions')
-        .select(`
-          user_id,
-          profiles!inner(
-            profile_data,
-            full_name
-          ),
-          missions!inner(created_by)
-        `)
-        .eq('missions.created_by', user.id)
-        .eq('status', 'aprovado')
-
-      if (participantsError) throw participantsError
-
-      // Extrair usuários únicos
-      const uniqueUsers = new Map()
-      participants?.forEach(participant => {
-        if (!uniqueUsers.has(participant.user_id)) {
-          uniqueUsers.set(participant.user_id, participant.profiles)
-        }
-      })
-
-      const ageDistribution: Record<string, number> = {}
-      const genderDistribution: Record<string, number> = {}
-      const locationDistribution: Record<string, number> = {}
-
-      Array.from(uniqueUsers.values()).forEach((profile: any) => {
-        if (profile?.profile_data) {
-          const profileData = profile.profile_data as any
-
-          // Faixa etária
-          if (profileData.ageRange) {
-            const ageKey = profileData.ageRange
-            ageDistribution[ageKey] = (ageDistribution[ageKey] || 0) + 1
-          }
-
-          // Gênero
-          if (profileData.gender) {
-            const genderKey = profileData.gender
-            genderDistribution[genderKey] = (genderDistribution[genderKey] || 0) + 1
-          }
-
-          // Localização
-          if (profileData.location) {
-            const locationKey = profileData.location
-            locationDistribution[locationKey] = (locationDistribution[locationKey] || 0) + 1
-          }
-        }
-      })
-
-      // Converter para formato de arrays para os gráficos
-      const ageData = Object.entries(ageDistribution).map(([name, value]) => ({ name, value }))
-      const genderData = Object.entries(genderDistribution).map(([name, value]) => ({ name, value }))
-      const locationData = Object.entries(locationDistribution)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10) // Top 10 localizações
-
-      setAudienceData({
-        ageDistribution: ageData,
-        genderDistribution: genderData,
-        locationDistribution: locationData,
-        totalUsers: uniqueUsers.size
-      })
-
-      // Se não há dados reais, mostrar dados de exemplo
-      if (uniqueUsers.size === 0) {
-        setAudienceData({
-          ageDistribution: [{ name: 'Sem dados', value: 0 }],
-          genderDistribution: [{ name: 'Sem dados', value: 0 }],
-          locationDistribution: [{ name: 'Sem dados', value: 0 }],
-          totalUsers: 0
-        })
-      }
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
-      console.error('Error fetching audience data:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Usuário não autenticado')
+
+        // Step 1: Fetch advertiser's missions
+        const { data: advertiserMissions, error: missionsError } = await supabase
+          .from('missions')
+          .select('id')
+          .eq('created_by', user.id)
+        if (missionsError) throw missionsError
+        const advertiserMissionIds = advertiserMissions.map(m => m.id)
+
+        if (advertiserMissionIds.length === 0) {
+            setAudienceData({ totalUsers: 0, ageDistribution: [], genderDistribution: [], locationDistribution: [] })
+            setIsLoading(false)
+            return
+        }
+
+        // Step 2: Fetch submissions for those missions
+        const { data: submissions, error: submissionsError } = await supabase
+            .from('mission_submissions')
+            .select('user_id')
+            .in('mission_id', advertiserMissionIds)
+            .eq('status', 'aprovado')
+        if(submissionsError) throw submissionsError
+        const userIds = [...new Set(submissions.map(s => s.user_id).filter(Boolean))] as string[]
+
+        if (userIds.length === 0) {
+            setAudienceData({ totalUsers: 0, ageDistribution: [], genderDistribution: [], locationDistribution: [] })
+            setIsLoading(false)
+            return
+        }
+        
+        // Step 3: Fetch profiles for those users
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('profile_data')
+          .in('id', userIds)
+        if (profilesError) throw profilesError
+        
+        const ageDist: Record<string, number> = {}
+        const genderDist: Record<string, number> = {}
+        const locationDist: Record<string, number> = {}
+
+        profiles.forEach(p => {
+            if (p.profile_data && typeof p.profile_data === 'object') {
+                const pd = p.profile_data as any;
+                if(pd.ageRange) ageDist[pd.ageRange] = (ageDist[pd.ageRange] || 0) + 1;
+                if(pd.gender) genderDist[pd.gender] = (genderDist[pd.gender] || 0) + 1;
+                if(pd.location) locationDist[pd.location] = (locationDist[pd.location] || 0) + 1;
+            }
+        })
+        
+        setAudienceData({
+          ageDistribution: Object.entries(ageDist).map(([name, value]) => ({ name, value })),
+          genderDistribution: Object.entries(genderDist).map(([name, value]) => ({ name, value })),
+          locationDistribution: Object.entries(locationDist).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0,10),
+          totalUsers: userIds.length,
+        });
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
+        console.error('Error fetching audience data:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     fetchData()
   }, [])
 
@@ -159,7 +137,7 @@ function DynamicAudienceChart() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
@@ -190,7 +168,7 @@ function DynamicAudienceChart() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
@@ -215,7 +193,7 @@ function DynamicAudienceChart() {
               <div className="h-80 lg:col-span-2 xl:col-span-1">
                 <h3 className="text-sm font-medium mb-4 text-gray-300">Top Localizações</h3>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={audienceData.locationDistribution} layout="horizontal">
+                  <BarChart data={audienceData.locationDistribution} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis type="number" stroke="#9CA3AF" />
                     <YAxis 
@@ -224,6 +202,7 @@ function DynamicAudienceChart() {
                       stroke="#9CA3AF"
                       fontSize={10}
                       width={80}
+                      interval={0}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -233,62 +212,9 @@ function DynamicAudienceChart() {
                       }}
                       labelStyle={{ color: '#F9FAFB' }}
                     />
-                    <Bar dataKey="value" fill="#06B6D4" />
+                    <Bar dataKey="value" fill="#06B6D4" name="Usuários" />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Resumo detalhado */}
-      <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-        <CardHeader className="px-6">
-          <CardTitle>Resumo da Audiência</CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 pb-6">
-          {isLoading ? (
-            <Skeleton className="w-full h-32" />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Resumo Faixa Etária */}
-              <div>
-                <h4 className="text-sm font-medium mb-3 text-gray-300">Faixa Etária</h4>
-                <div className="space-y-2">
-                  {audienceData.ageDistribution.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">{item.name}</span>
-                      <span className="text-sm text-white">{item.value} usuários</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Resumo Gênero */}
-              <div>
-                <h4 className="text-sm font-medium mb-3 text-gray-300">Gênero</h4>
-                <div className="space-y-2">
-                  {audienceData.genderDistribution.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">{item.name}</span>
-                      <span className="text-sm text-white">{item.value} usuários</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Resumo Localização */}
-              <div>
-                <h4 className="text-sm font-medium mb-3 text-gray-300">Top 5 Localizações</h4>
-                <div className="space-y-2">
-                  {audienceData.locationDistribution.slice(0, 5).map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">{item.name}</span>
-                      <span className="text-sm text-white">{item.value} usuários</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           )}

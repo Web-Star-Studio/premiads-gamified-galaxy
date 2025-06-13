@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +68,7 @@ const useCampaignOperations = () => {
         p_badge_image_url: formData.badgeImageUrl,
         p_min_purchase: formData.minPurchase || 0,
         p_selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
-        p_form_schema: formData.formSchema || []
+        p_form_schema: (formData.formSchema as any) || []
       });
 
       if (error) {
