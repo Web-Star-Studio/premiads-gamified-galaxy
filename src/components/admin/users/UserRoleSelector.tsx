@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +30,9 @@ interface UserRoleSelectorProps {
 
 const UserRoleSelector = ({ currentRole, onRoleChange, disabled }: UserRoleSelectorProps) => {
   const [open, setOpen] = useState(false);
+  
+  // Encontrar o rótulo do papel atual, com fallback para um valor padrão se não encontrado
+  const currentRoleLabel = roles.find((role) => role.value === currentRole)?.label || "Participante";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,7 +44,7 @@ const UserRoleSelector = ({ currentRole, onRoleChange, disabled }: UserRoleSelec
           disabled={disabled}
           className="w-full justify-between"
         >
-          {currentRole ? roles.find((role) => role.value === currentRole)?.label : "Select role..."}
+          {currentRoleLabel}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -56,8 +58,10 @@ const UserRoleSelector = ({ currentRole, onRoleChange, disabled }: UserRoleSelec
                 key={role.value}
                 value={role.value}
                 onSelect={(currentValue) => {
-                  onRoleChange(currentValue);
-                  setOpen(false);
+                  if (currentValue) {
+                    onRoleChange(currentValue);
+                    setOpen(false);
+                  }
                 }}
               >
                 <Check

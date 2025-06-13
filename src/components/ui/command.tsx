@@ -108,17 +108,29 @@ CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
 const CommandItem = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50",
-      className
-    )}
-    {...props}
-  />
-))
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> & { 
+    onSelect?: (value: string) => void 
+  }
+>(({ className, onSelect, ...props }, ref) => {
+  // Garantir que o valor nunca seja undefined
+  const handleSelect = React.useCallback((value: string) => {
+    if (onSelect && value) {
+      onSelect(value);
+    }
+  }, [onSelect]);
+
+  return (
+    <CommandPrimitive.Item
+      ref={ref}
+      onSelect={handleSelect}
+      className={cn(
+        "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  );
+})
 
 CommandItem.displayName = CommandPrimitive.Item.displayName
 

@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -75,7 +75,31 @@ export const useUsers = () => {
   }, [toast]);
 
   useEffect(() => {
+    let profilesSubscription: RealtimeChannel;
+
+    // Initial fetch
     fetchUsers();
+
+    // Set up real-time subscription to profiles table
+    profilesSubscription = supabase
+      .channel('profiles-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'profiles' 
+        }, 
+        () => {
+          // Refresh user list when profiles change
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      profilesSubscription.unsubscribe();
+    };
   }, [fetchUsers]);
 
   return {

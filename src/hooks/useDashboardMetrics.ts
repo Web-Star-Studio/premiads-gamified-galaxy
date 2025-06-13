@@ -17,6 +17,7 @@ export interface DashboardMetrics {
   totalPoints: number;
   averagePointsPerUser: number;
   pointsTrend: number;
+  adminActionsToday: number;
 }
 
 export const useDashboardMetrics = () => useQuery({
@@ -82,6 +83,21 @@ export const useDashboardMetrics = () => useQuery({
           .lt("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
       ]);
 
+      // Get admin actions today using raw query to avoid type issues
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString();
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString();
+      
+      const { count: adminActionsToday } = await supabase
+        .rpc('count_logs_today', { 
+          start_date: todayStr,
+          end_date: tomorrowStr
+        });
+
       // Calculate total rifas by summing the rifas from each profile
       const currentRifas = totalRifasData?.reduce((acc, curr) => acc + (curr.rifas || 0), 0) || 0;
       const previousRifas = previousMonthRifasData?.reduce((acc, curr) => acc + (curr.rifas || 0), 0) || 0;
@@ -112,6 +128,7 @@ export const useDashboardMetrics = () => useQuery({
         totalPoints,
         averagePointsPerUser,
         pointsTrend,
+        adminActionsToday: adminActionsToday || 0,
       };
     },
     refetchInterval: 30000,

@@ -1,6 +1,6 @@
-
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CreateUserInput {
   email: string;
@@ -15,11 +15,21 @@ export function useAdminCreateUser() {
 
   const createUser = useCallback(async (input: CreateUserInput) => {
     try {
+      // Get the current session to include the access token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Authentication required. Please log in again.");
+      }
+
       const response = await fetch(
         "https://zfryjwaeojccskfiibtq.functions.supabase.co/admin-create-user",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
+          },
           body: JSON.stringify(input),
         }
       );

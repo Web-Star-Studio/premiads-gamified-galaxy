@@ -1,9 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, UserCog } from "lucide-react";
 import { User } from "@/hooks/admin/useUsers";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { useUserOperations } from "@/hooks/admin/useUserOperations";
 
 interface UserTableProps {
   users: User[];
@@ -24,13 +31,37 @@ const UserTable = ({
   onDeleteUser,
   onEditUser,
 }: UserTableProps) => {
+  const { updateUserRole } = useUserOperations();
+  const [changingRoleFor, setChangingRoleFor] = useState<string | null>(null);
+
   const handleDelete = async (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       await onDeleteUser(userId);
     }
   };
 
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    if (!newRole) return;
+    
+    setChangingRoleFor(userId);
+    try {
+      await updateUserRole(userId, newRole);
+      // Role change is handled via the realtime subscription in useUsers
+    } catch (error) {
+      console.error("Error changing user role:", error);
+    } finally {
+      setChangingRoleFor(null);
+    }
+  };
+
   const allSelected = users.length > 0 && users.every(user => selectedUsers.has(user.id));
+
+  const roleOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'moderator', label: 'Moderator' },
+    { value: 'anunciante', label: 'Anunciante' },
+    { value: 'participante', label: 'Participante' }
+  ];
 
   return (
     <div className="overflow-x-auto">
@@ -64,20 +95,35 @@ const UserTable = ({
               <td className="whitespace-nowrap px-3 py-4 text-sm">{user.name}</td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">{user.email}</td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">
-                <Badge 
-                  variant={user.role === 'admin' ? 'default' : 'outline'}
-                  className={
-                    user.role === 'admin' 
-                      ? 'bg-neon-pink text-white' 
-                      : user.role === 'moderator'
-                        ? 'bg-neon-cyan text-galaxy-dark'
-                        : user.role === 'anunciante'
-                          ? 'bg-neon-lime/80 text-galaxy-dark'
-                          : ''
-                  }
-                >
-                  {user.role}
-                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Badge 
+                      variant={user.role === 'admin' ? 'default' : 'outline'}
+                      className={`cursor-pointer ${
+                        user.role === 'admin' 
+                          ? 'bg-neon-pink text-white' 
+                          : user.role === 'moderator'
+                            ? 'bg-neon-cyan text-galaxy-dark'
+                            : user.role === 'anunciante'
+                              ? 'bg-neon-lime/80 text-galaxy-dark'
+                              : ''
+                      }`}
+                    >
+                      {changingRoleFor === user.id ? '...' : user.role || 'participante'}
+                    </Badge>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {roleOptions.map(option => (
+                      <DropdownMenuItem 
+                        key={option.value} 
+                        onClick={() => handleRoleChange(user.id, option.value)}
+                        disabled={changingRoleFor === user.id}
+                      >
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">
                 <Badge 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUsers } from '@/hooks/admin/useUsers';
@@ -15,19 +15,48 @@ const UserManagement = () => {
   const { updateUserStatus, deleteUser } = useUserOperations();
   const { selectedUsers, handleSelectAll, handleSelectUser, setSelectedUsers } = useUserSelection(users);
 
-  const handleToggleStatus = async (userId: string, currentStatus: string) => {
+  const handleToggleStatus = useCallback(async (userId: string, currentStatus: string) => {
     const newActiveState = currentStatus !== 'active';
-    await updateUserStatus(userId, newActiveState);
-  };
-
-  const handleBulkDelete = async () => {
-    if (window.confirm(`Delete ${selectedUsers.size} selected users?`)) {
-      for (const userId of selectedUsers) {
-        await deleteUser(userId);
-      }
-      setSelectedUsers(new Set());
+    const success = await updateUserStatus(userId, newActiveState);
+    if (success) {
+      // Refresh users list after successful status update
+      fetchUsers();
     }
-  };
+  }, [updateUserStatus, fetchUsers]);
+
+  const handleDeleteUser = useCallback(async (userId: string) => {
+    const success = await deleteUser(userId);
+    if (success) {
+      // Clear selection if the deleted user was selected
+      setSelectedUsers(prev => {
+        const newSelection = new Set(prev);
+        newSelection.delete(userId);
+        return newSelection;
+      });
+      // Refresh users list after successful deletion
+      fetchUsers();
+    }
+    return success;
+  }, [deleteUser, setSelectedUsers, fetchUsers]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (window.confirm(`Delete ${selectedUsers.size} selected users?`)) {
+      let allSuccess = true;
+      
+      for (const userId of selectedUsers) {
+        const success = await deleteUser(userId);
+        if (!success) {
+          allSuccess = false;
+        }
+      }
+      
+      if (allSuccess) {
+        setSelectedUsers(new Set());
+        // Refresh users list after bulk deletion
+        fetchUsers();
+      }
+    }
+  }, [selectedUsers, deleteUser, setSelectedUsers, fetchUsers]);
 
   const handleExportUsers = () => {
     const csvContent = users
@@ -43,6 +72,14 @@ const UserManagement = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
+
+  const filteredUsers = searchQuery 
+    ? users.filter(user => 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : users;
 
   return (
     <motion.div
@@ -69,12 +106,12 @@ const UserManagement = () => {
           </div>
 
           <UserTable
-            users={users}
+            users={filteredUsers}
             selectedUsers={selectedUsers}
             onSelectUser={handleSelectUser}
             onSelectAll={handleSelectAll}
             onToggleStatus={handleToggleStatus}
-            onDeleteUser={deleteUser}
+            onDeleteUser={handleDeleteUser}
           />
         </CardContent>
       </Card>

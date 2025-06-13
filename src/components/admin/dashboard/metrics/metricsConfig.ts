@@ -1,4 +1,3 @@
-
 import { Users, BarChart2, Award, Target, TrendingUp, CheckCircle } from "lucide-react";
 import type { DashboardMetrics } from "@/hooks/useDashboardMetrics";
 
@@ -18,15 +17,15 @@ export const getMetricsData = (metrics: DashboardMetrics) => [
     colorClass: "text-neon-pink",
   },
   {
-    title: "Pontos Distribuídos",
-    value: metrics?.totalPoints.toLocaleString() || "0",
-    trend: metrics?.pointsTrend,
+    title: "Rifas Distribuídas",
+    value: metrics?.totalRifas.toLocaleString() || "0",
+    trend: metrics?.rifasTrend,
     icon: Award,
     colorClass: "text-neon-cyan",
   },
   {
-    title: "Média de Pontos/Usuário",
-    value: metrics?.averagePointsPerUser.toLocaleString() || "0",
+    title: "Média de Rifas/Usuário",
+    value: metrics?.averageRifasPerUser.toLocaleString() || "0",
     trend: null,
     icon: BarChart2,
     colorClass: "text-neon-pink",

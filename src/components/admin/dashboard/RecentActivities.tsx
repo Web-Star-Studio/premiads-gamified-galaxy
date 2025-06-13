@@ -1,9 +1,8 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { FileText, Image, Camera, Upload, MapPin, Users, Shield, Ticket, FileCheck, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, useRecentActivities } from "@/hooks/admin/useRecentActivities";
+import { useRecentActivities } from "@/hooks/admin/useRecentActivities";
 
 // Animation variants
 const itemVariants = {
@@ -16,7 +15,7 @@ const itemVariants = {
 };
 
 const RecentActivities = () => {
-  const { activities, loading } = useRecentActivities();
+  const { data: activities, isLoading: loading, error } = useRecentActivities();
 
   // Get icon based on activity type
   const getActivityIcon = (type: string) => {
@@ -58,6 +57,22 @@ const RecentActivities = () => {
     );
   }
 
+  if (error) {
+    return (
+      <motion.section variants={itemVariants}>
+        <h2 className="text-xl font-heading mb-4 neon-text-cyan">Atividades Recentes</h2>
+        <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/40 backdrop-blur-sm">
+          <CardContent className="pt-6">
+            <div className="p-4 text-center text-red-400">
+              <AlertTriangle className="mx-auto mb-2" />
+              <p>Erro ao carregar atividades recentes.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.section>
+    );
+  }
+
   return (
     <motion.section variants={itemVariants}>
       <h2 className="text-xl font-heading mb-4 neon-text-cyan">Atividades Recentes</h2>
@@ -66,20 +81,26 @@ const RecentActivities = () => {
           <div className="absolute top-0 left-7 bottom-0 w-px bg-galaxy-purple/30 z-0"></div>
           
           <div className="space-y-8 relative z-10">
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex gap-4">
-                <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-galaxy-purple bg-galaxy-deepPurple">
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{activity.event}</p>
-                    <span className="text-xs text-muted-foreground">{activity.timestamp}</span>
+            {activities && activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex gap-4">
+                  <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-galaxy-purple bg-galaxy-deepPurple">
+                    {getActivityIcon(activity.type)}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">por {activity.user}</p>
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <p className="text-sm font-medium">{activity.event}</p>
+                      <span className="text-xs text-muted-foreground">{activity.timestamp}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">por {activity.user}</p>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <p>Nenhuma atividade recente encontrada.</p>
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>

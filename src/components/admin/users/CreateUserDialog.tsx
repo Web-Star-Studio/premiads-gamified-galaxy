@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,6 +53,9 @@ export default function CreateUserDialog({ open, onOpenChange, onCreated }: Crea
     }
   };
 
+  // Garantir que user_type nunca seja undefined
+  const userType = form.user_type || "participante";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -85,7 +87,7 @@ export default function CreateUserDialog({ open, onOpenChange, onCreated }: Crea
             required
           />
           <UserRoleSelector 
-            currentRole={form.user_type} 
+            currentRole={userType} 
             onRoleChange={(role) => setForm(prev => ({ ...prev, user_type: role as UserType }))} 
           />
           <label className="flex items-center gap-2 mt-2">

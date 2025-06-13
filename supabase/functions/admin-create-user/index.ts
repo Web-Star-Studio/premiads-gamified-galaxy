@@ -1,5 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +13,61 @@ serve(async (req) => {
   }
   
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Extract the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Initialize Supabase client with service role to validate the token
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    
+    if (!SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_URL) {
+      throw new Error("Server misconfiguration: missing Supabase env keys");
+    }
+    
+    // Create a Supabase client with the service role key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Verify the JWT token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    // Check if the user has admin permissions
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', user.id)
+      .single();
+    
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "Failed to verify permissions" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    if (profile.user_type !== 'admin' && profile.user_type !== 'moderator') {
+      return new Response(JSON.stringify({ error: "Permission denied: Only admins and moderators can create users" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    // Parse the request body
     const { email, name, password, user_type, active } = await req.json();
     if (!email || !password || !user_type) {
       return new Response(JSON.stringify({ error: "Missing required fields." }), {
@@ -27,12 +82,6 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    if (!SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_URL) {
-      throw new Error("Server misconfiguration: missing Supabase env keys");
     }
 
     // Create user via Supabase Auth REST API

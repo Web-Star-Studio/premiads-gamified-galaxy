@@ -1,8 +1,7 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import SystemMetrics from "./dashboard/SystemMetrics";
-import SystemStatus from "./dashboard/SystemStatus";
+import AdminActions from "./dashboard/SystemStatus";
 import RecentActivities from "./dashboard/RecentActivities";
 
 // Animation variants for staggered animations
@@ -26,11 +25,11 @@ const AdminOverview = () => (
       {/* KPI Dashboard */}
       <SystemMetrics />
 
-      {/* System Status and Recent Activities Layout */}
+      {/* Admin Actions and Recent Activities Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* System Status */}
+        {/* Admin Actions */}
         <div className="lg:col-span-2">
-          <SystemStatus />
+          <AdminActions />
         </div>
 
         {/* Recent Activities */}

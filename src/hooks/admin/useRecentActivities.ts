@@ -1,70 +1,87 @@
-
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Activity {
-  id: number;
+  id: string;
   event: string;
   user: string;
   timestamp: string;
   type: 'user' | 'permission' | 'raffle' | 'moderation' | 'system';
 }
 
+interface LogRecord {
+  id: string;
+  type: string;
+  action: string;
+  user_name: string;
+  created_at: string;
+}
+
 export const useRecentActivities = () => {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // This would be an API call in a real application
-    const fetchActivities = async () => {
-      setLoading(true);
+  return useQuery({
+    queryKey: ['recent-activities'],
+    queryFn: async (): Promise<Activity[]> => {
+      // Fetch recent logs using a raw query to avoid type issues
+      const { data: logs, error } = await supabase
+        .rpc('get_recent_activities', { limit_count: 5 });
       
-      // Mock data for demonstration purposes
-      const mockData = [
-        { 
-          id: 1, 
-          event: "Novo administrador adicionado", 
-          user: "Carlos Silva", 
-          timestamp: "Há 10 minutos",
-          type: "user" as const
-        },
-        { 
-          id: 2, 
-          event: "Alteração de permissões", 
-          user: "Maria Oliveira", 
-          timestamp: "Há 45 minutos",
-          type: "permission" as const
-        },
-        { 
-          id: 3, 
-          event: "Novo sorteio criado", 
-          user: "João Pereira", 
-          timestamp: "Há 2 horas",
-          type: "raffle" as const
-        },
-        { 
-          id: 4, 
-          event: "Submissão aprovada", 
-          user: "Ana Santos", 
-          timestamp: "Há 3 horas",
-          type: "moderation" as const
-        },
-        { 
-          id: 5, 
-          event: "Alerta de sistema", 
-          user: "Sistema", 
-          timestamp: "Há 5 horas",
-          type: "system" as const
+      if (error) {
+        console.error('Error fetching recent activities:', error);
+        throw new Error(`Failed to fetch recent activities: ${error.message}`);
+      }
+      
+      if (!logs || logs.length === 0) {
+        return [];
+      }
+      
+      // Map logs to Activity interface
+      return (logs as LogRecord[]).map(log => {
+        // Map log type to UI type
+        let activityType: 'user' | 'permission' | 'raffle' | 'moderation' | 'system';
+        
+        switch(log.type) {
+          case 'ADMIN_ADD':
+            activityType = 'user';
+            break;
+          case 'PERMISSION_CHANGE':
+            activityType = 'permission';
+            break;
+          case 'RIFA_CRIADA':
+            activityType = 'raffle';
+            break;
+          case 'MISSAO_SUBMETIDA':
+            activityType = 'moderation';
+            break;
+          default:
+            activityType = 'system';
         }
-      ];
-      
-      setTimeout(() => {
-        setActivities(mockData);
-        setLoading(false);
-      }, 800);
-    };
-
-    fetchActivities();
-  }, []);
-
-  return { activities, loading };
+        
+        // Format timestamp
+        const createdAt = new Date(log.created_at);
+        const now = new Date();
+        const diffMs = now.getTime() - createdAt.getTime();
+        const diffMins = Math.round(diffMs / 60000);
+        const diffHours = Math.round(diffMins / 60);
+        
+        let timestamp = '';
+        if (diffMins < 60) {
+          timestamp = `Há ${diffMins} minutos`;
+        } else if (diffHours < 24) {
+          timestamp = `Há ${diffHours} horas`;
+        } else {
+          const diffDays = Math.round(diffHours / 24);
+          timestamp = `Há ${diffDays} dias`;
+        }
+        
+        return {
+          id: log.id,
+          event: log.action,
+          user: log.user_name || 'Sistema',
+          timestamp,
+          type: activityType
+        };
+      });
+    },
+    refetchInterval: 30000,
+  });
 };
