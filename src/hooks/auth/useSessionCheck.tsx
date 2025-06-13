@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
-import { supabase, supabaseAdmin } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserProfile } from "@/types/auth";
 
@@ -52,8 +52,8 @@ export const useSessionCheck = () => {
                     active: true,
                   };
 
-                  // Use supabaseAdmin to bypass RLS policies
-                  const { error: insertErr, data: insertData } = await supabaseAdmin
+                  // Use the standard client, which requires proper RLS policies
+                  const { error: insertErr, data: insertData } = await supabase
                     .from('profiles')
                     .insert(fallbackProfile)
                     .select()

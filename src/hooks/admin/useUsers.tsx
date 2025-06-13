@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, supabaseAdmin } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Json } from '@/integrations/supabase/types';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -34,8 +34,7 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Use supabaseAdmin to bypass RLS policies
-      const { data: functionData, error: functionError } = await supabaseAdmin.rpc('get_all_users');
+      const { data: functionData, error: functionError } = await supabase.rpc('get_all_users');
       
       if (functionError) throw functionError;
       
