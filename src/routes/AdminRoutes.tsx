@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -21,16 +20,21 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const AdminRoutes = () => {
   const { isAdmin, loading } = useAdminAuth();
 
+  console.log("AdminRoutes - isAdmin:", isAdmin, "loading:", loading);
+
   // Show loading state while checking admin status
   if (loading) {
+    console.log("AdminRoutes - Showing loading spinner");
     return <RouteLoadingSpinner />;
   }
 
   // If not admin and not loading, the redirect will happen in useAdminAuth
   if (!isAdmin) {
+    console.log("AdminRoutes - User is not admin, returning null");
     return null;
   }
 
+  console.log("AdminRoutes - Rendering admin routes");
   return (
     <Routes>
       <Route 

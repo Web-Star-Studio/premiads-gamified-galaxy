@@ -1,5 +1,4 @@
-
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,8 +14,15 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const AppRoutes = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const location = useLocation();
+  const renderCountRef = useRef(0);
   
-  console.log("AppRoutes rendered, current path:", location.pathname, "isAuthenticated:", isAuthenticated, "loading:", isLoading);
+  // Controle para evitar logs excessivos
+  useEffect(() => {
+    renderCountRef.current += 1;
+    if (renderCountRef.current <= 2 || renderCountRef.current % 10 === 0) {
+      console.log("AppRoutes rendered, current path:", location.pathname, "isAuthenticated:", isAuthenticated, "loading:", isLoading);
+    }
+  }, [location.pathname, isAuthenticated, isLoading]);
   
   // Helper function to handle redirections for root and auth paths
   const shouldRedirect = () => isAuthenticated && 

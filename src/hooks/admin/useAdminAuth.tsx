@@ -27,11 +27,35 @@ export const useAdminAuth = () => {
         return false;
       }
       
-      // Temporarily allow all authenticated users access
-      setIsAdmin(true);
+      console.log("useAdminAuth - Session found for user:", session.user.id);
+      
+      // Prioritize profile table as the source of truth for user_type
+      console.log("useAdminAuth - Checking profiles table for user_type as primary source.");
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+
+      let userType: string | undefined;
+
+      if (!profileErr && profile?.user_type) {
+        userType = profile.user_type;
+        console.log("useAdminAuth - User type from profiles (source of truth):", userType);
+      } else {
+        // Fallback to metadata only if profile fetch fails
+        userType = session.user.user_metadata?.user_type;
+        console.warn("useAdminAuth - Could not get profile, falling back to JWT metadata. User type:", userType);
+        if (profileErr) console.error("useAdminAuth - Profile fetch error:", profileErr);
+      }
+
+      const isAdminUser = userType === "admin" || userType === "moderator";
+      console.log("useAdminAuth - Final admin check result:", isAdminUser, "for user type:", userType);
+
+      setIsAdmin(isAdminUser);
       setLoading(false);
       checkedRef.current = true;
-      return true;
+      return isAdminUser;
 
     } catch (error) {
       console.error("Error in admin authentication:", error);

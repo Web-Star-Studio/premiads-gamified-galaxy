@@ -18,7 +18,19 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    },
+    global: {
+      fetch: (url: RequestInfo | URL, options?: RequestInit) => {
+        return fetch(url, options).catch(err => {
+          console.error('Supabase fetch error:', err);
+          throw err;
+        });
+      },
+      headers: {
+        'X-Client-Info': 'premiads-gamified-galaxy'
+      }
     }
   }
 );

@@ -95,12 +95,48 @@ export const useAuthMethods = () => {
         throw new Error("Email e senha são obrigatórios");
       }
       
+      console.log("Tentando login para:", credentials.email);
+      
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session) {
+        console.log("Sessão existente encontrada, tentando usar sessão atual");
+      } else {
+        console.log("Nenhuma sessão existente encontrada, realizando novo login");
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro de login:", error.message);
+        console.error("Código de erro:", error.status);
+        
+        if (error.status === 400) {
+          console.error("Erro 400 - Bad Request. Possível problema com token ou usuário banido.");
+        }
+        
+        if (error.message && error.message.includes("Invalid login credentials")) {
+          throw new Error("Email ou senha incorretos. Por favor, tente novamente.");
+        }
+        
+        if (error.message && error.message.includes("User is banned")) {
+          throw new Error("Sua conta foi desativada. Entre em contato com o suporte.");
+        }
+        
+        if (error.message && error.message.includes("Email not confirmed")) {
+          throw new Error("Por favor, confirme seu email antes de fazer login.");
+        }
+        
+        throw error;
+      }
+      
+      if (data.user && (data.user as any).banned_until && new Date((data.user as any).banned_until) > new Date()) {
+        console.error("Usuário banido até:", (data.user as any).banned_until);
+        await supabase.auth.signOut();
+        throw new Error("Sua conta foi desativada. Entre em contato com o suporte.");
+      }
       
       if (data.user) {
         try {
