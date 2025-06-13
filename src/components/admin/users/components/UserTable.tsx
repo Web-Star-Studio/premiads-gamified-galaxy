@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Edit, UserCog } from "lucide-react";
 import { User } from "@/hooks/admin/useUsers";
+import UserStatusBadge from "../UserStatusBadge";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -126,12 +127,7 @@ const UserTable = ({
                 </DropdownMenu>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm">
-                <Badge 
-                  variant={user.status === 'active' ? 'default' : 'outline'}
-                  className={user.status === 'active' ? 'bg-green-500' : 'text-red-400'}
-                >
-                  {user.status}
-                </Badge>
+                <UserStatusBadge status={user.status} />
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm flex items-center space-x-2">
                 <button
@@ -146,7 +142,11 @@ const UserTable = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => onToggleStatus(user.id, user.status)}
-                  className="text-xs"
+                  className={`text-xs ${
+                    user.status === 'active' 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                      : 'text-neon-lime hover:text-neon-lime/80 hover:bg-neon-lime/10'
+                  }`}
                 >
                   {user.status === 'active' ? 'Deactivate' : 'Activate'}
                 </Button>

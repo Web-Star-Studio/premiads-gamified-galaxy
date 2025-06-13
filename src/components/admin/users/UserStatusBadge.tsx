@@ -1,11 +1,10 @@
-
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/hooks/admin/useUsers";
 
 const statusColors = {
-  active: "bg-neon-lime text-galaxy-dark",
-  inactive: "bg-red-500 text-white",
-  pending: "bg-yellow-500 text-galaxy-dark",
+  active: "bg-neon-lime/80 text-galaxy-dark font-medium",
+  inactive: "bg-red-500/80 text-white font-medium",
+  pending: "bg-yellow-500/80 text-galaxy-dark font-medium",
 } as const;
 
 const UserStatusBadge = ({ status }: { status: User['status'] }) => (
