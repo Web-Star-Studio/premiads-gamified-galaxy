@@ -8,6 +8,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -51,29 +52,31 @@ const UserRoleSelector = ({ currentRole, onRoleChange, disabled }: UserRoleSelec
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder="Search role..." />
-          <CommandEmpty>No role found.</CommandEmpty>
-          <CommandGroup>
-            {roles.map((role) => (
-              <CommandItem
-                key={role.value}
-                value={role.value}
-                onSelect={(currentValue) => {
-                  if (currentValue) {
-                    onRoleChange(currentValue);
-                    setOpen(false);
-                  }
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    currentRole === role.value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {role.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>No role found.</CommandEmpty>
+            <CommandGroup>
+              {roles.map((role) => (
+                <CommandItem
+                  key={role.value}
+                  value={role.value}
+                  onSelect={(currentValue) => {
+                    if (currentValue) {
+                      onRoleChange(currentValue);
+                      setOpen(false);
+                    }
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      currentRole === role.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {role.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

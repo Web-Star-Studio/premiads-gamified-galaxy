@@ -109,19 +109,34 @@ serve(async (req) => {
     }
     const result = await resp.json();
 
-    // Optionally update "active" status in "profiles"
-    if (typeof active === "boolean") {
-      // Patch the profiles table if needed
-      await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.id}`, {
-        method: "PATCH",
-        headers: {
-          "apikey": SUPABASE_SERVICE_ROLE_KEY,
-          "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal",
+    /**
+     * Ensure the newly-created auth user also has a matching record
+     * in the public.profiles table so the admin UI reflects it.
+     * We upsert to be idempotent – if the row already exists, it will
+     * just update the existing values.
+     */
+    const profilePayload: Record<string, unknown> = {
+      id: result.id,
+      full_name: name ?? null,
+      email,
+      user_type,
+      active: typeof active === "boolean" ? active : true,
+    };
+
+    const { error: profileInsertError } = await supabase
+      .from("profiles")
+      .upsert(profilePayload, { onConflict: "id" });
+
+    if (profileInsertError) {
+      console.error("Failed to upsert profile", profileInsertError);
+      // Still return success for user creation but flag the profile issue
+      return new Response(
+        JSON.stringify({ success: true, user_id: result.id, profile_warning: profileInsertError.message }),
+        {
+          status: 207, // Multi-Status to indicate partial success
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
-        body: JSON.stringify({ active }),
-      });
+      );
     }
 
     return new Response(JSON.stringify({ success: true, user_id: result.id }), {

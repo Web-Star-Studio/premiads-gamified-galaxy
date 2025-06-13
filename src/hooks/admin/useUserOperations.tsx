@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseAdmin } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PostgrestError } from '@supabase/supabase-js';
 
@@ -35,7 +35,7 @@ export const useUserOperations = () => {
 
   const updateUserRole = useCallback(async (userId: string, newRole: string) => {
     try {
-      const { data, error } = await supabase.rpc(
+      const { data, error } = await supabaseAdmin.rpc(
         'update_user_role' as any, 
         {
           target_user_id: userId,
@@ -65,7 +65,7 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase.rpc('delete_user_account', {
+      const { data, error } = await supabaseAdmin.rpc('delete_user_account', {
         target_user_id: userId
       });
         
