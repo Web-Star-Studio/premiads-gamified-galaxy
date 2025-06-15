@@ -1,15 +1,15 @@
 
 import { NavigateFunction } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
+import { useUserProfile } from "./useUserProfile";
 import { useSessionManagement } from "./dashboard/useSessionManagement";
 import { useProfileData } from "./dashboard/useProfileData";
 import { useOnboarding } from "./dashboard/useOnboarding";
 
 export const useClientDashboard = (navigate?: NavigateFunction) => {
-  const { userName } = useUser();
+  const { userName, loading: profileLoading } = useUserProfile();
   const { handleExtendSession, handleSessionTimeout } = useSessionManagement(navigate);
   const { 
-    loading, 
+    loading: dataLoading, 
     points, 
     credits, 
     streak, 
@@ -24,7 +24,7 @@ export const useClientDashboard = (navigate?: NavigateFunction) => {
     points,
     credits,
     streak,
-    loading,
+    loading: profileLoading || dataLoading,
     showOnboarding,
     setShowOnboarding,
     handleExtendSession,

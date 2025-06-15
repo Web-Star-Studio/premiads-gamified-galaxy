@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, Bell, Lock, ArrowLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,8 @@ const preferenceSchema = z.object({
 });
 
 const ClientProfile = () => {
-  const { userName, setUserName } = useUser();
+  const { userName } = useUserProfile();
+  const { setUserName } = useUser(); // Manter para compatibilidade com localStorage
   const navigate = useNavigate();
   const { toast } = useToast();
   const { playSound } = useSounds();

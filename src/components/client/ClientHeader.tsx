@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import { Menu, User, Home, Bell } from "lucide-react";
 
 const ClientHeader = () => {
-  const { userName } = useUser();
+  const { userName } = useUserProfile();
   const navigate = useNavigate();
   const { toggleSidebar } = useSidebar();
   const isMobile = useMediaQuery("(max-width: 768px)");
