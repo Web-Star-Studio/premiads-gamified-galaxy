@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
@@ -61,9 +60,33 @@ export const useAuth = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.user) {
         setUser(data.user);
+
+        // Garantir que o perfil seja criado/atualizado com o nome completo
+        const profileData = {
+          id: data.user.id,
+          email: data.user.email,
+          full_name: (data.user.user_metadata as any)?.full_name || data.user.email,
+          user_type: (data.user.user_metadata as any)?.user_type || 'participante',
+          active: true,
+        };
+
+        // Aguardar um momento para garantir que o usuário foi criado
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Criar ou atualizar o perfil
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(profileData, { onConflict: 'id' });
+
+        if (profileError) {
+          console.error('Falha ao sincronizar perfil durante o cadastro:', profileError);
+        }
+
+        // Atualiza cache relacionado ao perfil caso exista
+        queryClient.invalidateQueries({ queryKey: ['profiles', data.user.id] });
       }
     },
     onError: (error: any) => {
