@@ -70,6 +70,20 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-4 pt-4 border-t border-white/10">
+              {/* Mostrar motivo da rejeição inicial se for submissão retornada */}
+              {submission.status === 'returned_to_advertiser' && submission.submission_data?.rejection_reason && (
+                <div className="bg-amber-950/30 border border-amber-500/30 rounded-md p-3">
+                  <h4 className="font-semibold text-amber-300 mb-2 flex items-center">
+                    <X className="h-4 w-4 mr-2" />
+                    Motivo da Rejeição Inicial
+                  </h4>
+                  <p className="text-amber-200 text-sm">{submission.submission_data.rejection_reason}</p>
+                  <p className="text-amber-200/60 text-xs mt-1">
+                    O administrador aprovou esta submissão em segunda instância. Sua decisão aqui será final.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <h4 className="font-semibold text-gray-300 mb-2">Resposta do Participante</h4>
                 <p className="text-gray-200 bg-black/20 p-3 rounded-md border border-white/10 whitespace-pre-wrap">{submissionContent}</p>
@@ -107,6 +121,7 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
         </AccordionItem>
       </Accordion>
       
+      {/* Botões para submissões pendentes (primeira instância) */}
       { (submission.status === 'pending_approval') && (
         <div className="flex justify-end gap-3 p-4 border-t border-white/10">
           <Button 
@@ -132,27 +147,80 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
         </div>
       )}
 
+      {/* Botões para submissões retornadas pelo admin (decisão final do anunciante) */}
+      { (submission.status === 'returned_to_advertiser') && (
+        <div className="flex justify-end gap-3 p-4 border-t border-amber-500/20 bg-amber-950/20">
+          <div className="flex-grow">
+            <p className="text-xs text-amber-300 mb-1">
+              <strong>Decisão Final:</strong> O administrador aprovou esta submissão em segunda instância.
+            </p>
+            <p className="text-xs text-amber-200/70">
+              Sua decisão aqui será definitiva e determinará se o participante recebe as recompensas.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setIsRejectDialogOpen(true)}
+              disabled={isProcessing}
+              className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Rejeitar Definitivamente
+            </Button>
+            
+            <Button 
+              size="sm"
+              onClick={handleApprove}
+              disabled={isProcessing}
+              className="bg-green-600/80 hover:bg-green-600 text-white"
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Aprovar e Conceder Recompensas
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Diálogo de rejeição */}
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent className="bg-gray-950 border-purple-400/50 text-white">
           <DialogHeader>
-            <DialogTitle>Rejeitar Submissão</DialogTitle>
+            <DialogTitle>
+              {submission.status === 'returned_to_advertiser' 
+                ? 'Rejeitar Submissão Definitivamente' 
+                : 'Rejeitar Submissão'
+              }
+            </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Forneça um feedback claro para o participante.
+              {submission.status === 'returned_to_advertiser' 
+                ? 'Esta ação rejeitará definitivamente a submissão. O participante não receberá as recompensas. Forneça um feedback claro sobre o motivo da rejeição final.'
+                : 'Forneça um feedback claro para o participante.'
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
             <Input
-              placeholder="Ex: A imagem enviada não corresponde ao comprovante solicitado."
+              placeholder={
+                submission.status === 'returned_to_advertiser'
+                  ? "Ex: Após análise administrativa, a submissão ainda não atende aos critérios da missão."
+                  : "Ex: A imagem enviada não corresponde ao comprovante solicitado."
+              }
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               className="bg-gray-900 border-white/20 focus:ring-purple-500"
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsRejectDialogOpen(false)} disabled={isProcessing}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsRejectDialogOpen(false)} disabled={isProcessing}>
+              Cancelar
+            </Button>
             <Button onClick={handleReject} disabled={isProcessing} className="bg-red-600 hover:bg-red-700">
-              Confirmar Rejeição
+              {submission.status === 'returned_to_advertiser' 
+                ? 'Confirmar Rejeição Definitiva' 
+                : 'Confirmar Rejeição'
+              }
             </Button>
           </DialogFooter>
         </DialogContent>

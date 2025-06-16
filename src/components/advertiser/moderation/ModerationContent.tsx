@@ -14,7 +14,7 @@ const tabStatusMap: Record<string, string> = {
   pendentes: 'pending_approval',
   aprovadas: 'approved',
   rejeitadas: 'rejected',
-  segunda_instancia: 'second_instance_pending',
+  segunda_instancia: 'second_instance',
   retornadas: 'returned_to_advertiser',
 };
 

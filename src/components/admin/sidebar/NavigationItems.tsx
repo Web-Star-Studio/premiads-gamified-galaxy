@@ -9,7 +9,8 @@ import {
   BarChart4,
   Ticket,
   FileText,
-  BookOpen
+  BookOpen,
+  Gavel
 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import NavigationItem, { NavigationItemProps } from "./NavigationItem";
@@ -40,6 +41,12 @@ export const NavigationItems = () => {
       url: "/admin/regras",
       icon: FileText,
       description: "Configurações de regras"
+    },
+    {
+      title: "Moderação",
+      url: "/admin/moderacao",
+      icon: Gavel,
+      description: "Moderação de submissões"
     },
     {
       title: "Monitoramento",

@@ -15,6 +15,7 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
+const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AdminRoutes = () => {
@@ -142,6 +143,17 @@ const AdminRoutes = () => {
           <ErrorBoundary>
             <Suspense fallback={<RouteLoadingSpinner />}>
               <DocumentationPage />
+            </Suspense>
+          </ErrorBoundary>
+        } 
+      />
+      
+      <Route 
+        path="moderacao" 
+        element={
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingSpinner />}>
+              <ModerationPage />
             </Suspense>
           </ErrorBoundary>
         } 
