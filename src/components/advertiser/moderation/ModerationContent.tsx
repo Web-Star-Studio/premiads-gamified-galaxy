@@ -206,6 +206,11 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log(`Approving submission ${submission.id}, status: ${submission.status}, second_instance: ${submission.second_instance}`);
       
+      // Verificar se a submissão já foi processada
+      if (submission.status === 'approved' || submission.status === 'rejected') {
+        throw new Error(`Submissão já foi ${submission.status === 'approved' ? 'aprovada' : 'rejeitada'} anteriormente`);
+      }
+      
       // Determine stage based on submission status and second_instance flag
       let stage: 'advertiser_first' | 'advertiser_second';
       
@@ -256,6 +261,11 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const handleReject = async (submission: Submission, rejectionReason: string = '') => {
     try {
       console.log(`Rejecting submission ${submission.id}, status: ${submission.status}, second_instance: ${submission.second_instance}`);
+      
+      // Verificar se a submissão já foi processada
+      if (submission.status === 'approved' || submission.status === 'rejected') {
+        throw new Error(`Submissão já foi ${submission.status === 'approved' ? 'aprovada' : 'rejeitada'} anteriormente`);
+      }
       
       // Determine stage based on submission status and second_instance flag
       let stage: 'advertiser_first' | 'advertiser_second';
