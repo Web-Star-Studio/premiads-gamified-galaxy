@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import SubmissionsList from './SubmissionsList';
@@ -84,11 +83,11 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       console.log('Fetching missions for user:', userId);
       
-      // Get all missions for this advertiser using created_by field
+      // Get all missions for this advertiser using advertiser_id field
       const { data: missionsData, error: missionsError } = await supabase
         .from('missions')
         .select('id, title')
-        .eq('created_by', userId);
+        .eq('advertiser_id', userId);
         
       if (missionsError) throw missionsError;
       
@@ -205,13 +204,28 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         throw new Error('Usuário não autenticado');
       }
       
-      console.log(`Approving submission ${submission.id}, second instance: ${submission.second_instance}`);
+      console.log(`Approving submission ${submission.id}, status: ${submission.status}, second_instance: ${submission.second_instance}`);
+      
+      // Determine stage based on submission status and second_instance flag
+      let stage: 'advertiser_first' | 'advertiser_second';
+      
+      if (submission.status === 'returned_to_advertiser') {
+        // Submissão retornada pelo admin para nova avaliação do anunciante
+        stage = 'advertiser_second';
+      } else if (submission.status === 'pending' || submission.status === 'pending_approval') {
+        // Primeira avaliação do anunciante
+        stage = 'advertiser_first';
+      } else {
+        throw new Error(`Status de submissão inválido para aprovação: ${submission.status}`);
+      }
+      
+      console.log(`Using stage: ${stage} for submission ${submission.id}`);
       
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
         decision: 'approve',
-        stage: (submission.status === 'returned_to_advertiser' || submission.status === 'pending_approval') ? 'advertiser_second' : 'advertiser_first',
+        stage: stage,
       });
       
       if (!result.success || result.error) {
@@ -241,13 +255,28 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   
   const handleReject = async (submission: Submission, rejectionReason: string = '') => {
     try {
-      console.log(`Rejecting submission ${submission.id}, second instance: ${submission.second_instance}`);
+      console.log(`Rejecting submission ${submission.id}, status: ${submission.status}, second_instance: ${submission.second_instance}`);
+      
+      // Determine stage based on submission status and second_instance flag
+      let stage: 'advertiser_first' | 'advertiser_second';
+      
+      if (submission.status === 'returned_to_advertiser') {
+        // Submissão retornada pelo admin para nova avaliação do anunciante
+        stage = 'advertiser_second';
+      } else if (submission.status === 'pending' || submission.status === 'pending_approval') {
+        // Primeira avaliação do anunciante
+        stage = 'advertiser_first';
+      } else {
+        throw new Error(`Status de submissão inválido para rejeição: ${submission.status}`);
+      }
+      
+      console.log(`Using stage: ${stage} for submission ${submission.id}`);
       
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
         decision: 'reject',
-        stage: (submission.status === 'returned_to_advertiser' || submission.status === 'pending_approval') ? 'advertiser_second' : 'advertiser_first',
+        stage: stage,
       });
       
       if (!result.success || result.error) {

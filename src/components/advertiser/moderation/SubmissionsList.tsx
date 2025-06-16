@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import SubmissionCard from './SubmissionCard';
@@ -14,11 +13,11 @@ export interface SubmissionsListProps {
 
 const SubmissionsList = ({ submissions, onApprove, onReject }: SubmissionsListProps) => {
   // Group submissions by status type
-  const pendingSubmissions = submissions.filter(s => s.status === 'pending');
+  const pendingSubmissions = submissions.filter(s => s.status === 'pending_approval');
   const returnedSubmissions = submissions.filter(s => s.status === 'returned_to_advertiser');
   const secondInstanceSubmissions = submissions.filter(s => s.status === 'second_instance_pending');
   const otherSubmissions = submissions.filter(s => 
-    s.status !== 'pending' && 
+    s.status !== 'pending_approval' && 
     s.status !== 'returned_to_advertiser' && 
     s.status !== 'second_instance_pending'
   );

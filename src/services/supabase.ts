@@ -44,14 +44,23 @@ export const missionService = {
     const client = await getSupabaseClient();
     let query = client.from('missions').select('*');
     
+    // Sempre filtrar por missões ativas
+    query = query.eq('is_active', true);
+    
     if (status) {
+      // Se status for 'ativa', buscar missões com status 'ativa'
+      // Para outros status, usar o valor passado
       query = query.eq('status', status);
     }
     
-    // RLS otimizado - sem necessidade de filtros manuais adicionais
+    // Ordenar por data de criação decrescente para mostrar as mais recentes primeiro
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
+    
+    // Log para debug
+    console.log(`Buscando missões com status: ${status || 'todos'}, encontradas: ${data?.length || 0}`);
+    
     return data;
   }, 'getMissions_optimized'),
 

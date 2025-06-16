@@ -44,6 +44,12 @@ const useCampaignOperations = () => {
         maxParticipants: formData.maxParticipants
       });
 
+      // Converter o array de selectedLootBoxRewards para um objeto JSONB
+      const selectedLootboxRewardsJSON = formData.selectedLootBoxRewards ? JSON.parse(JSON.stringify(formData.selectedLootBoxRewards)) : [];
+      
+      // Converter o array pointsRange para um objeto JSONB
+      const pointsRangeJSON = formData.pointsRange ? JSON.parse(JSON.stringify(formData.pointsRange)) : [0, 0];
+
       // Usar a função RPC atômica para criar a campanha e debitar rifas
       const { data: campaignId, error } = await supabase.rpc('create_campaign_atomic', {
         p_title: formData.title,
@@ -58,7 +64,7 @@ const useCampaignOperations = () => {
         p_sequence_bonus: formData.streakBonus,
         p_streak_multiplier: formData.streakMultiplier,
         p_random_points: formData.randomPoints,
-        p_points_range: formData.pointsRange,
+        p_points_range: pointsRangeJSON,
         p_rifas: formData.rifas,
         p_tickets_reward: formData.ticketsReward,
         p_cashback_reward: formData.cashbackReward,
@@ -67,7 +73,7 @@ const useCampaignOperations = () => {
         p_target_filter: formData.targetFilter || {},
         p_badge_image_url: formData.badgeImageUrl,
         p_min_purchase: formData.minPurchase || 0,
-        p_selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
+        p_selected_lootbox_rewards: selectedLootboxRewardsJSON,
         p_form_schema: (formData.formSchema as any) || []
       });
 
@@ -125,6 +131,12 @@ const useCampaignOperations = () => {
     setIsSubmitting(true);
     
     try {
+      // Converter o array de selectedLootBoxRewards para um objeto JSONB
+      const selectedLootboxRewardsJSON = formData.selectedLootBoxRewards ? JSON.parse(JSON.stringify(formData.selectedLootBoxRewards)) : [];
+      
+      // Converter o array pointsRange para um objeto JSONB
+      const pointsRangeJSON = formData.pointsRange ? JSON.parse(JSON.stringify(formData.pointsRange)) : [0, 0];
+
       // Mapear os dados do formulário para a estrutura da tabela missions
       const missionData = {
         title: formData.title,
@@ -139,7 +151,9 @@ const useCampaignOperations = () => {
         sequence_bonus: formData.streakBonus,
         streak_multiplier: formData.streakMultiplier,
         badge_image_url: formData.badgeImageUrl,
-        selected_lootbox_rewards: formData.selectedLootBoxRewards || [],
+        selected_lootbox_rewards: selectedLootboxRewardsJSON,
+        points_range: pointsRangeJSON,
+        random_points: formData.randomPoints,
         rifas: formData.rifas,
         tickets_reward: formData.ticketsReward,
         cashback_reward: formData.cashbackReward,

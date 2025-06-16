@@ -8,13 +8,13 @@ interface SubmissionData {
   [key: string]: any;
 }
 
-export const useMissionSubmit = () => {
+export const useMissionSubmit = (setMissions?: React.Dispatch<React.SetStateAction<any[]>>) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { playSound } = useSounds();
   const { showRewardNotification } = useRewardAnimations();
 
-  const submitMission = async (missionId: string, submissionData: SubmissionData) => {
+  const submitMission = async (missionId: string, submissionData: SubmissionData, status: "in_progress" | "pending_approval" = "pending_approval") => {
     setIsSubmitting(true);
     
     try {
@@ -52,6 +52,9 @@ export const useMissionSubmit = () => {
       if (missionError) throw missionError;
       if (!mission) throw new Error('Missão não encontrada');
 
+      console.log('Enviando submissão com status:', status);
+      console.log('Dados da submissão:', submissionData);
+
       // Submit the mission
       const { data: submission, error: submitError } = await supabase
         .from('mission_submissions')
@@ -59,12 +62,20 @@ export const useMissionSubmit = () => {
           user_id: userId,
           mission_id: missionId,
           submission_data: submissionData,
-          status: 'pending'
+          status: status,
+          submitted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          review_stage: 'first_review'
         })
         .select()
         .single();
 
-      if (submitError) throw submitError;
+      if (submitError) {
+        console.error('Erro ao enviar submissão:', submitError);
+        throw submitError;
+      }
+
+      console.log('Submissão enviada com sucesso:', submission);
 
       // Play success sound
       playSound('success');
@@ -80,6 +91,18 @@ export const useMissionSubmit = () => {
         variant: "default",
         className: "bg-gradient-to-br from-green-600/90 to-teal-500/60 text-white border-neon-cyan"
       });
+
+      // Atualizar a lista de missões se a função setMissions for fornecida
+      if (setMissions) {
+        // Atualizar o status da missão na lista local
+        setMissions(prevMissions => 
+          prevMissions.map(m => 
+            m.id === missionId 
+              ? { ...m, status: status } 
+              : m
+          )
+        );
+      }
 
       return { success: true, submission };
     } catch (error: any) {

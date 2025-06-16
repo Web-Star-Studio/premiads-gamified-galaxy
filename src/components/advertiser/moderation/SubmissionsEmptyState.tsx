@@ -9,31 +9,31 @@ const SubmissionsEmptyState = ({ activeTab }: SubmissionsEmptyStateProps) => {
   // Define content based on active tab
   const getContent = () => {
     switch (activeTab) {
-      case 'pending':
+      case 'pendentes':
         return {
           icon: <AlertCircle className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão pendente",
           description: "Não há submissões aguardando sua revisão no momento."
         };
-      case 'approved':
+      case 'aprovadas':
         return {
           icon: <CheckCircle2 className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão aprovada",
           description: "Você ainda não aprovou nenhuma submissão."
         };
-      case 'rejected':
+      case 'rejeitadas':
         return {
           icon: <XCircle className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão rejeitada",
           description: "Você ainda não rejeitou nenhuma submissão definitivamente."
         };
-      case 'second_instance_pending':
+      case 'segunda_instancia':
         return {
           icon: <RotateCcw className="w-12 h-12 text-gray-400" />,
           title: "Nenhuma submissão em segunda instância",
           description: "Não há submissões aguardando revisão de segunda instância pelo administrador."
         };
-      case 'returned_to_advertiser':
+      case 'retornadas':
         return {
           icon: <RotateCcw className="w-12 h-12 text-yellow-400" />,
           title: "Nenhuma submissão retornada",
