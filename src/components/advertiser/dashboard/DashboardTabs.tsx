@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MetricsOverview from "@/components/advertiser/MetricsOverview";
 import TopUsers from "@/components/advertiser/TopUsers";
-import EngagementCharts from "@/components/advertiser/EngagementCharts";
+import DynamicEngagementChart from "@/components/advertiser/DynamicEngagementChart";
 import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import CampaignsList from "@/components/advertiser/CampaignsList";
 import CreditsPurchase from "@/components/advertiser/CreditsPurchase";
@@ -50,7 +50,7 @@ const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) 
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <EngagementCharts />
+          <DynamicEngagementChart />
         </motion.div>
         
         <motion.div
@@ -68,7 +68,7 @@ const DashboardTabs = ({ activeTab, onTabChange, credits }: DashboardTabsProps) 
       </TabsContent>
       
       <TabsContent value="analytics" className="pb-8">
-        <EngagementCharts showExtended={true} />
+        <DynamicEngagementChart showExtended={true} />
       </TabsContent>
       
       <TabsContent value="finance" className="space-y-6 pb-8">

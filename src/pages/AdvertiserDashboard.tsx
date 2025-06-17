@@ -5,7 +5,7 @@ import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import LoadingState from "@/components/advertiser/dashboard/LoadingState";
 import NotificationBanner from "@/components/advertiser/dashboard/NotificationBanner";
 import MetricsOverview from "@/components/advertiser/MetricsOverview";
-import EngagementCharts from "@/components/advertiser/EngagementCharts";
+import DynamicEngagementChart from "@/components/advertiser/DynamicEngagementChart";
 import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import DashboardHeader from "@/components/advertiser/DashboardHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
@@ -51,7 +51,7 @@ const AdvertiserDashboard = () => {
           />
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <DashboardHeader userName={userName} credits={credits} isPremium={true} />
+            <DashboardHeader />
             
             <div className="mt-6">
               <NotificationBanner 
@@ -69,7 +69,7 @@ const AdvertiserDashboard = () => {
               >
                 <div className="flex flex-col gap-8 w-full">
                   <MetricsOverview />
-                  <EngagementCharts />
+                  <DynamicEngagementChart />
                   <AlertsPanel />
                 </div>
               </motion.div>
