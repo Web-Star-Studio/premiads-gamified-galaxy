@@ -18,8 +18,7 @@ export interface Mission {
   target_audience_region?: string;
   has_badge?: boolean;
   has_lootbox?: boolean;
-  sequence_bonus?: boolean;
-  streak_multiplier?: number;
+
   target_filter?: any;
   min_purchase?: number;
   cost_in_tokens?: number;

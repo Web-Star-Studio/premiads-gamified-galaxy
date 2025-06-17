@@ -5,7 +5,6 @@ import {
   OverviewContent,
   DashboardContent, 
   UsersContent, 
-  AccessContent, 
   RulesContent, 
   MonitoringContent, 
   ReportsContent, 
@@ -38,8 +37,6 @@ const DocSectionContent: React.FC<DocSectionContentProps> = ({ sectionId }) => {
         return <DashboardContent />;
       case "users":
         return <UsersContent />;
-      case "access":
-        return <AccessContent />;
       case "rules":
         return <RulesContent />;
       case "monitoring":

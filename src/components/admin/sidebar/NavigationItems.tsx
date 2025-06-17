@@ -31,12 +31,6 @@ export const NavigationItems = () => {
       description: "Gerenciamento de usuários"
     },
     {
-      title: "Acesso",
-      url: "/admin/acesso",
-      icon: Shield,
-      description: "Controle de permissões"
-    },
-    {
       title: "Regras",
       url: "/admin/regras",
       icon: FileText,

@@ -21,12 +21,9 @@ export interface Campaign {
   // Reward feature fields from database
   has_badge?: boolean;
   has_lootbox?: boolean;
-  sequence_bonus?: boolean;
-  streak_multiplier?: number;
   
   // Legacy fields for backward compatibility
   has_badges?: boolean; // Legacy field, use has_badge instead
-  streak_bonus?: boolean; // Legacy field, use sequence_bonus instead
   
   // Additional fields that might be needed
   [key: string]: any;

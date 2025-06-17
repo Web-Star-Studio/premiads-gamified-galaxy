@@ -78,9 +78,6 @@ export function useAdvertiserCampaigns() {
           has_badge: mission.has_badge,
           has_badges: mission.has_badge, // Legacy alias
           has_lootbox: mission.has_lootbox,
-          sequence_bonus: mission.sequence_bonus,
-          streak_bonus: mission.sequence_bonus, // Legacy alias
-          streak_multiplier: mission.streak_multiplier,
           // Include all other fields
           target_audience: mission.target_audience,
           target_audience_gender: mission.target_audience_gender,

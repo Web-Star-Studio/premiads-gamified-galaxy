@@ -2,7 +2,6 @@
 export { default as OverviewContent } from './OverviewContent';
 export { default as DashboardContent } from './DashboardContent';
 export { default as UsersContent } from './UsersContent';
-export { default as AccessContent } from './AccessContent';
 export { default as RulesContent } from './RulesContent';
 export { default as MonitoringContent } from './MonitoringContent';
 export { default as ReportsContent } from './ReportsContent';

@@ -35,7 +35,7 @@ export const MissionForm = () => {
   const [hasLootBox, setHasLootBox] = useState(false);
   const [sequenceBonus, setSequenceBonus] = useState(false);
   const [selectedLootBoxRewards, setSelectedLootBoxRewards] = useState<LootBoxRewardType[]>([
-    "credit_bonus", "random_badge", "multiplier", "level_up", "daily_streak_bonus"
+          "credit_bonus", "random_badge", "multiplier", "level_up"
   ]);
   const [badgeImageUrl, setBadgeImageUrl] = useState("");
   

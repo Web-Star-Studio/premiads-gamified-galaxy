@@ -10,7 +10,6 @@ export { default as SystemStatus } from './dashboard/SystemStatus';
 export { default as RecentActivities } from './dashboard/RecentActivities';
 
 // Admin functional components
-export { default as AccessControl } from './AccessControl';
 export { default as UserManagement } from './UserManagement';
 export { default as LotteryManagement } from './LotteryManagement';
 export { default as PlatformMonitoring } from './PlatformMonitoring';

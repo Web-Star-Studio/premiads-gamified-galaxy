@@ -9,7 +9,7 @@ export type LootBoxRewardType =
   | "random_badge" 
   | "multiplier" 
   | "level_up" 
-  | "daily_streak_bonus" 
+   
   | "raffle_ticket";
 
 interface LootBoxRewardOption {
@@ -44,12 +44,7 @@ const rewardOptions: LootBoxRewardOption[] = [
     description: "Ganho instantâneo de XP para subir de nível",
     icon: <Zap className="h-5 w-5" />,
   },
-  {
-    type: "daily_streak_bonus",
-    label: "Bônus de Sequência",
-    description: "Aumenta a sequência de logins diários",
-    icon: <Check className="h-5 w-5" />,
-  },
+
   {
     type: "raffle_ticket",
     label: "Ticket de Sorteio",

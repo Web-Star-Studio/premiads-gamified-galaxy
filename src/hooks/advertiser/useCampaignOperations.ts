@@ -55,26 +55,13 @@ const useCampaignOperations = () => {
         p_title: formData.title,
         p_description: formData.description,
         p_type: formData.type,
-        p_target_audience: formData.audience, // Corrigido: usar target_audience
-        p_requirements: formData.requirements,
-        p_start_date: formatDate(formData.startDate),
+        p_target_audience: formData.audience,
+        p_requirements: formData.requirements ? JSON.stringify(formData.requirements) : '',
         p_end_date: formatDate(formData.endDate),
-        p_has_badge: formData.hasBadges,
-        p_has_lootbox: formData.hasLootBox,
-        p_sequence_bonus: formData.streakBonus,
-        p_streak_multiplier: formData.streakMultiplier,
-        p_random_points: formData.randomPoints,
-        p_points_range: pointsRangeJSON,
         p_rifas: formData.rifas,
         p_tickets_reward: formData.ticketsReward,
         p_cashback_reward: formData.cashbackReward,
-        p_max_participants: formData.maxParticipants || 100,
-        p_cashback_amount_per_raffle: formData.cashbackAmountPerRaffle || 5.00,
-        p_target_filter: formData.targetFilter || {},
-        p_badge_image_url: formData.badgeImageUrl,
-        p_min_purchase: formData.minPurchase || 0,
-        p_selected_lootbox_rewards: selectedLootboxRewardsJSON,
-        p_form_schema: (formData.formSchema as any) || []
+        p_max_participants: formData.maxParticipants || 100
       });
 
       if (error) {
@@ -148,8 +135,8 @@ const useCampaignOperations = () => {
         end_date: formatDate(formData.endDate),
         has_badge: formData.hasBadges,
         has_lootbox: formData.hasLootBox,
-        sequence_bonus: formData.streakBonus,
-        streak_multiplier: formData.streakMultiplier,
+        sequence_bonus: false,
+        streak_multiplier: 1.0,
         badge_image_url: formData.badgeImageUrl,
         selected_lootbox_rewards: selectedLootboxRewardsJSON,
         points_range: pointsRangeJSON,

@@ -12,9 +12,9 @@ const FaqContent: React.FC = () => (
               Como posso alterar as configurações de permissões de usuários?
             </AccordionTrigger>
             <AccordionContent className="pb-4 text-zinc-400">
-              As permissões de usuários podem ser modificadas na seção de Controle de Acesso.
-              Navegue até Admin &gt; Acessos, selecione o usuário ou papel que deseja modificar,
-              e utilize a matriz de permissões para ajustar os níveis de acesso.
+                      As permissões de usuários são gerenciadas diretamente através do sistema de usuários.
+        Navegue até Admin &gt; Usuários, selecione o usuário que deseja modificar,
+        e utilize as configurações de permissões para ajustar os níveis de acesso.
             </AccordionContent>
           </AccordionItem>
           

@@ -12,7 +12,7 @@ const ReportsPage = lazy(() => import("@/pages/admin/ReportsPage"));
 const MonitoringPage = lazy(() => import("@/pages/admin/MonitoringPage"));
 const NotificationsPage = lazy(() => import("@/pages/admin/NotificationsPage"));
 const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
-const AccessControlPage = lazy(() => import("@/pages/admin/AccessControlPage"));
+
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
 const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
@@ -110,17 +110,6 @@ const AdminRoutes = () => {
           <ErrorBoundary>
             <Suspense fallback={<RouteLoadingSpinner />}>
               <RulesPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="acessos" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AccessControlPage />
             </Suspense>
           </ErrorBoundary>
         } 

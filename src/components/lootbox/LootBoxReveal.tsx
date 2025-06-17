@@ -72,7 +72,7 @@ export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({
       random_badge: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json",
       multiplier: "https://assets2.lottiefiles.com/packages/lf20_npi0slet.json",
       level_up: "https://assets3.lottiefiles.com/packages/lf20_zkgnnlia.json",
-      daily_streak_bonus: "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json",
+  
       raffle_ticket: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json",
       default: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json",
     };
@@ -87,7 +87,7 @@ export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({
       random_badge: "Badge Aleatória",
       multiplier: "Multiplicador de Créditos",
       level_up: "Level Up Instantâneo",
-      daily_streak_bonus: "Bônus de Sequência Diária",
+  
       raffle_ticket: "Ticket para Sorteio",
     };
     
@@ -105,8 +105,8 @@ export const LootBoxReveal: React.FC<LootBoxRevealProps> = ({
         return `Multiplicador de créditos: ${reward.reward_amount}x!`;
       case 'level_up':
         return `Ganhe ${reward.reward_amount} tickets de experiência instantâneos!`;
-      case 'daily_streak_bonus':
-        return `Sua sequência diária foi aumentada em ${reward.reward_amount}!`;
+
+        
       case 'raffle_ticket':
         return `Você ganhou ${reward.reward_amount} tickets para o próximo sorteio!`;
       case 'random_badge':

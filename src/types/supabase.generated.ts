@@ -105,47 +105,7 @@ export type Database = {
           },
         ]
       }
-      daily_streaks: {
-        Row: {
-          created_at: string | null
-          current_streak: number
-          id: string
-          last_completion_date: string
-          max_streak: number
-          mission_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          current_streak?: number
-          id?: string
-          last_completion_date: string
-          max_streak?: number
-          mission_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          current_streak?: number
-          id?: string
-          last_completion_date?: string
-          max_streak?: number
-          mission_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_streaks_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "missions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       mission_rewards: {
         Row: {
           cashback_earned: number | null
@@ -294,10 +254,8 @@ export type Database = {
           rifas: number
           rifas_per_mission: number
           selected_lootbox_rewards: string[] | null
-          sequence_bonus: boolean | null
           start_date: string | null
           status: string | null
-          streak_multiplier: number | null
           target_audience: string | null
           target_filter: Json
           title: string
@@ -323,10 +281,8 @@ export type Database = {
           rifas?: number
           rifas_per_mission?: number
           selected_lootbox_rewards?: string[] | null
-          sequence_bonus?: boolean | null
           start_date?: string | null
           status?: string | null
-          streak_multiplier?: number | null
           target_audience?: string | null
           target_filter?: Json
           title: string
@@ -352,10 +308,8 @@ export type Database = {
           rifas?: number
           rifas_per_mission?: number
           selected_lootbox_rewards?: string[] | null
-          sequence_bonus?: boolean | null
           start_date?: string | null
           status?: string | null
-          streak_multiplier?: number | null
           target_audience?: string | null
           target_filter?: Json
           title?: string

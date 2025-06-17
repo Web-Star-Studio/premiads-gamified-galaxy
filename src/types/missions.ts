@@ -55,8 +55,7 @@ export interface LegacyMission {
   requirements?: any;
   target_filter?: any;
   business_type?: string;
-  streak_bonus?: boolean;
-  streak_multiplier?: number;
+
   expires_at?: string; // For compatibility with old code, use an alias
   // Compatibility fields
   audience?: string; // Alias for target_audience
@@ -92,7 +91,7 @@ export function toSubmission(submission: any): Submission {
 }
 
 // Mission type mapping
-export type MissionType = 'engagement' | 'content' | 'survey' | 'referral' | 'daily' | 'streak' | 'participation';
+export type MissionType = 'engagement' | 'content' | 'survey' | 'referral' | 'daily' | 'participation';
 
 // Mission type descriptions for UI
 export const missionTypeDescriptions: Record<MissionType, string> = {
@@ -101,9 +100,10 @@ export const missionTypeDescriptions: Record<MissionType, string> = {
   survey: 'Pesquisa',
   referral: 'Indicação',
   daily: 'Diária',
-  streak: 'Sequência',
   participation: 'Participação'
 };
+
+
 
 // Add other mission-related types
 export interface UserTokens {

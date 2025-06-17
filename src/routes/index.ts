@@ -44,7 +44,6 @@
  *   /monitoramento - Platform monitoring page
  *   /notificacoes - Notifications page
  *   /regras - Rules configuration page
- *   /acessos - Access control page
  *   /configuracoes - Settings page
  */
 

@@ -21,8 +21,7 @@ export interface FormData {
   hasLootBox: boolean;
   /** Extra prize (formerly loot box) enable flag */
   hasExtraPrize?: boolean;
-  streakBonus: boolean;
-  streakMultiplier: number;
+
   randomPoints: boolean;
   pointsRange: number[];
   /** Quantidade de rifas que serão distribuídas aos participantes que completarem a missão */
@@ -63,8 +62,7 @@ export const initialFormData: FormData = {
   hasBadges: false,
   hasLootBox: false,
   hasExtraPrize: false,
-  streakBonus: false,
-  streakMultiplier: 1.2,
+
   randomPoints: false,
   pointsRange: [10, 50],
   rifas: 10, // Quantidade inicial de rifas para a missão
@@ -83,6 +81,6 @@ export const initialFormData: FormData = {
   extraPrizeDescription: '',
   extraPrizeImageUrl: null,
   minPurchase: 0, // Default value for minPurchase
-  selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'daily_streak_bonus', 'raffle_ticket'] as LootBoxRewardType[],
+  selectedLootBoxRewards: ['credit_bonus', 'random_badge', 'multiplier', 'level_up', 'raffle_ticket'] as LootBoxRewardType[],
   formSchema: []
 };

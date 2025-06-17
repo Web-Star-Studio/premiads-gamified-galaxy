@@ -11,7 +11,7 @@ export interface RewardDetails {
   loot_box_amount?: number;
   loot_box_display_name?: string;
   loot_box_description?: string;
-  streak_bonus?: number;
+
   current_streak?: number;
 }
 
@@ -21,7 +21,7 @@ const getRewardAnimation = (rewardType: string): string => {
     random_badge: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json",
     multiplier: "https://assets2.lottiefiles.com/packages/lf20_npi0slet.json",
     level_up: "https://assets3.lottiefiles.com/packages/lf20_zkgnnlia.json",
-    daily_streak_bonus: "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json",
+  
     raffle_ticket: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json",
     badge: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json",
     default: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json",
@@ -46,10 +46,7 @@ export const useRewardAnimations = () => {
       title = "Loot Box Desbloqueada!";
       description = rewardDetails.loot_box_description || 
                    `Recompensa: ${rewardDetails.loot_box_display_name || rewardDetails.loot_box_reward} (${rewardDetails.loot_box_amount})`;
-    } else if (rewardDetails.streak_bonus && rewardDetails.streak_bonus > 0) {
-      animationUrl = getRewardAnimation("daily_streak_bonus");
-      title = "Bônus de Sequência!";
-      description = `+${rewardDetails.streak_bonus} pontos por ${rewardDetails.current_streak} dias consecutivos`;
+    
     }
 
     // Show animation toast

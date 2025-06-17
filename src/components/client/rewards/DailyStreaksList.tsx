@@ -5,10 +5,10 @@ import { Calendar } from "lucide-react";
 
 const DailyStreaksList = () => {
   const dailyMissions = [
-    { title: "Login Diário", tickets_reward: 10, streak_multiplier: 1.2 },
-    { title: "Compartilhar no Instagram", tickets_reward: 25, streak_multiplier: 1.5 },
-    { title: "Avaliar Produto", tickets_reward: 30, streak_multiplier: 1.3 },
-    { title: "Completar Pesquisa", tickets_reward: 20, streak_multiplier: 1.4 },
+    { title: "Login Diário", tickets_reward: 10 },
+    { title: "Compartilhar no Instagram", tickets_reward: 25 },
+    { title: "Avaliar Produto", tickets_reward: 30 },
+    { title: "Completar Pesquisa", tickets_reward: 20 },
   ];
 
   return (
@@ -28,9 +28,7 @@ const DailyStreaksList = () => {
                 {mission.tickets_reward} pts
               </Badge>
             </div>
-            <p className="text-sm text-gray-400 mt-1">
-              Multiplier de sequência: {mission.streak_multiplier}x
-            </p>
+
           </div>
         ))}
       </CardContent>

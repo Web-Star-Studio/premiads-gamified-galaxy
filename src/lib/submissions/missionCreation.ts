@@ -16,7 +16,7 @@ export interface CreateMissionParams {
   targetAudienceRegion?: string;
   hasBadge?: boolean;
   hasLootbox?: boolean;
-  sequenceBonus?: boolean;
+
   badgeImageUrl?: string;
   selectedLootBoxRewards?: LootBoxRewardType[];
   rifas: number;
@@ -49,7 +49,7 @@ export const createMission = async (params: CreateMissionParams) => {
       target_audience_region: params.targetAudienceRegion || null,
       has_badge: params.hasBadge || false,
       has_lootbox: params.hasLootbox || false,
-      sequence_bonus: params.sequenceBonus || false,
+      sequence_bonus: false,
       badge_image_url: params.badgeImageUrl || null,
       advertiser_id: advertiserId,
       is_active: true,

@@ -15,8 +15,7 @@ export interface Mission {
   advertiser_id?: string;
   created_by?: string;
   is_active?: boolean;
-  streak_bonus?: boolean;
-  streak_multiplier?: number;
+
   target_audience?: string;
   target_audience_gender?: string;
   target_audience_age_min?: number;

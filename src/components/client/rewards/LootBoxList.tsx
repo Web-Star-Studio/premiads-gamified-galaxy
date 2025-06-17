@@ -41,7 +41,7 @@ const LOOTBOX_ANIMATIONS: Record<string, string> = {
   multiplier: "https://assets2.lottiefiles.com/packages/lf20_npi0slet.json",
   instant_level_up: "https://assets3.lottiefiles.com/packages/lf20_zkgnnlia.json",
   level_up: "https://assets3.lottiefiles.com/packages/lf20_zkgnnlia.json",
-  daily_streak_bonus: "https://assets1.lottiefiles.com/packages/lf20_fnjha2ed.json",
+
   raffle_ticket: "https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json",
   random_badge: "https://assets3.lottiefiles.com/packages/lf20_2cwdcjsd.json",
 };
@@ -154,8 +154,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       case 'instant_level_up':
       case 'level_up':
         return `Level up instantâneo com bônus de ${lootBox.reward_amount} tickets!`;
-      case 'daily_streak_bonus':
-        return `Sua sequência diária foi aumentada em ${lootBox.reward_amount}!`;
+
       case 'raffle_ticket':
         return `Você ganhou ${lootBox.reward_amount} tickets para o próximo sorteio!`;
       case 'random_badge':
@@ -194,8 +193,7 @@ const LootBoxList: React.FC<LootBoxListProps> = ({ lootBoxes }) => {
       case 'instant_level_up':
       case 'level_up':
         return 'Level Up Instantâneo';
-      case 'daily_streak_bonus':
-        return 'Bônus de Sequência';
+
       case 'raffle_ticket':
         return 'Ticket de Sorteio';
       case 'random_badge':

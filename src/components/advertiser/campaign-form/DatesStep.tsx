@@ -14,7 +14,7 @@ interface DatesStepProps {
 
 /**
  * Campaign dates configuration step
- * Manages start/end dates and streak bonus options
+ * Manages start/end dates and mission duration options
  */
 const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
   // Format today's date as YYYY-MM-DD for min attribute
@@ -89,20 +89,7 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
         </p>
       )}
 
-      <div className="flex items-center justify-between px-1 py-4 mt-4 border-t border-gray-700">
-        <div className="space-y-1">
-          <p className="text-sm font-medium" id="streak-label">Bônus de Sequência</p>
-          <p className="text-xs text-gray-400">
-            Ofereça tickets adicionais para usuários que completarem a missão em dias consecutivos
-          </p>
-        </div>
-        <Switch
-          id="streak"
-          checked={formData.streakBonus}
-          onCheckedChange={(checked) => updateFormData("streakBonus", checked)}
-          aria-labelledby="streak-label"
-        />
-      </div>
+
 
       <div className="bg-neon-cyan/10 border border-neon-cyan/30 p-4 rounded-md mt-4">
         <h4 className="text-sm font-medium mb-2">Resumo da Missão</h4>
@@ -115,13 +102,7 @@ const DatesStep = ({ formData, updateFormData }: DatesStepProps) => {
             formData.pointsRange[0] : `${formData.pointsRange[0]}-${formData.pointsRange[1]}`}</li>
           <li><span className="text-gray-400">Duração:</span> {startDateStr && endDateStr ? 
             `${startDateStr} até ${endDateStr}` : "Não definida"}</li>
-          {formData.streakBonus && (
-            <li><span className="text-gray-400">Bônus de Sequência:</span> 
-              {formData.streakMultiplier ? 
-                `${(formData.streakMultiplier * 100 - 100).toFixed(0)}% de tickets adicionais` : 
-                "Ativado"}  
-            </li>
-          )}
+
           
           {/* Display target audience filters if any are set */}
           {formData.targetFilter && (

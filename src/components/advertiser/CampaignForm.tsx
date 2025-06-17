@@ -43,8 +43,7 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
       endDate: editCampaign.end_date ? new Date(editCampaign.end_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       hasBadges: editCampaign.has_badge || false,
       hasLootBox: editCampaign.has_lootbox || false,
-      streakBonus: editCampaign.sequence_bonus || false,
-      streakMultiplier: editCampaign.streak_multiplier || 1.2,
+
       rifas: editCampaign.rifas || 10,
       ticketsReward: editCampaign.tickets_reward || 0,
       cashbackReward: editCampaign.cashback_reward || 0,

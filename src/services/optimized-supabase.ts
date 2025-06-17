@@ -144,39 +144,7 @@ export class OptimizedSupabaseService {
     return data;
   }
 
-  // ==========================================
-  // DAILY STREAKS - Política consolidada
-  // ==========================================
-  
-  static async getUserStreaks(userId: string) {
-    const { data, error } = await supabase
-      .from('daily_streaks')
-      .select(`
-        *,
-        missions(title, type)
-      `)
-      .eq('user_id', userId)
-      .order('last_completion_date', { ascending: false });
-    
-    if (error) throw error;
-    return data;
-  }
-  
-  static async updateStreak(userId: string, missionId: string, streakData: Partial<Database['public']['Tables']['daily_streaks']['Update']>) {
-    const { data, error } = await supabase
-      .from('daily_streaks')
-      .upsert({
-        user_id: userId,
-        mission_id: missionId,
-        ...streakData,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
+
 
   // ==========================================
   // PARTICIPATIONS - Política otimizada

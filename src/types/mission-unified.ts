@@ -15,7 +15,7 @@ export interface SupabaseMission {
   brand: string | null;
   cost_in_tokens: number | null;
   business_type: string | null;
-  sequence_bonus: boolean | null;
+
   start_date: string | null;
   end_date: string | null;
   max_participants: number | null;
@@ -27,7 +27,7 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission) => ({
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
   cost_in_tokens: mission.cost_in_tokens || 0,
-  sequence_bonus: mission.sequence_bonus || false,
+
   max_participants: mission.max_participants || 0,
 });
 
@@ -50,7 +50,7 @@ export interface Mission {
   brand?: string;
   cost_in_tokens?: number;
   business_type?: string;
-  sequence_bonus?: boolean;
+
   start_date?: string;
   end_date?: string;
   max_participants?: number;

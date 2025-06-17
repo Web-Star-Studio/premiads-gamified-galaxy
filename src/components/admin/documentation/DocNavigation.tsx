@@ -28,7 +28,6 @@ export const docSections: DocSectionItem[] = [
   { id: "overview", title: "Visão Geral", icon: BookOpen, description: "Informações gerais sobre o sistema" },
   { id: "dashboard", title: "Painel Principal", icon: BarChart4, description: "Dashboard com métricas da plataforma" },
   { id: "users", title: "Gestão de Usuários", icon: Users, description: "Gerenciamento de contas de usuários" },
-  { id: "access", title: "Controle de Acesso", icon: Shield, description: "Permissões e níveis de acesso" },
   { id: "rules", title: "Configuração de Regras", icon: FileText, description: "Regras de negócio configuráveis" },
   { id: "monitoring", title: "Monitoramento", icon: Server, description: "Acompanhamento de estado do sistema" },
   { id: "reports", title: "Relatórios", icon: BarChart4, description: "Relatórios e exportação de dados" },

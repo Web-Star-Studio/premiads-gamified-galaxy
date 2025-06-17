@@ -33,7 +33,7 @@ export function useMissions() {
           requirements: ['Fazer uma avaliação', 'Enviar screenshot'],
           has_badge: true,
           has_lootbox: false,
-          sequence_bonus: false
+      
         },
         {
           id: '2',
@@ -47,7 +47,7 @@ export function useMissions() {
           requirements: ['Foto em alta qualidade', 'Produto visível'],
           has_badge: false,
           has_lootbox: true,
-          sequence_bonus: true
+      
         }
       ];
 
