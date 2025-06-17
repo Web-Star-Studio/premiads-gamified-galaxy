@@ -65,4 +65,4 @@ begin
 
   return new_campaign_id;
 end;
-$$ language plpgsql security definer; 
+$$ language plpgsql security definer set search_path = public; 
