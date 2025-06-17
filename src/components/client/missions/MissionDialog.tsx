@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Dialog, 
@@ -99,7 +98,10 @@ const MissionDialog = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="bg-galaxy-darkPurple border-galaxy-purple max-w-lg">
+      <DialogContent 
+        className="bg-galaxy-darkPurple border-galaxy-purple max-w-lg"
+        aria-describedby="mission-submission-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-heading">
             {selectedMission.title}
@@ -108,7 +110,7 @@ const MissionDialog = ({
         
         <div className="space-y-4 my-4">
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
+            <p id="mission-submission-description" className="text-sm text-muted-foreground">
               {selectedMission.description}
             </p>
             

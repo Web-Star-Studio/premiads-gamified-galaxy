@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { missionService } from "@/services/supabase";
-import { RotateCcw, ShieldAlert, Wrench, Info } from "lucide-react";
+import { RotateCcw, ShieldAlert, Wrench, Info, AlertTriangle, CheckCircle, XCircle, RefreshCw, Bug, Database } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
 
 interface ModerationTestProps {
   onRefresh: () => void;
@@ -15,6 +15,10 @@ interface ModerationTestProps {
 
 const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagnosticResults, setDiagnosticResults] = useState<any[]>([]);
+  const [fixingIssues, setFixingIssues] = useState(false);
   const { toast } = useToast();
   const { currentUser } = useAuth();
   
@@ -233,9 +237,233 @@ const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
     }
   };
 
+  // Diagnosticar problemas no fluxo de moderação
+  const runDiagnostics = async () => {
+    setDiagnosing(true);
+    setDiagnosticResults([]);
+    
+    try {
+      const results = [];
+      
+      // 1. Verificar se o usuário atual é um anunciante
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      
+      if (!userId) {
+        results.push({
+          name: "Autenticação",
+          status: "error",
+          message: "Usuário não autenticado"
+        });
+        setDiagnosticResults(results);
+        return;
+      }
+      
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError || !profile) {
+        results.push({
+          name: "Perfil",
+          status: "error",
+          message: "Não foi possível obter o perfil do usuário"
+        });
+      } else if (profile.user_type !== 'anunciante') {
+        results.push({
+          name: "Tipo de usuário",
+          status: "warning",
+          message: `Usuário não é um anunciante (tipo: ${profile.user_type})`
+        });
+      } else {
+        results.push({
+          name: "Tipo de usuário",
+          status: "success",
+          message: "Usuário é um anunciante"
+        });
+      }
+      
+      // 2. Verificar se o anunciante tem missões
+      const { data: missions, error: missionsError } = await supabase
+        .from('missions')
+        .select('id, title, advertiser_id')
+        .eq('advertiser_id', userId);
+      
+      if (missionsError) {
+        results.push({
+          name: "Missões",
+          status: "error",
+          message: "Erro ao buscar missões"
+        });
+      } else if (!missions || missions.length === 0) {
+        results.push({
+          name: "Missões",
+          status: "warning",
+          message: "Anunciante não tem missões cadastradas"
+        });
+      } else {
+        results.push({
+          name: "Missões",
+          status: "success",
+          message: `Anunciante tem ${missions.length} missão(ões) cadastrada(s)`
+        });
+        
+        // Verificar se o campo advertiser_id está preenchido corretamente
+        const missionsWithoutAdvertiser = missions.filter(m => !m.advertiser_id);
+        if (missionsWithoutAdvertiser.length > 0) {
+          results.push({
+            name: "Campo advertiser_id",
+            status: "warning",
+            message: `${missionsWithoutAdvertiser.length} missão(ões) sem advertiser_id definido`,
+            fixable: true,
+            fixType: "missing_advertiser_id",
+            data: missionsWithoutAdvertiser
+          });
+        } else {
+          results.push({
+            name: "Campo advertiser_id",
+            status: "success",
+            message: "Todas as missões têm advertiser_id definido corretamente"
+          });
+        }
+      }
+      
+      // 3. Verificar se há submissões pendentes
+      const { data: pendingSubmissions, error: pendingError } = await supabase
+        .from('mission_submissions')
+        .select('id, mission_id, status')
+        .eq('status', 'pending_approval');
+      
+      if (pendingError) {
+        results.push({
+          name: "Submissões pendentes",
+          status: "error",
+          message: "Erro ao buscar submissões pendentes"
+        });
+      } else {
+        results.push({
+          name: "Submissões pendentes",
+          status: "success",
+          message: `Existem ${pendingSubmissions?.length || 0} submissões pendentes no sistema`
+        });
+        
+        if (pendingSubmissions && pendingSubmissions.length > 0 && missions && missions.length > 0) {
+          // Verificar se alguma submissão pendente é para missões deste anunciante
+          const missionIds = missions.map(m => m.id);
+          const relevantSubmissions = pendingSubmissions.filter(sub => 
+            missionIds.includes(sub.mission_id)
+          );
+          
+          results.push({
+            name: "Submissões para moderação",
+            status: relevantSubmissions.length > 0 ? "success" : "warning",
+            message: `${relevantSubmissions.length} submissão(ões) pendente(s) para missões deste anunciante`
+          });
+        }
+      }
+      
+      // 4. Verificar políticas RLS verificando se conseguimos buscar submissões
+      try {
+        // Tentativa de buscar submissões - se funcionar, as políticas RLS estão corretas
+        const { data: testSubmissions, error: testError } = await supabase
+          .from('mission_submissions')
+          .select('count')
+          .limit(1);
+        
+        if (!testError) {
+          results.push({
+            name: "Políticas RLS",
+            status: "success",
+            message: "Acesso às submissões está funcionando corretamente"
+          });
+        } else {
+          results.push({
+            name: "Políticas RLS",
+            status: "warning",
+            message: `Erro ao acessar submissões: ${testError.message}`
+          });
+        }
+      } catch (rlsError: any) {
+        results.push({
+          name: "Políticas RLS",
+          status: "warning",
+          message: `Erro ao verificar políticas RLS: ${rlsError.message}`
+        });
+      }
+      
+      setDiagnosticResults(results);
+      
+    } catch (error: any) {
+      toast({
+        title: "Erro no diagnóstico",
+        description: error.message || "Ocorreu um erro durante o diagnóstico",
+        variant: "destructive",
+      });
+    } finally {
+      setDiagnosing(false);
+    }
+  };
+
+  // Corrigir problemas identificados
+  const fixIssues = async () => {
+    setFixingIssues(true);
+    
+    try {
+      const fixableIssues = diagnosticResults.filter(result => result.fixable);
+      
+      if (fixableIssues.length === 0) {
+        toast({
+          title: "Nenhum problema para corrigir",
+          description: "Não foram encontrados problemas que possam ser corrigidos automaticamente",
+        });
+        return;
+      }
+      
+      for (const issue of fixableIssues) {
+        if (issue.fixType === "missing_advertiser_id") {
+          // Obter o ID do anunciante atual
+          const { data: session } = await supabase.auth.getSession();
+          const advertiserId = session?.session?.user?.id;
+          
+          if (!advertiserId) continue;
+          
+          // Atualizar missões sem advertiser_id
+          for (const mission of issue.data) {
+            await supabase
+              .from('missions')
+              .update({ advertiser_id: advertiserId })
+              .eq('id', mission.id);
+          }
+          
+          toast({
+            title: "Correção aplicada",
+            description: `Campo advertiser_id atualizado em ${issue.data.length} missão(ões)`,
+          });
+        }
+      }
+      
+      // Executar diagnóstico novamente para atualizar os resultados
+      await runDiagnostics();
+      
+      // Atualizar a lista de submissões
+      onRefresh();
+      
+    } catch (error: any) {
+      toast({
+        title: "Erro ao corrigir problemas",
+        description: error.message || "Ocorreu um erro ao tentar corrigir os problemas",
+        variant: "destructive",
+      });
+    } finally {
+      setFixingIssues(false);
+    }
+  };
+
   return (
-    <Card className="border-neon-pink/30 shadow-[0_0_15px_rgba(255,82,174,0.1)]">
-      <CardHeader className="pb-3">
+    <Card className="bg-galaxy-deepPurple/10 border-galaxy-purple/30">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wrench className="h-5 w-5 text-neon-pink" />
           Ferramentas de Teste da Moderação
@@ -244,65 +472,113 @@ const ModerationTest = ({ onRefresh }: ModerationTestProps) => {
           Crie submissões de teste para demonstrar o fluxo de moderação
         </CardDescription>
       </CardHeader>
-      
       <CardContent>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="info">
-            <AccordionTrigger>
-              <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-neon-cyan" />
-                <span>Sobre o Fluxo de Moderação</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <Alert className="mb-4">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertTitle>Fluxo de Moderação com Segunda Instância</AlertTitle>
-                <AlertDescription className="mt-2">
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
-                    <li>Você (anunciante) recebe submissões "pending" para aprovar ou rejeitar</li>
-                    <li>Se você aprovar, o usuário recebe os tickets imediatamente</li>
-                    <li>Se você rejeitar, a submissão vai para "second_instance_pending" para revisão do administrador</li>
-                    <li>O administrador pode rejeitar definitivamente ou aprovar e retornar para você</li>
-                    <li>Submissões retornadas aparecem como "returned_to_advertiser" para sua decisão final</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <Button 
-            variant="outline" 
-            className="border-neon-cyan/30 hover:border-neon-cyan/50"
-            onClick={createTestSubmission}
-            disabled={isCreating}
-          >
-            Criar Submissão Pendente
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              variant="outline" 
+              onClick={createTestSubmission} 
+              disabled={loading}
+              className="bg-galaxy-dark hover:bg-galaxy-deepPurple"
+            >
+              {loading ? "Criando..." : "Criar Submissão Pendente"}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={createSecondInstanceTest} 
+              disabled={isCreating}
+              className="bg-galaxy-dark hover:bg-galaxy-deepPurple"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Criar Segunda Instância
+              {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={createReturnedToAdvertiser} 
+              disabled={isCreating}
+              className="bg-galaxy-dark hover:bg-galaxy-deepPurple"
+            >
+              Criar Retornada p/ Anunciante
+              {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={runDiagnostics} 
+              disabled={diagnosing}
+              className="bg-galaxy-dark hover:bg-galaxy-deepPurple"
+            >
+              <Bug className="mr-2 h-4 w-4" />
+              {diagnosing ? "Diagnosticando..." : "Diagnosticar Problemas"}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={onRefresh} 
+              className="bg-galaxy-dark hover:bg-galaxy-deepPurple"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Atualizar Lista
+            </Button>
+          </div>
           
-          <Button 
-            variant="outline" 
-            className="border-neon-pink/30 hover:border-neon-pink/50"
-            onClick={createSecondInstanceTest}
-            disabled={isCreating}
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Criar Segunda Instância
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="border-amber-500/30 hover:border-amber-500/50"
-            onClick={createReturnedToAdvertiser}
-            disabled={isCreating}
-          >
-            Criar Retornada p/ Anunciante
-            {isCreating && <div className="ml-2 animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />}
-          </Button>
+          {/* Resultados do diagnóstico */}
+          {diagnosticResults.length > 0 && (
+            <Accordion type="single" collapsible className="mt-4">
+              <AccordionItem value="diagnostics">
+                <AccordionTrigger className="text-sm font-medium">
+                  Resultados do Diagnóstico ({diagnosticResults.length})
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    {diagnosticResults.map((result, index) => (
+                      <div 
+                        key={index} 
+                        className={`p-3 rounded-md flex items-start gap-3 ${
+                          result.status === "success" ? "bg-green-950/20 border border-green-800/30" :
+                          result.status === "warning" ? "bg-amber-950/20 border border-amber-800/30" :
+                          "bg-red-950/20 border border-red-800/30"
+                        }`}
+                      >
+                        {result.status === "success" ? (
+                          <CheckCircle className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        ) : result.status === "warning" ? (
+                          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          <h4 className={`font-medium ${
+                            result.status === "success" ? "text-green-400" :
+                            result.status === "warning" ? "text-amber-400" :
+                            "text-red-400"
+                          }`}>
+                            {result.name}
+                          </h4>
+                          <p className="text-sm text-gray-300">{result.message}</p>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Botão para corrigir problemas */}
+                    {diagnosticResults.some(result => result.fixable) && (
+                      <Button 
+                        onClick={fixIssues} 
+                        disabled={fixingIssues}
+                        className="w-full mt-3"
+                      >
+                        <Database className="mr-2 h-4 w-4" />
+                        {fixingIssues ? "Corrigindo problemas..." : "Corrigir Problemas Automaticamente"}
+                      </Button>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </div>
       </CardContent>
     </Card>

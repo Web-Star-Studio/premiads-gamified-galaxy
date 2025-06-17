@@ -92,6 +92,7 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       if (missionsError) throw missionsError;
       
       console.log('Missions found:', missionsData?.length || 0);
+      console.log('Missions data:', missionsData);
       
       if (!missionsData || missionsData.length === 0) {
         setMissions([])
@@ -113,6 +114,8 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
         return;
       }
       
+      console.log(`Mapeando aba '${activeTab}' para status '${dbStatus}' no banco de dados`);
+      
       // Fixed query - use status from map
       let submissionsQuery = supabase
         .from('mission_submissions')
@@ -132,6 +135,37 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       if (submissionsError) throw submissionsError;
       
       console.log('Submissions found:', submissionsData?.length || 0);
+      console.log('Submissions raw data:', submissionsData);
+      
+      // Verificação adicional para debug - listar todas as submissões pendentes
+      if (activeTab === 'pendentes' && (!submissionsData || submissionsData.length === 0)) {
+        console.log('Verificando se existem submissões pendentes no banco de dados:');
+        
+        const { data: allPendingSubmissions, error: pendingError } = await supabase
+          .from('mission_submissions')
+          .select('*')
+          .eq('status', 'pending_approval');
+          
+        if (!pendingError) {
+          console.log(`Total de submissões pendentes no banco: ${allPendingSubmissions?.length || 0}`);
+          console.log('Todas as submissões pendentes:', allPendingSubmissions);
+          
+          if (allPendingSubmissions && allPendingSubmissions.length > 0) {
+            // Verificar se as missões pertencem ao anunciante atual
+            const pendingMissionIds = [...new Set(allPendingSubmissions.map(sub => sub.mission_id))];
+            console.log('IDs de missões com submissões pendentes:', pendingMissionIds);
+            console.log('IDs de missões do anunciante atual:', missionIds);
+            
+            // Verificar interseção
+            const intersection = pendingMissionIds.filter(id => missionIds.includes(id));
+            console.log('Interseção de missões:', intersection);
+            
+            if (intersection.length > 0) {
+              console.warn('ALERTA: Existem submissões pendentes que deveriam aparecer mas não estão sendo exibidas!');
+            }
+          }
+        }
+      }
       
       // Now fetch user profiles and mission titles separately
       if (submissionsData && submissionsData.length > 0) {
