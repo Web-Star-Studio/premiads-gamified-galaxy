@@ -1,108 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertCircle, CheckCircle2, Info, Circle, X } from "lucide-react";
-import { useSounds } from "@/hooks/use-sounds";
 import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
-
-// Interface para as notificações
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning" | "error";
-  date: string;
-  read: boolean;
-}
+import { useNotifications } from "@/hooks/useNotifications";
 
 const NotificationsPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { playSound } = useSounds();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
   const { userName = "Desenvolvedor" } = useUser();
-
-  // Simulação de carregamento de notificações
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotifications([
-        {
-          id: 1,
-          title: "Aprovação de campanha",
-          message: "Sua campanha 'Promoção de Primavera' foi aprovada e está ativa.",
-          type: "success",
-          date: "15/04/2025 14:30",
-          read: false
-        },
-        {
-          id: 2,
-          title: "Rifas adicionadas",
-          message: "200 rifas foram adicionadas à sua conta.",
-          type: "info",
-          date: "14/04/2025 11:20",
-          read: false
-        },
-        {
-          id: 3,
-          title: "Campanha próxima de expirar",
-          message: "Sua campanha 'Descontos Exclusivos' expira em 2 dias.",
-          type: "warning",
-          date: "13/04/2025 09:45",
-          read: true
-        },
-        {
-          id: 4,
-          title: "Submissão rejeitada",
-          message: "A submissão para a campanha 'Teste Beta' foi rejeitada. Verifique os detalhes.",
-          type: "error",
-          date: "10/04/2025 16:15",
-          read: true
-        },
-        {
-          id: 5,
-          title: "Manutenção programada",
-          message: "O sistema estará indisponível para manutenção em 20/04/2025 das 02:00 às 04:00.",
-          type: "info",
-          date: "09/04/2025 10:00",
-          read: true
-        }
-      ]);
-      setLoading(false);
-      playSound("chime");
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [playSound]);
-
-  // Marcar notificação como lida
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-    playSound("pop");
-  };
-
-  // Excluir notificação
-  const deleteNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-    playSound("error");
-  };
-
-  // Marcar todas como lidas
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-    playSound("chime");
-  };
+  const { 
+    notifications, 
+    loading, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification,
+    stats 
+  } = useNotifications();
 
   // Ícone com base no tipo de notificação
   const getNotificationIcon = (type: string) => {
@@ -115,9 +33,25 @@ const NotificationsPage = () => {
         return <AlertCircle className="h-5 w-5 text-amber-400" />;
       case "error":
         return <AlertCircle className="h-5 w-5 text-red-400" />;
+      case "activity":
+        return <Bell className="h-5 w-5 text-neon-cyan" />;
       default:
         return <Circle className="h-5 w-5" />;
     }
+  };
+
+  // Formatar data para o formato brasileiro
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Data indisponível';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -135,14 +69,21 @@ const NotificationsPage = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold mb-2">Notificações</h1>
-                <p className="text-muted-foreground">Acompanhe suas notificações e alertas do sistema.</p>
+                <p className="text-muted-foreground">
+                  Acompanhe suas notificações e alertas do sistema. 
+                  {stats.unread > 0 && (
+                    <span className="ml-2 text-neon-pink font-medium">
+                      {stats.unread} não lidas
+                    </span>
+                  )}
+                </p>
               </div>
               
               <div className="mt-4 md:mt-0">
                 <Button 
                   variant="outline" 
                   onClick={markAllAsRead} 
-                  disabled={notifications.every(n => n.read) || loading}
+                  disabled={stats.unread === 0 || loading}
                 >
                   Marcar todas como lidas
                 </Button>
@@ -175,14 +116,19 @@ const NotificationsPage = () => {
                           <div className="flex-1">
                             <div className="flex items-start justify-between">
                               <div>
-                                <h3 className={`font-medium ${notification.read ? 'text-gray-300' : 'text-white'}`}>
-                                  {notification.title}
-                                </h3>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className={`font-medium ${notification.read ? 'text-gray-300' : 'text-white'}`}>
+                                    {notification.title}
+                                  </h3>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300 capitalize">
+                                    {notification.category}
+                                  </span>
+                                </div>
                                 <p className="text-sm text-muted-foreground mt-1">
                                   {notification.message}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-2">
-                                  {notification.date}
+                                  {formatDate(notification.created_at)}
                                 </p>
                               </div>
                               
