@@ -1,82 +1,29 @@
-
+import React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Clock, CheckCircle, AlertTriangle, Gift, Star } from "lucide-react";
+import { Bell, Gift, Target, AlertTriangle, Info, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSounds } from "@/hooks/use-sounds";
-
-type NotificationType = "mission" | "reward" | "alert" | "system";
-
-interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  time: string; // ISO string
-  read: boolean;
-}
-
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "mission",
-    title: "Nova Missão Disponível",
-    message: "Pesquisa de satisfação da marca XYZ disponível! Complete e ganhe 50 tickets.",
-    time: "2025-04-15T10:30:00Z",
-    read: false
-  },
-  {
-    id: "2",
-    type: "reward",
-    title: "Pontos Adicionados",
-    message: "Parabéns! Você ganhou 150 tickets pela missão completada.",
-    time: "2025-04-14T15:45:00Z",
-    read: false
-  },
-  {
-    id: "3",
-    type: "alert",
-    title: "Ticket Expirando",
-    message: "Seu ticket para o sorteio irá expirar em 2 dias. Não perca a chance!",
-    time: "2025-04-14T09:20:00Z",
-    read: true
-  },
-  {
-    id: "4",
-    type: "system",
-    title: "Manutenção Programada",
-    message: "Haverá uma breve manutenção no sistema em 18/04 às 03:00.",
-    time: "2025-04-13T11:15:00Z",
-    read: true
-  },
-  {
-    id: "5",
-    type: "reward",
-    title: "Novo Sorteio Disponível",
-    message: "Um novo sorteio foi aberto! Use seus tickets para participar.",
-    time: "2025-04-12T14:30:00Z",
-    read: true
-  }
-];
+import { useClientNotifications } from "@/hooks/useClientNotifications";
+import { Link } from "react-router-dom";
 
 const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-  const { playSound } = useSounds();
   
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { 
+    notifications, 
+    loading,
+    hasUnread,
+    markAsRead,
+    markAllAsRead 
+  } = useClientNotifications({ limit: 5 }); // Apenas as 5 mais recentes para o dropdown
   
   const toggleNotifications = () => {
     setIsOpen(!isOpen);
-    playSound("pop");
-    if (!isOpen && unreadCount > 0) {
-      // Mark all as read when opening
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
-    }
   };
   
-  const formatTimeAgo = (dateString: string) => {
+  const formatTimeAgo = (dateString: string | null) => {
+    if (!dateString) return 'Data indisponível';
+    
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -93,20 +40,20 @@ const NotificationCenter = () => {
     }
   };
   
-  const getNotificationIcon = (type: NotificationType) => {
-    switch (type) {
-      case "mission":
-        return <CheckCircle className="w-5 h-5 text-neon-lime" />;
-      case "reward":
-        return <Gift className="w-5 h-5 text-neon-pink" />;
-      case "alert":
-        return <AlertTriangle className="w-5 h-5 text-amber-400" />;
-      case "system":
-        return <Star className="w-5 h-5 text-neon-cyan" />;
-      default:
-        return <Bell className="w-5 h-5 text-gray-400" />;
-    }
+  const getNotificationIcon = (category: string, type: string) => {
+    const iconMap = {
+      campaign: <Target className="w-5 h-5 text-neon-lime" />,
+      submission: type === 'success' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />,
+      payment: <Gift className="w-5 h-5 text-neon-pink" />,
+      achievement: <Gift className="w-5 h-5 text-neon-cyan" />,
+      user: <Gift className="w-5 h-5 text-purple-400" />,
+      system: <Info className="w-5 h-5 text-blue-400" />,
+      security: <AlertTriangle className="w-5 h-5 text-red-400" />,
+    };
+    return iconMap[category as keyof typeof iconMap] || <Bell className="w-5 h-5 text-gray-400" />;
   };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="relative">
@@ -117,8 +64,8 @@ const NotificationCenter = () => {
         onClick={toggleNotifications}
       >
         <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full"></span>
+        {hasUnread && (
+          <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full animate-pulse"></span>
         )}
       </Button>
       
@@ -134,16 +81,34 @@ const NotificationCenter = () => {
             <div className="p-4 border-b border-galaxy-purple/20">
               <div className="flex items-center justify-between">
                 <h3 className="font-heading text-lg">Notificações</h3>
-                <span className="text-xs text-gray-400 flex items-center">
-                  <Clock className="w-3 h-3 mr-1" />
-                  Atualizadas agora
-                </span>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={markAllAsRead}
+                      className="text-xs text-neon-cyan hover:text-neon-cyan/80"
+                    >
+                      Marcar todas
+                    </Button>
+                  )}
+                  <span className="text-xs text-gray-400 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Tempo real
+                  </span>
+                </div>
               </div>
             </div>
             
             <div className="overflow-y-auto max-h-[50vh]">
-              {notifications.length === 0 ? (
+              {loading ? (
                 <div className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-neon-cyan mx-auto mb-2"></div>
+                  <p className="text-gray-400 text-sm">Carregando...</p>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Bell className="w-12 h-12 text-gray-600 mx-auto mb-2" />
                   <p className="text-gray-400">Sem notificações no momento.</p>
                 </div>
               ) : (
@@ -151,18 +116,37 @@ const NotificationCenter = () => {
                   {notifications.map(notification => (
                     <div 
                       key={notification.id}
-                      className={`p-4 border-b border-galaxy-purple/10 hover:bg-galaxy-deepPurple/30 transition-colors ${!notification.read ? 'bg-galaxy-deepPurple/20' : ''}`}
+                      className={`p-4 border-b border-galaxy-purple/10 hover:bg-galaxy-deepPurple/30 transition-colors cursor-pointer ${!notification.read ? 'bg-galaxy-deepPurple/20' : ''}`}
+                      onClick={() => !notification.read && markAsRead(notification.id)}
                     >
                       <div className="flex gap-3">
                         <div className="mt-0.5">
-                          {getNotificationIcon(notification.type)}
+                          {getNotificationIcon(notification.category, notification.type)}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium">{notification.title}</h4>
-                            <span className="text-xs text-gray-400">{formatTimeAgo(notification.time)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">{formatTimeAgo(notification.created_at)}</span>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-neon-cyan rounded-full"></div>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-300 mt-1">{notification.message}</p>
+                          <p className="text-sm text-gray-300 mt-1 line-clamp-2">{notification.message}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs px-2 py-1 bg-galaxy-purple/30 rounded-full text-galaxy-purple-light">
+                              {notification.category}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              notification.type === 'success' ? 'bg-green-500/20 text-green-400' :
+                              notification.type === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+                              notification.type === 'error' ? 'bg-red-500/20 text-red-400' :
+                              'bg-blue-500/20 text-blue-400'
+                            }`}>
+                              {notification.type}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -172,9 +156,11 @@ const NotificationCenter = () => {
             </div>
             
             <div className="p-3 border-t border-galaxy-purple/20">
-              <Button variant="ghost" size="sm" className="w-full text-neon-cyan text-sm">
-                Ver todas notificações
-              </Button>
+              <Link to="/cliente/notificacoes">
+                <Button variant="ghost" size="sm" className="w-full text-neon-cyan text-sm hover:text-neon-cyan/80">
+                  Ver todas notificações
+                </Button>
+              </Link>
             </div>
           </motion.div>
         )}
