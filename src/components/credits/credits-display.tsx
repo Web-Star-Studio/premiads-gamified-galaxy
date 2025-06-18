@@ -1,6 +1,5 @@
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
 
 interface CreditsDisplayProps {
   showTotal?: boolean;
@@ -16,14 +15,9 @@ export function CreditsDisplay({
   showLabel = true,
   className = '' 
 }: CreditsDisplayProps) {
-  const { availableCredits, totalCredits, isLoading, refreshCredits } = useUserCredits();
+  const { availableCredits, totalCredits, isLoading } = useUserCredits();
   
   const displayValue = showTotal ? totalCredits : availableCredits;
-  
-  // Auto-refresh on mount to ensure latest data
-  useEffect(() => {
-    refreshCredits();
-  }, []);
   
   return (
     <div className={`flex items-center gap-1 ${className}`}>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { User, Info, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -9,12 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const UserMenu = () => {
-  const { availableCredits: rifas, isLoading, refreshCredits } = useUserCredits();
-  
-  // Auto-refresh credits on mount to ensure latest data
-  useEffect(() => {
-    refreshCredits();
-  }, []);
+  const { availableCredits: rifas, isLoading } = useUserCredits();
   
   return (
     <DropdownMenu>

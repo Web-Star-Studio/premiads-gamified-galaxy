@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Bell, Wallet, Star, Info, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +17,8 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = () => {
   const { userName } = useUser(); // Fixed: use userName instead of user
-  const { availableCredits: rifas, isLoading, refreshCredits } = useUserCredits();
+  const { availableCredits: rifas, isLoading } = useUserCredits();
   const navigate = useNavigate();
-
-  // Auto-refresh credits on mount to ensure latest data
-  useEffect(() => {
-    refreshCredits();
-  }, []);
 
   const handleCreditsPurchase = () => {
     navigate("/anunciante/creditos");
