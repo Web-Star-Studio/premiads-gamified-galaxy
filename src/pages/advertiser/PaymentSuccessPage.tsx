@@ -40,6 +40,9 @@ function PaymentSuccessPage() {
   const [rifasAwarded, setRifasAwarded] = useState(0);
   const [bonusRifas, setBonusRifas] = useState(0);
   
+  // Evita processamento duplicado em renderizações estritas / re-renders
+  const hasProcessedRef = React.useRef(false);
+  
   const sessionId = searchParams.get('session_id');
   
   // Function to fetch purchase details from Supabase
@@ -135,6 +138,9 @@ function PaymentSuccessPage() {
   };
 
   useEffect(() => {
+    if (hasProcessedRef.current) return; // já executado
+    hasProcessedRef.current = true;
+
     const processPurchase = async () => {
       const purchaseId = searchParams.get('purchase_id');
       const sessionId = searchParams.get('session_id');
@@ -147,40 +153,71 @@ function PaymentSuccessPage() {
       try {
         setIsLoading(true);
 
-        // Get purchase data
-        const { data: purchaseData, error: purchaseError } = await supabase
-          .from('rifa_purchases')
-          .select(`
-            *,
-            rifa_packages (
-              rifas_amount,
-              rifas_bonus,
-              price
+        // Determine how to fetch the purchase: by id (query param) or by payment session id
+        let purchaseData: any
+        let purchaseError: any
+
+        if (purchaseId) {
+          // Fetch by primary id
+          ;({ data: purchaseData, error: purchaseError } = await supabase
+            .from('rifa_purchases')
+            .select(
+              `
+              *,
+              rifa_packages (
+                rifas_amount,
+                rifas_bonus,
+                price
+              )
+              `
             )
-          `)
-          .eq('id', purchaseId)
-          .single();
+            .eq('id', purchaseId)
+            .single())
+        } else if (sessionId) {
+          // Fallback: fetch by Stripe session / payment id stored in `payment_id`
+          ;({ data: purchaseData, error: purchaseError } = await supabase
+            .from('rifa_purchases')
+            .select(
+              `
+              *,
+              rifa_packages (
+                rifas_amount,
+                rifas_bonus,
+                price
+              )
+              `
+            )
+            .eq('payment_id', sessionId)
+            .single())
+        } else {
+          // Should not reach here due to guard clause above, but keep as safety net
+          throw new Error('Nenhum identificador de compra encontrado')
+        }
 
         if (purchaseError) throw purchaseError;
 
-        if (purchaseData) {
+        const resolvedPurchaseId = purchaseData?.id as string | undefined
+
+        if (purchaseData && resolvedPurchaseId) {
           setPurchase(purchaseData);
           setRifasAwarded(purchaseData.rifa_packages.rifas_amount);
           setBonusRifas(purchaseData.rifa_packages.rifas_bonus);
 
-          // Update purchase status to confirmed
-          const { error: updateError } = await supabase.functions.invoke(
-            'update-rifa-purchase-status',
-            {
-              body: {
-                purchase_id: purchaseId,
-                new_status: 'confirmed'
+          // Atualiza status somente se ainda não estiver confirmado
+          if (purchaseData.status !== 'confirmed') {
+            const { error: updateError } = await supabase.functions.invoke(
+              'update-rifa-purchase-status',
+              {
+                body: {
+                  purchase_id: resolvedPurchaseId,
+                  new_status: 'confirmed'
+                }
               }
-            }
-          );
+            );
 
-          if (updateError) {
-            console.error('Error updating purchase status:', updateError);
+            if (updateError) {
+              console.error('Error updating purchase status:', updateError);
+            }
           }
 
           // Refresh credits and invalidate queries
@@ -196,8 +233,8 @@ function PaymentSuccessPage() {
           playSound('success');
 
           toast({
-            title: "Pagamento confirmado!",
-            description: `Suas rifas foram adicionadas à sua conta.`,
+            title: 'Pagamento confirmado!',
+            description: 'Suas rifas foram adicionadas à sua conta.'
           });
         }
       } catch (error) {
