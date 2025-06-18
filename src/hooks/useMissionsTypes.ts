@@ -1,4 +1,3 @@
-
 // Define mission types for consistency across the app
 export interface Mission {
   id: string;
@@ -6,6 +5,7 @@ export interface Mission {
   description: string;
   type: MissionType;
   tickets_reward: number;
+  rifas: number;
   cashback_reward: number;
   cost_in_tokens: number;
   requirements: string[] | string;

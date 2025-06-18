@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +35,7 @@ const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: 
                   "bg-blue-600"
                 }
               >
-                {mission.tickets_reward} pts
+                {mission.rifas || mission.tickets_reward || 0} rifas
               </Badge>
             </div>
             <p className="mt-2 mb-2">{mission.description}</p>

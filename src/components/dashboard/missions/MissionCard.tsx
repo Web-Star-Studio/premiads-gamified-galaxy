@@ -48,7 +48,7 @@ const MissionCard = ({ mission, onClick }: MissionCardProps) => {
             className="flex items-center gap-1"
           >
             <Award className="w-3 h-3" />
-            <span>{mission.tickets_reward} pts</span>
+            <span>{mission.rifas || mission.tickets_reward || 0} rifas</span>
           </Badge>
           
           {mission.has_badge && (

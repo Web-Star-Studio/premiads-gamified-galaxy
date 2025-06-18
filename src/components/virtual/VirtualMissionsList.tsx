@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useVirtualScrolling } from '@/utils/performance';
 import { Mission } from '@/hooks/missions/types';
@@ -45,7 +44,7 @@ const VirtualMissionsList = React.memo<VirtualMissionsListProps>(({
           <div className="flex flex-col items-end gap-1">
             <Badge variant="secondary" className="flex items-center gap-1 text-xs">
               <Award className="w-3 h-3" />
-              <span>{mission.tickets_reward} pts</span>
+              <span>{mission.rifas || mission.tickets_reward || 0} rifas</span>
             </Badge>
           </div>
         </div>

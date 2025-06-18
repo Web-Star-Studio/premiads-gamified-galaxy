@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Clock, Award, Badge as BadgeIcon } from "lucide-react";
@@ -54,7 +53,7 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                     className="flex items-center gap-1"
                   >
                     <Award className="w-3 h-3" />
-                    <span>{mission.tickets_reward} pts</span>
+                    <span>{mission.rifas || mission.tickets_reward || 0} rifas</span>
                   </Badge>
                   
                   {mission.has_badge && (

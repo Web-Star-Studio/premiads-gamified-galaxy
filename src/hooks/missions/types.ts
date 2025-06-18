@@ -7,6 +7,7 @@ export interface Mission {
   brand?: string;
   type: string;
   tickets_reward: number;
+  rifas: number;
   cashback_reward: number;
   deadline?: string;
   status: MissionStatus | string;
