@@ -117,9 +117,9 @@ const NotificationsPage = () => {
                             <div className="flex items-start justify-between">
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h3 className={`font-medium ${notification.read ? 'text-gray-300' : 'text-white'}`}>
-                                    {notification.title}
-                                  </h3>
+                                <h3 className={`font-medium ${notification.read ? 'text-gray-300' : 'text-white'}`}>
+                                  {notification.title}
+                                </h3>
                                   <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300 capitalize">
                                     {notification.category}
                                   </span>

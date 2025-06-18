@@ -1,199 +1,372 @@
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
+import { Switch } from '../../components/ui/switch'
+import { Label } from '../../components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import { Separator } from '../../components/ui/separator'
+import { Badge } from '../../components/ui/badge'
+import { Send, Settings, History, Bell, Users, Globe } from 'lucide-react'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { useAdminNotifications, type SendNotificationData } from '../../hooks/admin/useAdminNotifications'
+import { useToast } from '../../hooks/use-toast'
 
-import { motion } from "framer-motion";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import AdminSidebar from "@/components/admin/AdminSidebar";
-import DashboardHeader from "@/components/admin/DashboardHeader";
-import { useMediaQuery } from "@/hooks/use-mobile";
-import { Bell, Settings, BellRing, BellOff } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+function NotificationsPage() {
+  const {
+    isLoading,
+    settings,
+    notifications,
+    pagination,
+    sendNotification,
+    getSettings,
+    updateSettings,
+    getNotificationsHistory,
+    toggleSetting
+  } = useAdminNotifications()
 
-const NotificationsPage = () => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [globalNotifications, setGlobalNotifications] = useState(true);
-  const [userNotifications, setUserNotifications] = useState(true);
-  const [systemNotifications, setSystemNotifications] = useState(true);
+  const { toast } = useToast()
+
+  // Form state
+  const [formData, setFormData] = useState<SendNotificationData>({
+    title: '',
+    message: '',
+    target_type: 'all'
+  })
+
+  // UI state
+  const [activeTab, setActiveTab] = useState<'send' | 'settings' | 'history'>('send')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Load initial data
+  useEffect(() => {
+    getSettings()
+  }, [getSettings])
+
+  // Load history only when history tab is active
+  useEffect(() => {
+    if (activeTab === 'history') {
+      getNotificationsHistory(1, 10)
+    }
+  }, [activeTab, getNotificationsHistory])
+
+  const handleSendNotification = async () => {
+    if (!formData.title || !formData.message) {
+      toast({
+        title: 'Erro de validação',
+        description: 'Título e mensagem são obrigatórios',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    const result = await sendNotification(formData)
+    
+    if (result.success) {
+      // Clear form and refresh history
+      setFormData({ title: '', message: '', target_type: 'all' })
+      getNotificationsHistory(1, 10)
+      setCurrentPage(1)
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    getNotificationsHistory(page, 10)
+  }
+
+  const getTargetTypeLabel = (targetType: string) => {
+    switch (targetType) {
+      case 'all': return 'Todos os usuários'
+      case 'advertisers': return 'Anunciantes'
+      case 'participants': return 'Participantes'
+      default: return targetType
+    }
+  }
+
+  const getTargetTypeColor = (targetType: string) => {
+    switch (targetType) {
+      case 'all': return 'bg-blue-500'
+      case 'advertisers': return 'bg-green-500'
+      case 'participants': return 'bg-purple-500'
+      default: return 'bg-gray-500'
+    }
+  }
   
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
-      <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
-        <AdminSidebar />
-        <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
-          <div className="container px-4 py-6 sm:py-8 mx-auto max-w-7xl">
-            <DashboardHeader 
-              title="Notificações" 
-              subtitle="Gerenciamento de notificações do sistema" 
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mt-6 sm:mt-8"
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Notificações</h1>
+          <p className="text-muted-foreground">
+            Gerencie notificações e configurações do sistema
+          </p>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex space-x-1 rounded-lg bg-muted p-1">
+        <Button
+          variant={activeTab === 'send' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('send')}
+          className="flex items-center gap-2 flex-1"
+        >
+          <Send className="h-4 w-4" />
+          Enviar Notificação
+        </Button>
+        <Button
+          variant={activeTab === 'settings' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('settings')}
+          className="flex items-center gap-2 flex-1"
+        >
+          <Settings className="h-4 w-4" />
+          Configurações
+        </Button>
+        <Button
+          variant={activeTab === 'history' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('history')}
+          className="flex items-center gap-2 flex-1"
+        >
+          <History className="h-4 w-4" />
+          Histórico
+        </Button>
+      </div>
+
+      {/* Send Notification Tab */}
+      {activeTab === 'send' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Enviar Notificação
+            </CardTitle>
+            <CardDescription>
+              Envie notificações personalizadas para usuários específicos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Título</Label>
+                <Input
+                  id="title"
+                  placeholder="Digite o título da notificação"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="target">Destinatários</Label>
+                <Select 
+                  value={formData.target_type} 
+                  onValueChange={(value: 'all' | 'advertisers' | 'participants') => 
+                    setFormData(prev => ({ ...prev, target_type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o público-alvo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Todos os usuários
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="advertisers">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Anunciantes
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="participants">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Participantes
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="message">Mensagem</Label>
+              <Textarea
+                id="message"
+                placeholder="Digite a mensagem da notificação..."
+                rows={4}
+                value={formData.message}
+                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+              />
+            </div>
+
+            <Button 
+              onClick={handleSendNotification}
+              disabled={isLoading}
+              className="w-full"
             >
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <Card className="bg-galaxy-deepPurple/10 border-galaxy-purple/30">
+              <Send className="h-4 w-4 mr-2" />
+              {isLoading ? 'Enviando...' : 'Enviar Notificação'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && (
+        <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-neon-pink" />
-                      Configuração Global
+              <Settings className="h-5 w-5" />
+              Configurações de Notificação
                     </CardTitle>
                     <CardDescription>
-                      Configurações de notificações para todo o sistema
+              Controle global das notificações do sistema
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+          <CardContent className="space-y-6">
+            {settings && (
+              <>
                       <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <h4 className="font-medium">Notificações Globais</h4>
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Notificações Globais</Label>
                           <p className="text-sm text-muted-foreground">
-                            Ativar ou desativar todas as notificações
+                      Habilita ou desabilita todas as notificações do sistema
                           </p>
                         </div>
                         <Switch 
-                          checked={globalNotifications}
-                          onCheckedChange={setGlobalNotifications}
+                    checked={settings.global_notifications_enabled}
+                    onCheckedChange={() => toggleSetting('global_notifications_enabled')}
+                    disabled={isLoading}
                         />
                       </div>
+
+                <Separator />
                       
                       <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <h4 className="font-medium">Notificações de Usuários</h4>
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Notificações de Usuários</Label>
                           <p className="text-sm text-muted-foreground">
-                            Ativar ou desativar notificações para usuários
+                      Controla notificações relacionadas a ações de usuários
                           </p>
                         </div>
                         <Switch 
-                          checked={userNotifications}
-                          onCheckedChange={setUserNotifications}
-                          disabled={!globalNotifications}
+                    checked={settings.user_notifications_enabled}
+                    onCheckedChange={() => toggleSetting('user_notifications_enabled')}
+                    disabled={isLoading || !settings.global_notifications_enabled}
                         />
                       </div>
+
+                <Separator />
                       
                       <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <h4 className="font-medium">Notificações de Sistema</h4>
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Notificações de Sistema</Label>
                           <p className="text-sm text-muted-foreground">
-                            Ativar ou desativar notificações de sistema
+                      Controla notificações automáticas do sistema
                           </p>
                         </div>
                         <Switch 
-                          checked={systemNotifications}
-                          onCheckedChange={setSystemNotifications}
-                          disabled={!globalNotifications}
+                    checked={settings.system_notifications_enabled}
+                    onCheckedChange={() => toggleSetting('system_notifications_enabled')}
+                    disabled={isLoading || !settings.global_notifications_enabled}
                         />
                       </div>
-                    </div>
+              </>
+            )}
                   </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">
-                      Salvar Configurações
-                    </Button>
-                  </CardFooter>
                 </Card>
+      )}
                 
-                <Card className="bg-galaxy-deepPurple/10 border-galaxy-purple/30">
+      {/* History Tab */}
+      {activeTab === 'history' && (
+        <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <BellRing className="h-5 w-5 text-neon-pink" />
+              <History className="h-5 w-5" />
                       Histórico de Notificações
                     </CardTitle>
                     <CardDescription>
-                      Notificações recentes enviadas pelo sistema
+              Visualize todas as notificações enviadas pelo sistema administrativo
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="p-3 rounded-md bg-galaxy-purple/10 border border-galaxy-purple/20">
-                        <div className="flex justify-between items-center mb-1">
-                          <h4 className="font-medium">Manutenção Programada</h4>
-                          <span className="text-xs text-muted-foreground">2h atrás</span>
+              {notifications.length === 0 ? (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhuma notificação encontrada</p>
+                </div>
+              ) : (
+                <>
+                  {notifications.map((notification) => (
+                    <div key={notification.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">{notification.title}</h3>
+                            <Badge 
+                              variant="secondary" 
+                              className={`${getTargetTypeColor(notification.data?.target_type)} text-white`}
+                            >
+                              {getTargetTypeLabel(notification.data?.target_type)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {notification.message}
+                          </p>
                         </div>
-                        <p className="text-sm">Sistema será atualizado às 02:00. Tempo estimado: 30 min.</p>
+                        <div className="text-right text-sm text-muted-foreground">
+                          {format(new Date(notification.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                        </div>
                       </div>
                       
-                      <div className="p-3 rounded-md bg-galaxy-purple/10 border border-galaxy-purple/20">
-                        <div className="flex justify-between items-center mb-1">
-                          <h4 className="font-medium">Novo Sorteio Criado</h4>
-                          <span className="text-xs text-muted-foreground">5h atrás</span>
+                      {notification.data?.recipients_count && (
+                        <div className="text-xs text-muted-foreground">
+                          Enviado para {notification.data.recipients_count} usuário(s)
                         </div>
-                        <p className="text-sm">Sorteio "Prêmio Especial" foi criado com sucesso.</p>
-                      </div>
-                      
-                      <div className="p-3 rounded-md bg-galaxy-purple/10 border border-galaxy-purple/20">
-                        <div className="flex justify-between items-center mb-1">
-                          <h4 className="font-medium">Alerta de Segurança</h4>
-                          <span className="text-xs text-muted-foreground">1d atrás</span>
-                        </div>
-                        <p className="text-sm">Múltiplas tentativas de login detectadas para usuário #4321.</p>
-                      </div>
+                      )}
                     </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">
-                      Ver Todas as Notificações
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-              
-              <Card className="mt-6 bg-galaxy-deepPurple/10 border-galaxy-purple/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-neon-pink" />
-                    Enviar Notificação
-                  </CardTitle>
-                  <CardDescription>
-                    Envie uma notificação para usuários específicos ou para todo o sistema
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid gap-2">
-                      <label htmlFor="title" className="text-sm font-medium">Título</label>
-                      <input 
-                        id="title"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder="Título da notificação"
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <label htmlFor="message" className="text-sm font-medium">Mensagem</label>
-                      <textarea 
-                        id="message"
-                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder="Mensagem da notificação"
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <label htmlFor="type" className="text-sm font-medium">Tipo</label>
-                      <select 
-                        id="type"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  ))}
+
+                  {/* Pagination */}
+                  {pagination && pagination.pages > 1 && (
+                    <div className="flex items-center justify-center space-x-2 pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1 || isLoading}
                       >
-                        <option value="all">Todos os usuários</option>
-                        <option value="clients">Apenas clientes</option>
-                        <option value="advertisers">Apenas anunciantes</option>
-                        <option value="admins">Apenas administradores</option>
-                      </select>
+                        Anterior
+                    </Button>
+                      
+                      <span className="text-sm text-muted-foreground">
+                        Página {currentPage} de {pagination.pages}
+                      </span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === pagination.pages || isLoading}
+                      >
+                        Próxima
+                      </Button>
                     </div>
+                  )}
+                </>
+              )}
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline">Cancelar</Button>
-                  <Button>Enviar Notificação</Button>
-                </CardFooter>
               </Card>
-            </motion.div>
+      )}
           </div>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
-  );
-};
+  )
+}
 
-export default NotificationsPage;
+export default NotificationsPage

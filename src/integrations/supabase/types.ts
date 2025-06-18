@@ -9,42 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      notifications: {
+      admin_notification_settings: {
         Row: {
-          category: string
           created_at: string | null
-          data: Json | null
+          description: string | null
           id: string
-          message: string
-          read: boolean | null
-          title: string
-          type: string
+          setting_key: string
+          setting_value: boolean
           updated_at: string | null
-          user_id: string
         }
         Insert: {
-          category?: string
           created_at?: string | null
-          data?: Json | null
+          description?: string | null
           id?: string
-          message: string
-          read?: boolean | null
-          title: string
-          type: string
+          setting_key: string
+          setting_value?: boolean
           updated_at?: string | null
-          user_id: string
         }
         Update: {
-          category?: string
           created_at?: string | null
-          data?: Json | null
+          description?: string | null
           id?: string
-          message?: string
-          read?: boolean | null
-          title?: string
-          type?: string
+          setting_key?: string
+          setting_value?: boolean
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -88,6 +76,45 @@ export type Database = {
           created_at?: string | null
           id?: string
           rifas?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          category: string
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -308,7 +335,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "missions"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rifas_transactions: {
@@ -366,7 +393,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       rifa_purchases: {
@@ -460,6 +487,10 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_notification_enabled: {
+        Args: { setting_key: string }
         Returns: boolean
       }
     }

@@ -30,14 +30,14 @@ const AlertsPanel = () => {
     // Mapear categorias para ícones específicos se necessário
     if (category === 'payment') {
       return {
-        icon: <DollarSign className="w-4 h-4 text-yellow-400" />,
+      icon: <DollarSign className="w-4 h-4 text-yellow-400" />,
         color: colorMap.warning
       };
     }
 
     if (category === 'user') {
       return {
-        icon: <Users className="w-4 h-4 text-neon-cyan" />,
+      icon: <Users className="w-4 h-4 text-neon-cyan" />,
         color: colorMap.activity
       };
     }
@@ -64,7 +64,7 @@ const AlertsPanel = () => {
     if (diffHours < 24) return `${diffHours}h atrás`;
     return `${diffDays}d atrás`;
   };
-
+  
   const handleDismissAlert = async (notificationId: string) => {
     await markAsRead(notificationId);
   };
@@ -93,7 +93,7 @@ const AlertsPanel = () => {
       </motion.div>
     );
   }
-
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -117,33 +117,33 @@ const AlertsPanel = () => {
                 const style = getNotificationStyle(notification.type, notification.category);
                 
                 return (
-                  <motion.div
+                <motion.div
                     key={notification.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    tabIndex={0}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  tabIndex={0}
                     className={`relative p-4 pl-3 border rounded-lg flex items-stretch group ${style.color} border-l-4 transition-shadow focus-within:shadow-[0_0_0_3px_#FF00C8] hover:shadow-[0_0_0_3px_#FF00C8] outline-none`}
-                  >
-                    <div className="flex gap-3 w-full">
+                >
+                  <div className="flex gap-3 w-full">
                       <div className="mt-0.5 bg-gray-800/50 p-2 rounded-md">{style.icon}</div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
                           <h4 className="text-sm font-medium">{notification.title}</h4>
                           <span className="text-xs text-gray-400 bg-gray-800/30 px-2 py-0.5 rounded-full">
                             {formatTimestamp(notification.created_at)}
                           </span>
-                        </div>
-                        <p className="text-xs mt-1 leading-relaxed text-gray-300">{notification.message}</p>
                       </div>
+                        <p className="text-xs mt-1 leading-relaxed text-gray-300">{notification.message}</p>
                     </div>
-                    <button
+                  </div>
+                  <button
                       onClick={() => handleDismissAlert(notification.id)}
-                      className="absolute top-3 right-3 text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/50 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </motion.div>
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/50 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
                 );
               })}
               {alertNotifications.length > 5 && (

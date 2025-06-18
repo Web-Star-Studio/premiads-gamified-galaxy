@@ -92,10 +92,10 @@ const NotificationCenter = () => {
                       Marcar todas
                     </Button>
                   )}
-                  <span className="text-xs text-gray-400 flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
+                <span className="text-xs text-gray-400 flex items-center">
+                  <Clock className="w-3 h-3 mr-1" />
                     Tempo real
-                  </span>
+                </span>
                 </div>
               </div>
             </div>
@@ -158,8 +158,8 @@ const NotificationCenter = () => {
             <div className="p-3 border-t border-galaxy-purple/20">
               <Link to="/cliente/notificacoes">
                 <Button variant="ghost" size="sm" className="w-full text-neon-cyan text-sm hover:text-neon-cyan/80">
-                  Ver todas notificações
-                </Button>
+                Ver todas notificações
+              </Button>
               </Link>
             </div>
           </motion.div>

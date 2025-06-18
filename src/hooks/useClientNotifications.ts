@@ -22,7 +22,7 @@ export interface ClientNotificationFilters {
   limit?: number
 }
 
-export function useClientNotifications(filters?: ClientNotificationFilters) {
+export function useClientNotifications() {
   const [notifications, setNotifications] = useState<ClientNotification[]>([])
   const [stats, setStats] = useState<ClientNotificationStats>({
     total: 0,
@@ -33,9 +33,95 @@ export function useClientNotifications(filters?: ClientNotificationFilters) {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [adminSettings, setAdminSettings] = useState<any>(null)
 
   const { user } = useAuth()
   const { playSound } = useSounds()
+
+  // Load admin notification settings
+  const loadAdminSettings = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('admin_notification_settings')
+        .select('setting_key, setting_value')
+
+      const settingsMap = data?.reduce((acc: any, setting: any) => {
+        acc[setting.setting_key] = setting.setting_value
+        return acc
+      }, {}) || {}
+
+      setAdminSettings({
+        global_notifications_enabled: settingsMap.global_notifications_enabled ?? true,
+        user_notifications_enabled: settingsMap.user_notifications_enabled ?? true,
+        system_notifications_enabled: settingsMap.system_notifications_enabled ?? true
+      })
+    } catch (error) {
+      console.error('Error loading admin settings:', error)
+      // Default to enabled if we can't load settings
+      setAdminSettings({
+        global_notifications_enabled: true,
+        user_notifications_enabled: true,
+        system_notifications_enabled: true
+      })
+    }
+  }, [])
+
+  // Load notifications with admin settings filter
+  const loadNotifications = useCallback(async () => {
+    if (!user || !adminSettings) return
+
+    // Check if notifications are globally disabled
+    if (!adminSettings.global_notifications_enabled) {
+      setNotifications([])
+      setUnreadCount(0)
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      
+      let query = supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      // Filter by admin settings
+      const allowedCategories = []
+      if (adminSettings.user_notifications_enabled) {
+        allowedCategories.push('campaign', 'submission', 'payment', 'user', 'achievement')
+      }
+      if (adminSettings.system_notifications_enabled) {
+        allowedCategories.push('system', 'security')
+      }
+
+      if (allowedCategories.length > 0) {
+        query = query.in('category', allowedCategories)
+      } else {
+        // If no categories are allowed, return empty
+        setNotifications([])
+        setUnreadCount(0)
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      const notificationsList = data || []
+      setNotifications(notificationsList)
+      setStats(calculateStats(notificationsList))
+      setUnreadCount(notificationsList.filter(n => !n.read).length)
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user, adminSettings])
 
   // Calcular estatísticas específicas para participantes
   const calculateStats = useCallback((notificationList: ClientNotification[]): ClientNotificationStats => {
@@ -59,106 +145,56 @@ export function useClientNotifications(filters?: ClientNotificationFilters) {
     }
   }, [])
 
-  // Buscar notificações com filtros específicos de participante
-  const fetchNotifications = useCallback(async () => {
-    if (!user?.id) return
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      let query = supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      // Aplicar filtros
-      if (filters?.category) {
-        query = query.eq('category', filters.category)
-      }
-      if (filters?.type) {
-        query = query.eq('type', filters.type)
-      }
-      if (filters?.unreadOnly) {
-        query = query.eq('read', false)
-      }
-      
-      query = query.limit(filters?.limit || 50)
-
-      const { data, error: fetchError } = await query
-
-      if (fetchError) throw fetchError
-
-      const notificationList = data || []
-      setNotifications(notificationList)
-      setStats(calculateStats(notificationList))
-    } catch (err) {
-      console.error('Error fetching client notifications:', err)
-      setError(err instanceof Error ? err.message : 'Erro ao carregar notificações')
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.id, filters, calculateStats])
-
   // Marcar notificação como lida
   const markAsRead = useCallback(async (notificationId: string) => {
-    if (!user?.id) return
+    if (!adminSettings?.global_notifications_enabled) return
 
     try {
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('notifications')
-        .update({ read: true, updated_at: new Date().toISOString() })
+        .update({ read: true })
         .eq('id', notificationId)
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
 
-      if (updateError) throw updateError
+      if (error) throw error
 
-      // Atualizar estado local
-      setNotifications(prev => prev.map(notification =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      ))
-
-      // Recalcular estatísticas
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId ? { ...n, read: true } : n
+        )
+      )
       setStats(prev => ({
         ...prev,
         unread: Math.max(0, prev.unread - 1)
       }))
-
+      setUnreadCount(prev => Math.max(0, prev - 1))
       playSound?.('pop')
-    } catch (err) {
-      console.error('Error marking notification as read:', err)
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
     }
-  }, [user?.id, playSound])
+  }, [user?.id, adminSettings, playSound])
 
   // Marcar todas como lidas
   const markAllAsRead = useCallback(async () => {
-    if (!user?.id) return
+    if (!user || !adminSettings?.global_notifications_enabled) return
 
     try {
-      const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
-      
-      if (unreadIds.length === 0) return
-
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('notifications')
-        .update({ read: true, updated_at: new Date().toISOString() })
+        .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false)
 
-      if (updateError) throw updateError
+      if (error) throw error
 
-      // Atualizar estado local
-      setNotifications(prev => prev.map(notification => ({ ...notification, read: true })))
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       setStats(prev => ({ ...prev, unread: 0 }))
-
+      setUnreadCount(0)
       playSound?.('success')
-    } catch (err) {
-      console.error('Error marking all notifications as read:', err)
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
     }
-  }, [user?.id, notifications, playSound])
+  }, [user, adminSettings, playSound])
 
   // Excluir notificação
   const deleteNotification = useCallback(async (notificationId: string) => {
@@ -199,69 +235,102 @@ export function useClientNotifications(filters?: ClientNotificationFilters) {
 
   // Configurar Realtime para participantes
   useEffect(() => {
-    if (!user?.id) return
+    if (!user || !adminSettings?.global_notifications_enabled) return
 
-    let channel: RealtimeChannel
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newNotification = payload.new as ClientNotification
+          
+          // Check if this notification category is allowed
+          const isUserCategory = ['campaign', 'submission', 'payment', 'user', 'achievement'].includes(newNotification.category)
+          const isSystemCategory = ['system', 'security'].includes(newNotification.category)
+          
+          const shouldShow = (
+            (isUserCategory && adminSettings.user_notifications_enabled) ||
+            (isSystemCategory && adminSettings.system_notifications_enabled)
+          )
 
-    const setupRealtime = async () => {
-      channel = supabase
-        .channel('client-notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              const newNotification = payload.new as ClientNotification
-              
-              // Adicionar nova notificação
-              setNotifications(prev => {
-                const updatedNotifications = [newNotification, ...prev]
-                setStats(calculateStats(updatedNotifications))
-                return updatedNotifications
-              })
-              
-              // Som baseado no tipo específico para participantes
-              const soundMap: Record<string, 'pop' | 'success' | 'error' | 'notification' | 'reward' | 'chime' | 'click'> = {
-                success: 'reward', // Para missões aprovadas, bônus, etc.
-                error: 'error',
-                warning: 'notification',
-                info: 'chime',
-                activity: 'pop'
-              }
-              playSound?.(soundMap[newNotification.type] || 'notification')
-              
-            } else if (payload.eventType === 'UPDATE') {
-              const updatedNotification = payload.new as ClientNotification
-              setNotifications(prev => prev.map(n => 
-                n.id === updatedNotification.id ? updatedNotification : n
-              ))
-            } else if (payload.eventType === 'DELETE') {
-              const deletedId = payload.old.id
-              setNotifications(prev => prev.filter(n => n.id !== deletedId))
+          if (shouldShow) {
+            setNotifications(prev => [newNotification, ...prev.slice(0, 49)])
+            if (!newNotification.read) {
+              setUnreadCount(prev => prev + 1)
             }
           }
-        )
-        .subscribe()
-    }
-
-    setupRealtime()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const updatedNotification = payload.new as ClientNotification
+          setNotifications(prev => 
+            prev.map(n => 
+              n.id === updatedNotification.id ? updatedNotification : n
+            )
+          )
+          
+          // Recalculate unread count
+          setNotifications(current => {
+            setUnreadCount(current.filter(n => !n.read).length)
+            return current
+          })
+        }
+      )
+      .subscribe()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      supabase.removeChannel(channel)
     }
-  }, [user?.id, calculateStats, playSound])
+  }, [user, adminSettings])
 
-  // Buscar notificações ao montar o componente
+  // Load admin settings on mount
   useEffect(() => {
-    fetchNotifications()
-  }, [fetchNotifications])
+    loadAdminSettings()
+  }, [loadAdminSettings])
+
+  // Load notifications when admin settings change
+  useEffect(() => {
+    if (adminSettings) {
+      loadNotifications()
+    }
+  }, [adminSettings, loadNotifications])
+
+  // Listen for admin settings changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin_notification_settings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'admin_notification_settings'
+        },
+        () => {
+          // Reload settings when they change
+          loadAdminSettings()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [loadAdminSettings])
 
   // Funções específicas para participantes
   const getRecentRewards = useCallback(() => {
@@ -284,7 +353,8 @@ export function useClientNotifications(filters?: ClientNotificationFilters) {
     stats,
     loading,
     error,
-    fetchNotifications,
+    unreadCount,
+    adminSettings,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -294,6 +364,7 @@ export function useClientNotifications(filters?: ClientNotificationFilters) {
     getAchievementNotifications,
     // Estados derivados úteis
     hasUnread: stats.unread > 0,
-    hasRecentActivity: stats.recentActivity > 0
+    hasRecentActivity: stats.recentActivity > 0,
+    refresh: loadNotifications
   }
 } 
