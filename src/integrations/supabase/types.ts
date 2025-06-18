@@ -81,6 +81,101 @@ export type Database = {
         }
         Relationships: []
       }
+      cashback_campaigns: {
+        Row: {
+          advertiser_id: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          cashback_percentage: number
+          category: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          min_purchase: number | null
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          advertiser_id?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          cashback_percentage: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_purchase?: number | null
+          start_date?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          advertiser_id?: string | null
+          advertiser_logo?: string | null
+          advertiser_name?: string | null
+          cashback_percentage?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_purchase?: number | null
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cashback_redemptions: {
+        Row: {
+          amount: number
+          campaign_id: string | null
+          code: string | null
+          created_at: string | null
+          id: string
+          redeemed_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          campaign_id?: string | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string | null
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          redeemed_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashback_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "cashback_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           category: string
@@ -492,6 +587,45 @@ export type Database = {
       is_notification_enabled: {
         Args: { setting_key: string }
         Returns: boolean
+      }
+      get_active_cashback_campaigns: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          advertiser_id: string | null
+          advertiser_logo: string | null
+          advertiser_name: string | null
+          cashback_percentage: number
+          category: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          min_purchase: number | null
+          start_date: string
+          title: string
+          updated_at: string | null
+        }[]
+      }
+      get_user_cashback_balance: {
+        Args: { user_id: string }
+        Returns: {
+          cashback_balance: number
+        }[]
+      }
+      redeem_cashback: {
+        Args: { p_user_id: string; p_campaign_id: string; p_amount: number }
+        Returns: {
+          amount: number
+          campaign_id: string | null
+          code: string | null
+          created_at: string | null
+          id: string
+          redeemed_at: string | null
+          status: string | null
+          user_id: string | null
+        }[]
       }
     }
     Enums: {

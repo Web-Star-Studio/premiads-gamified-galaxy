@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,10 +77,11 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
   const uploadImageToSupabase = async (file: File): Promise<string> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${advertiserId}/${Date.now()}.${fileExt}`;
+      const fileName = `cashback/${advertiserId}/${Date.now()}.${fileExt}`;
       
+      // Usar o bucket raffle-images que já existe
       const { error: uploadError } = await supabase.storage
-        .from('cashback-images')
+        .from('raffle-images')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
@@ -89,7 +90,7 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
       if (uploadError) throw uploadError;
       
       const { data: publicUrlData } = supabase.storage
-        .from('cashback-images')
+        .from('raffle-images')
         .getPublicUrl(fileName);
         
       return publicUrlData.publicUrl;
@@ -151,6 +152,9 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
           <DialogTitle>
             {editCampaign ? 'Editar Campanha' : 'Nova Campanha de Cashback'}
           </DialogTitle>
+          <DialogDescription>
+            Preencha os dados da campanha de cashback. A imagem será exibida como capa do cupom no marketplace.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
