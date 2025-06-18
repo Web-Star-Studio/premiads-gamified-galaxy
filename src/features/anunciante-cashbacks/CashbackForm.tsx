@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useCashbacks } from './useCashbacks.hook';
 import { CashbackCampaign, CreateCashbackInput } from './types';
+import { CashbackImageUploader } from '@/components/ui/CashbackImageUploader';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CashbackFormProps {
   isOpen: boolean;
@@ -41,6 +42,9 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
     is_active: true
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   useEffect(() => {
     if (editCampaign) {
       setFormData({
@@ -67,23 +71,58 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
         is_active: true
       });
     }
+    setImageFile(null);
   }, [editCampaign, advertiserId]);
+
+  const uploadImageToSupabase = async (file: File): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${advertiserId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('cashback-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (uploadError) throw uploadError;
+      
+      const { data: publicUrlData } = supabase.storage
+        .from('cashback-images')
+        .getPublicUrl(fileName);
+        
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      throw new Error('Falha ao fazer upload da imagem');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      let finalFormData = { ...formData };
+      
+      // Se há um arquivo de imagem, fazer upload
+      if (imageFile) {
+        setIsUploadingImage(true);
+        const uploadedImageUrl = await uploadImageToSupabase(imageFile);
+        finalFormData.advertiser_logo = uploadedImageUrl;
+      }
+      
       if (editCampaign && editCampaign.id) {
         await updateCashback({
           id: editCampaign.id,
-          ...formData
+          ...finalFormData
         });
         toast({
           title: 'Sucesso',
           description: 'Campanha de cashback atualizada com sucesso!'
         });
       } else {
-        await createCashback(formData);
+        await createCashback(finalFormData);
         toast({
           title: 'Sucesso', 
           description: 'Campanha de cashback criada com sucesso!'
@@ -98,14 +137,16 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
         description: error.message || 'Erro ao salvar campanha',
         variant: 'destructive'
       });
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
-  const isLoading = isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating || isUploadingImage;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editCampaign ? 'Editar Campanha' : 'Nova Campanha de Cashback'}
@@ -193,16 +234,12 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
             />
           </div>
 
-          <div>
-            <Label htmlFor="advertiser_logo">URL do Logo</Label>
-            <Input
-              id="advertiser_logo"
-              type="url"
-              value={formData.advertiser_logo}
-              onChange={(e) => setFormData({ ...formData, advertiser_logo: e.target.value })}
-              placeholder="https://exemplo.com/logo.png"
-            />
-          </div>
+          <CashbackImageUploader
+            onFileChange={setImageFile}
+            initialImage={editCampaign?.advertiser_logo}
+            label="Imagem do Cupom"
+            className="w-full"
+          />
 
           <div className="flex items-center space-x-2">
             <Switch

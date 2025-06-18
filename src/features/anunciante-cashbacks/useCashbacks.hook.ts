@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import type { CashbackCampaign } from './types'
@@ -8,11 +7,13 @@ const TABLE = 'cashback_campaigns'
 interface CreateCashbackInput {
   title: string
   description: string
-  cashback_percentage: number // Atualizado
-  minimum_purchase: number | null
+  cashback_percentage: number
+  minimum_purchase?: number | null
   end_date: string
   category: string
+  advertiser_id: string
   advertiser_logo: string
+  is_active: boolean
 }
 
 function useCashbacks(advertiserId: string) {
@@ -29,7 +30,7 @@ function useCashbacks(advertiserId: string) {
     queryFn: async () => {
       if (!advertiserId) return []
       const { data, error } = await supabase
-        .from(TABLE)
+        .from(TABLE as any)
         .select('*')
         .eq('advertiser_id', advertiserId)
         .order('created_at', { ascending: false })
@@ -44,13 +45,11 @@ function useCashbacks(advertiserId: string) {
     mutationFn: async (input: CreateCashbackInput) => {
       const { minimum_purchase, ...rest } = input
       const { data, error } = await supabase
-        .from(TABLE)
+        .from(TABLE as any)
         .insert([
           {
             ...rest,
             min_purchase: minimum_purchase,
-            advertiser_id: advertiserId,
-            is_active: true,
             expires_at: rest.end_date
           }
         ])
@@ -70,7 +69,7 @@ function useCashbacks(advertiserId: string) {
       if (minimum_purchase !== undefined) updateData.min_purchase = minimum_purchase
       if (rest.end_date) updateData.expires_at = rest.end_date
       const { data, error } = await supabase
-        .from(TABLE)
+        .from(TABLE as any)
         .update(updateData)
         .eq('id', id)
         .select()
@@ -85,7 +84,7 @@ function useCashbacks(advertiserId: string) {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from(TABLE)
+        .from(TABLE as any)
         .delete()
         .eq('id', id)
       if (error) throw error

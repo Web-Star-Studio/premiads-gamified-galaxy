@@ -1,4 +1,3 @@
-
 export interface CashbackCampaign {
   id: string;
   title: string;
