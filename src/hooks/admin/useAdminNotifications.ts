@@ -25,7 +25,7 @@ export interface AdminNotification {
 export interface SendNotificationData {
   title: string
   message: string
-  target_type: 'all' | 'advertisers' | 'participants'
+  target_type: 'all' | 'advertisers' | 'participants' | 'participant'
 }
 
 export interface PaginationInfo {
@@ -45,10 +45,15 @@ export function useAdminNotifications() {
   const sendNotification = useCallback(async (data: SendNotificationData) => {
     setIsLoading(true)
     try {
+      // Normalize target_type to match backend expectations
+      const normalizedTargetType =
+        data.target_type === 'participants' ? 'participant' : data.target_type
+
       const { data: result, error } = await supabase.functions.invoke('admin-notifications', {
         body: {
           action: 'send_notification',
-          ...data
+          ...data,
+          target_type: normalizedTargetType
         }
       })
 
@@ -83,10 +88,22 @@ export function useAdminNotifications() {
 
       if (error) throw error
 
+      // Edge function may return settings at root or inside a "settings" key
+      const rawSettings = (result?.settings ?? result) as Record<string, { value?: boolean } | boolean>
+
       const formattedSettings: NotificationSettings = {
-        global_notifications_enabled: result.settings.global_notifications_enabled?.value || false,
-        user_notifications_enabled: result.settings.user_notifications_enabled?.value || false,
-        system_notifications_enabled: result.settings.system_notifications_enabled?.value || false
+        global_notifications_enabled:
+          (typeof rawSettings.global_notifications_enabled === 'object'
+            ? rawSettings.global_notifications_enabled?.value
+            : rawSettings.global_notifications_enabled) ?? false,
+        user_notifications_enabled:
+          (typeof rawSettings.user_notifications_enabled === 'object'
+            ? rawSettings.user_notifications_enabled?.value
+            : rawSettings.user_notifications_enabled) ?? false,
+        system_notifications_enabled:
+          (typeof rawSettings.system_notifications_enabled === 'object'
+            ? rawSettings.system_notifications_enabled?.value
+            : rawSettings.system_notifications_enabled) ?? false
       }
 
       setSettings(formattedSettings)

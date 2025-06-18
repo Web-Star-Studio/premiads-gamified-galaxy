@@ -92,7 +92,7 @@ export function useClientNotifications() {
       // Filter by admin settings
       const allowedCategories = []
       if (adminSettings.user_notifications_enabled) {
-        allowedCategories.push('campaign', 'submission', 'payment', 'user', 'achievement')
+        allowedCategories.push('campaign', 'submission', 'payment', 'user', 'achievement', 'activity')
       }
       if (adminSettings.system_notifications_enabled) {
         allowedCategories.push('system', 'security')
