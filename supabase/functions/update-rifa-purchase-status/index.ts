@@ -34,36 +34,147 @@ serve(async (req) => {
       )
     }
 
-    // Update purchase status
-    const { data: purchase, error: updateError } = await supabase
+    console.log(`Processing purchase ${purchase_id} with status ${new_status}`)
+
+    // Check if purchase exists and current status
+    const { data: currentPurchase, error: fetchError } = await supabase
       .from('rifa_purchases')
-      .update({ status: new_status })
+      .select('*')
       .eq('id', purchase_id)
-      .select()
       .single()
 
-    if (updateError) {
-      console.error('Error updating purchase status:', updateError)
+    if (fetchError || !currentPurchase) {
+      console.error('Error fetching purchase:', fetchError)
       return new Response(
-        JSON.stringify({ error: 'Failed to update purchase status', details: updateError }),
+        JSON.stringify({ error: 'Purchase not found', details: fetchError }),
         { 
-          status: 500, 
+          status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
 
-    // If confirmed, add rifas to user balance
+    console.log('Current purchase data:', currentPurchase)
+
+    // If already confirmed, don't process again
+    if (currentPurchase.status === 'confirmed' && new_status === 'confirmed') {
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          purchase: currentPurchase,
+          message: 'Purchase already confirmed'
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // If confirming, update both purchase and user profile
     if (new_status === 'confirmed') {
-      const { error: addRifasError } = await supabase.rpc('add_user_rifas', {
-        user_id: purchase.user_id,
-        amount: purchase.total_rifas
+      console.log('Confirming purchase and updating user rifas')
+      
+      // Use transaction to ensure atomicity
+      const { error: transactionError } = await supabase.rpc('sql', {
+        query: `
+          BEGIN;
+          
+          -- Update purchase status
+          UPDATE rifa_purchases 
+          SET status = 'confirmed',
+              confirmed_at = COALESCE(confirmed_at, NOW()),
+              updated_at = NOW()
+          WHERE id = $1 AND status <> 'confirmed';
+          
+          -- Update user rifas
+          UPDATE profiles 
+          SET rifas = COALESCE(rifas, 0) + (
+            SELECT total_rifas 
+            FROM rifa_purchases 
+            WHERE id = $1
+          ),
+          updated_at = NOW()
+          WHERE id = (
+            SELECT user_id 
+            FROM rifa_purchases 
+            WHERE id = $1
+          );
+          
+          COMMIT;
+        `,
+        params: [purchase_id]
       })
 
-      if (addRifasError) {
-        console.error('Error adding rifas to user:', addRifasError)
+      if (transactionError) {
+        console.error('Transaction error:', transactionError)
+        
+        // Fallback: try step by step
+        console.log('Trying fallback approach...')
+        
+        // First update the purchase
+        const { error: updatePurchaseError } = await supabase
+          .from('rifa_purchases')
+          .update({ 
+            status: 'confirmed',
+            confirmed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', purchase_id)
+          .eq('status', 'pending')
+
+        if (updatePurchaseError) {
+          console.error('Error updating purchase:', updatePurchaseError)
+        } else {
+          console.log('Purchase status updated successfully')
+        }
+
+        // Then update the user's rifas
+        const { data: userProfile, error: profileFetchError } = await supabase
+          .from('profiles')
+          .select('rifas')
+          .eq('id', currentPurchase.user_id)
+          .single()
+
+        if (profileFetchError) {
+          console.error('Error fetching user profile:', profileFetchError)
+        } else {
+          const currentRifas = userProfile?.rifas || 0
+          const newRifas = currentRifas + currentPurchase.total_rifas
+          
+          console.log(`Updating user rifas: ${currentRifas} + ${currentPurchase.total_rifas} = ${newRifas}`)
+          
+          const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({ 
+              rifas: newRifas,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', currentPurchase.user_id)
+
+          if (updateProfileError) {
+            console.error('Error updating user rifas:', updateProfileError)
+          } else {
+            console.log('User rifas updated successfully')
+          }
+        }
+      } else {
+        console.log('Transaction completed successfully')
+      }
+    } else {
+      // For other status updates, just update the status
+      const { error: updateError } = await supabase
+        .from('rifa_purchases')
+        .update({ 
+          status: new_status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', purchase_id)
+
+      if (updateError) {
+        console.error('Error updating purchase status:', updateError)
         return new Response(
-          JSON.stringify({ error: 'Failed to add rifas to user', details: addRifasError }),
+          JSON.stringify({ error: 'Failed to update purchase status', details: updateError }),
           { 
             status: 500, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -72,10 +183,28 @@ serve(async (req) => {
       }
     }
 
+    // Fetch updated purchase data
+    const { data: updatedPurchase } = await supabase
+      .from('rifa_purchases')
+      .select('*')
+      .eq('id', purchase_id)
+      .single()
+
+    // Fetch updated user profile
+    const { data: updatedProfile } = await supabase
+      .from('profiles')
+      .select('rifas')
+      .eq('id', currentPurchase.user_id)
+      .single()
+
+    console.log('Final purchase data:', updatedPurchase)
+    console.log('Final user rifas:', updatedProfile?.rifas)
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        purchase,
+        purchase: updatedPurchase,
+        user_rifas: updatedProfile?.rifas,
         message: `Purchase status updated to ${new_status}`
       }),
       { 

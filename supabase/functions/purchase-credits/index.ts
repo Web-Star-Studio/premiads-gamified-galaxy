@@ -294,6 +294,7 @@ serve(async (req) => {
             cancel_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos`,
             metadata: {
               purchase_id: purchase.id,
+              rifa_purchase_id: purchase.id,
             },
           })
           
@@ -312,6 +313,7 @@ serve(async (req) => {
             customer: customerId,
             metadata: {
               purchase_id: purchase.id,
+              rifa_purchase_id: purchase.id,
             },
           })
           

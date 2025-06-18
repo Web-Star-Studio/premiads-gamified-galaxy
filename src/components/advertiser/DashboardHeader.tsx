@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, Wallet, Star, Info, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +17,13 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = () => {
   const { userName } = useUser(); // Fixed: use userName instead of user
-  const { availableCredits: rifas, isLoading } = useUserCredits();
+  const { availableCredits: rifas, isLoading, refreshCredits } = useUserCredits();
   const navigate = useNavigate();
+
+  // Auto-refresh credits on mount to ensure latest data
+  useEffect(() => {
+    refreshCredits();
+  }, []);
 
   const handleCreditsPurchase = () => {
     navigate("/anunciante/creditos");
@@ -38,11 +42,11 @@ const DashboardHeader = () => {
         <div className="flex items-center space-x-4">
           <div className="text-right">
             <div className="flex items-center space-x-2">
-              <div className="text-lg font-bold text-white">
+              <div className="text-lg font-bold text-white tabular-nums">
                 {isLoading ? (
                   <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                 ) : (
-                  `${rifas} Rifas`
+                  `${rifas.toLocaleString()} Rifas`
                 )}
               </div>
               <Tooltip>

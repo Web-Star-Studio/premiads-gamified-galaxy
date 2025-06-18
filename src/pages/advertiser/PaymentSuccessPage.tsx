@@ -205,7 +205,8 @@ function PaymentSuccessPage() {
 
           // Atualiza status somente se ainda não estiver confirmado
           if (purchaseData.status !== 'confirmed') {
-            const { error: updateError } = await supabase.functions.invoke(
+            console.log('Updating purchase status to confirmed...')
+            const { data: updateResult, error: updateError } = await supabase.functions.invoke(
               'update-rifa-purchase-status',
               {
                 body: {
@@ -215,19 +216,67 @@ function PaymentSuccessPage() {
               }
             );
 
+            console.log('Update result:', updateResult)
             if (updateError) {
               console.error('Error updating purchase status:', updateError);
+            } else {
+              console.log('Purchase status updated successfully:', updateResult)
             }
           }
 
-          // Refresh credits and invalidate queries
-          await handlePaymentSuccess();
+          // Multiple invalidation strategies to ensure UI updates
+          console.log('Invalidating queries and refreshing data...')
           
-          // Additional manual refresh to ensure data is updated
+          // 1. Invalidate all user-related queries
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['user-rifas'] }),
+            queryClient.invalidateQueries({ queryKey: ['userCredits'] }),
+            queryClient.invalidateQueries({ queryKey: ['profile-data'] }),
+            queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] }),
+            queryClient.invalidateQueries({ queryKey: ['activityLog'] }),
+            queryClient.removeQueries({ queryKey: ['user-rifas'] }),
+            queryClient.removeQueries({ queryKey: ['userCredits'] })
+          ])
+          
+          // 2. Force refresh credits multiple times
+          try {
+            await refreshCredits()
+            console.log('First refresh completed')
+          } catch (error) {
+            console.error('Error in first refresh:', error)
+          }
+          
+          // 3. Handle payment success which also refreshes
+          try {
+            await handlePaymentSuccess()
+            console.log('Payment success handler completed')
+          } catch (error) {
+            console.error('Error in payment success handler:', error)
+          }
+          
+          // 4. Additional refresh after a delay to catch any async updates
           setTimeout(async () => {
-            await refreshCredits();
-            queryClient.invalidateQueries({ queryKey: ['user-rifas'] });
-          }, 1000);
+            try {
+              console.log('Performing delayed refresh...')
+              await refreshCredits()
+              await queryClient.invalidateQueries({ queryKey: ['user-rifas'] })
+              await queryClient.refetchQueries({ queryKey: ['user-rifas'] })
+              console.log('Delayed refresh completed')
+            } catch (error) {
+              console.error('Error in delayed refresh:', error)
+            }
+          }, 1000)
+          
+          // 5. Final refresh after longer delay
+          setTimeout(async () => {
+            try {
+              console.log('Performing final refresh...')
+              await refreshCredits()
+              console.log('Final refresh completed')
+            } catch (error) {
+              console.error('Error in final refresh:', error)
+            }
+          }, 3000)
 
           // Play success sound
           playSound('success');

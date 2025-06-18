@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { User, Info, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -9,7 +9,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const UserMenu = () => {
-  const { availableCredits: rifas, isLoading } = useUserCredits();
+  const { availableCredits: rifas, isLoading, refreshCredits } = useUserCredits();
+  
+  // Auto-refresh credits on mount to ensure latest data
+  useEffect(() => {
+    refreshCredits();
+  }, []);
   
   return (
     <DropdownMenu>
@@ -39,11 +44,11 @@ const UserMenu = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-white">Rifas Disponíveis</span>
-              <span className="text-sm font-semibold text-neon-cyan">
+              <span className="text-sm font-semibold text-neon-cyan tabular-nums">
                 {isLoading ? (
                   <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
                 ) : (
-                  rifas
+                  rifas.toLocaleString()
                 )}
               </span>
             </div>
@@ -65,10 +70,7 @@ const UserMenu = () => {
           <Settings className="mr-2 h-4 w-4" />
           <span>Configurações</span>
         </DropdownMenuItem>
-        
-        <DropdownMenuSeparator className="bg-galaxy-purple/30" />
-        
-        <DropdownMenuItem className="text-red-400 hover:bg-red-400/20">
+        <DropdownMenuItem className="text-white hover:bg-galaxy-purple/20">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>
