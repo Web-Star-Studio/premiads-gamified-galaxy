@@ -43,6 +43,56 @@ function getModerationAction(decision: 'approve' | 'reject', stage: ValidationSt
 }
 
 /**
+ * Função auxiliar que faz a chamada real para a Edge Function
+ */
+async function callModerationEdgeFunction(
+  action: ModerationAction,
+  submissionId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`Calling Edge Function 'moderate-mission-submission' with action: ${action}, submission_id: ${submissionId}`);
+    
+    const { data, error } = await supabase.functions.invoke('moderate-mission-submission', {
+      body: { submission_id: submissionId, action }
+    });
+
+    if (error) {
+      console.log('Edge Function invocation error:', error);
+      
+      // For approval actions, try the fallback function
+      if (action === 'ADVERTISER_APPROVE_FIRST_INSTANCE' || action === 'ADVERTISER_APPROVE_SECOND_INSTANCE') {
+        console.log('Trying fallback mission-approval-fix function...');
+        
+        const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('mission-approval-fix', {
+          body: { submission_id: submissionId }
+        });
+
+        if (fallbackError) {
+          console.log('Fallback function also failed:', fallbackError);
+          return { success: false, error: fallbackError.message };
+        }
+
+        if (fallbackData?.success) {
+          console.log('Fallback function succeeded:', fallbackData);
+          return { success: true };
+        }
+      }
+      
+      return { success: false, error: error.message };
+    }
+
+    if (data?.success) {
+      return { success: true };
+    } else {
+      return { success: false, error: data?.error || 'Unknown error occurred' };
+    }
+  } catch (err: any) {
+    console.error('Error in callModerationEdgeFunction:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Modera uma submissão de missão chamando a Edge Function `moderate-mission-submission`.
  * A assinatura da função exportada é mantida como `finalizeMissionSubmission` para retrocompatibilidade.
  */
@@ -50,7 +100,7 @@ async function moderateMissionSubmissionInternal({
   submissionId,
   decision,
   stage,
-  // feedback // O feedback não é usado na chamada atual da Edge Function
+  // feedback // O feedback não é usado na chamada atual da Edge Function por enquanto
 }: ModerateMissionSubmissionInput): Promise<ModerateMissionSubmissionResponse> {
   const action = getModerationAction(decision, stage);
 
@@ -61,38 +111,13 @@ async function moderateMissionSubmissionInternal({
   }
 
   try {
-    console.log(`Calling Edge Function 'moderate-mission-submission' with action: ${action}, submission_id: ${submissionId}`);
-    const { data, error: functionError } = await supabase.functions.invoke('moderate-mission-submission', {
-      body: {
-        submission_id: submissionId,
-        action: action,
-      },
-    });
+    const { success, error } = await callModerationEdgeFunction(action, submissionId);
 
-    if (functionError) {
-      console.error('Edge Function invocation error:', functionError);
-      const errorContext = (functionError as any).context;
-      const errorMessage = errorContext?.error?.message || functionError.message || "Erro ao invocar a função de moderação.";
-      return { success: false, error: errorMessage, message: errorMessage };
+    if (success) {
+      return { success: true, message: 'Ação de moderação processada com sucesso.' };
+    } else {
+      return { success: false, error: error, message: error };
     }
-    
-    // A Edge Function retorna { success: true, message: "..." } ou { error: "..." } no corpo 'data'
-    if (data && data.error) {
-        console.error('Error from Edge Function logic:', data.error);
-        return { success: false, error: data.error, message: data.error };
-    }
-
-    if (data && data.success) {
-        return {
-            success: true,
-            message: data.message || 'Ação de moderação processada com sucesso.',
-        };
-    }
-    
-    // Caso inesperado onde não há erro explícito mas também não há sucesso claro
-    console.warn('Edge Function response did not indicate clear success or failure:', data);
-    return { success: false, error: 'Resposta inesperada da função de moderação.', message: 'Resposta inesperada da função de moderação.' };
-
   } catch (error: any) {
     console.error('Erro inesperado ao moderar submissão:', error);
     return { success: false, error: error.message, message: error.message };

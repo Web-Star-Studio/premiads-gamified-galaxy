@@ -7,7 +7,7 @@ export interface MissionSubmission {
   mission_title: string;
   submission_data: any;
   feedback?: string;
-  status: 'pending' | 'pending_approval' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser' | 'in_progress';
+  status: 'pending' | 'pending_approval' | 'approved' | 'rejected' | 'second_instance_pending' | 'returned_to_advertiser' | 'in_progress' | 'second_instance';
   submitted_at: string;
   updated_at: string; 
   second_instance?: boolean;

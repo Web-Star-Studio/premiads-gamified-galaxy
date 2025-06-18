@@ -251,6 +251,9 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       if (submission.status === 'returned_to_advertiser') {
         // Submissão retornada pelo admin para nova avaliação do anunciante
         stage = 'advertiser_second';
+      } else if (submission.second_instance) {
+        // Submissão já está na segunda instância
+        stage = 'advertiser_second';
       } else if (submission.status === 'pending' || submission.status === 'pending_approval') {
         // Primeira avaliação do anunciante
         stage = 'advertiser_first';
@@ -306,6 +309,9 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       
       if (submission.status === 'returned_to_advertiser') {
         // Submissão retornada pelo admin para nova avaliação do anunciante
+        stage = 'advertiser_second';
+      } else if (submission.second_instance) {
+        // Submissão já está na segunda instância
         stage = 'advertiser_second';
       } else if (submission.status === 'pending' || submission.status === 'pending_approval') {
         // Primeira avaliação do anunciante
