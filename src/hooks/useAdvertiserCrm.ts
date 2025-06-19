@@ -85,25 +85,16 @@ export function useAdvertiserCrm(advertiserId: string, filters?: { campaignId?: 
         }
       }
 
-      // Buscar dados de desbloqueio
-      // Primeiro tentar usar a nova estrutura, se falhar usar estrutura antiga
+      // Buscar dados de desbloqueio - simular que nenhum está desbloqueado por enquanto
+      // Quando a tabela advertiser_crm_unlocks estiver funcionando, substituir por query real
       let unlockedMissions = new Set<string>()
       
-      try {
-        // Tentar buscar dados da nova tabela
-        const { data: unlocks, error } = await (client as any)
-          .from('advertiser_crm_unlocks')
-          .select('mission_id')
-          .eq('advertiser_id', advertiserId)
-        
-        if (!error && unlocks) {
-          unlockedMissions = new Set(unlocks.map((u: any) => u.mission_id))
-        }
-      } catch (error) {
-        console.log('CRM: Usando dados simulados (migração ainda não aplicada)')
-        // Fallback: simular que nenhum está desbloqueado
-        unlockedMissions = new Set<string>()
-      }
+      // TODO: Quando migration for aplicada, substituir por:
+      // const { data: unlocks } = await client
+      //   .from('advertiser_crm_unlocks')
+      //   .select('mission_id')
+      //   .eq('advertiser_id', advertiserId)
+      // unlockedMissions = new Set(unlocks?.map(u => u.mission_id) || [])
 
       // Criar mapa de perfis para acesso rápido
       const profilesMap = new Map(profilesData.map(p => [p.id, p]))
