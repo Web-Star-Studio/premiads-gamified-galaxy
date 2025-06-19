@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
 import { useAdvertiserCampaigns } from "@/hooks/useAdvertiserCampaigns";
 import { CreditsDebug } from "@/components/credits/credits-debug";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const AdvertiserCampaigns = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -82,7 +83,9 @@ const AdvertiserCampaigns = () => {
             
             {/* Debug component - temporary */}
             <div className="mb-4">
-              <CreditsDebug />
+              <ErrorBoundary fallback={<div className="text-red-400 text-xs">Erro no componente de debug</div>}>
+                <CreditsDebug />
+              </ErrorBoundary>
             </div>
             
             {/* Stats overview */}

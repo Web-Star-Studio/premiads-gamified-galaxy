@@ -165,14 +165,14 @@ export const useUserCredits = () => {
   }, [user?.id, queryClient, refreshCredits]);
 
   return {
-    userCredits: userCreditsData.rifas,
-    availableCredits: userCreditsData.rifas, // Alias para compatibilidade
-    totalCredits: userCreditsData.rifas, // Alias para compatibilidade
+    userCredits: userCreditsData?.rifas ?? 0,
+    availableCredits: userCreditsData?.rifas ?? 0, // Alias para compatibilidade
+    totalCredits: userCreditsData?.rifas ?? 0, // Alias para compatibilidade
     usedCredits: 0, // Placeholder para compatibilidade
-    loading,
-    isLoading: loading, // Alias para compatibilidade
+    loading: Boolean(loading),
+    isLoading: Boolean(loading), // Alias para compatibilidade
     error,
-    availableCashback: userCreditsData.cashback_balance, // Agora busca valor real do banco
+    availableCashback: userCreditsData?.cashback_balance ?? 0, // Agora busca valor real do banco
     refreshCredits
   };
 };
