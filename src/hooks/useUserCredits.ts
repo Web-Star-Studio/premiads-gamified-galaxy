@@ -3,11 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCallback, useRef, useEffect } from 'react';
 
-interface UserCreditsData {
-  rifas: number;
-  cashback_balance: number;
-}
-
 export const useUserCredits = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -16,20 +11,20 @@ export const useUserCredits = () => {
   const isSettingUpRef = useRef(false);
 
   const {
-    data: userCreditsData = { rifas: 0, cashback_balance: 0 },
+    data: userCredits = 0,
     isLoading: loading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['user-credits', user?.id],
-    queryFn: async (): Promise<UserCreditsData> => {
-      if (!user?.id) return { rifas: 0, cashback_balance: 0 };
+    queryKey: ['user-rifas', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
 
-      console.log('Fetching user credits for user:', user.id);
+      console.log('Fetching user rifas for user:', user.id);
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('rifas, cashback_balance')
+        .select('rifas')
         .eq('id', user.id)
         .single();
 
@@ -38,12 +33,9 @@ export const useUserCredits = () => {
         throw error;
       }
 
-      const result = {
-        rifas: data?.rifas || 0,
-        cashback_balance: parseFloat(String(data?.cashback_balance || '0'))
-      };
-      console.log('Fetched credits:', result);
-      return result;
+      const rifas = data?.rifas || 0;
+      console.log('Fetched rifas:', rifas);
+      return rifas;
     },
     enabled: !!user?.id,
     staleTime: 0, // Always fetch fresh data for credits
@@ -69,17 +61,26 @@ export const useUserCredits = () => {
     }
   }, [user?.id, refetch]);
 
-  // Realtime subscriptions setup
+  // Setup realtime subscriptions
   useEffect(() => {
     if (!user?.id || isSettingUpRef.current) return;
-    
+
     isSettingUpRef.current = true;
-    console.log('Setting up realtime subscriptions for user:', user.id);
 
     const setupSubscriptions = () => {
-      // Profiles subscription (for rifas and cashback changes)
+      // Clean up existing subscriptions first
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+      }
+      if (purchaseSubscriptionRef.current) {
+        supabase.removeChannel(purchaseSubscriptionRef.current);
+      }
+
+      console.log('Setting up realtime subscription for user:', user.id);
+
+      // Profile updates subscription
       subscriptionRef.current = supabase
-        .channel(`profiles_${user.id}`)
+        .channel(`user_rifas_changes_${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -89,37 +90,20 @@ export const useUserCredits = () => {
             filter: `id=eq.${user.id}`,
           },
           (payload) => {
-            console.log('Profile updated via realtime:', payload);
-            setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: ['user-credits', user.id] });
-            }, 1000);
+            console.log('Rifas updated via realtime:', payload);
+            if (payload.new?.rifas !== undefined) {
+              console.log('New rifas value:', payload.new.rifas);
+              
+              // Update the query cache directly
+              queryClient.setQueryData(['user-rifas', user.id], payload.new.rifas);
+            }
           }
         )
         .subscribe((status) => {
-          console.log('Profile subscription status:', status);
+          console.log('Realtime subscription status:', status);
         });
 
-      // Mission rewards subscription (for when new rewards are added)
-      const rewardsSubscription = supabase
-        .channel(`mission_rewards_${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'mission_rewards',
-            filter: `user_id=eq.${user.id}`,
-          },
-          (payload) => {
-            console.log('Mission reward added via realtime:', payload);
-            setTimeout(() => {
-              refreshCredits();
-            }, 2000);
-          }
-        )
-        .subscribe((status) => {
-          console.log('Mission rewards subscription status:', status);
-        });
+      console.log('Setting up rifa_purchases subscription for user:', user.id);
 
       // Purchase updates subscription
       purchaseSubscriptionRef.current = supabase
@@ -165,14 +149,14 @@ export const useUserCredits = () => {
   }, [user?.id, queryClient, refreshCredits]);
 
   return {
-    userCredits: userCreditsData.rifas,
-    availableCredits: userCreditsData.rifas, // Alias para compatibilidade
-    totalCredits: userCreditsData.rifas, // Alias para compatibilidade
+    userCredits,
+    availableCredits: userCredits, // Alias para compatibilidade
+    totalCredits: userCredits, // Alias para compatibilidade
     usedCredits: 0, // Placeholder para compatibilidade
     loading,
     isLoading: loading, // Alias para compatibilidade
     error,
-    availableCashback: userCreditsData.cashback_balance, // Agora busca valor real do banco
+    availableCashback: 0, // Placeholder para compatibilidade
     refreshCredits
   };
 };

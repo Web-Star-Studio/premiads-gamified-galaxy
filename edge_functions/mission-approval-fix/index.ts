@@ -45,12 +45,12 @@ serve(async (req: Request) => {
       });
     }
 
-    // Get submission details with mission cashback data
+    // Get submission details
     const { data: submission, error: submissionError } = await supabase
       .from('mission_submissions')
       .select(`
         *,
-        missions!inner(rifas, cashback_amount_per_raffle, cashback_reward)
+        missions!inner(rifas, cashback_reward)
       `)
       .eq('id', submission_id)
       .single();
@@ -62,10 +62,10 @@ serve(async (req: Request) => {
       });
     }
 
-    // Get current user profile data (rifas and cashback_balance)
+    // Get current user rifas
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('rifas, cashback_balance')
+      .select('rifas')
       .eq('id', submission.user_id)
       .single();
 
@@ -77,13 +77,9 @@ serve(async (req: Request) => {
     }
 
     const rifasToAdd = submission.missions.rifas || 0;
-    const cashbackPerRifa = parseFloat(submission.missions.cashback_amount_per_raffle || '0');
-    const cashbackToAdd = rifasToAdd * cashbackPerRifa; // Cálculo dinâmico: rifas * valor por rifa
-    
+    const cashbackToAdd = parseFloat(submission.missions.cashback_reward || '0');
     const currentRifas = userProfile.rifas || 0;
-    const currentCashback = parseFloat(userProfile.cashback_balance || '0');
     const newRifasBalance = currentRifas + rifasToAdd;
-    const newCashbackBalance = currentCashback + cashbackToAdd;
 
     // Start transaction-like updates
     const { error: updateSubmissionError } = await supabase
@@ -101,18 +97,17 @@ serve(async (req: Request) => {
       throw new Error(`Failed to update submission: ${updateSubmissionError.message}`);
     }
 
-    // Update user rifas and cashback balance
+    // Update user rifas
     const { error: updateUserError } = await supabase
       .from('profiles')
       .update({
         rifas: newRifasBalance,
-        cashback_balance: newCashbackBalance,
         updated_at: new Date().toISOString()
       })
       .eq('id', submission.user_id);
 
     if (updateUserError) {
-      throw new Error(`Failed to update user profile: ${updateUserError.message}`);
+      throw new Error(`Failed to update user rifas: ${updateUserError.message}`);
     }
 
     // Insert rifas transaction record
@@ -134,31 +129,16 @@ serve(async (req: Request) => {
       // Don't fail the whole operation for this
     }
 
-    // Record mission reward in mission_rewards table for tracking
-    const { error: rewardError } = await supabase
-      .from('mission_rewards')
-      .insert({
-        id: crypto.randomUUID(),
-        user_id: submission.user_id,
-        mission_id: submission.mission_id,
-        submission_id: submission_id,
-        rifas_earned: rifasToAdd,
-        cashback_earned: cashbackToAdd,
-        rewarded_at: new Date().toISOString()
-      });
-
-    if (rewardError) {
-      console.warn(`Warning: Failed to create mission reward record: ${rewardError.message}`);
-      // Don't fail the whole operation for this
+    // TODO: Handle cashback if needed
+    if (cashbackToAdd > 0) {
+      console.log(`Cashback to be added: ${cashbackToAdd} - implement cashback logic here`);
     }
 
     return new Response(JSON.stringify({ 
       success: true, 
       message: "Submission approved successfully",
       rifas_added: rifasToAdd,
-      cashback_added: cashbackToAdd,
-      new_rifas_balance: newRifasBalance,
-      new_cashback_balance: newCashbackBalance
+      new_rifas_balance: newRifasBalance
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
