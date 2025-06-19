@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { UserType } from "@/types/auth";
 
@@ -57,8 +56,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const resetUserInfo = () => {
+    // Clear all auth-related localStorage items
     localStorage.removeItem("userName");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("supabase.auth.token");
+    localStorage.removeItem("sb-zfryjwaeojccskfiibtq-auth-token");
+    
+    // Reset state
     setUserNameState("");
+    setUserTypeState("participante");
     setIsOverlayOpen(true);
   };
 

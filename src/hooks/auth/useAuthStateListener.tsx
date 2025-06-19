@@ -73,6 +73,17 @@ export const useAuthStateListener = (
           console.log("User signed out");
           lastUserIdRef.current = null;
           setUser(null);
+          
+          // Clear all potential auth data from localStorage
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userType");
+          localStorage.removeItem("supabase.auth.token");
+          localStorage.removeItem("sb-zfryjwaeojccskfiibtq-auth-token");
+          
+          // Force complete page reload to ensure clean state
+          setTimeout(() => {
+            window.location.href = "/auth";
+          }, 200);
         } else if (event === "USER_UPDATED" && session) {
           console.log("User updated");
           lastUserIdRef.current = session.user.id;

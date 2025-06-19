@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Zap, User, Gift, UserPlus, Wallet, HelpCircle, LogOut, Award, Bell, PiggyBank } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { safeLogoutWithFallback } from '@/utils/auth';
 import { 
   Sidebar, 
   SidebarHeader, 
@@ -31,7 +32,7 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
   ;
 
   const handleLogout = async () => {
-    await signOut();
+    await safeLogoutWithFallback(signOut);
   };
   
   return (

@@ -28,6 +28,12 @@ const AppRoutes = () => {
   const shouldRedirect = () => isAuthenticated && 
            currentUser && 
            (location.pathname === "/" || location.pathname === "/auth");
+
+  // Check if user should be redirected to auth when not authenticated
+  const shouldRedirectToAuth = () => {
+    const protectedPaths = ["/cliente", "/anunciante", "/admin"];
+    return !isAuthenticated && protectedPaths.some(path => location.pathname.startsWith(path));
+  };
   
   // Get appropriate dashboard path based on user type
   const getDashboardPath = () => {
@@ -48,6 +54,14 @@ const AppRoutes = () => {
   return (
     <ErrorBoundary>
       <Routes>
+        {/* Redirect to auth if not authenticated and on protected route */}
+        {shouldRedirectToAuth() && (
+          <Route 
+            path="*" 
+            element={<Navigate to="/auth" replace />} 
+          />
+        )}
+        
         {/* Redirect root path for authenticated users */}
         {shouldRedirect() && (
           <Route 

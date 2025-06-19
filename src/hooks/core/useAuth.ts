@@ -106,6 +106,11 @@ export const useAuth = () => {
     onSuccess: () => {
       reset();
       queryClient.clear();
+      
+      // Force complete page reload to ensure all states are cleared
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 500);
     }
   });
 

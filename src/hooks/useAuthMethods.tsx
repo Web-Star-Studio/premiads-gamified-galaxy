@@ -225,12 +225,16 @@ export const useAuthMethods = () => {
       if (error) throw error;
       
       resetUserInfo();
-      navigate("/");
       
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
+      
+      // Force complete page reload to ensure all states are cleared
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 1000); // Wait 1 second for toast to show
       
       return true;
     } catch (error: any) {
@@ -243,7 +247,7 @@ export const useAuthMethods = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate, resetUserInfo, toast]);
+  }, [resetUserInfo, toast]);
 
   const resetPassword = async (email: string): Promise<boolean> => {
     setLoading(true);

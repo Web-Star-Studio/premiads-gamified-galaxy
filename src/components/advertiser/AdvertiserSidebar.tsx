@@ -33,6 +33,7 @@ import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { CreditsDisplay } from "@/components/credits/credits-display";
+import { safeLogoutWithFallback } from "@/utils/auth";
 
 export const AdvertiserSidebar = () => {
   const navigate = useNavigate();
@@ -211,7 +212,9 @@ export const AdvertiserSidebar = () => {
             "w-full text-gray-400 hover:text-white", 
             isCollapsed ? "justify-center px-0" : "justify-start gap-2"
           )}
-          onClick={signOut}
+          onClick={async () => {
+            await safeLogoutWithFallback(signOut);
+          }}
         >
           <LogOut className="w-4 h-4" />
           <span className={cn("transition-opacity duration-200", 
