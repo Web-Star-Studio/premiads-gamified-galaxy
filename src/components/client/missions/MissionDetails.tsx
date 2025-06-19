@@ -42,7 +42,10 @@ const MissionDetails = ({ mission, onClose, onSubmit, onStartMission }: MissionD
           className="flex items-center gap-1"
         >
           <Award className="w-4 h-4" />
-          <span>{mission.rifas || mission.tickets_reward || 0} rifas</span>
+          <span>{
+            typeof mission.rifas === 'number' ? mission.rifas :
+            typeof mission.tickets_reward === 'number' ? mission.tickets_reward : 0
+          } rifas</span>
         </Badge>
       </div>
 
@@ -53,11 +56,11 @@ const MissionDetails = ({ mission, onClose, onSubmit, onStartMission }: MissionD
         <ul>
           {Array.isArray(mission.requirements) ? (
             mission.requirements.map((req, index) => (
-              <li key={index} className="text-sm text-gray-400">{req}</li>
+              <li key={index} className="text-sm text-gray-400">{typeof req === 'string' ? req : JSON.stringify(req)}</li>
             ))
-          ) : (
-            <li className="text-sm text-gray-400">{mission.requirements}</li>
-          )}
+          ) : mission.requirements ? (
+            <li className="text-sm text-gray-400">{ typeof mission.requirements === 'string' ? mission.requirements : JSON.stringify(mission.requirements) }</li>
+          ) : null}
         </ul>
       </div>
 

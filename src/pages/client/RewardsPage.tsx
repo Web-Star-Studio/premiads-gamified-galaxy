@@ -15,7 +15,7 @@ import LootBoxList from "@/components/client/rewards/LootBoxList";
 import RaffleWinnersList from "@/components/client/rewards/RaffleWinnersList";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-
+import { raffleService } from "@/services/raffles";
 
 const RewardsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -33,59 +33,59 @@ const RewardsPage = () => {
     try {
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Buscar sorteios ganhos da tabela lotteries usando SQL raw
-      try {
-        const { data: lotteryData, error: lotteryError } = await supabase
-          .from('lotteries' as any)
-          .select('*')
-          .not('winner', 'is', null)
-          .order('updated_at', { ascending: false });
-          
-        if (lotteryError) {
-          console.warn('Erro ao buscar da tabela lotteries:', lotteryError);
-          setRaffleWinners([]);
-        } else {
-          // Filtrar manualmente os sorteios onde o usuário é vencedor
-          const userWonLotteries = (lotteryData || []).filter((lottery: any) => {
-            return lottery.winner && lottery.winner.id === user.id;
-          });
-          
-          const formattedLotteries = userWonLotteries.map((lottery: any) => ({
-            id: `lottery-${lottery.id}`,
-            lottery_id: lottery.id,
-            user_id: user.id,
-            winning_number: lottery.winning_number,
-            prize_name: lottery.prize_type || lottery.title,
-            prize_value: lottery.prize_value,
-            created_at: lottery.updated_at,
-            raffle: {
-              id: lottery.id,
-              title: lottery.title,
-              prize_type: lottery.prize_type,
-              prize_value: lottery.prize_value,
-              status: lottery.status,
-              winning_number: lottery.winning_number
-            }
-          }));
-          
-          setRaffleWinners(formattedLotteries);
-          
-          if (formattedLotteries.length > 0) {
-            playSound("chime");
-            toast({
-              title: "Sorteios ganhos carregados!",
-              description: `Você tem ${formattedLotteries.length} sorteio(s) ganho(s)!`,
-            });
-          }
-        }
-      } catch (raffleErr) {
-        console.warn('Erro ao buscar sorteios ganhos:', raffleErr);
-        setRaffleWinners([]);
+      // Fetch mission rewards for the user
+      const { data: missionRewardsData, error: lootBoxesError } = await supabase
+        .from('mission_rewards')
+        .select(`
+          id,
+          rifas_earned,
+          cashback_earned,
+          rewarded_at,
+          mission_id,
+          missions (title),
+          mission_submissions!inner (user_id)
+        `)
+        .eq('mission_submissions.user_id', user.id)
+        .order('rewarded_at', { ascending: false });
+
+      if (lootBoxesError) {
+        console.error("Error fetching mission rewards:", lootBoxesError);
+        throw lootBoxesError;
       }
+
+      const transformedLootBoxes = (missionRewardsData || []).flatMap(reward => {
+        const rewards = [];
+        if (reward.rifas_earned > 0) {
+          rewards.push({
+            id: `${reward.id}-rifas`,
+            reward_type: 'Rifas',
+            reward_amount: reward.rifas_earned,
+            awarded_at: reward.rewarded_at,
+            missions: reward.missions
+          });
+        }
+        if (reward.cashback_earned > 0) {
+          rewards.push({
+            id: `${reward.id}-cashback`,
+            reward_type: 'Cashback',
+            reward_amount: reward.cashback_earned,
+            awarded_at: reward.rewarded_at,
+            missions: reward.missions
+          });
+        }
+        return rewards;
+      });
       
-      // Por enquanto, deixar lootboxes vazio até corrigir os tipos
-      setLootBoxes([]);
+      setLootBoxes(transformedLootBoxes);
       
+      // Fetch raffle prizes won by the user
+      const raffleWinnersData = await raffleService.getUserWonRaffles(user.id);
+      setRaffleWinners(raffleWinnersData);
+      
+      // Play sound if user has rewards
+      if ((transformedLootBoxes.length > 0) || raffleWinnersData.length > 0) {
+        playSound("chime");
+      }
     } catch (error: any) {
       console.error("Error fetching rewards:", error);
       toast({

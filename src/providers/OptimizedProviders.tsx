@@ -5,7 +5,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { HelmetProvider } from 'react-helmet-async';
 import { PerformanceProvider } from '@/components/performance/PerformanceProvider';
-import { RoutePreloader } from '@/components/progressive/RoutePreloader';
+// import { RoutePreloader } from '@/components/progressive/RoutePreloader';
 import LoadingScreen from '@/components/LoadingScreen';
 import { AuthProvider } from '@/hooks/useAuth';
 
@@ -33,6 +33,7 @@ const createOptimizedQueryClient = () => new QueryClient({
 const queryClient = createOptimizedQueryClient();
 
 // Route imports for preloading
+/*
 const routeImports = {
   '/auth': () => import('@/pages/Authentication'),
   '/cliente': () => import('@/pages/ClientDashboard'),
@@ -44,6 +45,7 @@ const routeImports = {
   '/anunciante/moderacao': () => import('@/pages/advertiser/ModerationPage'),
   '/admin': () => import('@/pages/AdminPanel'),
 };
+*/
 
 interface OptimizedProvidersProps {
   children: React.ReactNode;
@@ -63,7 +65,7 @@ export const OptimizedProviders: React.FC<OptimizedProvidersProps> = ({ children
             >
               <HelmetProvider>
                 <AuthProvider>
-                  <RoutePreloader routes={routeImports} />
+                  {/* <RoutePreloader routes={routeImports} /> */}
                   {children}
                   <Toaster 
                     position="top-right"

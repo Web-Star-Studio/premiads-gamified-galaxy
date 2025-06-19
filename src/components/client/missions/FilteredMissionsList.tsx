@@ -18,53 +18,61 @@ const FilteredMissionsList = ({ missions, onMissionClick, emptyMessage, type }: 
           <p className="text-gray-400">{emptyMessage}</p>
         </div>
       ) : (
-        missions.map(mission => (
-          <div 
-            key={mission.id}
-            className="glass-panel p-4"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-medium">{mission.title}</h4>
-                <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
-              </div>
-              <Badge 
-                className={
-                  type === "completed" ? "bg-green-600" : 
-                  type === "pending" ? "bg-yellow-600" : 
-                  "bg-blue-600"
-                }
-              >
-                {mission.rifas || mission.tickets_reward || 0} rifas
-              </Badge>
-            </div>
-            <p className="mt-2 mb-2">{mission.description}</p>
-            
-            {type === "completed" && (
-              <div className="bg-green-600/20 rounded p-2 text-sm flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-                <p className="text-green-400">Concluída e aprovada</p>
-              </div>
-            )}
-            
-            {type === "pending" && (
-              <div className="bg-yellow-600/20 rounded p-2 text-sm">
-                <p className="text-yellow-300">Aguardando aprovação do anunciante</p>
-              </div>
-            )}
-            
-            {type === "in_progress" && onMissionClick && (
-              <div className="flex justify-end">
-                <Button 
-                  className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
-                  onClick={() => onMissionClick(mission)}
+        missions.map(mission => {
+          const rifasReward =
+            typeof mission.rifas === 'number'
+              ? mission.rifas
+              : typeof mission.tickets_reward === 'number'
+                ? mission.tickets_reward
+                : 0;
+          return (
+            <div 
+              key={mission.id}
+              className="glass-panel p-4"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{mission.title}</h4>
+                  <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
+                </div>
+                <Badge 
+                  className={
+                    type === "completed" ? "bg-green-600" : 
+                    type === "pending" ? "bg-yellow-600" : 
+                    "bg-blue-600"
+                  }
                 >
-                  Continuar
-                </Button>
+                  {rifasReward} rifas
+                </Badge>
               </div>
-            )}
-          </div>
-        ))
+              <p className="mt-2 mb-2">{typeof mission.description === 'string' ? mission.description : ''}</p>
+              
+              {type === "completed" && (
+                <div className="bg-green-600/20 rounded p-2 text-sm flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                  <p className="text-green-400">Concluída e aprovada</p>
+                </div>
+              )}
+              
+              {type === "pending" && (
+                <div className="bg-yellow-600/20 rounded p-2 text-sm">
+                  <p className="text-yellow-300">Aguardando aprovação do anunciante</p>
+                </div>
+              )}
+              
+              {type === "in_progress" && onMissionClick && (
+                <div className="flex justify-end">
+                  <Button 
+                    className="bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/80"
+                    onClick={() => onMissionClick(mission)}
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );
