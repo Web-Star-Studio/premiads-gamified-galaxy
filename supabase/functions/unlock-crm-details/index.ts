@@ -16,7 +16,13 @@ interface Profile {
   user_type: string;
 }
 
-
+interface ProfileView {
+  advertiser_id: string;
+  participant_id: string;
+  unlocked_details: boolean;
+  rifa_consumed_for_unlock: boolean;
+  viewed_at: string;
+}
 
 async function getUserProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
@@ -31,7 +37,33 @@ async function getUserProfile(supabase: SupabaseClient, userId: string): Promise
   return data as Profile;
 }
 
+async function checkIfAlreadyUnlocked(
+  supabase: SupabaseClient, 
+  advertiserId: string, 
+  participantId: string
+): Promise<ProfileView | null> {
+  console.log(`unlock-crm-details: Checking if already unlocked for advertiser ${advertiserId} and participant ${participantId}`);
+  
+  const { data, error } = await supabase
+    .from("advertiser_profile_views")
+    .select("advertiser_id, participant_id, unlocked_details, rifa_consumed_for_unlock, viewed_at")
+    .eq("advertiser_id", advertiserId)
+    .eq("participant_id", participantId)
+    .single();
 
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows found - not unlocked yet
+      console.log("unlock-crm-details: No previous unlock record found");
+      return null;
+    }
+    console.error("unlock-crm-details: Error checking previous unlock:", error);
+    return null;
+  }
+
+  console.log(`unlock-crm-details: Found previous unlock record:`, data);
+  return data as ProfileView;
+}
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -59,16 +91,16 @@ serve(async (req: Request) => {
     const advertiserId = user.id;
     console.log(`unlock-crm-details: Authenticated advertiser ID: ${advertiserId}`);
 
-    const { mission_id } = await req.json();
-    if (!mission_id) {
-      console.error("unlock-crm-details: Missing mission_id");
-      return new Response(JSON.stringify({ error: "Missing mission_id" }), {
+    const { participant_id } = await req.json();
+    if (!participant_id) {
+      console.error("unlock-crm-details: Missing participant_id");
+      return new Response(JSON.stringify({ error: "Missing participant_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log(`unlock-crm-details: Processing unlock request for mission: ${mission_id}`);
+    console.log(`unlock-crm-details: Processing unlock request for participant: ${participant_id}`);
 
     const advertiserProfile = await getUserProfile(supabaseAdminClient, advertiserId);
     if (!advertiserProfile || advertiserProfile.user_type !== "advertiser") {
@@ -79,36 +111,51 @@ serve(async (req: Request) => {
       });
     }
 
-    // Verificar se a missão pertence ao anunciante
-    const { data: mission, error: missionError } = await supabaseAdminClient
-      .from("missions")
-      .select("id, title, advertiser_id")
-      .eq("id", mission_id)
-      .eq("advertiser_id", advertiserId)
-      .single();
+    // Verificar se os detalhes já foram desbloqueados anteriormente
+    const existingUnlock = await checkIfAlreadyUnlocked(supabaseAdminClient, advertiserId, participant_id);
+    
+    if (existingUnlock && existingUnlock.unlocked_details) {
+      console.log(`unlock-crm-details: Details already unlocked for advertiser ${advertiserId} and participant ${participant_id}. No rifa consumption needed.`);
+      
+      // Atualizar apenas a data de visualização, sem consumir rifa
+      const { error: updateError } = await supabaseAdminClient
+        .from("advertiser_profile_views")
+        .update({ viewed_at: new Date().toISOString() })
+        .eq("advertiser_id", advertiserId)
+        .eq("participant_id", participant_id);
 
-    if (missionError || !mission) {
-      console.error("unlock-crm-details: Mission not found or not owned by advertiser:", missionError);
-      return new Response(JSON.stringify({ error: "Missão não encontrada ou não pertence ao anunciante" }), {
-        status: 404,
+      if (updateError) {
+        console.error("unlock-crm-details: Error updating view timestamp:", updateError);
+      } else {
+        console.log("unlock-crm-details: Updated view timestamp successfully");
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Detalhes já estavam desbloqueados. Nenhuma rifa foi consumida.",
+        already_unlocked: true
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Chamar função RPC para desbloqueio
-    console.log(`unlock-crm-details: Calling RPC function for mission: ${mission_id}`);
+    // Se não foi desbloqueado antes, proceder com o desbloqueio que consome rifa
+    console.log(`unlock-crm-details: Proceeding with unlock that will consume rifa for advertiser ${advertiserId} and participant ${participant_id}`);
 
-    const { data: result, error: rpcError } = await supabaseAdminClient.rpc("unlock_crm_mission_details", {
+    const rpcParams: { [key: string]: string } = {
       p_advertiser_id: advertiserId,
-      p_mission_id: mission_id,
-    });
+      p_participant_id: participant_id,
+    };
+
+    const { error: rpcError } = await supabaseAdminClient.rpc("unlock_crm_participant_details", rpcParams);
 
     if (rpcError) {
-      console.error("unlock-crm-details: RPC error (unlock_crm_mission_details):", rpcError);
-      const errorMessage = rpcError.message.includes("rifas suficientes") 
+      console.error("unlock-crm-details: RPC error (unlock_crm_participant_details):", rpcError);
+      const errorMessage = rpcError.message.includes("não possui rifas suficientes") 
         ? "Você não possui rifas suficientes." 
         : "Falha ao desbloquear detalhes.";
-      const errorStatus = rpcError.message.includes("rifas suficientes") ? 402 : 500;
+      const errorStatus = rpcError.message.includes("não possui rifas suficientes") ? 402 : 500;
 
       return new Response(JSON.stringify({ error: errorMessage, details: rpcError.message }), {
         status: errorStatus,
@@ -116,9 +163,13 @@ serve(async (req: Request) => {
       });
     }
 
-    console.log(`unlock-crm-details: Successfully unlocked details for mission ${mission_id}. Result:`, result);
+    console.log(`unlock-crm-details: Successfully unlocked details for advertiser ${advertiserId} and participant ${participant_id}. 1 rifa consumed.`);
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Detalhes do participante desbloqueados. 1 rifa consumida.",
+      already_unlocked: false
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
