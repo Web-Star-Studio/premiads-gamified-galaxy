@@ -13,9 +13,6 @@ export function CreditsDebug() {
     setLastUpdate(new Date());
   }, [userCredits]);
 
-  // Verificação de segurança para evitar renderização de valores inválidos
-  if (!user) return null;
-  
   return (
     <Card className="bg-red-900/20 border-red-500/30">
       <CardHeader>
@@ -24,11 +21,11 @@ export function CreditsDebug() {
       <CardContent className="space-y-2 text-xs">
         <div className="flex justify-between">
           <span>User ID:</span>
-          <span className="font-mono">{user?.id?.substring(0, 8) || 'N/A'}...</span>
+          <span className="font-mono">{user?.id?.substring(0, 8)}...</span>
         </div>
         <div className="flex justify-between">
           <span>Rifas atuais:</span>
-          <Badge variant="outline">{userCredits ?? 0}</Badge>
+          <Badge variant="outline">{userCredits}</Badge>
         </div>
         <div className="flex justify-between">
           <span>Status:</span>
@@ -38,11 +35,11 @@ export function CreditsDebug() {
         </div>
         <div className="flex justify-between">
           <span>Última atualização:</span>
-          <span>{lastUpdate?.toLocaleTimeString?.() || 'N/A'}</span>
+          <span>{lastUpdate.toLocaleTimeString()}</span>
         </div>
         {error && (
           <div className="text-red-400 text-xs">
-            Erro: {error?.message || 'Erro desconhecido'}
+            Erro: {error.message}
           </div>
         )}
       </CardContent>

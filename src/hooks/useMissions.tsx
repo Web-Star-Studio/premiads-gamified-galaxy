@@ -273,15 +273,15 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   };
 
   return {
-    loading: Boolean(loading),
-    missions: getFilteredMissions() || [],
-    allMissions: missions || [],
+    loading,
+    missions: getFilteredMissions(),
+    allMissions: missions,
     selectedMission,
     setSelectedMission,
     currentFilter,
     setFilter,
     submitMission: handleSubmitMission,
-    submissionLoading: Boolean(submissionLoading),
+    submissionLoading,
     refreshMissions: fetchMissions
   };
 };

@@ -33,52 +33,43 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
         </div>
       ) : (
         <div className="space-y-3">
-          {missions.map(mission => {
-            const rifasReward =
-              typeof mission.rifas === 'number'
-                ? mission.rifas
-                : typeof mission.tickets_reward === 'number'
-                  ? mission.tickets_reward
-                  : 0;
-
-            return (
-              <div 
-                key={mission.id}
-                className={`bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20 cursor-pointer transition-all hover:border-neon-cyan/40 ${selectedMission?.id === mission.id ? 'border-neon-cyan' : ''}`}
-                onClick={() => {
-                  onMissionClick(mission);
-                  playSound("pop");
-                }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{mission.title}</h4>
-                    <p className="text-sm text-gray-400">{typeof mission.brand === 'string' ? mission.brand : 'PremiAds'}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge 
-                      variant="secondary" 
-                      className="flex items-center gap-1"
-                    >
-                      <Award className="w-3 h-3" />
-                      <span>{rifasReward} rifas</span>
-                    </Badge>
-                    
-                    {mission.has_badge && (
-                      <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30 flex items-center gap-1">
-                        <BadgeIcon className="w-3 h-3" />
-                        <span>Badge</span>
-                      </Badge>
-                    )}
-                  </div>
+          {missions.map(mission => (
+            <div 
+              key={mission.id}
+              className={`bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20 cursor-pointer transition-all hover:border-neon-cyan/40 ${selectedMission?.id === mission.id ? 'border-neon-cyan' : ''}`}
+              onClick={() => {
+                onMissionClick(mission);
+                playSound("pop");
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{mission.title}</h4>
+                  <p className="text-sm text-gray-400">{mission.brand || "PremiAds"}</p>
                 </div>
-                <div className="flex items-center mt-2 text-xs text-gray-400">
-                  <Clock className="w-3 h-3 mr-1" />
-                  <span>Prazo: {formatDeadline(typeof mission.deadline === 'string' ? mission.deadline : undefined)}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge 
+                    variant="secondary" 
+                    className="flex items-center gap-1"
+                  >
+                    <Award className="w-3 h-3" />
+                    <span>{mission.rifas || mission.tickets_reward || 0} rifas</span>
+                  </Badge>
+                  
+                  {mission.has_badge && (
+                    <Badge variant="outline" className="text-xs bg-neon-pink/20 text-neon-pink border-neon-pink/30 flex items-center gap-1">
+                      <BadgeIcon className="w-3 h-3" />
+                      <span>Badge</span>
+                    </Badge>
+                  )}
                 </div>
               </div>
-            );
-          })}
+              <div className="flex items-center mt-2 text-xs text-gray-400">
+                <Clock className="w-3 h-3 mr-1" />
+                <span>Prazo: {formatDeadline(mission.deadline)}</span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
