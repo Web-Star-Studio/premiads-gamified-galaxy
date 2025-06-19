@@ -1,64 +1,17 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSounds } from "@/hooks/use-sounds";
+import { useAuth } from "@/hooks/core/useAuth";
+import { useFixedRaffleParticipations } from "@/hooks/client/useFixedRaffleParticipations";
 import { Calendar, ChevronLeft, ChevronRight, Gift, Search, Ticket, Trophy } from "lucide-react";
-
-// Mock history data
-const HISTORY_DATA = [
-  {
-    id: 1,
-    raffleName: "Sorteio Semanal de Pontos",
-    ticketsUsed: 2,
-    participationDate: "2025-04-08T14:30:00",
-    drawDate: "2025-04-09T18:00:00",
-    result: "win",
-    prize: "5000 Pontos"
-  },
-  {
-    id: 2,
-    raffleName: "Loot Box Exclusiva",
-    ticketsUsed: 5,
-    participationDate: "2025-04-01T10:15:00",
-    drawDate: "2025-04-02T18:00:00",
-    result: "loss",
-    prize: null
-  },
-  {
-    id: 3,
-    raffleName: "Sorteio de Eletrônicos",
-    ticketsUsed: 3,
-    participationDate: "2025-03-25T16:45:00",
-    drawDate: "2025-03-26T18:00:00",
-    result: "win",
-    prize: "Fone de Ouvido"
-  },
-  {
-    id: 4,
-    raffleName: "Sorteio Especial de Aniversário",
-    ticketsUsed: 1,
-    participationDate: "2025-03-15T09:20:00",
-    drawDate: "2025-03-16T18:00:00",
-    result: "loss",
-    prize: null
-  },
-  {
-    id: 5,
-    raffleName: "Sorteio Mensal",
-    ticketsUsed: 10,
-    participationDate: "2025-03-01T11:05:00",
-    drawDate: "2025-03-05T18:00:00",
-    result: "win",
-    prize: "10000 Pontos"
-  }
-];
 
 const ParticipationHistory = () => {
   const { playSound } = useSounds();
-  const [history, setHistory] = useState(HISTORY_DATA);
+  const { user } = useAuth();
+  const { participations, loading, error } = useFixedRaffleParticipations(user?.id || null);
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(4);
   
@@ -81,16 +34,25 @@ const ParticipationHistory = () => {
     });
   };
   
-  const getResultColor = (result: string) => result === 'win' ? 
-      'bg-neon-lime/20 text-neon-lime border-neon-lime/30' : 
-      'bg-gray-700/20 text-gray-400 border-gray-600/30';
+  const getResultColor = (status: string) => {
+    if (status === 'completed') {
+      return 'bg-neon-lime/20 text-neon-lime border-neon-lime/30';
+    } else if (status === 'active') {
+      return 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30';
+    }
+    return 'bg-gray-700/20 text-gray-400 border-gray-600/30';
+  };
   
-  const getResultText = (result: string) => result === 'win' ? 'Prêmio Ganho' : 'Não Premiado';
+  const getResultText = (status: string) => {
+    if (status === 'completed') return 'Finalizado';
+    if (status === 'active') return 'Em Andamento';
+    return 'Pendente';
+  };
   
   // Pagination
-  const totalPages = Math.ceil(history.length / itemsPerPage);
+  const totalPages = Math.ceil(participations.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
-  const paginatedHistory = history.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedHistory = participations.slice(startIndex, startIndex + itemsPerPage);
   
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -105,6 +67,37 @@ const ParticipationHistory = () => {
       playSound("pop");
     }
   };
+
+  if (loading) {
+    return (
+      <motion.div
+        className="glass-panel p-6"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <div className="text-center py-12">
+          <div className="animate-spin w-8 h-8 border-2 border-neon-cyan/30 border-t-neon-cyan rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando histórico...</p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        className="glass-panel p-6"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <div className="text-center py-12">
+          <Trophy className="w-12 h-12 mx-auto text-red-500 mb-3" />
+          <h3 className="text-lg font-medium mb-2">Erro ao carregar histórico</h3>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </motion.div>
+    );
+  }
   
   return (
     <motion.div
@@ -116,16 +109,16 @@ const ParticipationHistory = () => {
         <h2 className="text-xl font-bold font-heading">Histórico de Participações</h2>
         <div className="flex items-center">
           <Search className="w-4 h-4 mr-2 text-neon-cyan" />
-          <span className="text-sm">{history.length} participações</span>
+          <span className="text-sm">{participations.length} participações</span>
         </div>
       </div>
       
-      {history.length === 0 ? (
+      {participations.length === 0 ? (
         <div className="text-center py-12">
           <Trophy className="w-12 h-12 mx-auto text-gray-500 mb-3" />
           <h3 className="text-lg font-medium mb-2">Nenhuma participação ainda</h3>
           <p className="text-gray-400">
-            Você ainda não participou de nenhum sorteio. Converta seus tickets em tickets e tente a sorte!
+            Você ainda não participou de nenhum sorteio. Use suas rifas e tente a sorte!
           </p>
         </div>
       ) : (
@@ -135,50 +128,52 @@ const ParticipationHistory = () => {
               <TableHeader>
                 <TableRow className="border-galaxy-purple/20">
                   <TableHead>Sorteio</TableHead>
-                  <TableHead className="text-center">Tickets</TableHead>
+                  <TableHead className="text-center">Números</TableHead>
                   <TableHead>Data de Participação</TableHead>
                   <TableHead>Data do Sorteio</TableHead>
-                  <TableHead>Resultado</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedHistory.map((entry) => (
                   <TableRow 
-                    key={entry.id}
+                    key={entry.participation.id}
                     className="border-galaxy-purple/10 hover:bg-galaxy-deepPurple/30"
                   >
                     <TableCell className="font-medium">
                       <div className="flex items-center">
                         <Gift className="w-4 h-4 mr-2 text-neon-pink" />
-                        {entry.raffleName}
+                        {entry.raffle.title || entry.raffle.name}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center">
                         <Ticket className="w-4 h-4 mr-1 text-neon-cyan" />
-                        {entry.ticketsUsed}
+                        {entry.participation.numbers.length}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        <span className="text-sm">{formatDate(entry.participationDate)}</span>
+                        <span className="text-sm">{formatDate(entry.participation.created_at)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        <span className="text-sm">{formatDate(entry.drawDate)}</span>
+                        <span className="text-sm">
+                          {entry.raffle.draw_date ? formatDate(entry.raffle.draw_date) : 'A definir'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Badge className={`${getResultColor(entry.result)} text-xs`}>
-                          {getResultText(entry.result)}
+                        <Badge className={`${getResultColor(entry.raffle.status)} text-xs`}>
+                          {getResultText(entry.raffle.status)}
                         </Badge>
-                        {entry.prize && (
+                        {entry.raffle.status === 'completed' && entry.raffle.winner && (
                           <span className="text-xs text-neon-lime">
-                            {entry.prize}
+                            {entry.raffle.winner.id === entry.participation.user_id ? 'Você ganhou!' : 'Não premiado'}
                           </span>
                         )}
                       </div>
@@ -192,7 +187,7 @@ const ParticipationHistory = () => {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-gray-400">
-                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, history.length)} de {history.length} entradas
+                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, participations.length)} de {participations.length} entradas
               </div>
               <div className="flex items-center space-x-2">
                 <Button

@@ -2,6 +2,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lottery, LotteryFormValues, LotteryParticipation } from '@/types/lottery';
 import { withPerformanceMonitoring } from '@/utils/performance-monitor';
 
+// Generate UUID function for IDs
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // Helper function to transform form data to Supabase structure
 const transformLotteryData = (formData: LotteryFormValues) => {
   // Calculate end date as 72 hours after start date if auto-scheduled
@@ -10,6 +19,7 @@ const transformLotteryData = (formData: LotteryFormValues) => {
     : formData.endDate;
     
   return {
+    id: generateUUID(), // Explicitly generate UUID for id
     name: formData.name,
     title: formData.name,
     description: formData.description,
@@ -63,8 +73,8 @@ export const raffleService = {
         raffleData.image_url = publicUrlData.publicUrl;
       }
       
-      // Insert raffle into database
-      const { data, error } = await supabase
+      // Insert raffle into database with explicitly generated ID
+      const { data, error } = await (supabase as any)
         .from('lotteries')
         .insert(raffleData)
         .select()
@@ -72,7 +82,7 @@ export const raffleService = {
         
       if (error) throw error;
       
-      return data;
+      return data as unknown as Lottery;
     } catch (error) {
       console.error('Error creating raffle:', error);
       throw error;

@@ -7,6 +7,7 @@ import { useSounds } from '@/hooks/use-sounds';
 import { differenceInSeconds, parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CountdownInfo {
   days: number;
@@ -128,13 +129,28 @@ export function useRaffleData(raffleId: number | string) {
       if (!userId || !raffleId) return;
       
       try {
-        // Fetch user participations
-        const participations = await raffleService.getUserParticipations(userId);
-        const userParticipation = participations.find(p => p.participation.lottery_id === String(raffleId));
-        
-        if (userParticipation) {
-          setParticipation(userParticipation.participation);
-          setUserNumbers(userParticipation.participation.numbers);
+        // Usar consulta direta para evitar erro de relacionamento
+        const { data: participationData, error: participationError } = await supabase
+          .from('lottery_participants' as any)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('lottery_id', String(raffleId))
+          .maybeSingle();
+
+        if (participationError) {
+          console.warn('Error fetching participation:', participationError);
+        } else if (participationData) {
+          const userParticipation = {
+            id: participationData.id,
+            user_id: participationData.user_id,
+            lottery_id: participationData.lottery_id,
+            numbers: participationData.numbers || [],
+            created_at: participationData.created_at,
+            updated_at: participationData.updated_at
+          };
+          
+          setParticipation(userParticipation);
+          setUserNumbers(userParticipation.numbers);
         } else {
           setParticipation(null);
           setUserNumbers([]);
