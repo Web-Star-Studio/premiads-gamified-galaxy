@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Edit, Eye, Trash, BarChart } from "lucide-react";
+import { Edit, Trash } from "lucide-react";
 import CampaignStatusBadge from "./CampaignStatusBadge";
 import { Campaign } from "./campaignData";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -35,19 +35,6 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 text-gray-400 hover:text-white"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Ver detalhes</TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
                 className="h-8 w-8 text-gray-400 hover:text-neon-cyan"
                 onClick={() => onEdit(campaign)}
               >
@@ -55,19 +42,6 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit }: CampaignTableRowProps)
               </Button>
             </TooltipTrigger>
             <TooltipContent>Editar campanha</TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-gray-400 hover:text-neon-pink"
-              >
-                <BarChart className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Ver analytics</TooltipContent>
           </Tooltip>
           
           <Tooltip>

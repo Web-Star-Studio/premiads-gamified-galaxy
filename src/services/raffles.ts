@@ -560,19 +560,55 @@ export const raffleService = {
   
   getUserWonRaffles: withPerformanceMonitoring(async (userId: string) => {
     try {
-      // Buscar os sorteios ganhos pelo usuário com detalhes do sorteio
-      const { data, error } = await supabase
+      // Primeiro tentar buscar da tabela lottery_winners
+      const { data: lotteryWinners, error: winnersError } = await supabase
         .from('lottery_winners')
-        .select(`
-          *,
-          raffle:lotteries(*)
-        `)
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
         
-      if (error) throw error;
+      if (winnersError) {
+        console.warn('Error fetching lottery_winners:', winnersError);
+      }
       
-      return data || [];
+      // Se encontrou dados em lottery_winners, retornar
+      if (lotteryWinners && lotteryWinners.length > 0) {
+        return lotteryWinners.map(winner => ({
+          ...winner,
+          raffle: {
+            id: winner.lottery_id,
+            title: winner.prize_name || 'Sorteio',
+            prize_type: winner.prize_name,
+            prize_value: winner.prize_value
+          }
+        }));
+      }
+      
+      // Se não há dados em lottery_winners, buscar diretamente de raffles
+      const { data: raffleWinners, error: rafflesError } = await supabase
+        .from('raffles')
+        .select('*')
+        .eq('winner_user_id', userId)
+        .order('updated_at', { ascending: false });
+      
+      if (rafflesError) {
+        console.warn('Error fetching from raffles table:', rafflesError);
+        return [];
+      }
+      
+      // Transformar os dados de raffles para o formato esperado
+      const raffleData = (raffleWinners || []).map(raffle => ({
+        id: `raffle-${raffle.id}`,
+        lottery_id: raffle.id,
+        user_id: userId,
+        winning_number: null,
+        prize_name: raffle.prize_type || raffle.title,
+        prize_value: raffle.prize_value,
+        created_at: raffle.updated_at,
+        raffle: raffle
+      }));
+      
+      return raffleData;
     } catch (error) {
       console.error('Error fetching user won raffles:', error);
       return [];
