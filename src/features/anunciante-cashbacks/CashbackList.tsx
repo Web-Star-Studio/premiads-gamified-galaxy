@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,12 +77,6 @@ export const CashbackList: React.FC<CashbackListProps> = ({
                   <Calendar className="h-3 w-3" />
                   <span>Até {new Date(campaign.end_date).toLocaleDateString()}</span>
                 </div>
-                {campaign.min_purchase && (
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    <span>Min. R$ {campaign.min_purchase}</span>
-                  </div>
-                )}
               </div>
               
               <div className="flex gap-2 mt-4">

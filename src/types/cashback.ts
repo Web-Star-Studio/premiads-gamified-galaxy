@@ -1,4 +1,3 @@
-
 export interface CashbackCampaign {
   id: string;
   title: string;
@@ -7,7 +6,6 @@ export interface CashbackCampaign {
   advertiser_logo?: string;
   cashback_percentage: number;
   discount_percentage: number; // Add this for compatibility
-  min_purchase?: number;
   category?: string;
   start_date: string;
   end_date: string;
@@ -32,7 +30,6 @@ export interface CreateCashbackInput {
   title: string;
   description?: string;
   cashback_percentage: number;
-  minimum_purchase?: number;
   category?: string;
   start_date: string;
   end_date: string;

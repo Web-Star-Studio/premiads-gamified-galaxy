@@ -8,7 +8,6 @@ interface CreateCashbackInput {
   title: string
   description: string
   cashback_percentage: number
-  minimum_purchase?: number | null
   end_date: string
   category: string
   advertiser_id: string
@@ -43,14 +42,12 @@ function useCashbacks(advertiserId: string) {
   // Criar campanha
   const createMutation = useMutation({
     mutationFn: async (input: CreateCashbackInput) => {
-      const { minimum_purchase, ...rest } = input
       const { data, error } = await supabase
         .from(TABLE as any)
         .insert([
           {
-            ...rest,
-            min_purchase: minimum_purchase,
-            expires_at: rest.end_date
+            ...input,
+            expires_at: input.end_date
           }
         ])
         .select()
@@ -64,9 +61,8 @@ function useCashbacks(advertiserId: string) {
   // Editar campanha
   const updateMutation = useMutation({
     mutationFn: async (input: Partial<CashbackCampaign> & { id: string }) => {
-      const { id, minimum_purchase, ...rest } = input as any
+      const { id, ...rest } = input as any
       const updateData: any = { ...rest }
-      if (minimum_purchase !== undefined) updateData.min_purchase = minimum_purchase
       if (rest.end_date) updateData.expires_at = rest.end_date
       const { data, error } = await supabase
         .from(TABLE as any)

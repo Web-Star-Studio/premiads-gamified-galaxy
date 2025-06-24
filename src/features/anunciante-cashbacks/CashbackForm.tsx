@@ -33,8 +33,7 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
   const [formData, setFormData] = useState<CreateCashbackInput>({
     title: '',
     description: '',
-    cashback_percentage: 5,
-    minimum_purchase: null,
+    cashback_percentage: 0,
     end_date: '',
     category: '',
     advertiser_id: advertiserId,
@@ -51,10 +50,9 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
         title: editCampaign.title,
         description: editCampaign.description,
         cashback_percentage: editCampaign.cashback_percentage,
-        minimum_purchase: editCampaign.min_purchase,
         end_date: editCampaign.end_date,
         category: editCampaign.category,
-        advertiser_id: editCampaign.advertiser_id,
+        advertiser_id: advertiserId,
         advertiser_logo: editCampaign.advertiser_logo,
         is_active: editCampaign.is_active ?? true
       });
@@ -62,8 +60,7 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
       setFormData({
         title: '',
         description: '',
-        cashback_percentage: 5,
-        minimum_purchase: null,
+        cashback_percentage: 0,
         end_date: '',
         category: '',
         advertiser_id: advertiserId,
@@ -79,18 +76,40 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
       const fileExt = file.name.split('.').pop();
       const fileName = `cashback/${advertiserId}/${Date.now()}.${fileExt}`;
       
-      // Usar o bucket raffle-images que já existe
+      // Try cashback-images bucket first, fallback to raffle-images
+      const bucketName = 'cashback-images'; // Change to 'raffle-images' if needed
+      
       const { error: uploadError } = await supabase.storage
-        .from('raffle-images')
+        .from(bucketName)
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
         });
         
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // If cashback-images bucket doesn't exist, try raffle-images
+        if (bucketName === 'cashback-images' && uploadError.message.includes('not found')) {
+          const { error: fallbackError } = await supabase.storage
+            .from('raffle-images')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (fallbackError) throw fallbackError;
+          
+          const { data: publicUrlData } = supabase.storage
+            .from('raffle-images')
+            .getPublicUrl(fileName);
+            
+          return publicUrlData.publicUrl;
+        }
+        
+        throw uploadError;
+      }
       
       const { data: publicUrlData } = supabase.storage
-        .from('raffle-images')
+        .from(bucketName)
         .getPublicUrl(fileName);
         
       return publicUrlData.publicUrl;
@@ -188,21 +207,6 @@ export const CashbackForm: React.FC<CashbackFormProps> = ({
               value={formData.cashback_percentage}
               onChange={(e) => setFormData({ ...formData, cashback_percentage: Number(e.target.value) })}
               required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="minimum_purchase">Compra Mínima (R$)</Label>
-            <Input
-              id="minimum_purchase"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.minimum_purchase || ''}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                minimum_purchase: e.target.value ? Number(e.target.value) : null 
-              })}
             />
           </div>
 

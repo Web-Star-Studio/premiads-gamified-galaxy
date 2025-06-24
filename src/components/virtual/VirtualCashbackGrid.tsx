@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useVirtualScrolling } from '@/utils/performance';
 import { CashbackCampaign } from '@/types/cashback';
@@ -61,7 +60,7 @@ const VirtualCashbackGrid = React.memo<VirtualCashbackGridProps>(({
           <Button
             size="sm"
             className="w-full bg-neon-cyan text-galaxy-dark hover:bg-neon-cyan/90"
-            onClick={() => onRedeem(campaign.id, campaign.min_purchase || 0)}
+            onClick={() => onRedeem(campaign.id, 0)}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Resgatar

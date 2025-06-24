@@ -20,7 +20,6 @@ const convertDatabaseCampaignToFrontend = (dbCampaign: DatabaseCashbackCampaign)
   advertiser_logo: dbCampaign.advertiser_logo || '',
   cashback_percentage: Number(dbCampaign.cashback_percentage),
   discount_percentage: Number(dbCampaign.cashback_percentage), // Same as cashback for compatibility
-  min_purchase: Number(dbCampaign.min_purchase || 0),
   category: dbCampaign.category || '',
   start_date: dbCampaign.start_date,
   end_date: dbCampaign.end_date,

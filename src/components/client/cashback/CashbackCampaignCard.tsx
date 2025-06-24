@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -75,8 +74,7 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
           
           <CampaignContent
             description={campaign.description}
-            endDate={campaign.expires_at}
-            minimumPurchase={campaign.min_purchase}
+            endDate={campaign.end_date}
             formatDate={formatDate}
           />
           
