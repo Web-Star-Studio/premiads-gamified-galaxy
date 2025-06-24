@@ -24,7 +24,8 @@ import {
   BellRing,
   BadgePlus,
   Shield,
-  Users
+  Users,
+  CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,6 +73,11 @@ export const AdvertiserSidebar = () => {
       title: "Cashbacks",
       url: "/anunciante/cashbacks",
       icon: Wallet,
+    },
+    {
+      title: "Validação de Cupom",
+      url: "/anunciante/validacao-cupom",
+      icon: CheckSquare,
     },
     {
       title: "Moderação",

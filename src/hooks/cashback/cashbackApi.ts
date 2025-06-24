@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client'
-import type { CashbackCampaign, CashbackRedemption } from '@/types/cashback'
+import type { CashbackCampaign, CashbackRedemption, CashbackToken } from '@/types/cashback'
 import type { Tables } from '@/integrations/supabase/types'
 
 export interface FetchCashbackResult {
@@ -8,6 +8,51 @@ export interface FetchCashbackResult {
 }
 
 type DatabaseCashbackCampaign = Tables<'cashback_campaigns'>
+
+/**
+ * Gera um código SHA único para cashback: 7 letras maiúsculas + 3 dígitos da porcentagem
+ */
+function generateCashbackSHA(cashbackPercentage: number): string {
+  const letters = Array.from({ length: 7 }, () =>
+    String.fromCharCode(65 + Math.floor(Math.random() * 26))
+  ).join('');
+  const numeric = cashbackPercentage.toString().padStart(3, '0');
+  return `${letters}${numeric}`;
+}
+
+/**
+ * Verifica se o código SHA é único no banco de dados
+ */
+async function isSHAUnique(shaCode: string): Promise<boolean> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('cashback_tokens')
+      .select('id')
+      .eq('sha_code', shaCode);
+    
+    if (error) {
+      console.error('Error checking SHA uniqueness:', error);
+      return true; // Assume unique if error
+    }
+    
+    return data.length === 0;
+  } catch {
+    return true; // Assume unique if table doesn't exist yet
+  }
+}
+
+/**
+ * Gera um código SHA único com até 5 tentativas
+ */
+async function generateUniqueSHA(cashbackPercentage: number): Promise<string> {
+  for (let i = 0; i < 5; i++) {
+    const sha = generateCashbackSHA(cashbackPercentage);
+    if (await isSHAUnique(sha)) {
+      return sha;
+    }
+  }
+  throw new Error('Falha ao gerar SHA único após múltiplas tentativas');
+}
 
 /**
  * Converts database campaign format to frontend format
@@ -96,7 +141,7 @@ export const redeemCashback = async (
   // Verify campaign exists and is active
   const { data: campaign, error: campaignError } = await supabase
     .from('cashback_campaigns')
-    .select('id, is_active, end_date')
+    .select('id, is_active, end_date, cashback_percentage, advertiser_id')
     .eq('id', campaignId)
     .single()
   
@@ -110,6 +155,14 @@ export const redeemCashback = async (
   if (campaign.end_date < now) {
     throw new Error('Campanha expirada')
   }
+
+  // Generate unique SHA code
+  const cashbackPercentage = Number(campaign.cashback_percentage);
+  const shaCode = await generateUniqueSHA(cashbackPercentage);
+
+  // Calculate validade (expiry date) - 30 days from now
+  const validade = new Date();
+  validade.setDate(validade.getDate() + 30);
 
   // Generate redemption code
   const redemptionCode = 'CB' + Math.random().toString(36).substr(2, 8).toUpperCase()
@@ -130,6 +183,25 @@ export const redeemCashback = async (
   
   if (redemptionError) throw redemptionError
 
+  // Create cashback token with unique SHA (using any until table is created)
+  try {
+    await (supabase as any)
+      .from('cashback_tokens')
+      .insert({
+        user_id: userId,
+        advertiser_id: campaign.advertiser_id,
+        sha_code: shaCode,
+        cashback_percentage: cashbackPercentage,
+        status: 'ativo',
+        validade: validade.toISOString(),
+        campaign_id: campaignId
+      })
+  } catch (tokenError) {
+    console.error('Error creating cashback token:', tokenError);
+    // Don't throw error here to avoid breaking the cashback redemption
+    // The redemption will still work without the token
+  }
+
   // Update user balance
   const { error: balanceError } = await supabase
     .from('profiles')
@@ -142,4 +214,75 @@ export const redeemCashback = async (
   if (balanceError) throw balanceError
 
   return redemption as CashbackRedemption
+}
+
+/**
+ * Fetches user's cashback tokens from the database
+ */
+export const fetchUserCashbackTokens = async (): Promise<CashbackToken[]> => {
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabase.auth.getSession()
+  if (sessionError || !session) throw new Error('Autenticação necessária')
+  
+  try {
+    const { data, error } = await (supabase as any)
+      .from('cashback_tokens')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching cashback tokens:', error)
+      throw error
+    }
+    
+    return (data || []) as CashbackToken[]
+  } catch (error) {
+    console.error('Error fetching cashback tokens:', error)
+    return []
+  }
+}
+
+/**
+ * Validates a cashback coupon by SHA code
+ */
+export const validateCashbackCoupon = async (shaCode: string): Promise<{
+  success: boolean;
+  message: string;
+  tokenData?: any;
+}> => {
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabase.auth.getSession()
+  if (sessionError || !session) throw new Error('Autenticação necessária')
+  
+  try {
+    const { data, error } = await (supabase as any).rpc('validate_cashback_coupon', {
+      p_sha_code: shaCode,
+      p_advertiser_id: session.user.id
+    })
+    
+    if (error) {
+      console.error('Error validating coupon:', error)
+      throw error
+    }
+    
+    // The function returns an array with a single result
+    const result = data?.[0]
+    
+    return {
+      success: result?.success || false,
+      message: result?.message || 'Erro desconhecido',
+      tokenData: result?.token_data
+    }
+  } catch (error) {
+    console.error('Error validating cashback coupon:', error)
+    return {
+      success: false,
+      message: 'Erro ao validar cupom. Tente novamente.'
+    }
+  }
 }

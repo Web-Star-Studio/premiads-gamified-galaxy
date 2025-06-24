@@ -17,6 +17,7 @@ const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"
 const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
 const PaymentSuccessPage = lazy(() => import("@/pages/advertiser/PaymentSuccessPage"));
 const AdvertiserCrmPage = lazy(() => import("@/pages/advertiser/CrmPage"));
+const CouponValidationPage = lazy(() => import("@/pages/advertiser/CouponValidationPage"));
 
 // Custom loading component for routes
 const RouteLoadingSpinner = () => <LoadingSpinner />;
@@ -109,6 +110,13 @@ const AdvertiserRoutes = () => (
         <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <AdvertiserCrmPage />
+          </Suspense>
+        </RouteGuard>
+      } />
+      <Route path="validacao-cupom" element={
+        <RouteGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <CouponValidationPage />
           </Suspense>
         </RouteGuard>
       } />

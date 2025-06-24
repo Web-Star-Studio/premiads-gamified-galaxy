@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Gift, Clock3, Trophy } from "lucide-react";
+import { Gift, Clock3, Trophy, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -16,11 +16,13 @@ import RaffleWinnersList from "@/components/client/rewards/RaffleWinnersList";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { raffleService } from "@/services/raffles";
+import { fetchUserCashbackTokens } from "@/hooks/cashback/cashbackApi";
 
 const RewardsPage = () => {
   const [loading, setLoading] = useState(true);
   const [lootBoxes, setLootBoxes] = useState<any[]>([]);
   const [raffleWinners, setRaffleWinners] = useState<any[]>([]);
+  const [cashbackTokens, setCashbackTokens] = useState<any[]>([]);
   const { toast } = useToast();
   const { playSound } = useSounds();
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -81,6 +83,15 @@ const RewardsPage = () => {
       // Fetch raffle prizes won by the user
       const raffleWinnersData = await raffleService.getUserWonRaffles(user.id);
       setRaffleWinners(raffleWinnersData);
+
+      // Fetch cashback tokens (placeholder until table exists)
+      try {
+        const tokens = await fetchUserCashbackTokens();
+        setCashbackTokens(tokens);
+      } catch (error) {
+        console.error('Error fetching cashback tokens:', error);
+        setCashbackTokens([]);
+      }
       
       // Play sound if user has rewards
       if ((transformedLootBoxes.length > 0) || raffleWinnersData.length > 0) {
@@ -183,6 +194,10 @@ const RewardsPage = () => {
                   <Gift className="mr-2 h-4 w-4" />
                   Prêmios de Missões
                 </TabsTrigger>
+                <TabsTrigger value="cashback-tokens" className="data-[state=active]:bg-neon-cyan/20 data-[state=active]:text-white">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Cupons de Cashback
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="raffle-prizes" className="mt-6">
@@ -207,6 +222,62 @@ const RewardsPage = () => {
                       />
                       <h3 className="text-xl font-medium text-white mt-4">Nenhum Prêmio</h3>
                       <p className="text-gray-400 mt-2">Complete missões especiais para desbloquear prêmios disponibilizados pelos anunciantes!</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="cashback-tokens" className="mt-6">
+                {loading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <div className="w-10 h-10 border-4 border-t-neon-cyan border-galaxy-purple rounded-full animate-spin"></div>
+                  </div>
+                ) : cashbackTokens.length > 0 ? (
+                  <div className="grid gap-4">
+                    {cashbackTokens.map((token) => (
+                      <Card key={token.id} className="border-galaxy-purple/30 bg-galaxy-deepPurple/20">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                <h3 className="text-lg font-semibold text-white">
+                                  Cupom {token.cashback_percentage}% OFF
+                                </h3>
+                              </div>
+                              <p className="text-sm text-gray-300 mb-1">
+                                Código: <span className="font-mono text-neon-cyan font-bold">{token.sha_code}</span>
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Válido até: {new Date(token.validade).toLocaleDateString('pt-BR')}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Status: <span className={`font-semibold ${
+                                  token.status === 'ativo' ? 'text-green-400' : 
+                                  token.status === 'usado' ? 'text-yellow-400' : 'text-red-400'
+                                }`}>{token.status}</span>
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-neon-cyan">{token.cashback_percentage}%</p>
+                              <p className="text-xs text-gray-400">desconto</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="border-galaxy-purple/30 bg-galaxy-deepPurple/20">
+                    <CardContent className="pt-6 text-center">
+                      <Player
+                        src="https://assets2.lottiefiles.com/packages/lf20_jbb5yfim.json"
+                        className="w-40 h-40 mx-auto"
+                        autoplay
+                        loop
+                      />
+                      <h3 className="text-xl font-medium text-white mt-4">Nenhum Cupom de Cashback</h3>
+                      <p className="text-gray-400 mt-2">Resgatte cashback nas campanhas para gerar seus cupons únicos!</p>
                     </CardContent>
                   </Card>
                 )}
