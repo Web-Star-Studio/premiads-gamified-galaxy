@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/services/supabase'
-import { useDesbloqueioParticipantes } from './advertiser/useDesbloqueioParticipantes'
 
 interface CrmStats {
   completionRate: number
@@ -19,31 +18,32 @@ interface Demographics {
 }
 
 interface Participant {
+  id: string
   name: string
   email: string
-  status: 'completed' | 'started' | 'abandoned'
+  status: 'completed' | 'pending' | 'abandoned'
   startedAt: string
   completedAt?: string
+  demographics?: {
+    age?: number
+    gender?: string
+    location?: string
+    income?: string
+  }
 }
 
 interface CrmDashboardResponse {
   stats: CrmStats
   demographics: Demographics
   participants: Participant[]
-  isDataLocked?: boolean
+  isDataLocked: boolean
 }
 
 export function useAdvertiserCrm(advertiserId: string, filters?: { campaignId?: string, startDate?: string, endDate?: string }) {
   const { campaignId, startDate, endDate } = filters || {};
-  
-  // Hook para controle de desbloqueio (apenas se uma campanha específica for selecionada)
-  const { hasUnlocked, canUnlock, unlockData, isUnlocking } = useDesbloqueioParticipantes(
-    advertiserId, 
-    campaignId || ''
-  );
 
   return useQuery<CrmDashboardResponse>({
-    queryKey: ['advertiser-crm', advertiserId, filters, hasUnlocked],
+    queryKey: ['advertiser-crm', advertiserId, filters],
     queryFn: async () => {
       const client = await getSupabaseClient()
       
@@ -120,8 +120,8 @@ export function useAdvertiserCrm(advertiserId: string, filters?: { campaignId?: 
           totalCompleted
         };
 
-        // Verificar se os dados demográficos estão bloqueados
-        const isDataLocked = campaignId ? !hasUnlocked : false;
+        // No novo sistema, dados gerais sempre disponíveis
+        const isDataLocked = false;
 
         // Se dados estão bloqueados, retornar apenas stats básicas
         if (isDataLocked) {
@@ -222,11 +222,13 @@ export function useAdvertiserCrm(advertiserId: string, filters?: { campaignId?: 
             participants = profiles.map(profile => {
               const submission = approvedSubmissions.find(s => s.user_id === profile.id);
               return {
+                id: profile.id,
                 name: profile.full_name || 'Nome não informado',
                 email: profile.email || 'Email não informado',
                 status: 'completed' as const,
                 startedAt: submission?.submitted_at || profile.created_at,
-                completedAt: submission?.updated_at
+                completedAt: submission?.updated_at,
+                demographics: undefined
               };
             });
           }
