@@ -4,7 +4,7 @@ export { default as DashboardContent } from './DashboardContent';
 export { default as UsersContent } from './UsersContent';
 export { default as RulesContent } from './RulesContent';
 
-export { default as ReportsContent } from './ReportsContent';
+
 export { default as RafflesContent } from './RafflesContent';
 export { default as NotificationsContent } from './NotificationsContent';
 export { default as SettingsContent } from './SettingsContent';

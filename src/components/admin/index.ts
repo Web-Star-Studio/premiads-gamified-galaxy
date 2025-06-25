@@ -13,7 +13,7 @@ export { default as RecentActivities } from './dashboard/RecentActivities';
 export { default as UserManagement } from './UserManagement';
 export { default as LotteryManagement } from './LotteryManagement';
 
-export { default as AdvancedReporting } from './AdvancedReporting';
+
 export { default as RulesConfiguration } from './RulesConfiguration';
 export { default as NotificationTesting } from './NotificationTesting';
 export { default as TechnicalSupport } from './TechnicalSupport';

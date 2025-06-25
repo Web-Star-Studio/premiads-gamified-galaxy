@@ -40,7 +40,7 @@
  *   / - Admin dashboard
  *   /usuarios - User management page
  *   /sorteios - Lottery management page
- *   /relatorios - Reports page
+
 
  *   /notificacoes - Notifications page
  *   /regras - Rules configuration page

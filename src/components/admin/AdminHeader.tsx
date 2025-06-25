@@ -23,7 +23,7 @@ const AdminHeader = () => {
     { label: "Regras", href: "/admin/regras" },
     { label: "Moderação", href: "/admin/moderacao" },
 
-    { label: "Relatórios", href: "/admin/relatorios" },
+
     { label: "Notificações", href: "/admin/notificacoes" },
     { label: "Configurações", href: "/admin/configuracoes" },
   ];

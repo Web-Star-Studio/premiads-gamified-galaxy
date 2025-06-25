@@ -43,12 +43,7 @@ export const NavigationItems = () => {
       description: "Moderação de submissões"
     },
 
-    {
-      title: "Relatórios",
-      url: "/admin/relatorios",
-      icon: BarChart4,
-      description: "Análise de dados"
-    },
+
     {
       title: "Sorteios",
       url: "/admin/sorteios",
