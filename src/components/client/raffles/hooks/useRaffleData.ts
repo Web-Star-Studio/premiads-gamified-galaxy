@@ -135,6 +135,8 @@ export function useRaffleData(raffleId: number | string) {
           .select('*')
           .eq('user_id', userId)
           .eq('lottery_id', String(raffleId))
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (participationError) {

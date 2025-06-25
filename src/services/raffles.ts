@@ -480,99 +480,99 @@ export const raffleService = {
       // Select required number of tickets
       const userNumbers = availableNumbers.slice(0, numberOfTickets);
       
-      // Fetch participation list (may contain duplicates from dados antigos)
-      const { data: participationList, error: listError } = await supabase
+      // Buscar TODAS as participações existentes do usuário neste sorteio
+      const { data: allUserParticipations, error: listError } = await supabase
         .from('lottery_participants')
         .select('*')
         .eq('lottery_id', raffleId)
         .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
-      const existingParticipation = participationList && participationList.length > 0 ? participationList[0] : null;
-      const existingError = listError;
+      if (listError) throw listError;
       
       let participation;
-      // Usar transação manual diretamente (RPC desabilitado até ajuste de FK)
-      {
-        if (!existingError && existingParticipation && existingParticipation.id) {
-          // Update existing participation - validate ID first
-          if (!existingParticipation.id || existingParticipation.id === 'null' || existingParticipation.id === null) {
-            throw new Error('Participação existente com ID inválido');
-          }
-          
-          const updatedNumbers = [...existingParticipation.numbers, ...userNumbers];
-          
-          const { data, error } = await supabase
-            .from('lottery_participants')
-            .update({
-              numbers: updatedNumbers,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingParticipation.id)
-            .select()
-            .single();
-            
-          if (error) throw error;
-          
-          participation = data;
-        } else {
-          // Create new participation
-          const { data, error } = await supabase
-            .from('lottery_participants')
-            .insert({
-              user_id: userId,
-              lottery_id: raffleId,
-              numbers: userNumbers,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-            
-          if (error) throw error;
-          
-          participation = data;
-        }
+      
+      if (allUserParticipations && allUserParticipations.length > 0) {
+        // Consolidar todos os números existentes de todas as participações
+        const allExistingNumbers = allUserParticipations.reduce((acc, p) => {
+          return [...acc, ...p.numbers];
+        }, [] as number[]);
         
-        // Update raffle progress
-        const totalParticipants = (await supabase
+        // Adicionar os novos números aos existentes
+        const consolidatedNumbers = [...allExistingNumbers, ...userNumbers];
+        
+        // Deletar todas as participações existentes (que podem ter IDs nulos)
+        const { error: deleteError } = await supabase
           .from('lottery_participants')
-          .select('numbers')
-          .eq('lottery_id', raffleId)).data || [];
+          .delete()
+          .eq('lottery_id', raffleId)
+          .eq('user_id', userId);
         
-        const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
-        const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
+        if (deleteError) throw deleteError;
         
-        await supabase
-          .from('lotteries')
-          .update({
-            progress,
-            numbers_sold: totalNumbersSold,
+        // Criar nova participação consolidada com todos os números
+        const { data, error } = await supabase
+          .from('lottery_participants')
+          .insert({
+            user_id: userId,
+            lottery_id: raffleId,
+            numbers: consolidatedNumbers,
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('id', raffleId);
+          .select()
+          .single();
           
-        // Deduct rifas from user
-        await supabase
-          .from('profiles')
-          .update({
-            rifas: profile.rifas - numberOfTickets
+        if (error) throw error;
+        
+        participation = data;
+      } else {
+        // Criar nova participação se não existir nenhuma
+        const { data, error } = await supabase
+          .from('lottery_participants')
+          .insert({
+            user_id: userId,
+            lottery_id: raffleId,
+            numbers: userNumbers,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
-          .eq('id', userId);
+          .select()
+          .single();
+          
+        if (error) throw error;
+        
+        participation = data;
       }
       
-      // Get updated participation data
-      const { data: updatedParticipation, error: updatedError } = await supabase
+      // Update raffle progress
+      const totalParticipants = (await supabase
         .from('lottery_participants')
-        .select('*')
-        .eq('lottery_id', raffleId)
-        .eq('user_id', userId)
-        .maybeSingle();
-        
-      if (updatedError) throw updatedError;
-      if (!updatedParticipation) throw new Error('Participação não encontrada após atualização.');
+        .select('numbers')
+        .eq('lottery_id', raffleId)).data || [];
       
-      return updatedParticipation;
+      const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
+      const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
+      
+      await supabase
+        .from('lotteries')
+        .update({
+          progress,
+          numbers_sold: totalNumbersSold,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', raffleId);
+        
+      // Deduct rifas from user
+      await supabase
+        .from('profiles')
+        .update({
+          rifas: profile.rifas - numberOfTickets
+        })
+        .eq('id', userId);
+      
+      // Retorna a participação recém-criada ou atualizada sem realizar uma nova consulta
+      return participation as LotteryParticipation;
     } catch (error) {
       console.error('Error participating in raffle:', error);
       throw error;
