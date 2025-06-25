@@ -480,56 +480,26 @@ export const raffleService = {
       // Select required number of tickets
       const userNumbers = availableNumbers.slice(0, numberOfTickets);
       
-      // Check if user already has a participation in this raffle
-      const { data: existingParticipation, error: existingError } = await supabase
+      // Fetch participation list (may contain duplicates from dados antigos)
+      const { data: participationList, error: listError } = await supabase
         .from('lottery_participants')
         .select('*')
         .eq('lottery_id', raffleId)
         .eq('user_id', userId)
-        .maybeSingle();
-       
-      let participation;
+        .order('created_at', { ascending: true });
+
+      const existingParticipation = participationList && participationList.length > 0 ? participationList[0] : null;
+      const existingError = listError;
       
-      // Begin transaction using RPC
-      let rpcFailed = false;
-      try {
-        const { data: transaction, error: transactionError } = await supabase.rpc('participate_in_raffle', {
-          p_user_id: userId,
-          p_lottery_id: raffleId,
-          p_numbers: userNumbers,
-          p_tickets_used: numberOfTickets
-        });
-        
-        if (transactionError) {
-          console.error('RPC participate_in_raffle error:', transactionError);
-          
-          // Handle specific error codes
-          if (transactionError.code === '23505') { // unique_violation
-            throw new Error('Você já possui alguns desses números neste sorteio');
-          } else if (transactionError.code === 'P0001') { // raise_exception
-            throw new Error(transactionError.message || 'Erro na participação do sorteio');
+      let participation;
+      // Usar transação manual diretamente (RPC desabilitado até ajuste de FK)
+      {
+        if (!existingError && existingParticipation && existingParticipation.id) {
+          // Update existing participation - validate ID first
+          if (!existingParticipation.id || existingParticipation.id === 'null' || existingParticipation.id === null) {
+            throw new Error('Participação existente com ID inválido');
           }
           
-          rpcFailed = true;
-        }
-        
-        if (transaction) participation = transaction as any;
-      } catch (rpcError: any) {
-        console.warn('RPC participate_in_raffle falhou:', rpcError);
-        
-        // If it's a known error, re-throw it
-        if (rpcError.message && rpcError.message.includes('já possui')) {
-          throw rpcError;
-        }
-        
-        rpcFailed = true;
-      }
-      
-      // Caso RPC falhe, use fallback manual
-      if (rpcFailed || !participation) {
-        // Start a manual transaction
-        if (!existingError && existingParticipation) {
-          // Update existing participation
           const updatedNumbers = [...existingParticipation.numbers, ...userNumbers];
           
           const { data, error } = await supabase
