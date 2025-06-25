@@ -41,7 +41,7 @@
  *   /usuarios - User management page
  *   /sorteios - Lottery management page
  *   /relatorios - Reports page
- *   /monitoramento - Platform monitoring page
+
  *   /notificacoes - Notifications page
  *   /regras - Rules configuration page
  *   /configuracoes - Settings page

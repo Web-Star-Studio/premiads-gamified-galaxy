@@ -42,12 +42,7 @@ export const NavigationItems = () => {
       icon: Gavel,
       description: "Moderação de submissões"
     },
-    {
-      title: "Monitoramento",
-      url: "/admin/monitoramento",
-      icon: DatabaseZap,
-      description: "Status do sistema"
-    },
+
     {
       title: "Relatórios",
       url: "/admin/relatorios",

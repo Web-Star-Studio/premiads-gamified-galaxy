@@ -57,7 +57,7 @@ const FaqContent: React.FC = () => (
               O que fazer em caso de falha no sistema?
             </AccordionTrigger>
             <AccordionContent className="pb-4 text-zinc-400">
-              Em caso de falha, acesse o módulo de Monitoramento para identificar a origem do problema.
+              Em caso de falha, verifique os logs do sistema e notificações para identificar a origem do problema.
               Verifique os logs de erro detalhados e utilize a funcionalidade de rollback se necessário.
               Para falhas críticas, entre em contato com o suporte técnico através do canal prioritário.
             </AccordionContent>

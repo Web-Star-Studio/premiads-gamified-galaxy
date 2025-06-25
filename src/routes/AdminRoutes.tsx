@@ -9,7 +9,7 @@ const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
 const UserManagementPage = lazy(() => import("@/pages/admin/UserManagementPage"));
 const LotteryManagementPage = lazy(() => import("@/pages/admin/LotteryManagementPage"));
 const ReportsPage = lazy(() => import("@/pages/admin/ReportsPage"));
-const MonitoringPage = lazy(() => import("@/pages/admin/MonitoringPage"));
+
 const NotificationsPage = lazy(() => import("@/pages/admin/NotificationsPage"));
 const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 
@@ -82,16 +82,7 @@ const AdminRoutes = () => {
         } 
       />
       
-      <Route 
-        path="monitoramento" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <MonitoringPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
+
       
       <Route 
         path="notificacoes" 

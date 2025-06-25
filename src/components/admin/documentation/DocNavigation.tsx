@@ -29,7 +29,7 @@ export const docSections: DocSectionItem[] = [
   { id: "dashboard", title: "Painel Principal", icon: BarChart4, description: "Dashboard com métricas da plataforma" },
   { id: "users", title: "Gestão de Usuários", icon: Users, description: "Gerenciamento de contas de usuários" },
   { id: "rules", title: "Configuração de Regras", icon: FileText, description: "Regras de negócio configuráveis" },
-  { id: "monitoring", title: "Monitoramento", icon: Server, description: "Acompanhamento de estado do sistema" },
+
   { id: "reports", title: "Relatórios", icon: BarChart4, description: "Relatórios e exportação de dados" },
   { id: "raffles", title: "Gestão de Sorteios", icon: Ticket, description: "Configuração de sorteios e premiações" },
   { id: "notifications", title: "Notificações", icon: Bell, description: "Sistema de mensagens e notificações" },
