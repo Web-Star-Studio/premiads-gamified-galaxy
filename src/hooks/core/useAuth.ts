@@ -45,7 +45,7 @@ export const useAuth = () => {
 
   // Sign up mutation
   const signUpMutation = useMutation({
-    mutationFn: async (credentials: SignUpCredentials) => {
+    mutationFn: async (credentials: SignUpCredentials & { referralCode?: string }) => {
       setGlobalLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
@@ -53,14 +53,15 @@ export const useAuth = () => {
         options: {
           data: {
             full_name: credentials.name,
-            user_type: credentials.userType || 'participante'
+            user_type: credentials.userType || 'participante',
+            referral_code: credentials.referralCode || null
           }
         }
       });
       if (error) throw error;
       return data;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       if (data.user) {
         setUser(data.user);
 
@@ -83,6 +84,37 @@ export const useAuth = () => {
 
         if (profileError) {
           console.error('Falha ao sincronizar perfil durante o cadastro:', profileError);
+        }
+
+        // Processar código de referência se fornecido
+        if (variables.referralCode && variables.userType === 'participante') {
+          try {
+            // Validar código de referência
+            const { data: referencia, error: refError } = await supabase
+              .from('referencias')
+              .select('id, participante_id')
+              .eq('codigo', variables.referralCode.toUpperCase())
+              .single();
+
+            if (!refError && referencia) {
+              // Registrar indicação
+              const { error: indicacaoError } = await supabase
+                .from('indicacoes')
+                .insert({
+                  referencia_id: referencia.id,
+                  convidado_id: data.user.id,
+                  status: 'pendente'
+                });
+
+              if (indicacaoError) {
+                console.error('Erro ao registrar indicação:', indicacaoError);
+              } else {
+                console.log('Indicação registrada com sucesso');
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao processar código de referência:', error);
+          }
         }
 
         // Atualiza cache relacionado ao perfil caso exista
@@ -118,7 +150,7 @@ export const useAuth = () => {
     return signInMutation.mutateAsync(credentials);
   }, [signInMutation]);
 
-  const signUp = useCallback((credentials: SignUpCredentials) => {
+  const signUp = useCallback((credentials: SignUpCredentials & { referralCode?: string }) => {
     return signUpMutation.mutateAsync(credentials);
   }, [signUpMutation]);
 

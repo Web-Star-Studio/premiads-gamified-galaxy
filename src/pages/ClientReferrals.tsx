@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -28,40 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClientDashboardHeader from "@/components/client/ClientDashboardHeader";
 import ReferralProgram from "@/components/client/ReferralProgram";
 
-// Mock rewards data - in a real app, this would come from the database
-const MOCK_REWARDS: ReferralReward[] = [
-  {
-    id: 1,
-    description: "Bônus de indicação - 3 amigos",
-    type: "points",
-    value: 500,
-    status: "claimed"
-  },
-  {
-    id: 2,
-    description: "Bônus de indicação - 5 amigos",
-    type: "points",
-    value: 1000,
-    status: "available"
-  },
-  {
-    id: 3,
-    description: "Bilhetes extras para sorteio",
-    type: "tickets",
-    value: 3,
-    status: "available",
-    expiresAt: "2025-05-30"
-  },
-  {
-    id: 4,
-    description: "Acesso VIP - Evento exclusivo",
-    type: "special",
-    value: 1,
-    status: "available",
-    expiresAt: "2025-06-15"
-  }
-];
-
 const ClientReferrals = () => {
   const { userName, userType } = useUser();
   const navigate = useNavigate();
@@ -72,12 +37,40 @@ const ClientReferrals = () => {
     referrals, 
     referralCode, 
     referralLink, 
+    stats,
     sendInvites 
   } = useReferrals();
   
-  const [rewards, setRewards] = useState<ReferralReward[]>(MOCK_REWARDS);
   const [emailInputs, setEmailInputs] = useState<string[]>(["", "", ""]);
   const [inviteMessage, setInviteMessage] = useState("Junte-se a mim no PremiAds e ganhe pontos para trocar por prêmios incríveis! Use meu código:");
+
+  // Recompensas baseadas no progresso atual
+  const getRewardsBasedOnProgress = () => {
+    const rewards: ReferralReward[] = [
+      {
+        id: 1,
+        description: "Bônus de indicação - 3 amigos",
+        type: "points",
+        value: 500,
+        status: stats.registrados >= 3 ? "available" : "claimed"
+      },
+      {
+        id: 2,
+        description: "Bônus de indicação - 5 amigos",
+        type: "points", 
+        value: 1000,
+        status: stats.registrados >= 5 ? "available" : "claimed"
+      },
+      {
+        id: 3,
+        description: "Bilhetes extras para sorteio",
+        type: "tickets",
+        value: stats.registrados * 3, // 3 bilhetes por indicação completa
+        status: stats.registrados > 0 ? "available" : "claimed"
+      }
+    ];
+    return rewards;
+  };
 
   useEffect(() => {
     // Redirect if user is not a participant
@@ -139,14 +132,7 @@ const ClientReferrals = () => {
   };
 
   const handleClaimReward = (rewardId: number) => {
-    const updatedRewards = rewards.map(reward => 
-      reward.id === rewardId 
-        ? { ...reward, status: "claimed" as const } 
-        : reward
-    );
-    
-    setRewards(updatedRewards);
-    
+    // In a real app, this would call the API to claim the reward
     playSound("reward");
     toast({
       title: "Recompensa resgatada!",
@@ -292,25 +278,19 @@ const ClientReferrals = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Total de convites</div>
-                          <div className="text-xl font-semibold">{referrals.length}</div>
+                          <div className="text-xl font-semibold text-neon-cyan">{stats.totalConvites}</div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Pendentes</div>
-                          <div className="text-xl font-semibold">
-                            {referrals.filter(r => r.status === "pending").length}
-                          </div>
+                          <div className="text-xl font-semibold text-yellow-400">{stats.pendentes}</div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Registrados</div>
-                          <div className="text-xl font-semibold">
-                            {referrals.filter(r => r.status === "registered").length}
-                          </div>
+                          <div className="text-xl font-semibold text-neon-green">{stats.registrados}</div>
                         </div>
                         <div className="bg-galaxy-deepPurple/40 p-3 rounded border border-galaxy-purple/20">
                           <div className="text-xs text-gray-400">Pontos ganhos</div>
-                          <div className="text-xl font-semibold">
-                            {referrals.reduce((total, ref) => total + (ref.pointsEarned || 0), 0)}
-                          </div>
+                          <div className="text-xl font-semibold text-neon-pink">{stats.pontosGanhos}</div>
                         </div>
                       </div>
                       
@@ -360,7 +340,7 @@ const ClientReferrals = () => {
                                     </div>
                                     {referral.status === "completed" && (
                                       <div className="text-xs text-neon-pink">
-                                        <span>+{referral.pointsEarned} pontos</span>
+                                        <span>+{referral.rifasEarned} pontos</span>
                                       </div>
                                     )}
                                   </div>
@@ -378,19 +358,19 @@ const ClientReferrals = () => {
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-heading">Recompensas de Indicação</h3>
                         <span className="text-sm text-gray-400">
-                          {referrals.filter(r => r.status === "completed").length} de {referrals.length} indicações completadas
+                          {stats.registrados} de 0 indicações completadas
                         </span>
                       </div>
                       
                       <div className="w-full bg-galaxy-deepPurple/40 h-2 rounded-full overflow-hidden">
                         <div 
-                          className="bg-gradient-to-r from-neon-pink to-neon-cyan h-full rounded-full" 
-                          style={{ width: `${(referrals.filter(r => r.status === "completed").length / 5) * 100}%` }}
+                          className="bg-gradient-to-r from-neon-pink to-neon-cyan h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.min((stats.registrados / 5) * 100, 100)}%` }}
                         ></div>
                       </div>
                       
                       <div className="grid grid-cols-1 gap-4">
-                        {rewards.map(reward => (
+                        {getRewardsBasedOnProgress().map(reward => (
                           <div key={reward.id} className="bg-galaxy-deepPurple/40 p-4 rounded border border-galaxy-purple/20">
                             <div className="flex justify-between items-start">
                               <div className="flex items-start gap-3">

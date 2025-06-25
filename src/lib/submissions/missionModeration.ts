@@ -43,6 +43,38 @@ function getModerationAction(decision: 'approve' | 'reject', stage: ValidationSt
 }
 
 /**
+ * Função auxiliar para chamar a Edge Function de completar referência
+ */
+async function callCompleteReferralFunction(submissionId: string): Promise<void> {
+  try {
+    // Buscar dados da submissão para obter o user_id
+    const { data: submission, error: submissionError } = await supabase
+      .from('mission_submissions')
+      .select('user_id')
+      .eq('id', submissionId)
+      .single();
+
+    if (submissionError || !submission) {
+      console.error('Erro ao buscar submissão para processar referência:', submissionError);
+      return;
+    }
+
+    // Chamar Edge Function para processar referência
+    const { error } = await supabase.functions.invoke('complete-referral', {
+      body: { userId: submission.user_id }
+    });
+
+    if (error) {
+      console.error('Erro ao processar referência:', error);
+    } else {
+      console.log('Referência processada com sucesso para usuário:', submission.user_id);
+    }
+  } catch (error) {
+    console.error('Erro inesperado ao processar referência:', error);
+  }
+}
+
+/**
  * Função auxiliar que faz a chamada real para a Edge Function
  */
 async function callModerationEdgeFunction(
@@ -114,6 +146,11 @@ async function moderateMissionSubmissionInternal({
     const { success, error } = await callModerationEdgeFunction(action, submissionId);
 
     if (success) {
+      // Se a submissão foi aprovada, chamar a Edge Function para processar referência
+      if (action === 'ADVERTISER_APPROVE_FIRST_INSTANCE' || action === 'ADVERTISER_APPROVE_SECOND_INSTANCE') {
+        await callCompleteReferralFunction(submissionId);
+      }
+      
       return { success: true, message: 'Ação de moderação processada com sucesso.' };
     } else {
       return { success: false, error: error, message: error };

@@ -1,14 +1,14 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignUpCredentials, UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
+import { validateReferralCodeStandalone } from "@/hooks/useReferrals";
 
 interface SignUpFormProps {
   loading: boolean;
-  onSubmit: (credentials: SignUpCredentials) => Promise<void>;
+  onSubmit: (credentials: SignUpCredentials & { referralCode?: string }) => Promise<void>;
 }
 
 const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
@@ -16,8 +16,35 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<UserType>("participante");
+  const [referralCode, setReferralCode] = useState("");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [validatingCode, setValidatingCode] = useState(false);
+  const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const { toast } = useToast();
+
+
+  const handleReferralCodeChange = async (code: string) => {
+    setReferralCode(code);
+    setCodeValid(null);
+    
+    if (code.trim().length === 0) return;
+    
+    if (code.trim().length < 3) {
+      setCodeValid(false);
+      return;
+    }
+    
+    setValidatingCode(true);
+    try {
+      const result = await validateReferralCodeStandalone(code.trim().toUpperCase());
+      setCodeValid(result.valid);
+    } catch (error) {
+      console.error('Erro ao validar código:', error);
+      setCodeValid(false);
+    } finally {
+      setValidatingCode(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +67,22 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
       return;
     }
     
-    await onSubmit({ email, password, name, userType });
+    if (referralCode && codeValid === false) {
+      toast({
+        title: "Código inválido",
+        description: "O código de indicação inserido não é válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await onSubmit({ 
+      email, 
+      password, 
+      name, 
+      userType, 
+      referralCode: referralCode.trim() || undefined 
+    });
   };
 
   return (
@@ -83,6 +125,53 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
           <p className="text-red-400 text-xs">A senha deve ter pelo menos 6 caracteres</p>
         )}
       </div>
+      
+      {userType === "participante" && (
+        <div className="space-y-2">
+          <Label htmlFor="referral-code">
+            Código de indicação <span className="text-muted-foreground text-xs">(opcional)</span>
+          </Label>
+          <div className="relative">
+            <Input
+              id="referral-code"
+              type="text"
+              placeholder="Ex: PREMIUMUSER2025"
+              value={referralCode}
+              onChange={(e) => handleReferralCodeChange(e.target.value)}
+              className={`bg-galaxy-dark ${
+                referralCode 
+                  ? codeValid === true 
+                    ? 'border-green-500' 
+                    : codeValid === false 
+                      ? 'border-red-500' 
+                      : 'border-yellow-500'
+                  : ''
+              }`}
+              disabled={validatingCode}
+            />
+            {validatingCode && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+              </div>
+            )}
+          </div>
+          {referralCode && (
+            <p className={`text-xs ${
+              codeValid === true 
+                ? 'text-green-400' 
+                : codeValid === false 
+                  ? 'text-red-400' 
+                  : 'text-yellow-400'
+            }`}>
+              {codeValid === true 
+                ? '✓ Código válido! Você ganhará pontos extras ao se cadastrar.' 
+                : codeValid === false 
+                  ? '✗ Código inválido ou expirado.' 
+                  : 'Verificando código...'}
+            </p>
+          )}
+        </div>
+      )}
       
       <div className="space-y-2">
         <Label>Tipo de conta</Label>
