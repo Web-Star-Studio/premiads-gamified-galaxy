@@ -125,8 +125,8 @@ const RaffleDetailsContent: React.FC<RaffleDetailsContentProps> = ({
                   <div className="text-neon-pink">Sorteio encerrado</div>
                 ) : (
                   <>
-                    Início: {new Date(raffle.startDate).toLocaleDateString()}<br />
-                    Término: {new Date(raffle.endDate).toLocaleDateString()}
+                    Início: {raffle.startDate ? new Date(raffle.startDate).toLocaleDateString('pt-BR') : 'Não definida'}<br />
+                    Término: {raffle.endDate ? new Date(raffle.endDate).toLocaleDateString('pt-BR') : 'Não definida'}
                   </>
                 )}
               </div>

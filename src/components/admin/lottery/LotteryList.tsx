@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,13 +50,22 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [lotteryToDelete, setLotteryToDelete] = useState<string | null>(null);
 
+  // Filter out lotteries with null or undefined IDs
+  const validLotteries = lotteries.filter(lottery => lottery?.id && lottery.id !== null && lottery.id !== 'null');
+
   const handleDelete = (lotteryId: string) => {
+    // Validate ID before attempting deletion
+    if (!lotteryId || lotteryId === 'null' || lotteryId === 'undefined') {
+      console.error('Invalid lottery ID for deletion:', lotteryId);
+      return;
+    }
+    
     setLotteryToDelete(lotteryId);
     setDeleteDialogOpen(true);
   };
 
   const confirmDelete = () => {
-    if (lotteryToDelete) {
+    if (lotteryToDelete && lotteryToDelete !== 'null' && lotteryToDelete !== 'undefined') {
       onDelete(lotteryToDelete);
       setDeleteDialogOpen(false);
       setLotteryToDelete(null);
@@ -66,8 +74,8 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
 
   return (
     <div className="space-y-4">
-      {lotteries.map((lottery) => (
-        <Card key={lottery.id} className="border-gray-800 bg-gray-900/50">
+      {validLotteries.map((lottery, index) => (
+        <Card key={lottery.id || `lottery-${index}-${Date.now()}`} className="border-gray-800 bg-gray-900/50">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div>
@@ -89,17 +97,21 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Detalhes
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit(lottery)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleDelete(lottery.id)}
-                      className="text-red-400 focus:text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
+                    {lottery.id && lottery.id !== 'null' && (
+                      <>
+                        <DropdownMenuItem onClick={() => onEdit(lottery)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(lottery.id)}
+                          className="text-red-400 focus:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

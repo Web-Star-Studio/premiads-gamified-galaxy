@@ -2,8 +2,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lottery, LotteryFormValues, LotteryParticipation } from '@/types/lottery';
 import { withPerformanceMonitoring } from '@/utils/performance-monitor';
 
-// Generate UUID function for IDs
+// Generate UUID function for IDs using crypto API or fallback
 const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback implementation
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -19,7 +24,7 @@ const transformLotteryData = (formData: LotteryFormValues) => {
     : formData.endDate;
     
   return {
-    id: generateUUID(), // Explicitly generate UUID for id
+    id: null, // Will be set in createRaffle function
     name: formData.name,
     title: formData.name,
     description: formData.description,
@@ -54,6 +59,11 @@ export const raffleService = {
       // Transform form data to Supabase structure
       const raffleData = transformLotteryData(formData);
       
+      // Ensure we have a valid UUID
+      if (!raffleData.id || raffleData.id === 'null') {
+        raffleData.id = generateUUID();
+      }
+      
       // Handle image upload if provided
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
@@ -73,16 +83,37 @@ export const raffleService = {
         raffleData.image_url = publicUrlData.publicUrl;
       }
       
-      // Insert raffle into database with explicitly generated ID
-      const { data, error } = await (supabase as any)
+      // Remove ID from data and let Supabase generate it
+      const raffleDataForInsert = {
+        ...raffleData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Remove the id field to let the database auto-generate
+      delete raffleDataForInsert.id;
+      
+      // Insert raffle into database
+      const { data, error } = await supabase
         .from('lotteries')
-        .insert(raffleData)
+        .insert(raffleDataForInsert)
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
       
-      return data as unknown as Lottery;
+      // Check if we got valid data with ID
+      if (!data) {
+        throw new Error('Failed to create raffle: No data returned');
+      }
+      
+             // Log the received data to debug
+       console.log('Raffle created successfully:', { id: data.id, name: data.name });
+       
+       return data as unknown as Lottery;
     } catch (error) {
       console.error('Error creating raffle:', error);
       throw error;
@@ -185,11 +216,20 @@ export const raffleService = {
         query = query.eq('status', status);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query
+        .not('id', 'is', null)  // Filter out records with null ID
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      return data || [];
+      // Additional filter to ensure we only return records with valid IDs and proper dates
+      const validData = (data || []).filter(item => 
+        item.id != null && 
+        item.start_date != null && 
+        item.end_date != null
+      );
+      
+      return validData;
     } catch (error) {
       console.error('Error fetching raffles:', error);
       return [];
@@ -215,12 +255,45 @@ export const raffleService = {
   
   deleteRaffle: withPerformanceMonitoring(async (id: string): Promise<boolean> => {
     try {
+      // Validate ID first
+      if (!id || id === 'null' || id === 'undefined') {
+        console.error('Invalid ID provided for deletion:', id);
+        return false;
+      }
+      
+      // First check if the raffle exists
+      const { data: existing, error: checkError } = await supabase
+        .from('lotteries')
+        .select('id')
+        .eq('id', id)
+        .single();
+        
+      if (checkError || !existing) {
+        console.error('Raffle not found for deletion:', id);
+        return false;
+      }
+      
+      // Delete related records first (lottery_participants, lottery_winners)
+      await supabase
+        .from('lottery_participants')
+        .delete()
+        .eq('lottery_id', id);
+        
+      await supabase
+        .from('lottery_winners')
+        .delete()
+        .eq('lottery_id', id);
+      
+      // Now delete the raffle
       const { error } = await supabase
         .from('lotteries')
         .delete()
         .eq('id', id);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting raffle:', error);
+        return false;
+      }
       
       return true;
     } catch (error) {
@@ -426,11 +499,30 @@ export const raffleService = {
           p_numbers: userNumbers,
           p_tickets_used: numberOfTickets
         });
-        if (transactionError) rpcFailed = true;
+        
+        if (transactionError) {
+          console.error('RPC participate_in_raffle error:', transactionError);
+          
+          // Handle specific error codes
+          if (transactionError.code === '23505') { // unique_violation
+            throw new Error('Você já possui alguns desses números neste sorteio');
+          } else if (transactionError.code === 'P0001') { // raise_exception
+            throw new Error(transactionError.message || 'Erro na participação do sorteio');
+          }
+          
+          rpcFailed = true;
+        }
+        
         if (transaction) participation = transaction as any;
-      } catch (rpcError) {
+      } catch (rpcError: any) {
+        console.warn('RPC participate_in_raffle falhou:', rpcError);
+        
+        // If it's a known error, re-throw it
+        if (rpcError.message && rpcError.message.includes('já possui')) {
+          throw rpcError;
+        }
+        
         rpcFailed = true;
-        console.warn('RPC participate_in_raffle falhou, caindo para lógica manual:', rpcError);
       }
       
       // Caso RPC falhe, use fallback manual

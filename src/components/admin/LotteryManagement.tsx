@@ -28,7 +28,14 @@ const LotteryManagement = () => {
       setIsLoading(true);
       try {
         const data = await raffleService.getRaffles();
-        setLotteries(data);
+        // Filter out any lotteries with invalid IDs
+        const validLotteries = data.filter(lottery => 
+          lottery?.id && 
+          lottery.id !== null && 
+          lottery.id !== 'null' && 
+          lottery.id !== 'undefined'
+        );
+        setLotteries(validLotteries);
       } catch (error) {
         console.error("Error fetching lotteries:", error);
         toast({
@@ -93,11 +100,24 @@ const LotteryManagement = () => {
 
   const handleDeleteLottery = async (lotteryId: string) => {
     try {
+      // Validate ID first
+      if (!lotteryId || lotteryId === 'null' || lotteryId === 'undefined') {
+        toast({
+          title: "Erro",
+          description: "ID do sorteio inválido. Não é possível excluir.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const success = await raffleService.deleteRaffle(lotteryId);
       
       if (success) {
-        setLotteries(lotteries.filter(lottery => lottery.id !== lotteryId));
+        // Filter out the deleted lottery from the list
+        const updatedLotteries = lotteries.filter(lottery => lottery.id !== lotteryId);
+        setLotteries(updatedLotteries);
         
+        // Clear selection if the deleted lottery was selected
         if (selectedLottery?.id === lotteryId) {
           setSelectedLottery(null);
         }
@@ -108,6 +128,12 @@ const LotteryManagement = () => {
         });
         
         playSound("success");
+      } else {
+        toast({
+          title: "Erro na exclusão",
+          description: "Não foi possível excluir o sorteio. Verifique se ele existe.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error deleting lottery:", error);

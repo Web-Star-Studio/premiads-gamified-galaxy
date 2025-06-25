@@ -24,9 +24,11 @@ const RafflesList = ({
 
   return (
     <div className="space-y-4">
-      {raffles.map((raffle) => (
+      {raffles
+        .filter(raffle => raffle?.id && raffle.id !== null) // Filter out raffles with null IDs
+        .map((raffle, index) => (
         <RaffleListItem
-          key={raffle.id}
+          key={raffle.id || `raffle-${index}`} // Use index as fallback key
           raffle={raffle}
           isSelected={selectedRaffleId === raffle.id}
           onSelect={() => onSelectRaffle(raffle.id)}
