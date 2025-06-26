@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
 import { useAdvertiserCampaigns } from "@/hooks/useAdvertiserCampaigns";
 import { CreditsDebug } from "@/components/credits/credits-debug";
+import { useLocation } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const AdvertiserCampaigns = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -19,6 +21,28 @@ const AdvertiserCampaigns = () => {
   const [activeTab, setActiveTab] = useState("active");
   const { userName = "Desenvolvedor" } = useUser();
   const { stats } = useAdvertiserCampaigns();
+  const location = useLocation();
+  const { toast } = useToast();
+
+  // Verificar se chegou aqui após criar uma campanha
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.fromCampaignCreation && state?.campaignCreated) {
+      console.log('Usuário redirecionado após criar campanha com sucesso');
+      
+      // Mostrar toast de confirmação
+      toast({
+        title: "✅ Redirecionamento realizado!",
+        description: "Sua campanha foi criada com sucesso e você foi redirecionado para a página de campanhas.",
+        duration: 4000,
+      });
+      
+      playSound('success');
+      
+      // Limpar o estado para evitar mostrar novamente
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, toast, playSound]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);

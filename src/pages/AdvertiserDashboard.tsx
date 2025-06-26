@@ -10,6 +10,7 @@ import AlertsPanel from "@/components/advertiser/AlertsPanel";
 import DashboardHeader from "@/components/advertiser/DashboardHeader";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useSounds } from "@/hooks/use-sounds";
+import { usePendingSubmissions } from "@/hooks/advertiser";
 import { motion } from "framer-motion";
 
 const AdvertiserDashboard = () => {
@@ -17,8 +18,14 @@ const AdvertiserDashboard = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(5000);
-  const [pendingSubmissions, setPendingSubmissions] = useState(3);
   const [userName, setUserName] = useState("Desenvolvedor");
+  
+  // Hook dinâmico para submissões pendentes
+  const { 
+    data: pendingSubmissions = 0, 
+    isLoading: isLoadingSubmissions,
+    error: submissionsError 
+  } = usePendingSubmissions();
 
   // Simulated data loading for development
   useEffect(() => {
@@ -35,6 +42,13 @@ const AdvertiserDashboard = () => {
     
     return () => clearTimeout(loadTimer);
   }, [playSound]);
+
+  // Log de erro das submissões se houver
+  useEffect(() => {
+    if (submissionsError) {
+      console.error("Erro ao carregar submissões pendentes:", submissionsError);
+    }
+  }, [submissionsError]);
 
   if (loading) {
     return <LoadingState />;

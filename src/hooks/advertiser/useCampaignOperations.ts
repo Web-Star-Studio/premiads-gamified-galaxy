@@ -21,14 +21,14 @@ const useCampaignOperations = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const createCampaign = async (formData: FormData) => {
+  const createCampaign = async (formData: FormData): Promise<{ success: boolean; shouldRedirect?: boolean }> => {
     if (!user) {
       toast({
         title: 'Erro',
         description: 'Você precisa estar logado para criar uma campanha',
         variant: 'destructive',
       });
-      return false;
+      return { success: false };
     }
     
     setIsSubmitting(true);
@@ -69,7 +69,13 @@ const useCampaignOperations = () => {
         throw error;
       }
       
+      // Validação adicional para garantir que a campanha foi criada
+      if (!campaignId) {
+        throw new Error('Campanha foi criada mas não retornou ID válido');
+      }
+      
       console.log('Campaign created successfully with ID:', campaignId);
+      console.log('🎯 Preparando redirecionamento após criação de campanha...');
       
       toast({
         title: 'Campanha criada com sucesso!',
@@ -81,7 +87,8 @@ const useCampaignOperations = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
       
-      return true;
+      console.log('✅ Campanha criada com sucesso, retornando shouldRedirect=true');
+      return { success: true, shouldRedirect: true };
     } catch (error: any) {
       console.error('Error creating campaign:', error);
       
@@ -99,20 +106,20 @@ const useCampaignOperations = () => {
           variant: 'destructive',
         });
       }
-      return false;
+      return { success: false };
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const updateCampaign = async (campaignId: string, formData: FormData) => {
+  const updateCampaign = async (campaignId: string, formData: FormData): Promise<{ success: boolean; shouldRedirect?: boolean }> => {
     if (!user) {
       toast({
         title: 'Erro',
         description: 'Você precisa estar logado para editar uma campanha',
         variant: 'destructive',
       });
-      return false;
+      return { success: false };
     }
     
     setIsSubmitting(true);
@@ -167,7 +174,7 @@ const useCampaignOperations = () => {
       // Refresh campaigns list
       queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
       
-      return true;
+      return { success: true, shouldRedirect: true };
     } catch (error: any) {
       console.error('Error updating campaign:', error);
       toast({
@@ -175,7 +182,7 @@ const useCampaignOperations = () => {
         description: error.message || 'Ocorreu um erro ao atualizar a campanha',
         variant: 'destructive',
       });
-      return false;
+      return { success: false };
     } finally {
       setIsSubmitting(false);
     }

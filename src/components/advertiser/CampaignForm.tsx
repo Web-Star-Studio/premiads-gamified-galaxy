@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { FormProgress } from './campaign-form/FormProgress';
@@ -102,21 +101,69 @@ const CampaignForm = ({ onClose, editCampaign }: CampaignFormProps) => {
     }
     
     try {
-      let success;
+      let result: { success: boolean; shouldRedirect?: boolean };
       
       if (editCampaign) {
-        success = await updateCampaign(editCampaign.id, formData);
+        result = await updateCampaign(editCampaign.id, formData);
       } else {
-        success = await createCampaign(formData);
+        result = await createCampaign(formData);
       }
       
-      if (success) {
+      if (result.success) {
         playSound('success');
-        // Refresh credits after successful creation
-        setTimeout(() => {
-          refreshCredits();
-          navigate("/anunciante/campanhas");
-        }, 1500);
+        console.log('🎯 Resultado da operação:', result);
+        
+        // Refresh credits imediatamente
+        await refreshCredits();
+        
+        // Emitir evento personalizado para notificar componentes pais
+        const campaignCreatedEvent = new CustomEvent('campaignCreated', {
+          detail: { 
+            success: true, 
+            timestamp: Date.now(),
+            isNewCampaign: !editCampaign
+          }
+        });
+        window.dispatchEvent(campaignCreatedEvent);
+        
+        // Chamar onClose imediatamente para resetar o estado local
+        console.log('🔄 Chamando onClose() para resetar estado do formulário...');
+        onClose();
+        
+        // Redirecionamento imediato e direto para a página de campanhas
+        if (result.shouldRedirect) {
+          console.log('🚀 Iniciando redirecionamento para /anunciante/campanhas...');
+          
+          // Usar múltiplas estratégias para garantir o redirecionamento
+          const redirectToCampaigns = () => {
+            console.log('📍 Executando navigate para /anunciante/campanhas');
+            navigate("/anunciante/campanhas", { 
+              replace: true, // Replace para evitar voltar para o formulário
+              state: { 
+                fromCampaignCreation: true,
+                campaignCreated: true,
+                timestamp: Date.now()
+              }
+            });
+          };
+          
+          // Primeira tentativa: imediato
+          redirectToCampaigns();
+          
+          // Segunda tentativa: com requestAnimationFrame
+          requestAnimationFrame(() => {
+            console.log('🔄 Tentativa de redirecionamento via requestAnimationFrame');
+            redirectToCampaigns();
+          });
+          
+          // Terceira tentativa: com timeout como fallback
+          setTimeout(() => {
+            console.log('⏰ Tentativa de redirecionamento via timeout (fallback)');
+            redirectToCampaigns();
+          }, 100);
+          
+          return; // Sair da função imediatamente
+        }
       }
       
     } catch (error: any) {

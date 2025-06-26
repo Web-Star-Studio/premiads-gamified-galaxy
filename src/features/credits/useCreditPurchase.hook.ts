@@ -103,6 +103,9 @@ export default function useCreditPurchase() {
         if (!selectedPackage) throw new Error('Nenhum pacote selecionado.')
         if (!user) throw new Error('Usuário não autenticado.')
 
+        console.log('Tentando compra com:', { provider, method, packageId: selectedPackage.id, userId: user.id });
+
+        console.log('Iniciando compra com Supabase...');
         const { data, error } = await supabase.functions.invoke(
           'purchase-credits',
           {
@@ -120,7 +123,8 @@ export default function useCreditPurchase() {
           throw new Error(error.message || 'Falha ao iniciar compra.')
         }
 
-        return data
+        console.log('Resposta da compra:', data);
+        return data;
       },
       onSuccess: async (data: any) => {
         // Invalidate queries to refresh user data

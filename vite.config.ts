@@ -8,18 +8,6 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    proxy: {
-      '/api/purchase-credits': {
-        target: 'https://zfryjwaeojccskfiibtq.supabase.co/functions/v1/purchase-credits',
-        changeOrigin: true,
-        rewrite: () => '',
-      },
-      '/api/confirm-payment': {
-        target: 'https://zfryjwaeojccskfiibtq.supabase.co/functions/v1/confirm-payment',
-        changeOrigin: true,
-        rewrite: () => '',
-      }
-    }
   },
   plugins: [
     react(),

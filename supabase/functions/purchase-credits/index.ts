@@ -1,9 +1,28 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
-import { supabaseConfig, stripeConfig, corsHeaders } from '../_shared/config.ts'
 import { z } from 'https://esm.sh/zod@3.23.8'
 import Stripe from 'https://esm.sh/stripe@12.17.0'
+
+// CORS headers inline to avoid import issues
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Configuration inline to avoid import issues
+const supabaseConfig = {
+  url: Deno.env.get('SUPABASE_URL') || '',
+  serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+  anonKey: Deno.env.get('SUPABASE_ANON_KEY') || '',
+}
+
+const stripeConfig = {
+  secretKey: Deno.env.get('STRIPE_SECRET_KEY') || '',
+  webhookSecret: Deno.env.get('STRIPE_WEBHOOK_SECRET') || '',
+  apiVersion: '2023-10-16' as const,
+}
 
 // Define schema for purchase request
 const purchaseSchema = z.object({
@@ -22,21 +41,56 @@ const purchaseRequestSchema = purchaseSchema.refine(
 )
 
 serve(async (req) => {
+  console.log('Purchase credits function called:', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  })
+
   // Handle CORS for preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request')
     return new Response('ok', { headers: corsHeaders })
   }
   
   try {
+    console.log('Starting purchase process...')
+
+    // Validate environment variables
+    if (!supabaseConfig.url || !supabaseConfig.serviceRoleKey) {
+      console.error('Missing Supabase configuration')
+      return new Response(
+        JSON.stringify({ error: 'Configuração do servidor incompleta' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!stripeConfig.secretKey) {
+      console.error('Missing Stripe configuration')
+      return new Response(
+        JSON.stringify({ error: 'Configuração do Stripe incompleta' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     // Create Supabase client
     const supabase = createClient(
       supabaseConfig.url,
       supabaseConfig.serviceRoleKey
     )
     
+    console.log('Supabase client created')
+
     // Check for authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.log('No authorization header')
       return new Response(
         JSON.stringify({ error: 'Não autorizado. Token de autenticação ausente.' }),
         { 
@@ -48,9 +102,12 @@ serve(async (req) => {
     
     // Verify JWT token
     const token = authHeader.replace('Bearer ', '')
+    console.log('Verifying JWT token...')
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
     if (authError || !user) {
+      console.error('Auth error:', authError)
       return new Response(
         JSON.stringify({ error: 'Token de autenticação inválido', details: authError?.message }),
         { 
@@ -60,7 +117,10 @@ serve(async (req) => {
       )
     }
     
+    console.log('User authenticated:', user.id)
+
     // Initialize Stripe
+    console.log('Initializing Stripe...')
     const stripe = new Stripe(stripeConfig.secretKey, {
       apiVersion: stripeConfig.apiVersion,
     })
@@ -69,6 +129,7 @@ serve(async (req) => {
     let body
     try {
       body = await req.json()
+      console.log('Request body parsed:', body)
     } catch (err) {
       console.error('JSON parse error:', err)
       return new Response(
@@ -80,6 +141,7 @@ serve(async (req) => {
     const parseResult = purchaseRequestSchema.safeParse(body)
     
     if (!parseResult.success) {
+      console.error('Validation error:', parseResult.error)
       return new Response(
         JSON.stringify({ 
           error: 'Dados inválidos', 
@@ -94,8 +156,11 @@ serve(async (req) => {
     
     const { userId, packageId, customAmount, customPrice, paymentProvider, paymentMethod } = parseResult.data
     
+    console.log('Parsed data:', { userId, packageId, customAmount, paymentProvider, paymentMethod })
+
     // Ensure the authenticated user matches the requested userId
     if (user.id !== userId) {
+      console.error('User ID mismatch:', { authUserId: user.id, requestUserId: userId })
       return new Response(
         JSON.stringify({ error: 'Não autorizado. ID de usuário não corresponde ao token.' }),
         { 
@@ -109,6 +174,7 @@ serve(async (req) => {
     let packageData
     
     if (packageId) {
+      console.log('Fetching package:', packageId)
       // Fetch existing rifa package
       const { data: pkg, error: pkgError } = await supabase
         .from('rifa_packages')
@@ -118,6 +184,7 @@ serve(async (req) => {
         .single()
       
       if (pkgError || !pkg) {
+        console.error('Package fetch error:', pkgError)
         return new Response(
           JSON.stringify({ error: 'Pacote não encontrado ou inativo', details: pkgError }), 
           { 
@@ -134,7 +201,10 @@ serve(async (req) => {
         price: pkg.price,
         validity_months: pkg.validity_months,
       }
+      
+      console.log('Package data:', packageData)
     } else if (customAmount) {
+      console.log('Calculating custom package for amount:', customAmount)
       // Calculate custom package
       const { data: packages, error: pkgsError } = await supabase
         .from('rifa_packages')
@@ -143,6 +213,7 @@ serve(async (req) => {
         .order('rifas_amount', { ascending: true })
       
       if (pkgsError || !packages || packages.length === 0) {
+        console.error('Packages fetch error:', pkgsError)
         return new Response(
           JSON.stringify({ error: 'Erro ao calcular pacote personalizado', details: pkgsError }), 
           { 
@@ -172,6 +243,8 @@ serve(async (req) => {
         price,
         validity_months: 12,
       }
+      
+      console.log('Custom package data:', packageData)
     } else {
       return new Response(
         JSON.stringify({ error: 'Pacote ou quantidade personalizada não especificada' }), 
@@ -182,6 +255,7 @@ serve(async (req) => {
       )
     }
     
+    console.log('Creating purchase record...')
     // Create purchase record (pending)
     const { data: purchase, error: purchaseError } = await supabase
       .from('rifa_purchases')
@@ -210,10 +284,13 @@ serve(async (req) => {
       )
     }
     
+    console.log('Purchase record created:', purchase.id)
+
     // Handle payment based on provider
     let paymentData
     
     if (paymentProvider === 'mercado_pago') {
+      console.log('Processing Mercado Pago payment...')
       // Simulated Mercado Pago integration
       paymentData = {
         payment_id: `mp-${Date.now()}`,
@@ -222,6 +299,7 @@ serve(async (req) => {
         expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
       }
     } else if (paymentProvider === 'stripe') {
+      console.log('Processing Stripe payment...')
       try {
         // Get user information for Stripe customer
         const { data: userProfile, error: userError } = await supabase
@@ -231,9 +309,12 @@ serve(async (req) => {
           .single()
           
         if (userError || !userProfile) {
+          console.error('User profile error:', userError)
           throw new Error('User profile not found')
         }
         
+        console.log('User profile found:', userProfile.email)
+
         // Create or retrieve Stripe customer
         const { data: customers, error: customerError } = await supabase
           .from('stripe_customers')
@@ -248,6 +329,7 @@ serve(async (req) => {
         }
         
         if (!customers?.stripe_id) {
+          console.log('Creating new Stripe customer...')
           // Create new customer
           const customer = await stripe.customers.create({
             email: userProfile.email,
@@ -266,12 +348,15 @@ serve(async (req) => {
             })
             
           customerId = customer.id
+          console.log('New Stripe customer created:', customerId)
         } else {
           customerId = customers.stripe_id
+          console.log('Existing Stripe customer found:', customerId)
         }
         
         // Create payment session based on payment method
         if (paymentMethod === 'credit_card' || paymentMethod === 'debit') {
+          console.log('Creating Stripe checkout session...')
           // Create Stripe Checkout session
           const session = await stripe.checkout.sessions.create({
             customer: customerId,
@@ -304,7 +389,10 @@ serve(async (req) => {
             session_id: session.id,
             expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
           }
+          
+          console.log('Checkout session created:', session.id)
         } else if (paymentMethod === 'pix') {
+          console.log('Creating PIX payment intent...')
           // Create a PaymentIntent for PIX
           const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(packageData.price * 100),
@@ -327,6 +415,8 @@ serve(async (req) => {
             pix_code: pixDetails?.financial_address || null,
             expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
           }
+          
+          console.log('PIX payment intent created:', paymentIntent.id)
         } else {
           throw new Error(`Payment method ${paymentMethod} not supported for Stripe`)
         }
@@ -360,12 +450,14 @@ serve(async (req) => {
       )
     }
     
+    console.log('Updating purchase with payment ID...')
     // Update purchase with payment ID
     await supabase
       .from('rifa_purchases')
       .update({ payment_id: paymentData.payment_id })
       .eq('id', purchase.id)
     
+    console.log('Purchase process completed successfully')
     // Return payment info
     return new Response(
       JSON.stringify({
