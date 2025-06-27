@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
@@ -20,12 +20,20 @@ function PaymentMethodSelector({
   selectedProvider,
   selectedMethod
 }: PaymentMethodSelectorProps) {
-  const [activeTab, setActiveTab] = useState<PaymentProvider>('mercado_pago')
+  const [activeTab, setActiveTab] = useState<PaymentProvider>(selectedProvider || 'mercado_pago')
   const { playSound } = useSounds()
   
+  // Sincroniza o tab ativo com o selectedProvider
+  useEffect(() => {
+    if (selectedProvider) {
+      setActiveTab(selectedProvider)
+    }
+  }, [selectedProvider])
+  
   const handleTabChange = (value: string) => {
-    setActiveTab(value as PaymentProvider)
-    onSelectProvider(value as PaymentProvider)
+    const newProvider = value as PaymentProvider
+    setActiveTab(newProvider)
+    onSelectProvider(newProvider)
     playSound('pop')
   }
   

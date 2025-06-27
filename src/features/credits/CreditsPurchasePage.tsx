@@ -15,6 +15,7 @@ import {
   PaymentModal 
 } from "./index";
 import useCreditPurchase from "./useCreditPurchase.hook";
+import { usePaymentSelection } from "./usePaymentSelection.hook";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -26,13 +27,18 @@ const CreditsPurchasePage = () => {
     packages,
     selectedPackage,
     setSelectedPackage,
-    paymentMethod,
-    setPaymentMethod,
     handlePayment,
     isLoading: isPurchasing,
     paymentError,
     resetState,
   } = useCreditPurchase();
+  const { 
+    selectedProvider, 
+    selectedMethod, 
+    updateProvider, 
+    updateMethod,
+    getPaymentConfig 
+  } = usePaymentSelection();
   const { user: authUser } = useAuthSession();
 
   const [customCredits, setCustomCredits] = useState<number>(500);
@@ -89,8 +95,9 @@ const CreditsPurchasePage = () => {
 
   const handlePurchaseClick = () => {
     if (selectedPackage && authUser) {
-      // Use the method from useCreditPurchase hook
-      handlePayment('stripe', 'credit_card');
+      // Usa a configuração de pagamento selecionada pelo usuário
+      const { provider, method } = getPaymentConfig();
+      handlePayment(provider, method);
     }
   };
 
@@ -211,7 +218,7 @@ const CreditsPurchasePage = () => {
                 <div className="bg-galaxy-deepPurple/30 border border-galaxy-purple/30 rounded-lg p-4">
                   <CreditSummary
                     selectedPackage={selectedPackage}
-                    paymentMethod={paymentMethod}
+                    paymentMethod={selectedProvider === "stripe" ? "stripe" : "paypal"}
                   />
                 </div>
                 
@@ -219,10 +226,10 @@ const CreditsPurchasePage = () => {
                 
                 <div className="bg-galaxy-deepPurple/30 border border-galaxy-purple/30 rounded-lg p-4">
                   <PaymentMethodSelector
-                    selectedProvider={paymentMethod === "stripe" ? "stripe" : "mercado_pago"}
-                    selectedMethod={paymentMethod === "stripe" ? "credit_card" : "pix"}
-                    onSelectProvider={(provider) => setPaymentMethod(provider === "stripe" ? "stripe" : "paypal")}
-                    onSelectMethod={() => {}}
+                    selectedProvider={selectedProvider}
+                    selectedMethod={selectedMethod}
+                    onSelectProvider={updateProvider}
+                    onSelectMethod={updateMethod}
                   />
                 </div>
                 

@@ -16,6 +16,7 @@ const AdvertiserSettings = lazy(() => import("@/pages/advertiser/SettingsPage"))
 const AdvertiserProfilePage = lazy(() => import("@/pages/advertiser/ProfilePage"));
 const ModerationPage = lazy(() => import("@/pages/advertiser/ModerationPage"));
 const PaymentSuccessPage = lazy(() => import("@/pages/advertiser/PaymentSuccessPage"));
+const PagamentoMockPage = lazy(() => import("@/pages/anunciante/pagamento-mock"));
 const AdvertiserCrmPage = lazy(() => import("@/pages/advertiser/CrmPage"));
 const CouponValidationPage = lazy(() => import("@/pages/advertiser/CouponValidationPage"));
 
@@ -103,6 +104,13 @@ const AdvertiserRoutes = () => (
         <RouteGuard>
           <Suspense fallback={<RouteLoadingSpinner />}>
             <PaymentSuccessPage />
+          </Suspense>
+        </RouteGuard>
+      } />
+      <Route path="pagamento-mock" element={
+        <RouteGuard>
+          <Suspense fallback={<RouteLoadingSpinner />}>
+            <PagamentoMockPage />
           </Suspense>
         </RouteGuard>
       } />

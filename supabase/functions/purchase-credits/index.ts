@@ -291,12 +291,144 @@ serve(async (req) => {
     
     if (paymentProvider === 'mercado_pago') {
       console.log('Processing Mercado Pago payment...')
-      // Simulated Mercado Pago integration
-      paymentData = {
-        payment_id: `mp-${Date.now()}`,
-        payment_url: `https://mercadopago.com/checkout/${purchase.id}`,
-        qr_code: paymentMethod === 'pix' ? 'data:image/png;base64,mockQrCode' : null,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+      
+      const mpAccessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
+      
+      if (!mpAccessToken) {
+        console.warn('MERCADO_PAGO_ACCESS_TOKEN não configurado, usando fallback mock para desenvolvimento')
+        paymentData = {
+          payment_id: `mp-dev-${Date.now()}`,
+          payment_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-mock?provider=mercado_pago&method=${paymentMethod}&purchase_id=${purchase.id}&dev=true`,
+          qr_code: paymentMethod === 'pix' ? 'data:image/png;base64,mockQrCodeForDev' : null,
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        }
+      } else {
+        try {
+          console.log('Creating Mercado Pago preference with production API...')
+          
+          // Configuração da preferência para produção
+          const preferenceData = {
+            items: [{
+              id: purchase.id,
+              title: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus - PremiAds`,
+              description: `Pacote de rifas para campanha publicitária`,
+              quantity: 1,
+              currency_id: 'BRL',
+              unit_price: Number(packageData.price.toFixed(2))
+            }],
+            payment_methods: {
+              excluded_payment_types: [],
+              installments: paymentMethod === 'credit_card' ? 12 : 1
+            },
+            back_urls: {
+              success: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-sucesso?mp_payment_id={{payment_id}}&mp_status={{payment_status}}`,
+              failure: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos?error=payment_failed`,
+              pending: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos?status=pending`
+            },
+            auto_return: 'approved',
+            external_reference: purchase.id,
+            notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercado-pago-webhook`,
+            statement_descriptor: 'PREMIADS',
+            metadata: {
+              purchase_id: purchase.id,
+              payment_method: paymentMethod,
+              user_id: userId,
+              package_rifas: packageData.rifas_amount,
+              package_bonus: packageData.bonus
+            }
+          }
+          
+          // Configurações específicas por método de pagamento
+          if (paymentMethod === 'pix') {
+            preferenceData.payment_methods = {
+              excluded_payment_types: [
+                { id: 'credit_card' },
+                { id: 'debit_card' },
+                { id: 'ticket' }
+              ]
+            }
+          } else if (paymentMethod === 'credit_card') {
+            preferenceData.payment_methods = {
+              excluded_payment_types: [
+                { id: 'ticket' }
+              ],
+              excluded_payment_methods: [
+                { id: 'pix' }
+              ]
+            }
+          } else if (paymentMethod === 'boleto') {
+            preferenceData.payment_methods = {
+              excluded_payment_types: [
+                { id: 'credit_card' },
+                { id: 'debit_card' }
+              ],
+              excluded_payment_methods: [
+                { id: 'pix' }
+              ]
+            }
+          }
+          
+          console.log('Sending preference to Mercado Pago API...')
+          const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${mpAccessToken}`,
+              'Content-Type': 'application/json',
+              'X-Idempotency-Key': `${purchase.id}-${Date.now()}`
+            },
+            body: JSON.stringify(preferenceData)
+          })
+          
+          if (!mpResponse.ok) {
+            const errorText = await mpResponse.text()
+            console.error('Mercado Pago API error response:', {
+              status: mpResponse.status,
+              statusText: mpResponse.statusText,
+              body: errorText
+            })
+            throw new Error(`API Error ${mpResponse.status}: ${errorText}`)
+          }
+          
+          const mpResult = await mpResponse.json()
+          console.log('Mercado Pago preference created successfully:', {
+            id: mpResult.id,
+            init_point: mpResult.init_point?.substring(0, 50) + '...'
+          })
+          
+          paymentData = {
+            payment_id: mpResult.id,
+            payment_url: mpResult.init_point,
+            sandbox_init_point: mpResult.sandbox_init_point || null,
+            qr_code: mpResult.qr_code || null,
+            qr_code_base64: mpResult.qr_code_base64 || null,
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
+            external_reference: mpResult.external_reference
+          }
+          
+        } catch (mpError) {
+          console.error('Mercado Pago integration error:', mpError)
+          
+          // Atualizar status da compra para erro
+          await supabase
+            .from('rifa_purchases')
+            .update({ 
+              status: 'failed',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', purchase.id)
+          
+          return new Response(
+            JSON.stringify({ 
+              error: 'Erro na integração com Mercado Pago',
+              details: mpError.message,
+              suggestion: 'Tente novamente ou entre em contato com o suporte'
+            }), 
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        }
       }
     } else if (paymentProvider === 'stripe') {
       console.log('Processing Stripe payment...')
