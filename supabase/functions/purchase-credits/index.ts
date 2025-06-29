@@ -380,6 +380,12 @@ serve(async (req) => {
 async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
   console.log('Processing Mercado Pago payment...')
   const mpAccessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
+  const origin = req.headers.get('origin') || 'https://premiads.com'
+
+  // Usar URL de produção para callback em desenvolvimento
+  const successUrl = origin.includes('localhost') || origin.includes('192.168')
+    ? 'https://premiads.com/anunciante/pagamento-sucesso'
+    : `${origin}/anunciante/pagamento-sucesso`
 
   if (!mpAccessToken) {
     console.warn('MERCADO_PAGO_ACCESS_TOKEN não configurado, usando fallback mock.')
@@ -390,13 +396,6 @@ async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
   }
 
   try {
-    const origin = req.headers.get('origin') || 'https://premiads.com'
-    const isDevelopment = origin.includes('localhost') || origin.includes('192.168')
-
-    const successUrl = isDevelopment 
-      ? `https://premiads.com/anunciante/pagamento-sucesso`
-      : `${origin}/anunciante/pagamento-sucesso`
-
     const preferenceData = {
       items: [{
         id: purchase.id,
@@ -406,12 +405,14 @@ async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
         currency_id: 'BRL',
         unit_price: Number(packageData.price.toFixed(2)),
       }],
+      payer: {
+        email: 'test_user_123456@testuser.com', // E-mail de teste obrigatório
+      },
       back_urls: {
         success: successUrl,
         failure: `${origin}/anunciante/creditos?error=mp_payment_failed`,
         pending: `${origin}/anunciante/creditos?status=mp_pending`,
       },
-      auto_return: 'approved',
       external_reference: purchase.id,
       notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercado-pago-webhook`,
       statement_descriptor: 'PREMIADS',
@@ -429,7 +430,7 @@ async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
 
     if (!mpResponse.ok) {
       const errorText = await mpResponse.text()
-      console.error('Mercado Pago API error:', { status: mpResponse.status, body: errorText })
+      logError('Mercado Pago API error:', new Error(`API Error ${mpResponse.status}: ${errorText}`))
       throw new Error(`API Error ${mpResponse.status}: ${errorText}`)
     }
 
@@ -441,7 +442,7 @@ async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
       payment_url: mpResult.init_point,
     }
   } catch (mpError) {
-    console.error('Mercado Pago integration error:', mpError)
+    logError('Mercado Pago integration error:', mpError)
     await supabase
       .from('rifa_purchases')
       .update({ status: 'failed', updated_at: new Date().toISOString() })
@@ -523,4 +524,13 @@ async function handleStripePayment(req, purchase, packageData, supabase) {
       details: stripeError.message,
     }
   }
+}
+
+// Adicionando uma função de log para facilitar a depuração
+function logError(message, error) {
+  console.error(message, {
+    errorMessage: error.message,
+    errorStack: error.stack,
+    errorCause: error.cause,
+  });
 } 
