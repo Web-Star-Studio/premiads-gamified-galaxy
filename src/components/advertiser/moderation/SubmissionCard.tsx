@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Check, X, Paperclip, FileText, Download } from "lucide-react";
+import { Check, X, Paperclip, FileText, Download, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Submission } from '@/types/missions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useSubmissionFileUpload } from '@/hooks/useSubmissionFileUpload';
+import AttachmentViewerModal from './AttachmentViewerModal';
 
 interface SubmissionCardProps {
   submission: Submission;
@@ -20,6 +22,8 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const { downloadFile, getFileUrl } = useSubmissionFileUpload();
   
   const handleApprove = async () => {
     setIsProcessing(true);
@@ -34,6 +38,34 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
     setIsRejectDialogOpen(false);
     setIsProcessing(false);
   };
+
+  const handleDownloadFile = async (file: { name: string, url: string, path?: string }, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    try {
+      if (file.path) {
+        await downloadFile(file.path, file.name);
+      } else {
+        // Fallback for files without path - direct download
+        const link = document.createElement('a');
+        link.href = file.url;
+        link.download = file.name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Erro no download:', error);
+    }
+  };
+
+  const handleViewAttachments = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsViewerOpen(true);
+  };
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Data desconhecida';
@@ -45,7 +77,21 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
   };
 
   const submissionContent = submission.submission_data?.content as string || 'Nenhuma resposta fornecida.';
-  const submissionFiles = submission.submission_data?.files as { name: string, url: string }[] || [];
+  const submissionFiles = submission.submission_data?.files as { name: string, url: string, path?: string }[] || [];
+
+  // Convert legacy file data to proper format
+  const normalizedFiles = submissionFiles.map(file => {
+    // If file is just a string (legacy data), convert to proper format
+    if (typeof file === 'string') {
+      return {
+        name: file,
+        url: '', // Legacy files don't have URLs
+        path: undefined,
+        type: undefined
+      };
+    }
+    return file;
+  });
 
   return (
     <div className="bg-gradient-to-br from-gray-900/60 to-gray-950/80 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg transition-all hover:border-purple-400/50 hover:shadow-purple-500/10">
@@ -94,24 +140,45 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
                   <h4 className="font-semibold text-gray-300 mb-2 flex items-center">
                     <Paperclip className="h-4 w-4 mr-2" />
                     Anexos
+                    <Button
+                      onClick={handleViewAttachments}
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto text-purple-400 hover:text-purple-300 hover:bg-purple-400/10"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Visualizar todos
+                    </Button>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {submissionFiles.map((file, index) => (
-                      <a 
+                      <div 
                         key={index} 
-                        href={file.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
                         className="bg-black/20 p-3 rounded-md border border-white/10 hover:border-purple-400/80 transition-all group"
                       >
                         <div className="flex items-center gap-3">
                           <FileText className="h-6 w-6 text-purple-400" />
                           <div className="flex-grow overflow-hidden">
-                            <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{file.name}</p>
+                            <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white">{typeof file === 'string' ? file : file.name}</p>
                           </div>
-                          <Download className="h-5 w-5 text-gray-500 group-hover:text-white transition-all"/>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={handleViewAttachments}
+                              className="p-1 rounded hover:bg-purple-400/20 text-purple-400 hover:text-purple-300 transition-all"
+                              title="Visualizar"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDownloadFile(file, e)}
+                              className="p-1 rounded hover:bg-purple-400/20 text-gray-500 hover:text-white transition-all"
+                              title="Baixar"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
-                      </a>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -225,6 +292,21 @@ const SubmissionCard = ({ submission, onApprove, onReject }: SubmissionCardProps
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de visualização de anexos */}
+      <AttachmentViewerModal
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        files={normalizedFiles}
+        onApprove={handleApprove}
+        onReject={async (reason) => {
+          if (reason) setRejectReason(reason);
+          setIsRejectDialogOpen(true);
+          setIsViewerOpen(false);
+        }}
+        userName={submission.user_name}
+        missionTitle={submission.mission_title}
+      />
     </div>
   );
 };

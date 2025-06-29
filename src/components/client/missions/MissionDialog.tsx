@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Save, Upload, X } from "lucide-react";
 import { Mission } from "@/hooks/missions/types";
+import { useSubmissionFileUpload } from "@/hooks/useSubmissionFileUpload";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MissionDialogProps {
   isOpen: boolean;
@@ -33,10 +36,12 @@ const MissionDialog = ({
     saveAsDraft: false
   });
   const [submitting, setSubmitting] = useState(false);
+  const { uploadFiles, isUploading } = useSubmissionFileUpload();
+  const { toast } = useToast();
   
   // Handle dialog close
   const handleClose = () => {
-    if (submitting) return;
+    if (submitting || isUploading) return;
     setIsOpen(false);
     setFormData({ content: "", files: [], saveAsDraft: false });
   };
@@ -74,21 +79,57 @@ const MissionDialog = ({
     
     setSubmitting(true);
     
-    // Prepare submission data
-    const submissionData = {
-      content: formData.content,
-      files: formData.files.map(file => file.name) // In a real app, we'd upload the files
-    };
-    
-    // Submit as draft or for approval
-    const status = asDraft ? "in_progress" : "pending_approval";
-    
     try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      let uploadedFiles: any[] = [];
+      
+      // Upload files if any
+      if (formData.files.length > 0) {
+        try {
+          uploadedFiles = await uploadFiles(formData.files, user.id, selectedMission.id);
+        } catch (uploadError) {
+          console.error('Erro no upload dos arquivos:', uploadError);
+          toast({
+            title: 'Erro no upload',
+            description: 'Não foi possível fazer upload dos arquivos. Tente novamente.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
+      // Prepare submission data
+      const submissionData = {
+        content: formData.content,
+        files: uploadedFiles
+      };
+      
+      // Submit as draft or for approval
+      const status = asDraft ? "in_progress" : "pending_approval";
+      
       const success = await onSubmitMission(submissionData, status);
       
       if (success) {
         handleClose();
+        toast({
+          title: 'Submissão enviada',
+          description: asDraft 
+            ? 'Sua submissão foi salva como rascunho.' 
+            : 'Sua submissão foi enviada para aprovação.',
+        });
       }
+    } catch (error: any) {
+      console.error('Erro na submissão:', error);
+      toast({
+        title: 'Erro na submissão',
+        description: error.message || 'Ocorreu um erro ao enviar sua submissão.',
+        variant: 'destructive'
+      });
     } finally {
       setSubmitting(false);
     }
@@ -160,6 +201,12 @@ const MissionDialog = ({
                   accept="image/*,.pdf,.doc,.docx"
                 />
               </label>
+              {isUploading && (
+                <div className="ml-2 flex items-center gap-2 text-sm text-gray-400">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Enviando...
+                </div>
+              )}
             </div>
             
             {formData.files.length > 0 && (
@@ -190,10 +237,10 @@ const MissionDialog = ({
           <Button
             variant="outline"
             onClick={() => handleSubmit(true)}
-            disabled={submitting}
+            disabled={submitting || isUploading}
             className="w-full sm:w-auto order-2 sm:order-1"
           >
-            {submitting ? (
+            {submitting || isUploading ? (
               <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
             ) : (
               <Save className="h-4 w-4 mr-2" />
@@ -203,10 +250,10 @@ const MissionDialog = ({
           
           <Button
             onClick={() => handleSubmit(false)}
-            disabled={!formData.content || submitting}
+            disabled={!formData.content || submitting || isUploading}
             className="w-full sm:w-auto order-1 sm:order-2"
           >
-            {submitting ? (
+            {submitting || isUploading ? (
               <LoaderCircle className="h-4 w-4 animate-spin mr-2" />
             ) : (
               <Upload className="h-4 w-4 mr-2" />
