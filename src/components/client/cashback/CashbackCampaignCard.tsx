@@ -29,10 +29,10 @@ export const CashbackCampaignCard: React.FC<CashbackCampaignCardProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   
-  const handleRedeem = async () => {
+  const handleRedeem = async (amount: number) => {
     setIsRedeeming(true);
     try {
-      await onRedeem(campaign.id, userCashback);
+      await onRedeem(campaign.id, amount);
       setIsOpen(false);
     } finally {
       setIsRedeeming(false);

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog,
@@ -19,7 +18,7 @@ interface RedemptionDialogProps {
   campaign: CashbackCampaign;
   userCashback: number;
   formatDate: (dateString: string) => string;
-  onRedeem: () => Promise<void>;
+  onRedeem: (amount: number) => Promise<void>;
 }
 
 const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
@@ -30,7 +29,20 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
   userCashback,
   formatDate,
   onRedeem
-}) => (
+}) => {
+  const [customAmount, setCustomAmount] = useState<number>(userCashback);
+
+  const handleAmountChange = (amount: number) => {
+    setCustomAmount(amount);
+  };
+
+  const handleRedeem = async () => {
+    await onRedeem(customAmount);
+  };
+
+  const isValidAmount = customAmount > 0 && customAmount <= userCashback;
+
+  return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="glass-panel border-neon-cyan/20 max-w-md">
         <DialogHeader>
@@ -43,7 +55,9 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
         <CampaignDialogDetails 
           campaign={campaign} 
           userCashback={userCashback} 
-          formatDate={formatDate} 
+          formatDate={formatDate}
+          customAmount={customAmount}
+          onAmountChange={handleAmountChange}
         />
 
         <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -56,8 +70,8 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
           </Button>
           <Button 
             className="w-full sm:w-auto bg-gradient-to-r from-neon-cyan to-neon-pink text-galaxy-dark font-medium"
-            onClick={onRedeem}
-            disabled={isRedeeming || userCashback === 0}
+            onClick={handleRedeem}
+            disabled={isRedeeming || !isValidAmount}
           >
             {isRedeeming ? 'Processando...' : 'Confirmar Resgate'}
           </Button>
@@ -65,5 +79,6 @@ const RedemptionDialog: React.FC<RedemptionDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
+};
 
 export default RedemptionDialog;
