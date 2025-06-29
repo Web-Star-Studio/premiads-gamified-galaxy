@@ -36,6 +36,11 @@ const MissionDetails = ({ mission, onClose, onSubmit, onStartMission }: MissionD
         <div>
           <h2 className="text-2xl font-bold mb-2">{mission.title}</h2>
           <p className="text-gray-400">{mission.brand || "PremiAds"}</p>
+          {mission.hasUserSubmission && (
+            <Badge variant="outline" className="mt-2 bg-yellow-600/20 text-yellow-400 border-yellow-600/30">
+              Já submetida
+            </Badge>
+          )}
         </div>
         <Badge 
           variant="secondary" 
@@ -73,8 +78,12 @@ const MissionDetails = ({ mission, onClose, onSubmit, onStartMission }: MissionD
           </Button>
         )}
         {onStartMission && (
-          <Button onClick={onStartMission} className="flex-1">
-            Iniciar Missão
+          <Button 
+            onClick={onStartMission} 
+            className="flex-1"
+            disabled={mission.hasUserSubmission}
+          >
+            {mission.hasUserSubmission ? "Já Submetida" : "Iniciar Missão"}
           </Button>
         )}
       </div>

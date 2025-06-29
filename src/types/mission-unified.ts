@@ -21,14 +21,14 @@ export interface SupabaseMission {
   max_participants: number | null;
 }
 
-export const mapSupabaseMissionToMission = (mission: SupabaseMission) => ({
+export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission => ({
   ...mission,
   requirements: mission.requirements || [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
   cost_in_tokens: mission.cost_in_tokens || 0,
-
   max_participants: mission.max_participants || 0,
+  hasUserSubmission: false,
 });
 
 export interface Mission {
@@ -50,6 +50,7 @@ export interface Mission {
   brand?: string;
   cost_in_tokens?: number;
   business_type?: string;
+  hasUserSubmission?: boolean;
 
   start_date?: string;
   end_date?: string;

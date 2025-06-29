@@ -62,6 +62,12 @@ const MissionsList = ({ missions, selectedMission, onMissionClick, emptyMessage 
                       <span>Badge</span>
                     </Badge>
                   )}
+                  
+                  {mission.hasUserSubmission && (
+                    <Badge variant="outline" className="text-xs bg-yellow-600/20 text-yellow-400 border-yellow-600/30">
+                      Já submetida
+                    </Badge>
+                  )}
                 </div>
               </div>
               <div className="flex items-center mt-2 text-xs text-gray-400">

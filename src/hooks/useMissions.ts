@@ -22,7 +22,7 @@ interface UseMissionsReturn {
 }
 
 export const useMissions = ({ initialFilter = 'available' }): UseMissionsReturn => {
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [allMissions, setAllMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
@@ -33,15 +33,149 @@ export const useMissions = ({ initialFilter = 'available' }): UseMissionsReturn 
   const fetchMissions = async () => {
     try {
       setLoading(true);
-      const data = await missionService.getMissions('ativa');
-      const mappedMissions = data.map(mapSupabaseMissionToMission);
-      setMissions(mappedMissions);
+      
+      // Get current user
+      const { data: userData, error: userError } = await missionService.supabase.auth.getUser();
+      console.log('Auth data:', userData);
+      console.log('Auth error:', userError);
+      
+      if (userError || !userData.user) {
+        console.error("Erro de autenticação:", userError);
+        setError('Usuário não autenticado');
+        return;
+      }
+      
+      const userId = userData.user.id;
+      console.log('Fetching missions for user:', userId);
+      console.log('User email:', userData.user.email);
+      console.log('User role:', userData.user.role);
+      
+      // First, let's check if there are any missions at all
+      const { data: allMissionsTest, error: testError } = await missionService.supabase
+        .from('missions')
+        .select('id, title, status, is_active')
+        .limit(5);
+      
+      console.log('Test query - all missions (first 5):', allMissionsTest);
+      console.log('Test query error:', testError);
+      
+      // Now let's try with the filters
+      const { data: filteredMissionsTest, error: filteredTestError } = await missionService.supabase
+        .from('missions')
+        .select('id, title, status, is_active')
+        .eq('is_active', true)
+        .eq('status', 'ativa')
+        .limit(5);
+      
+      console.log('Filtered test query:', filteredMissionsTest);
+      console.log('Filtered test error:', filteredTestError);
+      
+      // Test without the join to see if that's the issue
+      const { data: missionsWithoutJoin, error: noJoinError } = await missionService.supabase
+        .from('missions')
+        .select('*')
+        .eq('is_active', true)
+        .eq('status', 'ativa')
+        .order('created_at', { ascending: false });
+      
+      console.log('Missions without join:', missionsWithoutJoin);
+      console.log('No join error:', noJoinError);
+      
+      // Fetch missions with user submission data
+      const { data: missionsData, error: missionsError } = await missionService.supabase
+        .from('missions')
+        .select('*')
+        .eq('is_active', true)
+        .eq('status', 'ativa')
+        .order('created_at', { ascending: false });
+      
+      console.log('Raw missions data from database:', missionsData);
+      console.log('Missions error:', missionsError);
+      
+      if (missionsError) throw missionsError;
+      
+      // If we have missions, fetch user submissions separately
+      let userSubmissions: any[] = [];
+      if (missionsData && missionsData.length > 0) {
+        const missionIds = missionsData.map(m => m.id);
+        const { data: submissionsData, error: submissionsError } = await missionService.supabase
+          .from('mission_submissions')
+          .select('id, mission_id, status, submitted_at, user_id')
+          .eq('user_id', userId)
+          .in('mission_id', missionIds);
+        
+        console.log('User submissions:', submissionsData);
+        console.log('Submissions error:', submissionsError);
+        
+        if (!submissionsError) {
+          userSubmissions = submissionsData || [];
+        }
+      }
+      
+      // Process missions and add user-specific status
+      const processedMissions = (missionsData || []).map(missionData => {
+        const userSubmission = userSubmissions.find(
+          (sub: any) => sub.mission_id === missionData.id
+        );
+        
+        // Map Supabase mission to unified Mission type
+        const mission = mapSupabaseMissionToMission(missionData);
+        
+        // Add user-specific properties
+        mission.hasUserSubmission = !!userSubmission;
+        
+        // Set user-specific status based on submission
+        if (userSubmission) {
+          switch (userSubmission.status) {
+            case 'in_progress':
+              mission.status = 'in_progress';
+              break;
+            case 'pending_approval':
+            case 'second_instance_pending':
+              mission.status = 'pending_approval';
+              break;
+            case 'approved':
+              mission.status = 'completed';
+              break;
+            case 'rejected':
+              // Rejected missions return to available status
+              mission.status = 'available';
+              mission.hasUserSubmission = false;
+              break;
+            default:
+              mission.status = 'available';
+          }
+        } else {
+          mission.status = 'available';
+        }
+        
+        return mission;
+      });
+      
+      console.log('Processed missions:', processedMissions);
+      setAllMissions(processedMissions);
       setError('');
     } catch (err: any) {
       console.error('Error fetching missions:', err);
       setError(err.message || 'Erro ao carregar missões');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Filter missions based on current filter
+  const getFilteredMissions = (): Mission[] => {
+    switch (currentFilter) {
+      case 'available':
+        return allMissions.filter(mission => mission.status === 'available');
+      case 'in_progress':
+        return allMissions.filter(mission => mission.status === 'in_progress');
+      case 'pending':
+        return allMissions.filter(mission => mission.status === 'pending_approval');
+      case 'completed':
+        return allMissions.filter(mission => mission.status === 'completed');
+      default:
+        return allMissions;
     }
   };
 
@@ -165,7 +299,7 @@ export const useMissions = ({ initialFilter = 'available' }): UseMissionsReturn 
   }, []);
 
   return {
-    missions,
+    missions: getFilteredMissions(),
     loading,
     error,
     selectedMission,

@@ -19,6 +19,7 @@ export interface Mission {
   target_audience_region?: string;
   has_badge?: boolean;
   has_lootbox?: boolean;
+  hasUserSubmission?: boolean; // Flag para indicar se o usuário já submeteu
 
   target_filter?: any;
   min_purchase?: number;

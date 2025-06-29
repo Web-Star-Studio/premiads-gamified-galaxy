@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
-import { Mission, UseMissionsOptions } from "@/hooks/missions/types";
+import { Mission } from "@/hooks/useMissionsTypes";
+import { UseMissionsOptions } from "@/hooks/missions/types";
 import { useMissionSubmit } from "@/hooks/missions/useMissionSubmit";
 
 export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions = {}) => {
@@ -82,16 +83,41 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         );
         
         // Determine status based on user's submission
-        let status: Mission["status"] = mapDbStatusToFrontend(mission.status || 'ativa');
+        let status: Mission["status"];
+        let hasUserSubmission = false;
         
         if (userSubmission) {
-          status = userSubmission.status as Mission["status"];
+          hasUserSubmission = true;
+          // Map submission status to frontend status
+          switch (userSubmission.status) {
+            case 'in_progress':
+              status = 'in_progress';
+              break;
+            case 'pending_approval':
+            case 'pending':
+              status = 'pending_approval';
+              break;
+            case 'approved':
+            case 'completed':
+              status = 'completed';
+              break;
+            case 'rejected':
+              // Se foi rejeitada, volta a ficar disponível
+              status = 'available';
+              break;
+            default:
+              status = userSubmission.status as Mission["status"];
+          }
+        } else {
+          // Sem submissão do usuário - verificar se a missão está ativa
+          status = mapDbStatusToFrontend(mission.status || 'ativa');
         }
         
         return {
           ...mission,
           status,
-        } as Mission;
+          hasUserSubmission, // Adicionar flag para identificar se já foi submetida
+        } as Mission & { hasUserSubmission: boolean };
       });
       
       setMissions(processedMissions);
@@ -238,21 +264,31 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
 
   // Get missions filtered by current filter
   const getFilteredMissions = useCallback(() => {
-    const statusFilter = filterToStatus[currentFilter];
-    
     return missions.filter((mission) => {
-      // Special case for 'available' filter
-      if (currentFilter === 'available') {
-        // Missões com status 'available' ou missões com status 'ativa' no banco
-        return mission.status === 'available' || 
-               (mission.status === 'ativa') || 
-               (typeof mission.status === 'string' && mission.status.toLowerCase() === 'ativa');
+      switch (currentFilter) {
+        case 'available':
+          // Missões ativas que o usuário ainda não submeteu
+          return (mission.status === 'available' || 
+                 mission.status === 'ativa' || 
+                 (typeof mission.status === 'string' && mission.status.toLowerCase() === 'ativa'));
+        
+        case 'in_progress':
+          // Missões que o usuário iniciou mas ainda não finalizou
+          return mission.status === 'in_progress';
+        
+        case 'pending':
+          // Missões que o usuário submeteu e estão aguardando aprovação
+          return mission.status === 'pending_approval' || mission.status === 'pending';
+        
+        case 'completed':
+          // Missões que foram aprovadas/concluídas para o usuário
+          return mission.status === 'approved' || mission.status === 'completed';
+        
+        default:
+          return false;
       }
-      
-      // For other filters, match the corresponding status
-      return mission.status === statusFilter;
     });
-  }, [missions, currentFilter, filterToStatus]);
+  }, [missions, currentFilter]);
 
   // Submit a mission with specific status
   const handleSubmitMission = async (

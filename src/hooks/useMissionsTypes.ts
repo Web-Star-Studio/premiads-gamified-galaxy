@@ -28,6 +28,7 @@ export interface Mission {
   has_badge?: boolean;
   has_lootbox?: boolean;
   brand?: string;
+  hasUserSubmission?: boolean; // Flag para indicar se o usuário já submeteu
 }
 
 export type MissionType = 'form' | 'photo' | 'video' | 'checkin' | 'social' | 'coupon' | 'survey' | 'review';
