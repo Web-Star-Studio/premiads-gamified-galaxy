@@ -33,7 +33,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
   const [maxParticipants, setMaxParticipants] = useState(10000); // Default max
   
   const minRifas = 1;
-  const minParticipants = 10;
+  const minParticipants = 1;
   const rifasStep = 1;
 
   const totalRifasAtribuidas = formData.rifas * formData.maxParticipants;
@@ -236,7 +236,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
                   type="number"
                   min={minParticipants}
                   max={maxParticipants}
-                  step={10}
+                  step={1}
                   value={formData.maxParticipants}
                   onChange={(e) => {
                     const val = parseInt(e.target.value, 10)
@@ -252,7 +252,7 @@ const RewardsStep = ({ formData, updateFormData }: RewardsStepProps) => {
               value={[formData.maxParticipants]}
               min={minParticipants}
               max={maxParticipants}
-              step={10}
+              step={1}
               onValueChange={(value) => updateFormData("maxParticipants", value[0])}
               className="py-4"
               aria-valuemin={minParticipants}
