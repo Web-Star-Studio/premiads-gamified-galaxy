@@ -44,6 +44,7 @@ function NotificationsPage() {
   // UI state
   const [activeTab, setActiveTab] = useState<'send' | 'settings' | 'history'>('send')
   const [currentPage, setCurrentPage] = useState(1)
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'anunciante' | 'participante'>('all')
 
   // Load initial data
   useEffect(() => {
@@ -55,17 +56,17 @@ function NotificationsPage() {
     })
   }, [getSettings])
 
-  // Load history only when history tab is active
+  // Load history only when history tab is active or filter changes
   useEffect(() => {
     if (activeTab === 'history') {
-      console.log('NotificationsPage - Loading history...')
-      getNotificationsHistory(1, 10).then(result => {
+      console.log('NotificationsPage - Loading history with filter:', historyFilter)
+      getNotificationsHistory(1, 10, historyFilter).then(result => {
         console.log('NotificationsPage - History result:', result)
       }).catch(error => {
         console.error('NotificationsPage - History error:', error)
       })
     }
-  }, [activeTab, getNotificationsHistory])
+  }, [activeTab, historyFilter, getNotificationsHistory])
 
   const handleSendNotification = async () => {
     if (!formData.title || !formData.message) {
@@ -89,7 +90,7 @@ function NotificationsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    getNotificationsHistory(page, 10)
+    getNotificationsHistory(page, 10, historyFilter)
   }
 
   const getTargetTypeLabel = (targetType: string) => {
@@ -324,6 +325,38 @@ function NotificationsPage() {
                     <CardDescription>
               Visualize todas as notificações enviadas pelo sistema administrativo
                     </CardDescription>
+                    
+                    {/* Filter by target type */}
+                    <div className="flex items-center gap-2 pt-4">
+                      <Label htmlFor="history-filter" className="text-sm font-medium">
+                        Filtrar por destinatário:
+                      </Label>
+                      <Select value={historyFilter} onValueChange={(value: 'all' | 'anunciante' | 'participante') => setHistoryFilter(value)}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-4 w-4" />
+                              Todos os tipos
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="anunciante">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              Apenas Anunciantes
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="participante">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              Apenas Participantes
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">

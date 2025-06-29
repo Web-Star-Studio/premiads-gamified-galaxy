@@ -45,27 +45,29 @@ export function useAdminNotifications() {
   const sendNotification = useCallback(async (data: SendNotificationData) => {
     setIsLoading(true)
     try {
-      // Normalize target_type to match backend expectations
-      const normalizedTargetType =
-        data.target_type === 'participants' ? 'participant' : data.target_type
+      // Normalize target_type for RPC function
+      const normalizedTargetType = data.target_type === 'participants' ? 'participante' : 
+                                   data.target_type === 'advertisers' ? 'anunciante' : 
+                                   'all'
 
-      const { data: result, error } = await supabase.functions.invoke('admin-notifications', {
-        body: {
-          action: 'send_notification',
-          ...data,
-          target_type: normalizedTargetType
-        }
+      // Use RPC directly instead of Edge Function
+      const { data: result, error } = await supabase.rpc('send_notification_to_users', {
+        p_title: data.title,
+        p_message: data.message,
+        p_target_type: normalizedTargetType
       })
 
       if (error) throw error
 
+      const recipientsCount = result?.[0]?.recipients_count || 0
+
       toast({
         title: 'Sucesso',
-        description: result.message || 'Notificação enviada com sucesso',
+        description: `Notificação enviada para ${recipientsCount} usuário(s)`,
         variant: 'default'
       })
 
-      return { success: true, data: result }
+      return { success: true, data: { recipients_count: recipientsCount } }
     } catch (error: any) {
       console.error('Error sending notification:', error)
       toast({
@@ -154,38 +156,46 @@ export function useAdminNotifications() {
     }
   }, [toast])
 
-  const getNotificationsHistory = useCallback(async (page: number = 1, limit: number = 20) => {
+  const getNotificationsHistory = useCallback(async (page: number = 1, limit: number = 20, targetTypeFilter?: string) => {
     setIsLoading(true)
     try {
       const offset = (page - 1) * limit
 
-      // Fetch notifications with user profile info
-      const { data: notifications, error: notificationsError } = await supabase
-        .from('notifications')
+      // Build query with optional filter (without join for now)
+      let query = supabase
+        .from('admin_notifications_log')
         .select(`
           id,
           title,
           message,
-          type,
-          category,
+          target_type,
+          recipients_count,
+          sent_at,
           data,
-          created_at,
-          profiles:user_id (
-            full_name,
-            user_type
-          )
+          sent_by
         `)
-        .eq('category', 'system')
-        .order('created_at', { ascending: false })
+        
+      // Apply filter if specified and not 'all'
+      if (targetTypeFilter && targetTypeFilter !== 'all') {
+        query = query.eq('target_type', targetTypeFilter)
+      }
+        
+      const { data: adminLogs, error: logsError } = await query
+        .order('sent_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
-      if (notificationsError) throw notificationsError
+      if (logsError) throw logsError
 
-      // Count total notifications for pagination
-      const { count, error: countError } = await supabase
-        .from('notifications')
+      // Count total notifications for pagination with same filter
+      let countQuery = supabase
+        .from('admin_notifications_log')
         .select('*', { count: 'exact', head: true })
-        .eq('category', 'system')
+        
+      if (targetTypeFilter && targetTypeFilter !== 'all') {
+        countQuery = countQuery.eq('target_type', targetTypeFilter)
+      }
+        
+      const { count, error: countError } = await countQuery
 
       if (countError) throw countError
 
@@ -198,10 +208,23 @@ export function useAdminNotifications() {
         pages: totalPages
       }
 
-      // Transform notifications to match expected type
-      const transformedNotifications = (notifications || []).map(notification => ({
-        ...notification,
-        profiles: notification.profiles?.[0] || null
+      // Transform to match AdminNotification interface
+      const transformedNotifications: AdminNotification[] = (adminLogs || []).map(log => ({
+        id: log.id,
+        title: log.title,
+        message: log.message,
+        type: 'info' as const,
+        category: 'admin_broadcast',
+        data: {
+          ...log.data,
+          target_type: log.target_type,
+          recipients_count: log.recipients_count
+        },
+        created_at: log.sent_at,
+        profiles: {
+          full_name: 'Admin',
+          user_type: 'admin'
+        }
       }))
       
       setNotifications(transformedNotifications)
@@ -210,12 +233,12 @@ export function useAdminNotifications() {
       return { 
         success: true, 
         data: { 
-          notifications: notifications || [], 
+          notifications: transformedNotifications, 
           pagination: paginationInfo 
         } 
       }
     } catch (error: any) {
-      console.error('Error fetching notifications history:', error)
+      console.error('Error fetching admin notifications history:', error)
       
       toast({
         title: 'Erro',
