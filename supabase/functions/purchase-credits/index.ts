@@ -303,308 +303,35 @@ serve(async (req) => {
 
     // Handle payment based on provider
     let paymentData
-    
-    if (paymentProvider === 'mercado_pago') {
-      console.log('Processing Mercado Pago payment...')
-      
-      const mpAccessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
-      
-      if (!mpAccessToken) {
-        console.warn('MERCADO_PAGO_ACCESS_TOKEN não configurado, usando fallback mock para desenvolvimento')
-        paymentData = {
-          payment_id: `mp-dev-${Date.now()}`,
-          payment_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-mock?provider=mercado_pago&method=${paymentMethod}&purchase_id=${purchase.id}&dev=true`,
-          qr_code: paymentMethod === 'pix' ? 'data:image/png;base64,mockQrCodeForDev' : null,
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        }
-      } else {
-        try {
-          console.log('Creating Mercado Pago preference with production API...')
-          
-          // Configuração da preferência para produção
-          const preferenceData = {
-            items: [{
-              id: purchase.id,
-              title: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus - PremiAds`,
-              description: `Pacote de rifas para campanha publicitária`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: Number(packageData.price.toFixed(2))
-            }],
-            payment_methods: {
-              excluded_payment_types: [],
-              installments: paymentMethod === 'credit_card' ? 12 : 1
-            },
-            back_urls: {
-              success: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-sucesso?mp_payment_id={{payment_id}}&mp_status={{payment_status}}`,
-              failure: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos?error=payment_failed`,
-              pending: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos?status=pending`
-            },
-            auto_return: 'approved',
-            external_reference: purchase.id,
-            notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercado-pago-webhook`,
-            statement_descriptor: 'PREMIADS',
-            metadata: {
-              purchase_id: purchase.id,
-              payment_method: paymentMethod,
-              user_id: userId,
-              package_rifas: packageData.rifas_amount,
-              package_bonus: packageData.bonus
-            }
-          }
-          
-          // Configurações específicas por método de pagamento
-          if (paymentMethod === 'pix') {
-            preferenceData.payment_methods = {
-              excluded_payment_types: [
-                { id: 'credit_card' },
-                { id: 'debit_card' },
-                { id: 'ticket' }
-              ]
-            }
-          } else if (paymentMethod === 'credit_card') {
-            preferenceData.payment_methods = {
-              excluded_payment_types: [
-                { id: 'ticket' }
-              ],
-              excluded_payment_methods: [
-                { id: 'pix' }
-              ]
-            }
-          } else if (paymentMethod === 'boleto') {
-            preferenceData.payment_methods = {
-              excluded_payment_types: [
-                { id: 'credit_card' },
-                { id: 'debit_card' }
-              ],
-              excluded_payment_methods: [
-                { id: 'pix' }
-              ]
-            }
-          }
-          
-          console.log('Sending preference to Mercado Pago API...')
-          const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${mpAccessToken}`,
-              'Content-Type': 'application/json',
-              'X-Idempotency-Key': `${purchase.id}-${Date.now()}`
-            },
-            body: JSON.stringify(preferenceData)
-          })
-          
-          if (!mpResponse.ok) {
-            const errorText = await mpResponse.text()
-            console.error('Mercado Pago API error response:', {
-              status: mpResponse.status,
-              statusText: mpResponse.statusText,
-              body: errorText
-            })
-            throw new Error(`API Error ${mpResponse.status}: ${errorText}`)
-          }
-          
-          const mpResult = await mpResponse.json()
-          console.log('Mercado Pago preference created successfully:', {
-            id: mpResult.id,
-            init_point: mpResult.init_point?.substring(0, 50) + '...'
-          })
-          
-          paymentData = {
-            payment_id: mpResult.id,
-            payment_url: mpResult.init_point,
-            sandbox_init_point: mpResult.sandbox_init_point || null,
-            qr_code: mpResult.qr_code || null,
-            qr_code_base64: mpResult.qr_code_base64 || null,
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
-            external_reference: mpResult.external_reference
-          }
-          
-        } catch (mpError) {
-          console.error('Mercado Pago integration error:', mpError)
-          
-          // Atualizar status da compra para erro
-          await supabase
-            .from('rifa_purchases')
-            .update({ 
-              status: 'failed',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', purchase.id)
-          
-          return new Response(
-            JSON.stringify({ 
-              error: 'Erro na integração com Mercado Pago',
-              details: mpError.message,
-              suggestion: 'Tente novamente ou entre em contato com o suporte'
-            }), 
-            { 
-              status: 500, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          )
-        }
-      }
-    } else if (paymentProvider === 'stripe') {
-      console.log('Processing Stripe payment...')
-      try {
-        // Get user information for Stripe customer
-        console.log('Fetching user profile for Stripe customer creation...')
-        const { data: userProfile, error: userError } = await supabase
-          .from('profiles')
-          .select('email, full_name')
-          .eq('id', userId)
-          .single()
-          
-        if (userError || !userProfile) {
-          console.error('User profile error:', userError)
-          throw new Error('User profile not found')
-        }
-        
-        console.log('User profile found:', userProfile.email)
 
-        // Create or retrieve Stripe customer
-        let customerId
-        
-        try {
-          console.log('Checking for existing Stripe customer...')
-          const { data: customers, error: customerError } = await supabase
-            .from('stripe_customers')
-            .select('stripe_id')
-            .eq('user_id', userId)
-            .maybeSingle()
-            
-          if (customerError) {
-            console.error('Error fetching customer:', customerError)
-          }
-          
-          if (!customers?.stripe_id) {
-            console.log('Creating new Stripe customer...')
-            // Create new customer
-            const customer = await stripe.customers.create({
-              email: userProfile.email,
-              name: userProfile.full_name,
-              metadata: {
-                user_id: userId
-              }
-            })
-            
-            console.log('Stripe customer created, storing in database...')
-            // Store customer ID
-            await supabase
-              .from('stripe_customers')
-              .insert({
-                user_id: userId,
-                stripe_id: customer.id
-              })
-              
-            customerId = customer.id
-            console.log('New Stripe customer created:', customerId)
-          } else {
-            customerId = customers.stripe_id
-            console.log('Existing Stripe customer found:', customerId)
-          }
-        } catch (customerCreationError) {
-          console.error('Error in customer creation/retrieval:', customerCreationError)
-          throw new Error('Failed to create or retrieve Stripe customer: ' + customerCreationError.message)
-        }
-        
-        // Create payment session based on payment method
-        if (paymentMethod === 'credit_card' || paymentMethod === 'debit') {
-          console.log('Creating Stripe checkout session...')
-          // Create Stripe Checkout session
-          const session = await stripe.checkout.sessions.create({
-            customer: customerId,
-            payment_method_types: [paymentMethod === 'credit_card' ? 'card' : 'card'],
-            line_items: [
-              {
-                price_data: {
-                  currency: 'brl',
-                  product_data: {
-                    name: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus`,
-                    description: 'Rifas para sua conta PremiAds',
-                  },
-                  unit_amount: Math.round(packageData.price * 100), // Stripe uses cents
-                },
-                quantity: 1,
-              },
-            ],
-            mode: 'payment',
-            success_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/creditos`,
-            metadata: {
-              purchase_id: purchase.id,
-              rifa_purchase_id: purchase.id,
-            },
-          })
-          
-          paymentData = {
-            payment_id: session.id,
-            payment_url: session.url,
-            session_id: session.id,
-            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
-          }
-          
-          console.log('Checkout session created:', session.id)
-        } else if (paymentMethod === 'pix') {
-          console.log('Creating PIX payment intent...')
-          // Create a PaymentIntent for PIX
-          const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(packageData.price * 100),
-            currency: 'brl',
-            payment_method_types: ['pix'],
-            customer: customerId,
-            metadata: {
-              purchase_id: purchase.id,
-              rifa_purchase_id: purchase.id,
-            },
-          })
-          
-          // Get PIX details
-          const pixDetails = paymentIntent.next_action?.display_bank_transfer_instructions
-          
-          paymentData = {
-            payment_id: paymentIntent.id,
-            payment_url: null,
-            pix_qr_code: pixDetails?.hosted_instructions_url || null,
-            pix_code: pixDetails?.financial_address || null,
-            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
-          }
-          
-          console.log('PIX payment intent created:', paymentIntent.id)
-        } else {
-          throw new Error(`Payment method ${paymentMethod} not supported for Stripe`)
-        }
-      } catch (stripeError) {
-        console.error('Stripe error:', stripeError)
-        
-        // Update purchase status to failed
-        await supabase
-          .from('rifa_purchases')
-          .update({ status: 'failed' })
-          .eq('id', purchase.id)
-          
-        return new Response(
-          JSON.stringify({ 
-            error: 'Erro ao processar pagamento com Stripe',
-            details: stripeError.message
-          }), 
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
+    if (paymentProvider === 'mercado_pago') {
+      paymentData = await handleMercadoPagoPayment(req, purchase, packageData, supabase)
+    } else if (paymentProvider === 'stripe') {
+      paymentData = await handleStripePayment(req, purchase, packageData, supabase)
     } else {
       return new Response(
-        JSON.stringify({ error: `Provedor de pagamento não suportado: ${paymentProvider}` }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        JSON.stringify({ error: `Provedor de pagamento não suportado: ${paymentProvider}` }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       )
     }
-    
+
+    // Check for errors returned from handlers
+    if (paymentData.error) {
+      return new Response(
+        JSON.stringify({
+          error: paymentData.error,
+          details: paymentData.details,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
     console.log('Updating purchase with payment ID...')
     // Update purchase with payment ID
     await supabase
@@ -635,15 +362,165 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unhandled error in purchase-credits function:', error)
     return new Response(
-      JSON.stringify({ 
-        error: 'Erro interno do servidor', 
+      JSON.stringify({
+        error: 'Erro interno do servidor',
         details: error.message,
-        stack: error.stack
-      }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        stack: error.stack,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
   }
-}) 
+})
+
+// --- HELPER FUNCTIONS ---
+
+async function handleMercadoPagoPayment(req, purchase, packageData, supabase) {
+  console.log('Processing Mercado Pago payment...')
+  const mpAccessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
+
+  if (!mpAccessToken) {
+    console.warn('MERCADO_PAGO_ACCESS_TOKEN não configurado, usando fallback mock.')
+    return {
+      payment_id: `mp-dev-${Date.now()}`,
+      payment_url: `${req.headers.get('origin') || 'https://premiads.com'}/anunciante/pagamento-mock?purchase_id=${purchase.id}`,
+    }
+  }
+
+  try {
+    const origin = req.headers.get('origin') || 'https://premiads.com'
+    const isDevelopment = origin.includes('localhost') || origin.includes('192.168')
+
+    const successUrl = isDevelopment 
+      ? `https://premiads.com/anunciante/pagamento-sucesso`
+      : `${origin}/anunciante/pagamento-sucesso`
+
+    const preferenceData = {
+      items: [{
+        id: purchase.id,
+        title: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus`,
+        description: `Pacote de rifas para campanha publicitária`,
+        quantity: 1,
+        currency_id: 'BRL',
+        unit_price: Number(packageData.price.toFixed(2)),
+      }],
+      back_urls: {
+        success: successUrl,
+        failure: `${origin}/anunciante/creditos?error=mp_payment_failed`,
+        pending: `${origin}/anunciante/creditos?status=mp_pending`,
+      },
+      auto_return: 'approved',
+      external_reference: purchase.id,
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercado-pago-webhook`,
+      statement_descriptor: 'PREMIADS',
+    }
+
+    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${mpAccessToken}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': purchase.id,
+      },
+      body: JSON.stringify(preferenceData),
+    })
+
+    if (!mpResponse.ok) {
+      const errorText = await mpResponse.text()
+      console.error('Mercado Pago API error:', { status: mpResponse.status, body: errorText })
+      throw new Error(`API Error ${mpResponse.status}: ${errorText}`)
+    }
+
+    const mpResult = await mpResponse.json()
+    console.log('Mercado Pago preference created:', mpResult.id)
+
+    return {
+      payment_id: mpResult.id,
+      payment_url: mpResult.init_point,
+    }
+  } catch (mpError) {
+    console.error('Mercado Pago integration error:', mpError)
+    await supabase
+      .from('rifa_purchases')
+      .update({ status: 'failed', updated_at: new Date().toISOString() })
+      .eq('id', purchase.id)
+    return {
+      error: 'Erro na integração com Mercado Pago',
+      details: mpError.message,
+    }
+  }
+}
+
+async function handleStripePayment(req, purchase, packageData, supabase) {
+  console.log('Processing Stripe payment...')
+  try {
+    const stripe = new Stripe(stripeConfig.secretKey, {
+      apiVersion: stripeConfig.apiVersion,
+    })
+
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', purchase.user_id)
+      .single()
+
+    if (userError || !userProfile) throw new Error('User profile not found')
+
+    let customerId
+    const { data: existingCustomer } = await supabase
+      .from('stripe_customers')
+      .select('stripe_id')
+      .eq('user_id', purchase.user_id)
+      .maybeSingle()
+
+    if (existingCustomer?.stripe_id) {
+      customerId = existingCustomer.stripe_id
+    } else {
+      const customer = await stripe.customers.create({
+        email: userProfile.email,
+        name: userProfile.full_name,
+        metadata: { user_id: purchase.user_id },
+      })
+      await supabase
+        .from('stripe_customers')
+        .insert({ user_id: purchase.user_id, stripe_id: customer.id })
+      customerId = customer.id
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'brl',
+          product_data: {
+            name: `${packageData.rifas_amount} rifas + ${packageData.bonus} bônus`,
+          },
+          unit_amount: Math.round(packageData.price * 100),
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${req.headers.get('origin') || ''}/anunciante/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin') || ''}/anunciante/creditos`,
+      metadata: { purchase_id: purchase.id },
+    })
+
+    return {
+      payment_id: session.id,
+      payment_url: session.url,
+    }
+  } catch (stripeError) {
+    console.error('Stripe error:', stripeError)
+    await supabase
+      .from('rifa_purchases')
+      .update({ status: 'failed' })
+      .eq('id', purchase.id)
+    return {
+      error: 'Erro ao processar pagamento com Stripe',
+      details: stripeError.message,
+    }
+  }
+} 
