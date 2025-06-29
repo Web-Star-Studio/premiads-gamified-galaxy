@@ -142,11 +142,19 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
       </motion.div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PrizeTable prizes={selectedLottery.prizes || []} isCompleted={selectedLottery.status === 'completed'} />
+        <PrizeTable 
+          prizes={selectedLottery.prizes || []} 
+          isCompleted={selectedLottery.status === 'completed'}
+          lotteryPrize={{
+            prize_type: selectedLottery.prize_type,
+            prize_value: selectedLottery.prize_value,
+            image_url: selectedLottery.image_url
+          }}
+        />
         <RandomNumberGenerator selectedLottery={selectedLottery} onDrawRaffle={onDrawRaffle} />
       </div>
       
-      {(!selectedLottery.prizes || selectedLottery.prizes.length === 0) && (
+      {(!selectedLottery.prize_type || !selectedLottery.prize_value) && (!selectedLottery.prizes || selectedLottery.prizes.length === 0) && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

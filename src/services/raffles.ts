@@ -220,15 +220,21 @@ export const raffleService = {
         .not('id', 'is', null)  // Filter out records with null ID
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Database error fetching raffles:', error);
+        throw error;
+      }
       
       // Additional filter to ensure we only return records with valid IDs and proper dates
       const validData = (data || []).filter(item => 
         item.id != null && 
+        item.id !== 'null' &&
+        item.id !== 'undefined' &&
         item.start_date != null && 
         item.end_date != null
       );
       
+      console.log(`Fetched ${validData.length} valid lotteries from database`);
       return validData;
     } catch (error) {
       console.error('Error fetching raffles:', error);

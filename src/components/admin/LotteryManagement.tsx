@@ -29,6 +29,7 @@ const LotteryManagement = () => {
       setIsLoading(true);
       try {
         const data = await raffleService.getRaffles();
+        
         // Filter out any lotteries with invalid IDs
         const validLotteries = data.filter(lottery => 
           lottery?.id && 
