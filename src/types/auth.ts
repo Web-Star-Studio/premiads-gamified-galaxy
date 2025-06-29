@@ -1,4 +1,3 @@
-
 export type UserType = "participante" | "anunciante" | "admin" | "moderator";
 
 export interface SignUpCredentials {
@@ -23,6 +22,8 @@ export interface UserProfile {
   points?: number;
   credits?: number;
   profile_completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthState {

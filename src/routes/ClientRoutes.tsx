@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -20,105 +19,25 @@ const ClientNotifications = lazy(() => import("@/pages/client/ClientNotification
 const RewardsPage = lazy(() => import("@/pages/client/RewardsPage"));
 
 const ClientRoutes = () => (
-    <Routes>
-      <Route index element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientDashboard />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="missoes" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientMissions />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="perfil" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientProfile />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="sorteios" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientRaffles />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="indicacoes" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientReferrals />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="cashback" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <CashbackMarketplace />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="suporte" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Support />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="tour" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Tour />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="como-funciona" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <HowItWorks />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="faq" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <Faq />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="notificacoes" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClientNotifications />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="recompensas" element={
-        <RouteGuard>
-          <Suspense fallback={<LoadingSpinner />}>
-            <RewardsPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  <RouteGuard>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route index element={<ClientDashboard />} />
+        <Route path="missoes" element={<ClientMissions />} />
+        <Route path="perfil" element={<ClientProfile />} />
+        <Route path="sorteios" element={<ClientRaffles />} />
+        <Route path="indicacoes" element={<ClientReferrals />} />
+        <Route path="cashback" element={<CashbackMarketplace />} />
+        <Route path="suporte" element={<Support />} />
+        <Route path="tour" element={<Tour />} />
+        <Route path="como-funciona" element={<HowItWorks />} />
+        <Route path="faq" element={<Faq />} />
+        <Route path="notificacoes" element={<ClientNotifications />} />
+        <Route path="recompensas" element={<RewardsPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  </RouteGuard>
+);
 
 export default ClientRoutes;

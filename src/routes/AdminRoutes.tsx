@@ -37,102 +37,54 @@ const AdminRoutes = () => {
 
   console.log("AdminRoutes - Rendering admin routes");
   return (
-    <Routes>
-      <Route 
-        index 
-        element={
-          <ErrorBoundary fallback={<div className="p-8">Erro ao carregar o painel de administração. Tente novamente.</div>}>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AdminPanel />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="usuarios" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <UserManagementPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="sorteios" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <LotteryManagementPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-
-      
-
-      
-      <Route 
-        path="notificacoes" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <NotificationsPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="regras" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <RulesPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="configuracoes" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <SettingsPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="documentacao" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <DocumentationPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      <Route 
-        path="moderacao" 
-        element={
-          <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <ModerationPage />
-            </Suspense>
-          </ErrorBoundary>
-        } 
-      />
-      
-      {/* Catch-all route for 404 handling within admin routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <ErrorBoundary fallback={<div className="p-8">Ocorreu um erro. Tente novamente mais tarde.</div>}>
+      <Suspense fallback={<RouteLoadingSpinner />}>
+        <Routes>
+          <Route 
+            index 
+            element={<AdminPanel />} 
+          />
+          
+          <Route 
+            path="usuarios" 
+            element={<UserManagementPage />} 
+          />
+          
+          <Route 
+            path="sorteios" 
+            element={<LotteryManagementPage />} 
+          />
+          
+          <Route 
+            path="notificacoes" 
+            element={<NotificationsPage />} 
+          />
+          
+          <Route 
+            path="regras" 
+            element={<RulesPage />} 
+          />
+          
+          <Route 
+            path="configuracoes" 
+            element={<SettingsPage />} 
+          />
+          
+          <Route 
+            path="documentacao" 
+            element={<DocumentationPage />} 
+          />
+          
+          <Route 
+            path="moderacao" 
+            element={<ModerationPage />} 
+          />
+          
+          {/* Catch-all route for 404 handling within admin routes */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

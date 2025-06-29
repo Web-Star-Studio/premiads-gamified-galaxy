@@ -24,114 +24,34 @@ const CouponValidationPage = lazy(() => import("@/pages/advertiser/CouponValidat
 const RouteLoadingSpinner = () => <LoadingSpinner />;
 
 const AdvertiserRoutes = () => (
-    <Routes>
-      {/* Remover a restrição de roles e usar RouteGuard padrão */}
-      <Route index element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserDashboard />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      {/* Mesma lógica para todas as outras rotas */}
-      <Route path="campanhas" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserCampaigns />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="cashbacks" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserCashbacksPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      <Route path="nova-campanha" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserNewCampaign />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="analises" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserAnalytics />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="creditos" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserCredits />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="notificacoes" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserNotifications />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="perfil" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserProfilePage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="configuracoes" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserSettings />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="moderacao" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <ModerationPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="pagamento-sucesso" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <PaymentSuccessPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="pagamento-mock" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <PagamentoMockPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="crm" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <AdvertiserCrmPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      <Route path="validacao-cupom" element={
-        <RouteGuard>
-          <Suspense fallback={<RouteLoadingSpinner />}>
-            <CouponValidationPage />
-          </Suspense>
-        </RouteGuard>
-      } />
-      
-      {/* Catch-all route for 404 handling within advertiser routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  <RouteGuard>
+    <Suspense fallback={<RouteLoadingSpinner />}>
+      <Routes>
+        {/* Remover a restrição de roles e usar RouteGuard padrão */}
+        <Route index element={<AdvertiserDashboard />} />
+        
+        {/* Mesma lógica para todas as outras rotas */}
+        <Route path="campanhas" element={<AdvertiserCampaigns />} />
+        
+        <Route path="cashbacks" element={<AdvertiserCashbacksPage />} />
+        
+        <Route path="nova-campanha" element={<AdvertiserNewCampaign />} />
+        <Route path="analises" element={<AdvertiserAnalytics />} />
+        <Route path="creditos" element={<AdvertiserCredits />} />
+        <Route path="notificacoes" element={<AdvertiserNotifications />} />
+        <Route path="perfil" element={<AdvertiserProfilePage />} />
+        <Route path="configuracoes" element={<AdvertiserSettings />} />
+        <Route path="moderacao" element={<ModerationPage />} />
+        <Route path="pagamento-sucesso" element={<PaymentSuccessPage />} />
+        <Route path="pagamento-mock" element={<PagamentoMockPage />} />
+        <Route path="crm" element={<AdvertiserCrmPage />} />
+        <Route path="validacao-cupom" element={<CouponValidationPage />} />
+        
+        {/* Catch-all route for 404 handling within advertiser routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  </RouteGuard>
+);
 
 export default AdvertiserRoutes;
