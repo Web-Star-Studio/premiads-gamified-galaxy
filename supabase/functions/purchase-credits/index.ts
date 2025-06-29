@@ -1,8 +1,9 @@
 // @ts-nocheck
+console.log('STARTING purchase-credits function v3') // Canary log
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
-import { z } from 'https://esm.sh/zod@3.23.8'
-import Stripe from 'https://esm.sh/stripe@12.17.0'
+import Stripe from 'npm:stripe@15.12.0' // Using modern npm specifier for better compatibility
 
 // CORS headers inline to avoid import issues
 const corsHeaders = {
@@ -24,21 +25,7 @@ const stripeConfig = {
   apiVersion: '2023-10-16' as const,
 }
 
-// Define schema for purchase request
-const purchaseSchema = z.object({
-  userId: z.string().uuid(),
-  packageId: z.string().uuid().optional(),
-  customAmount: z.number().min(500).max(10000).optional(),
-  customPrice: z.number().optional(),
-  paymentProvider: z.enum(['mercado_pago', 'stripe']),
-  paymentMethod: z.enum(['pix', 'credit_card', 'boleto', 'debit']),
-})
-
-// Ensure at least one of packageId or customAmount is provided
-const purchaseRequestSchema = purchaseSchema.refine(
-  data => data.packageId !== undefined || data.customAmount !== undefined,
-  { message: 'Either packageId or customAmount must be provided' }
-)
+// Removed Zod schema validation in favor of more flexible manual validation
 
 serve(async (req) => {
   console.log('Purchase credits function called:', {
@@ -138,25 +125,53 @@ serve(async (req) => {
       )
     }
     
-    const parseResult = purchaseRequestSchema.safeParse(body)
+    // IMPROVED VALIDATION - more flexible and with better error handling
+    const { userId, packageId, customAmount, customPrice, paymentProvider, paymentMethod } = body
     
-    if (!parseResult.success) {
-      console.error('Validation error:', parseResult.error)
+    console.log('Raw body data:', { userId, packageId, customAmount, paymentProvider, paymentMethod })
+    
+    // Validate required fields with better error messages
+    if (!userId || typeof userId !== 'string') {
+      console.error('Invalid userId:', userId)
       return new Response(
-        JSON.stringify({ 
-          error: 'Dados inválidos', 
-          details: parseResult.error.format() 
-        }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: 'userId é obrigatório e deve ser uma string válida' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
     
-    const { userId, packageId, customAmount, customPrice, paymentProvider, paymentMethod } = parseResult.data
+    if (!paymentProvider || !['mercado_pago', 'stripe'].includes(paymentProvider)) {
+      console.error('Invalid paymentProvider:', paymentProvider)
+      return new Response(
+        JSON.stringify({ 
+          error: 'paymentProvider deve ser "mercado_pago" ou "stripe"',
+          received: paymentProvider,
+          valid_options: ['mercado_pago', 'stripe']
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     
-    console.log('Parsed data:', { userId, packageId, customAmount, paymentProvider, paymentMethod })
+    if (!paymentMethod || !['pix', 'credit_card', 'boleto', 'debit'].includes(paymentMethod)) {
+      console.error('Invalid paymentMethod:', paymentMethod)
+      return new Response(
+        JSON.stringify({ 
+          error: 'paymentMethod deve ser um dos valores válidos',
+          received: paymentMethod,
+          valid_options: ['pix', 'credit_card', 'boleto', 'debit']
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    if (!packageId && !customAmount) {
+      console.error('Missing packageId and customAmount')
+      return new Response(
+        JSON.stringify({ error: 'packageId ou customAmount deve ser fornecido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    console.log('Validation passed, proceeding with purchase...')
 
     // Ensure the authenticated user matches the requested userId
     if (user.id !== userId) {
@@ -434,6 +449,7 @@ serve(async (req) => {
       console.log('Processing Stripe payment...')
       try {
         // Get user information for Stripe customer
+        console.log('Fetching user profile for Stripe customer creation...')
         const { data: userProfile, error: userError } = await supabase
           .from('profiles')
           .select('email, full_name')
@@ -448,42 +464,49 @@ serve(async (req) => {
         console.log('User profile found:', userProfile.email)
 
         // Create or retrieve Stripe customer
-        const { data: customers, error: customerError } = await supabase
-          .from('stripe_customers')
-          .select('stripe_id')
-          .eq('user_id', userId)
-          .maybeSingle()
-          
         let customerId
         
-        if (customerError) {
-          console.error('Error fetching customer:', customerError)
-        }
-        
-        if (!customers?.stripe_id) {
-          console.log('Creating new Stripe customer...')
-          // Create new customer
-          const customer = await stripe.customers.create({
-            email: userProfile.email,
-            name: userProfile.full_name,
-            metadata: {
-              user_id: userId
-            }
-          })
-          
-          // Store customer ID
-          await supabase
+        try {
+          console.log('Checking for existing Stripe customer...')
+          const { data: customers, error: customerError } = await supabase
             .from('stripe_customers')
-            .insert({
-              user_id: userId,
-              stripe_id: customer.id
+            .select('stripe_id')
+            .eq('user_id', userId)
+            .maybeSingle()
+            
+          if (customerError) {
+            console.error('Error fetching customer:', customerError)
+          }
+          
+          if (!customers?.stripe_id) {
+            console.log('Creating new Stripe customer...')
+            // Create new customer
+            const customer = await stripe.customers.create({
+              email: userProfile.email,
+              name: userProfile.full_name,
+              metadata: {
+                user_id: userId
+              }
             })
             
-          customerId = customer.id
-          console.log('New Stripe customer created:', customerId)
-        } else {
-          customerId = customers.stripe_id
-          console.log('Existing Stripe customer found:', customerId)
+            console.log('Stripe customer created, storing in database...')
+            // Store customer ID
+            await supabase
+              .from('stripe_customers')
+              .insert({
+                user_id: userId,
+                stripe_id: customer.id
+              })
+              
+            customerId = customer.id
+            console.log('New Stripe customer created:', customerId)
+          } else {
+            customerId = customers.stripe_id
+            console.log('Existing Stripe customer found:', customerId)
+          }
+        } catch (customerCreationError) {
+          console.error('Error in customer creation/retrieval:', customerCreationError)
+          throw new Error('Failed to create or retrieve Stripe customer: ' + customerCreationError.message)
         }
         
         // Create payment session based on payment method
@@ -610,9 +633,13 @@ serve(async (req) => {
     )
     
   } catch (error) {
-    console.error('Unhandled error:', error)
+    console.error('Unhandled error in purchase-credits function:', error)
     return new Response(
-      JSON.stringify({ error: 'Erro interno do servidor', details: error.message }), 
+      JSON.stringify({ 
+        error: 'Erro interno do servidor', 
+        details: error.message,
+        stack: error.stack
+      }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
