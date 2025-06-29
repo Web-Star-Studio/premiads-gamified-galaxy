@@ -44,6 +44,22 @@ serve(async (req) => {
     const signature = req.headers.get('x-signature')
     const webhookSecret = Deno.env.get('MERCADO_PAGO_WEBHOOK_SECRET_TEST') || Deno.env.get('MERCADO_PAGO_WEBHOOK_SECRET_PROD')
     
+    if (!webhookSecret) {
+      console.error('Webhook secret is not configured in Supabase environment variables.')
+      return new Response(JSON.stringify({ error: 'Server configuration error: Missing webhook secret' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    
+    if (!signature) {
+      console.warn('Request is missing x-signature header.')
+      return new Response(JSON.stringify({ error: 'Missing signature' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Parse do body da requisição
     let body
     let bodyText: string
@@ -51,50 +67,44 @@ serve(async (req) => {
     try {
       bodyText = await req.text()
       
-      // Verificar assinatura se configurada
-      if (webhookSecret && signature) {
-        console.log('Verifying webhook signature...')
-        
-        // Verificar se a assinatura é válida usando HMAC SHA256
-        const encoder = new TextEncoder()
-        const keyData = encoder.encode(webhookSecret)
-        
-        const key = await crypto.subtle.importKey(
-          'raw',
-          keyData,
-          { name: 'HMAC', hash: 'SHA-256' },
-          false,
-          ['sign']
+      // Verificar assinatura é obrigatório
+      console.log('Verifying webhook signature...')
+      
+      const encoder = new TextEncoder()
+      const keyData = encoder.encode(webhookSecret)
+      
+      const key = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      )
+      
+      const expectedSignature = await crypto.subtle.sign(
+        'HMAC',
+        key,
+        encoder.encode(bodyText)
+      )
+      
+      const expectedHex = Array.from(new Uint8Array(expectedSignature))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+      
+      const receivedSignature = signature.includes('=') ? signature.split('=')[1] : signature
+      
+      if (expectedHex !== receivedSignature) {
+        console.warn('Invalid webhook signature received')
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
         )
-        
-        const expectedSignature = await crypto.subtle.sign(
-          'HMAC',
-          key,
-          encoder.encode(bodyText)
-        )
-        
-        const expectedHex = Array.from(new Uint8Array(expectedSignature))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('')
-        
-        // Extrair apenas o hash da assinatura (remover prefixo se houver)
-        const receivedSignature = signature.includes('=') ? signature.split('=')[1] : signature
-        
-        if (expectedHex !== receivedSignature) {
-          console.warn('Invalid webhook signature received')
-          return new Response(
-            JSON.stringify({ error: 'Invalid signature' }),
-            { 
-              status: 401, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          )
-        }
-        
-        console.log('Webhook signature verified successfully ✅')
-      } else {
-        console.warn('⚠️ Webhook secret not configured or signature not provided - proceeding without verification')
       }
+      
+      console.log('Webhook signature verified successfully ✅')
       
       // Parse do JSON após verificação
       body = JSON.parse(bodyText)
