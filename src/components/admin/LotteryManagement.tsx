@@ -13,6 +13,7 @@ import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
 import raffleService from "@/services/raffles";
+import { adminRaffleService } from "@/services/admin-raffles";
 import { supabase } from '@/integrations/supabase/client'
 
 const LotteryManagement = () => {
@@ -62,7 +63,7 @@ const LotteryManagement = () => {
 
   const handleStatusChange = async (lotteryId: string, newStatus: Lottery['status']) => {
     try {
-      const updatedLottery = await raffleService.updateRaffleStatus(lotteryId, newStatus);
+      const updatedLottery = await adminRaffleService.updateRaffleStatus(lotteryId, newStatus);
       
       if (updatedLottery) {
         setLotteries(lotteries.map(lottery => {
@@ -110,7 +111,7 @@ const LotteryManagement = () => {
         return;
       }
       
-      const success = await raffleService.deleteRaffle(lotteryId);
+      const success = await adminRaffleService.deleteRaffle(lotteryId);
       
       if (success) {
         // Filter out the deleted lottery from the list

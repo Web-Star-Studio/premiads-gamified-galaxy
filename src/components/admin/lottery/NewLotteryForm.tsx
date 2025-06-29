@@ -13,7 +13,7 @@ import NumberRangeSection from './form-sections/NumberRangeSection';
 import FormActions from './form-sections/FormActions';
 import { Card } from '@/components/ui/card';
 import NumberGenerator from './NumberGenerator';
-import raffleService from '@/services/raffles';
+import { adminRaffleService } from '@/services/admin-raffles';
 
 interface NewLotteryFormProps {
   onSuccess: (lottery: Lottery) => void;
@@ -74,8 +74,8 @@ const NewLotteryForm: React.FC<NewLotteryFormProps> = ({ onSuccess, onCancel }) 
     }
     
     try {
-      // Upload image and create raffle
-      const newLottery = await raffleService.createRaffle(values, values.imageFile);
+      // Upload image and create raffle using admin service
+      const newLottery = await adminRaffleService.createRaffle(values, values.imageFile);
       
       toast({
         title: 'Sorteio criado',
