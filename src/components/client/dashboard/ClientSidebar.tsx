@@ -26,10 +26,14 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ userName = 'Visitante' })
   const { signOut } = useAuth();
   const { availableCredits: rifas, availableCashback: cashback, isLoading } = useUserCredits();
   
-  const isActive = (path: string) => 
-    // Account for both exact matches and nested routes
-     location.pathname === path || location.pathname.startsWith(`${path}/`)
-  ;
+  const isActive = (path: string) => {
+    // Handle exact match for root client path
+    if (path === '/cliente') {
+      return location.pathname === '/cliente';
+    }
+    // For other paths, check exact match or nested routes
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   const handleLogout = async () => {
     await safeLogoutWithFallback(signOut);
