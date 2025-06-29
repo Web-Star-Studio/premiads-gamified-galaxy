@@ -6,19 +6,68 @@ import { useSounds } from "@/hooks/use-sounds";
 // Função standalone para validar códigos de referência (não requer autenticação)
 export const validateReferralCodeStandalone = async (codigo: string) => {
   try {
+    // Verificar se o código não está vazio
+    if (!codigo || codigo.trim().length === 0) {
+      return { valid: false, error: 'Código de referência não pode estar vazio' };
+    }
+
+    // Limpar e normalizar o código
+    const cleanCode = codigo.trim().toUpperCase();
+    
+    // Verificar comprimento mínimo
+    if (cleanCode.length < 3) {
+      return { valid: false, error: 'Código de referência muito curto' };
+    }
+
+    // Primeiro, tentar usar a Edge Function se disponível
+    try {
+      const { data: functionResult, error: functionError } = await supabase.functions.invoke('validate-referral-code', {
+        body: { codigo: cleanCode }
+      });
+
+      if (!functionError && functionResult) {
+        return functionResult;
+      }
+    } catch (functionError) {
+      console.warn('Edge Function não disponível, usando fallback direto:', functionError);
+    }
+
+    // Fallback: consulta direta ao banco
     const { data: referencia, error } = await supabase
       .from('referencias')
       .select('id, participante_id')
-      .eq('codigo', codigo.toUpperCase())
-      .single();
+      .eq('codigo', cleanCode)
+      .maybeSingle();
 
     if (error) {
-      return { valid: false, error: 'Código de referência inválido' };
+      console.error('Erro ao validar código de referência:', error);
+      return { valid: false, error: 'Erro ao validar código de referência' };
     }
 
-    return { valid: true, referenciaId: referencia.id, participanteId: referencia.participante_id };
+    if (!referencia) {
+      return { valid: false, error: 'Código de referência inválido ou não encontrado' };
+    }
+
+    // Verificar se o usuário está ativo
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, active')
+      .eq('id', referencia.participante_id)
+      .single();
+
+    if (profileError || !profile?.active) {
+      return { valid: false, error: 'Código de referência inválido ou inativo' };
+    }
+
+    return { 
+      valid: true, 
+      referenciaId: referencia.id, 
+      participanteId: referencia.participante_id,
+      ownerName: profile.full_name
+    };
   } catch (error) {
-    return { valid: false, error: 'Erro ao validar código' };
+    console.error('Erro inesperado ao validar código:', error);
+    return { valid: false, error: 'Erro inesperado ao validar código' };
   }
 };
 
@@ -472,3 +521,44 @@ export const useReferrals = () => {
     completeReferral
   };
 };
+
+// Nova função encapsulada usando MCP direto
+export async function validateReferralCodeMCP(codigo: string) {
+  try {
+    if (!codigo || codigo.trim().length < 3) {
+      return { isValid: false, error: 'Código deve ter pelo menos 3 caracteres' }
+    }
+
+    const trimmedCode = codigo.trim().toUpperCase()
+
+    // Consulta SQL direta que faz JOIN e evita problemas de RLS
+    const { data, error } = await supabase.rpc('validate_referral_code_direct', {
+      input_code: trimmedCode
+    })
+
+    if (error) {
+      console.error('Erro ao validar código:', error)
+      return { isValid: false, error: 'Erro interno do servidor' }
+    }
+
+    if (!data || data.length === 0) {
+      return { isValid: false, error: 'Código inválido ou expirado' }
+    }
+
+    const referralData = data[0]
+    
+    if (!referralData.active) {
+      return { isValid: false, error: 'Usuário do código não está ativo' }
+    }
+
+    return {
+      isValid: true,
+      ownerName: referralData.full_name,
+      ownerId: referralData.participante_id
+    }
+
+  } catch (error) {
+    console.error('Erro na validação MCP:', error)
+    return { isValid: false, error: 'Erro interno do servidor' }
+  }
+}

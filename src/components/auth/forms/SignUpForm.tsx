@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignUpCredentials, UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
-import { validateReferralCodeStandalone } from "@/hooks/useReferrals";
+import { validateReferralCodeMCP } from "@/hooks/useReferrals";
 
 interface SignUpFormProps {
   loading: boolean;
@@ -20,12 +20,14 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [validatingCode, setValidatingCode] = useState(false);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
+  const [codeOwnerName, setCodeOwnerName] = useState<string | null>(null);
   const { toast } = useToast();
 
 
   const handleReferralCodeChange = async (code: string) => {
     setReferralCode(code);
     setCodeValid(null);
+    setCodeOwnerName(null);
     
     if (code.trim().length === 0) return;
     
@@ -36,8 +38,11 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
     
     setValidatingCode(true);
     try {
-      const result = await validateReferralCodeStandalone(code.trim().toUpperCase());
-      setCodeValid(result.valid);
+      const result = await validateReferralCodeMCP(code.trim().toUpperCase());
+              setCodeValid(result.isValid);
+        if (result.isValid && result.ownerName) {
+        setCodeOwnerName(result.ownerName);
+      }
     } catch (error) {
       console.error('Erro ao validar código:', error);
       setCodeValid(false);
@@ -164,7 +169,7 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
                   : 'text-yellow-400'
             }`}>
               {codeValid === true 
-                ? '✓ Código válido! Você ganhará pontos extras ao se cadastrar.' 
+                ? `✓ Código válido! Você ganhará pontos extras ao se cadastrar. Dono: ${codeOwnerName}` 
                 : codeValid === false 
                   ? '✗ Código inválido ou expirado.' 
                   : 'Verificando código...'}
