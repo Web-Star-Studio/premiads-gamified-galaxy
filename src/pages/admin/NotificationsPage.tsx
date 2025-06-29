@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -8,13 +9,17 @@ import { Label } from '../../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Separator } from '../../components/ui/separator'
 import { Badge } from '../../components/ui/badge'
-import { Send, Settings, History, Bell, Users, Globe } from 'lucide-react'
+import { Send, Settings, History, Bell, Users, Globe, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useAdminNotifications, type SendNotificationData } from '../../hooks/admin/useAdminNotifications'
 import { useToast } from '../../hooks/use-toast'
+import { SidebarProvider, SidebarInset } from '../../components/ui/sidebar'
+import AdminSidebar from '../../components/admin/AdminSidebar'
+import AdminHeader from '../../components/admin/AdminHeader'
 
 function NotificationsPage() {
+  const navigate = useNavigate()
   const {
     isLoading,
     settings,
@@ -42,13 +47,23 @@ function NotificationsPage() {
 
   // Load initial data
   useEffect(() => {
-    getSettings()
+    console.log('NotificationsPage - Loading settings...')
+    getSettings().then(result => {
+      console.log('NotificationsPage - Settings result:', result)
+    }).catch(error => {
+      console.error('NotificationsPage - Settings error:', error)
+    })
   }, [getSettings])
 
   // Load history only when history tab is active
   useEffect(() => {
     if (activeTab === 'history') {
-      getNotificationsHistory(1, 10)
+      console.log('NotificationsPage - Loading history...')
+      getNotificationsHistory(1, 10).then(result => {
+        console.log('NotificationsPage - History result:', result)
+      }).catch(error => {
+        console.error('NotificationsPage - History error:', error)
+      })
     }
   }, [activeTab, getNotificationsHistory])
 
@@ -96,15 +111,31 @@ function NotificationsPage() {
   }
   
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Notificações</h1>
-          <p className="text-muted-foreground">
-            Gerencie notificações e configurações do sistema
-          </p>
-        </div>
-      </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
+        <AdminSidebar />
+        <SidebarInset className="overflow-y-auto pb-20 fancy-scrollbar">
+          <AdminHeader />
+          
+          <div className="container mx-auto p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="hover:bg-galaxy-purple/20"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold">Notificações</h1>
+                  <p className="text-muted-foreground">
+                    Gerencie notificações e configurações do sistema
+                  </p>
+                </div>
+              </div>
+            </div>
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 rounded-lg bg-muted p-1">
@@ -366,6 +397,9 @@ function NotificationsPage() {
               </Card>
       )}
           </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   )
 }
 

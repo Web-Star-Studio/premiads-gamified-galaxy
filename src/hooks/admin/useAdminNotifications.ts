@@ -19,7 +19,7 @@ export interface AdminNotification {
   profiles?: {
     full_name: string
     user_type: string
-  }
+  } | null
 }
 
 export interface SendNotificationData {
@@ -80,32 +80,26 @@ export function useAdminNotifications() {
   }, [toast])
 
   const getSettings = useCallback(async () => {
+    console.log('useAdminNotifications - getSettings called')
     setIsLoading(true)
     try {
-      const { data: result, error } = await supabase.functions.invoke('admin-notifications', {
-        body: { action: 'get_settings' }
-      })
+      // Try direct database query first as fallback for edge function issues
+      console.log('useAdminNotifications - Using direct database query')
+      const { data: settingsData, error: dbError } = await supabase
+        .from('admin_notification_settings')
+        .select('setting_key, setting_value')
 
-      if (error) throw error
+      if (dbError) throw dbError
 
-      // Edge function may return settings at root or inside a "settings" key
-      const rawSettings = (result?.settings ?? result) as Record<string, { value?: boolean } | boolean>
+      console.log('useAdminNotifications - Database settings:', settingsData)
 
       const formattedSettings: NotificationSettings = {
-        global_notifications_enabled:
-          (typeof rawSettings.global_notifications_enabled === 'object'
-            ? rawSettings.global_notifications_enabled?.value
-            : rawSettings.global_notifications_enabled) ?? false,
-        user_notifications_enabled:
-          (typeof rawSettings.user_notifications_enabled === 'object'
-            ? rawSettings.user_notifications_enabled?.value
-            : rawSettings.user_notifications_enabled) ?? false,
-        system_notifications_enabled:
-          (typeof rawSettings.system_notifications_enabled === 'object'
-            ? rawSettings.system_notifications_enabled?.value
-            : rawSettings.system_notifications_enabled) ?? false
+        global_notifications_enabled: settingsData?.find(s => s.setting_key === 'global_notifications_enabled')?.setting_value ?? false,
+        user_notifications_enabled: settingsData?.find(s => s.setting_key === 'user_notifications_enabled')?.setting_value ?? false,
+        system_notifications_enabled: settingsData?.find(s => s.setting_key === 'system_notifications_enabled')?.setting_value ?? false
       }
 
+      console.log('useAdminNotifications - Formatted settings:', formattedSettings)
       setSettings(formattedSettings)
       return { success: true, data: formattedSettings }
     } catch (error: any) {
@@ -124,14 +118,18 @@ export function useAdminNotifications() {
   const updateSettings = useCallback(async (newSettings: Partial<NotificationSettings>) => {
     setIsLoading(true)
     try {
-      const { data: result, error } = await supabase.functions.invoke('admin-notifications', {
-        body: {
-          action: 'update_settings',
-          settings: newSettings
-        }
-      })
-
-      if (error) throw error
+      // Update each setting directly in the database
+      for (const [key, value] of Object.entries(newSettings)) {
+        const { error } = await supabase
+          .from('admin_notification_settings')
+          .update({ 
+            setting_value: value,
+            updated_at: new Date().toISOString()
+          })
+          .eq('setting_key', key)
+        
+        if (error) throw error
+      }
 
       // Update local state
       setSettings(prev => prev ? { ...prev, ...newSettings } : null)
@@ -142,7 +140,7 @@ export function useAdminNotifications() {
         variant: 'default'
       })
 
-      return { success: true, data: result }
+      return { success: true, data: newSettings }
     } catch (error: any) {
       console.error('Error updating settings:', error)
       toast({
@@ -159,40 +157,65 @@ export function useAdminNotifications() {
   const getNotificationsHistory = useCallback(async (page: number = 1, limit: number = 20) => {
     setIsLoading(true)
     try {
-      const { data: result, error } = await supabase.functions.invoke('admin-notifications', {
-        body: {
-          action: 'get_notifications_history',
-          page,
-          limit
-        }
-      })
+      const offset = (page - 1) * limit
 
-      if (error) {
-        console.error('Edge Function error:', error)
-        throw error
+      // Fetch notifications with user profile info
+      const { data: notifications, error: notificationsError } = await supabase
+        .from('notifications')
+        .select(`
+          id,
+          title,
+          message,
+          type,
+          category,
+          data,
+          created_at,
+          profiles:user_id (
+            full_name,
+            user_type
+          )
+        `)
+        .eq('category', 'system')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (notificationsError) throw notificationsError
+
+      // Count total notifications for pagination
+      const { count, error: countError } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'system')
+
+      if (countError) throw countError
+
+      const totalPages = Math.ceil((count || 0) / limit)
+      
+      const paginationInfo = {
+        page,
+        limit,
+        total: count || 0,
+        pages: totalPages
       }
 
-      if (!result) {
-        console.warn('No data returned from Edge Function')
-        setNotifications([])
-        setPagination(null)
-        return { success: true, data: { notifications: [], pagination: null } }
+      // Transform notifications to match expected type
+      const transformedNotifications = (notifications || []).map(notification => ({
+        ...notification,
+        profiles: notification.profiles?.[0] || null
+      }))
+      
+      setNotifications(transformedNotifications)
+      setPagination(paginationInfo)
+
+      return { 
+        success: true, 
+        data: { 
+          notifications: notifications || [], 
+          pagination: paginationInfo 
+        } 
       }
-
-      setNotifications(result.notifications || [])
-      setPagination(result.pagination || null)
-
-      return { success: true, data: result }
     } catch (error: any) {
       console.error('Error fetching notifications history:', error)
-      
-      // More detailed error logging
-      if (error.context) {
-        console.error('Error context:', error.context)
-      }
-      if (error.details) {
-        console.error('Error details:', error.details)
-      }
       
       toast({
         title: 'Erro',
