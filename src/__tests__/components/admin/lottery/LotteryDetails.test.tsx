@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@/utils/test-utils';
 import LotteryDetails from '@/components/admin/lottery/LotteryDetails';
@@ -53,6 +54,7 @@ describe('LotteryDetails Component', () => {
   };
   
   const mockOnStatusChange = jest.fn();
+  const mockOnDrawRaffle = jest.fn();
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -63,6 +65,7 @@ describe('LotteryDetails Component', () => {
       <LotteryDetails 
         selectedLottery={mockLottery}
         onStatusChange={mockOnStatusChange}
+        onDrawRaffle={mockOnDrawRaffle}
       />
     );
     
@@ -80,6 +83,7 @@ describe('LotteryDetails Component', () => {
       <LotteryDetails 
         selectedLottery={mockLottery}
         onStatusChange={mockOnStatusChange}
+        onDrawRaffle={mockOnDrawRaffle}
       />
     );
     
@@ -100,6 +104,7 @@ describe('LotteryDetails Component', () => {
       <LotteryDetails 
         selectedLottery={mockCompletedLottery}
         onStatusChange={mockOnStatusChange}
+        onDrawRaffle={mockOnDrawRaffle}
       />
     );
     
@@ -114,6 +119,7 @@ describe('LotteryDetails Component', () => {
       <LotteryDetails 
         selectedLottery={mockLottery}
         onStatusChange={mockOnStatusChange}
+        onDrawRaffle={mockOnDrawRaffle}
       />
     );
     
@@ -132,6 +138,7 @@ describe('LotteryDetails Component', () => {
       <LotteryDetails 
         selectedLottery={mockLottery}
         onStatusChange={mockOnStatusChange}
+        onDrawRaffle={mockOnDrawRaffle}
       />
     );
     
