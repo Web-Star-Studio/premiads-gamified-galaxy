@@ -1,4 +1,6 @@
 
+import { MissionType } from '@/hooks/useMissionsTypes';
+
 export interface SupabaseMission {
   id: string;
   title: string;
@@ -27,6 +29,7 @@ export interface SupabaseMission {
 export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission => ({
   ...mission,
   description: mission.description || '',
+  brand: mission.brand || '',
   requirements: mission.requirements || [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
@@ -35,18 +38,20 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission =
   cashback_reward: mission.cashback_reward || 0,
   tickets_reward: mission.tickets_reward || 0,
   hasUserSubmission: false,
+  type: mission.type as MissionType,
 });
 
 export interface Mission {
   id: string;
   title: string;
   description: string; // Made required to match other Mission interfaces
-  type: string;
+  type: MissionType; // Changed from string to MissionType
   requirements: string | string[];
   rifas: number;
   points?: number;
   tickets_reward: number; // Made required
   cashback_reward: number; // Made required
+  brand: string; // Made required
   has_badge?: boolean;
   has_lootbox?: boolean;
   badge_image_url?: string;
@@ -54,7 +59,6 @@ export interface Mission {
   deadline?: string;
   created_at?: string;
   advertiser_id?: string;
-  brand?: string;
   cost_in_tokens?: number;
   business_type?: string;
   hasUserSubmission?: boolean;

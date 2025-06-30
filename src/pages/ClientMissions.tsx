@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ import MissionDetails from "@/components/client/missions/MissionDetails";
 import FilteredMissionsList from "@/components/client/missions/FilteredMissionsList";
 import MissionDialog from "@/components/client/missions/MissionDialog";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { Mission as UnifiedMission } from "@/types/mission-unified";
 
 const ClientMissions = () => {
   const { userName, userType } = useUser();
@@ -25,8 +27,8 @@ const ClientMissions = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { 
     loading, 
-    missions, 
-    selectedMission, 
+    missions: rawMissions, 
+    selectedMission: rawSelectedMission, 
     setSelectedMission, 
     currentFilter, 
     setFilter,
@@ -35,6 +37,23 @@ const ClientMissions = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
+
+  // Convert missions to the expected format
+  const missions = rawMissions.map((mission: UnifiedMission) => ({
+    ...mission,
+    brand: mission.brand || '',
+    description: mission.description || '',
+    cashback_reward: mission.cashback_reward || 0,
+    tickets_reward: mission.tickets_reward || 0,
+  }));
+
+  const selectedMission = rawSelectedMission ? {
+    ...rawSelectedMission,
+    brand: rawSelectedMission.brand || '',
+    description: rawSelectedMission.description || '',
+    cashback_reward: rawSelectedMission.cashback_reward || 0,
+    tickets_reward: rawSelectedMission.tickets_reward || 0,
+  } : null;
 
   useEffect(() => {
     // TEMPORARILY DISABLED: Redirect if user is not a participant

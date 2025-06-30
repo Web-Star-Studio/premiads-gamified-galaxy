@@ -1,24 +1,24 @@
 
 export interface UserLevel {
-  id: number;
-  name: string;
+  id: string;
   min_points: number;
-  max_points: number | null;
-  points_multiplier: number;
-  icon: string;
+  max_points: number;
+  name: string;
   color: string;
+  icon: string;
   description: string;
+  points_multiplier: number;
   benefits: {
     ticket_discount: number;
-    access_to_exclusive_raffles: boolean;
     priority_support: boolean;
     early_access: boolean;
+    access_to_exclusive_raffles: boolean;
   };
 }
 
 export interface UserLevelInfo {
   currentLevel: UserLevel;
-  nextLevel: UserLevel | null;
+  nextLevel?: UserLevel;
   progress: number;
   pointsToNextLevel: number;
 }

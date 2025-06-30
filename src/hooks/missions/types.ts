@@ -1,10 +1,12 @@
 
+import { MissionType } from '@/hooks/useMissionsTypes';
+
 export interface Mission {
   id: string;
   title: string;
   description: string;
   brand: string;
-  type: string;
+  type: MissionType;
   tickets_reward: number;
   cashback_reward: number;
   rifas: number;
