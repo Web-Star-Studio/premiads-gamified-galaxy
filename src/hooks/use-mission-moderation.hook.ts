@@ -40,12 +40,12 @@ export const useMissionModeration = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      const moderatorId = userData.user.id; // Changed from approverId to moderatorId
+      const approverId = userData.user.id;
 
       // Process submission
       const result = await finalizeMissionSubmission({
         submissionId,
-        moderatorId, // Changed from approverId to moderatorId
+        approverId,
         decision,
         stage,
         feedback

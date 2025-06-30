@@ -29,13 +29,11 @@ export function useMissions() {
           type: 'review',
           tickets_reward: 50,
           cashback_reward: 5.00,
-          rifas: 50,
           status: 'available',
           requirements: ['Fazer uma avaliação', 'Enviar screenshot'],
           has_badge: true,
           has_lootbox: false,
-          cost_in_tokens: 10,
-          start_date: new Date().toISOString(),
+      
         },
         {
           id: '2',
@@ -45,13 +43,11 @@ export function useMissions() {
           type: 'photo',
           tickets_reward: 75,
           cashback_reward: 7.50,
-          rifas: 75,
           status: 'available',
           requirements: ['Foto em alta qualidade', 'Produto visível'],
           has_badge: false,
           has_lootbox: true,
-          cost_in_tokens: 15,
-          start_date: new Date().toISOString(),
+      
         }
       ];
 

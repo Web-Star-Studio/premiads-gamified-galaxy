@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUser } from '@/context/UserContext';
-import { RaffleService } from '@/services/raffles';
+import raffleService from '@/services/raffles';
 import { Lottery, LotteryParticipation } from '@/types/lottery';
 import { useToast } from '@/hooks/use-toast';
 import { useSounds } from '@/hooks/use-sounds';
@@ -76,7 +75,7 @@ export function useRaffleData(raffleId: number | string) {
     async function fetchRaffleData() {
       setIsLoading(true);
       try {
-        const { data } = await RaffleService.getRaffleById(String(raffleId));
+        const data = await raffleService.getRaffleById(String(raffleId));
         if (data) {
           setRaffle(data);
           
@@ -160,7 +159,7 @@ export function useRaffleData(raffleId: number | string) {
         }
         
         // Fetch user's rifas from profile
-        const { data: userProfile } = await RaffleService.getUserProfile(userId);
+        const userProfile = await raffleService.getUserProfile(userId);
         if (userProfile) {
           setUserTokens({
             rifas: userProfile.rifas || 0,
@@ -221,19 +220,16 @@ export function useRaffleData(raffleId: number | string) {
     setParticipationLoading(true);
     
     try {
-      // Mock participation result since we don't have the actual method
-      const mockResult = {
-        id: 'mock-id',
-        user_id: userId,
-        lottery_id: String(raffleId),
-        numbers: Array.from({ length: numberOfTickets }, (_, i) => Math.floor(Math.random() * 1000) + 1),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Participate in raffle
+      const result = await raffleService.participateInRaffle(
+        userId,
+        String(raffleId),
+        numberOfTickets
+      );
       
       // Update user data
-      setParticipation(mockResult);
-      setUserNumbers(mockResult.numbers);
+      setParticipation(result);
+      setUserNumbers(result.numbers);
       
       // Update user tokens
       setUserTokens(prev => ({

@@ -55,7 +55,7 @@ const PointsSection = ({ totalPoints = 0 }: PointsSectionProps) => {
       </TooltipProvider>
       
       {!levelLoading && levelInfo && (
-        <UserLevel levelInfo={levelInfo as any} />
+        <UserLevel levelInfo={levelInfo} />
       )}
       
       <TicketsButton />

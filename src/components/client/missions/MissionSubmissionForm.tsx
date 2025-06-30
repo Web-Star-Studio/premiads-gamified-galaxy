@@ -1,137 +1,202 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Mission } from '@/hooks/missions/types';
-import { Upload, X } from 'lucide-react';
+import React, { useState } from "react";
+import { Camera, X, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Mission } from "@/hooks/useMissions";
+import { useToast } from "@/hooks/use-toast";
+import { MissionType } from "@/hooks/useMissionsTypes";
 
 interface MissionSubmissionFormProps {
-  mission: Mission;
-  onSubmit: (data: any) => Promise<boolean>;
-  onCancel: () => void;
-  loading?: boolean;
+  mission: Mission | null;
+  loading: boolean;
+  onSubmit: (submissionData: any) => void;
 }
 
-const MissionSubmissionForm: React.FC<MissionSubmissionFormProps> = ({
-  mission,
-  onSubmit,
-  onCancel,
-  loading = false
-}) => {
-  const [formData, setFormData] = useState({
-    text: '',
-    image: null as File | null,
-    comment: ''
-  });
+const MissionSubmissionForm = ({ mission, loading, onSubmit }: MissionSubmissionFormProps) => {
+  const [missionAnswer, setMissionAnswer] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const submissionData = {
-      ...formData,
-      mission_id: mission.id,
-      mission_type: mission.type
-    };
+  if (!mission) return null;
 
-    const success = await onSubmit(submissionData);
-    if (success) {
-      setFormData({ text: '', image: null, comment: '' });
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, image: file }));
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const removeImage = () => {
-    setFormData(prev => ({ ...prev, image: null }));
+  const handleClearImage = () => {
+    setImagePreview(null);
+  };
+
+  const handleSubmit = () => {
+    // Prepare submission data based on mission type
+    let submissionData = {};
+    
+    if (mission.type === "form" || mission.type === "survey") {
+      submissionData = { answer: missionAnswer };
+    } else if (mission.type === "photo" || mission.type === "video") {
+      if (!imagePreview) {
+        toast({
+          title: "Arquivo necessário",
+          description: "Por favor, envie uma imagem ou vídeo para concluir esta missão.",
+          variant: "destructive",
+        });
+        return;
+      }
+      submissionData = { mediaUrl: imagePreview };
+    } else if (mission.type === "social") {
+      submissionData = { shareLink: missionAnswer };
+    } else if (mission.type === "checkin") {
+      submissionData = { checkin: true };
+    }
+    
+    onSubmit(submissionData);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Enviar Submissão - {mission.title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="text">Descrição da Missão</Label>
-            <Textarea
-              id="text"
-              placeholder="Descreva como você completou a missão..."
-              value={formData.text}
-              onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
-              required
-            />
-          </div>
-
-          {mission.type === 'photo' && (
-            <div>
-              <Label htmlFor="image">Upload de Imagem</Label>
+    <div className="space-y-4 my-4">
+      {(mission.type === "form" || mission.type === "survey") && (
+        <div className="space-y-2">
+          <Label htmlFor="answer">Sua resposta</Label>
+          <Textarea 
+            id="answer"
+            placeholder="Digite sua resposta aqui..."
+            className="min-h-[150px]"
+            value={missionAnswer}
+            onChange={(e) => setMissionAnswer(e.target.value)}
+          />
+        </div>
+      )}
+      
+      {(mission.type === "photo" || mission.type === "video") && (
+        <div className="space-y-2">
+          <Label>Enviar {mission.type === "photo" ? "foto" : "vídeo"}</Label>
+          {imagePreview ? (
+            <div className="relative">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="max-h-[200px] w-full object-cover rounded-md" 
+              />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="absolute top-2 right-2"
+                onClick={handleClearImage}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-gray-400 rounded-md p-6 text-center">
+              <Camera className="mx-auto h-8 w-8 text-gray-400" />
               <div className="mt-2">
-                {formData.image ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{formData.image.name}</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={removeImage}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="image"
-                      className="flex flex-col items-center cursor-pointer"
-                    >
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-600">
-                        Clique para fazer upload da imagem
-                      </span>
-                    </label>
-                  </div>
-                )}
+                <label htmlFor="file-upload" className="cursor-pointer text-neon-cyan hover:underline">
+                  Clique para enviar
+                </label>
+                <input
+                  id="file-upload"
+                  name="file-upload"
+                  type="file"
+                  className="sr-only"
+                  accept={mission.type === "photo" ? "image/*" : "video/*"}
+                  onChange={handleImageUpload}
+                />
               </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {mission.type === "photo" 
+                  ? "PNG, JPG ou GIF até 5MB" 
+                  : "MP4 ou MOV até 50MB"}
+              </p>
             </div>
           )}
-
-          <div>
-            <Label htmlFor="comment">Comentários Adicionais</Label>
-            <Textarea
-              id="comment"
-              placeholder="Comentários opcionais..."
-              value={formData.comment}
-              onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancelar
+          
+          {mission.type === "photo" && (
+            <p className="text-sm text-gray-400">
+              Dica: Certifique-se de que a foto esteja bem iluminada e claramente mostrando o produto.
+            </p>
+          )}
+        </div>
+      )}
+      
+      {(mission.type === "social") && (
+        <div className="space-y-2">
+          <Label htmlFor="share-link">Link da postagem</Label>
+          <Input
+            id="share-link"
+            placeholder="Cole o link da sua postagem aqui..."
+            value={missionAnswer}
+            onChange={(e) => setMissionAnswer(e.target.value)}
+          />
+          <p className="text-sm text-gray-400">
+            Cole o link da sua postagem nas redes sociais contendo a hashtag solicitada.
+          </p>
+        </div>
+      )}
+      
+      {(mission.type === "checkin") && (
+        <div className="space-y-2">
+          <Label>Check-in na loja</Label>
+          <div className="bg-galaxy-deepPurple/80 rounded-md p-4">
+            <p className="text-center">
+              Pressione o botão abaixo para realizar check-in usando sua localização atual
+            </p>
+            <Button className="w-full mt-4">
+              <MapPin className="w-4 h-4 mr-2" />
+              Fazer Check-in
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Enviando...' : 'Enviar Submissão'}
-            </Button>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+      )}
+      
+      <div className="flex items-start space-x-2 pt-4">
+        <Checkbox 
+          id="terms" 
+          checked={agreedToTerms}
+          onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+        />
+        <div className="grid gap-1.5 leading-none">
+          <Label
+            htmlFor="terms"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Declaro que li e concordo com os termos de submissão
+          </Label>
+          <p className="text-sm text-gray-400">
+            Autorizo o uso do conteúdo enviado para fins promocionais.
+          </p>
+        </div>
+      </div>
+      
+      <div className="pt-4 flex justify-end space-x-2">
+        <Button 
+          variant="outline" 
+          onClick={() => onSubmit(null)}
+        >
+          Cancelar
+        </Button>
+        <Button 
+          onClick={handleSubmit}
+          disabled={
+            (mission.type !== "checkin" && !missionAnswer && !imagePreview) || 
+            !agreedToTerms || 
+            loading
+          }
+        >
+          {loading ? "Enviando..." : "Enviar"}
+        </Button>
+      </div>
+    </div>
   );
 };
 

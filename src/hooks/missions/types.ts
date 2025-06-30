@@ -1,40 +1,33 @@
-
-import { MissionType } from '@/hooks/useMissionsTypes';
+export type MissionStatus = "available" | "in_progress" | "pending_approval" | "completed";
 
 export interface Mission {
   id: string;
   title: string;
   description: string;
-  brand: string;
-  type: MissionType;
+  brand?: string;
+  type: string;
   tickets_reward: number;
-  cashback_reward: number;
   rifas: number;
-  status: string;
+  cashback_reward: number;
+  deadline?: string;
+  status: MissionStatus | string;
   requirements: string[];
-  has_badge: boolean;
-  has_lootbox: boolean;
-  cost_in_tokens: number;
   business_type?: string;
   target_audience_gender?: string;
   target_audience_age_min?: number;
   target_audience_age_max?: number;
   target_audience_region?: string;
-  start_date: string;
+  has_badge?: boolean;
+  has_lootbox?: boolean;
+  hasUserSubmission?: boolean; // Flag para indicar se o usuário já submeteu
+
+  target_filter?: any;
+  min_purchase?: number;
+  cost_in_tokens?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
-export interface MissionSubmission {
-  id: string;
-  mission_id: string;
-  user_id: string;
-  submission_data: any;
-  status: 'pending' | 'approved' | 'rejected' | 'in_progress';
-  submitted_at: string;
-  updated_at: string;
-}
-
-export interface MissionFilters {
-  status?: string;
-  type?: string;
-  brand?: string;
+export interface UseMissionsOptions {
+  initialFilter?: "available" | "in_progress" | "pending" | "completed";
 }

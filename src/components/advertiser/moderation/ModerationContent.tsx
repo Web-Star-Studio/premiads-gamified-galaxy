@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import SubmissionsList from './SubmissionsList';
@@ -234,9 +233,9 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   const handleApprove = async (submission: Submission) => {
     try {
       const { data: session } = await supabase.auth.getSession();
-      const moderatorId = session?.session?.user?.id;
+      const approverId = session?.session?.user?.id;
       
-      if (!moderatorId) {
+      if (!approverId) {
         throw new Error('Usuário não autenticado');
       }
       
@@ -268,7 +267,6 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        moderatorId: moderatorId,
         decision: 'approve',
         stage: stage,
       });
@@ -300,13 +298,6 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
   
   const handleReject = async (submission: Submission, rejectionReason: string = '') => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const moderatorId = session?.session?.user?.id;
-      
-      if (!moderatorId) {
-        throw new Error('Usuário não autenticado');
-      }
-      
       console.log(`Rejecting submission ${submission.id}, status: ${submission.status}, second_instance: ${submission.second_instance}`);
       
       // Verificar se a submissão já foi processada
@@ -335,7 +326,6 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
       // Use the finalizeMissionSubmission function
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        moderatorId: moderatorId,
         decision: 'reject',
         stage: stage,
       });

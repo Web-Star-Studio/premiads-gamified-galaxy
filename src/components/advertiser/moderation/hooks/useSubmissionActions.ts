@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,15 +14,15 @@ export function useSubmissionActions() {
 
       const result = await finalizeMissionSubmission({
         submissionId,
-        moderatorId: user.id,
+        approverId: user.id,
         decision: 'approve',
         stage
       });
 
-      if (result.success) {
+      if (result.success && result.result) {
         toast({
           title: "Submissão aprovada",
-          description: "Usuário recebeu recompensas.",
+          description: `Usuário recebeu ${result.result.badge_earned ? 'badge e ' : ''}recompensas.`,
         });
 
         // Invalidate queries to refresh the data
@@ -48,7 +47,7 @@ export function useSubmissionActions() {
 
       const result = await finalizeMissionSubmission({
         submissionId,
-        moderatorId: user.id,
+        approverId: user.id,
         decision: 'reject',
         stage,
         feedback

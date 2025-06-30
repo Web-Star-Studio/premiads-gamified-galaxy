@@ -1,6 +1,3 @@
-
-import { MissionType } from '@/hooks/useMissionsTypes';
-
 export interface SupabaseMission {
   id: string;
   title: string;
@@ -18,8 +15,6 @@ export interface SupabaseMission {
   brand: string | null;
   cost_in_tokens: number | null;
   business_type: string | null;
-  cashback_reward: number | null;
-  tickets_reward: number | null;
 
   start_date: string | null;
   end_date: string | null;
@@ -28,49 +23,36 @@ export interface SupabaseMission {
 
 export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission => ({
   ...mission,
-  description: mission.description || '',
-  brand: mission.brand || '',
-  requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
+  requirements: mission.requirements || [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
   cost_in_tokens: mission.cost_in_tokens || 0,
   max_participants: mission.max_participants || 0,
-  cashback_reward: mission.cashback_reward || 0,
-  tickets_reward: mission.tickets_reward || 0,
   hasUserSubmission: false,
-  type: mission.type as MissionType,
-  start_date: mission.start_date || new Date().toISOString(),
 });
 
 export interface Mission {
   id: string;
   title: string;
-  description: string;
-  type: MissionType;
-  requirements: string[];
+  description?: string;
+  type: string;
+  requirements: string | string[];
   rifas: number;
   points?: number;
-  tickets_reward: number;
-  cashback_reward: number;
-  brand: string;
-  has_badge: boolean;
-  has_lootbox: boolean;
+  tickets_reward?: number;
+  has_badge?: boolean;
+  has_lootbox?: boolean;
   badge_image_url?: string;
   status: string;
   deadline?: string;
   created_at?: string;
   advertiser_id?: string;
-  cost_in_tokens: number;
+  brand?: string;
+  cost_in_tokens?: number;
   business_type?: string;
   hasUserSubmission?: boolean;
 
-  start_date: string;
+  start_date?: string;
   end_date?: string;
   max_participants?: number;
-  
-  // Additional targeting properties
-  target_audience_gender?: string;
-  target_audience_age_min?: number;
-  target_audience_age_max?: number;
-  target_audience_region?: string;
 }

@@ -1,7 +1,6 @@
-
 import { Raffle, RafflePrize } from '../types/raffleTypes';
 import { RAFFLES } from '../data/mockRaffles';
-import { RaffleService } from '../data/mockRaffles';
+import { raffleService } from '../data/mockRaffles';
 import { Lottery } from '@/types/lottery';
 
 /**
@@ -46,8 +45,7 @@ export const fetchRaffleById = async (raffleId: number): Promise<Raffle | null> 
  */
 export const fetchRaffleByIdUsingService = async (raffleId: number | string): Promise<Lottery | null> => {
   try {
-    const { data } = await RaffleService.getRaffleById(String(raffleId));
-    return data;
+    return await raffleService.getRaffleById(String(raffleId));
   } catch (error) {
     console.error("Error fetching raffle:", error);
     return null;
@@ -59,8 +57,7 @@ export const fetchRaffleByIdUsingService = async (raffleId: number | string): Pr
  */
 export const fetchActiveRaffles = async (): Promise<Lottery[]> => {
   try {
-    const { data } = await RaffleService.getActiveRaffles();
-    return data || [];
+    return await raffleService.getActiveRaffles();
   } catch (error) {
     console.error("Error fetching active raffles:", error);
     return [];

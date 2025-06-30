@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -17,8 +16,6 @@ import MissionDetails from "@/components/client/missions/MissionDetails";
 import FilteredMissionsList from "@/components/client/missions/FilteredMissionsList";
 import MissionDialog from "@/components/client/missions/MissionDialog";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { Mission as UnifiedMission } from "@/types/mission-unified";
-import { Mission as UseMissionsTypeMission } from "@/hooks/useMissionsTypes";
 
 const ClientMissions = () => {
   const { userName, userType } = useUser();
@@ -28,8 +25,8 @@ const ClientMissions = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { 
     loading, 
-    missions: rawMissions, 
-    selectedMission: rawSelectedMission, 
+    missions, 
+    selectedMission, 
     setSelectedMission, 
     currentFilter, 
     setFilter,
@@ -38,28 +35,6 @@ const ClientMissions = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
-
-  // Convert missions to the expected format for UI components
-  const missions = rawMissions.map((mission: UnifiedMission): UseMissionsTypeMission => ({
-    ...mission,
-    brand: mission.brand || '',
-    description: mission.description || '',
-    cashback_reward: mission.cashback_reward || 0,
-    tickets_reward: mission.tickets_reward || 0,
-    cost_in_tokens: mission.cost_in_tokens || 0,
-    requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
-    start_date: mission.start_date || new Date().toISOString(),
-  }));
-
-  const selectedMission = rawSelectedMission ? {
-    ...rawSelectedMission,
-    brand: rawSelectedMission.brand || '',
-    description: rawSelectedMission.description || '',
-    cashback_reward: rawSelectedMission.cashback_reward || 0,
-    tickets_reward: rawSelectedMission.tickets_reward || 0,
-    cost_in_tokens: rawSelectedMission.cost_in_tokens || 0,
-    requirements: Array.isArray(rawSelectedMission.requirements) ? rawSelectedMission.requirements : [rawSelectedMission.requirements || ''],
-  } : null;
 
   useEffect(() => {
     // TEMPORARILY DISABLED: Redirect if user is not a participant
@@ -83,14 +58,8 @@ const ClientMissions = () => {
     mission.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleMissionClick = (mission: UseMissionsTypeMission) => {
-    // Convert back to UnifiedMission format for setSelectedMission
-    const unifiedMission: UnifiedMission = {
-      ...mission,
-      requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
-      start_date: mission.start_date || new Date().toISOString(),
-    };
-    setSelectedMission(unifiedMission);
+  const handleMissionClick = (mission: any) => {
+    setSelectedMission(mission);
     playSound("pop");
   };
 
@@ -193,12 +162,7 @@ const ClientMissions = () => {
                   <FilteredMissionsList 
                     missions={filteredMissions}
                     onMissionClick={(mission) => {
-                      const unifiedMission: UnifiedMission = {
-                        ...mission,
-                        requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
-                        start_date: mission.start_date || new Date().toISOString(),
-                      };
-                      setSelectedMission(unifiedMission);
+                      setSelectedMission(mission);
                       setIsSubmissionOpen(true);
                     }}
                     emptyMessage="Você não tem missões em progresso no momento."

@@ -116,12 +116,8 @@ function AdminModerationContent({ refreshKey }: AdminModerationContentProps) {
     try {
       console.log(`Admin approving submission ${submission.id} in second instance`);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-      
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        moderatorId: user.id,
         decision: 'approve',
         stage: 'admin',
       });
@@ -157,12 +153,8 @@ function AdminModerationContent({ refreshKey }: AdminModerationContentProps) {
     try {
       console.log(`Admin rejecting submission ${submission.id} in second instance`);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-      
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        moderatorId: user.id,
         decision: 'reject',
         stage: 'admin',
       });
@@ -227,4 +219,4 @@ function AdminModerationContent({ refreshKey }: AdminModerationContentProps) {
   );
 }
 
-export default AdminModerationContent;
+export default AdminModerationContent; 
