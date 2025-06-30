@@ -20,11 +20,31 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
   const [showDialog, setShowDialog] = useState(false);
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
   const [winningNumber, setWinningNumber] = useState<number | null>(null);
+  const [winnerInfo, setWinnerInfo] = useState<{name: string; id: string} | null>(null);
   const { playSound } = useSounds();
   
   // Determina o range de números com base no sorteio
   const minNumber = selectedLottery.number_range?.min || 1;
   const maxNumber = selectedLottery.number_range?.max || selectedLottery.numbers_total;
+  
+  // Monitora mudanças na loteria para capturar resultado do sorteio
+  useEffect(() => {
+    if (selectedLottery.status === 'completed' && selectedLottery.winning_number && isGenerating) {
+      // A loteria foi completada durante um sorteio ativo
+      setTimeout(() => {
+        setIsGenerating(false);
+        setWinningNumber(selectedLottery.winning_number);
+        
+        // Captura informações do ganhador se disponível
+        if (selectedLottery.winner && typeof selectedLottery.winner === 'object' && selectedLottery.winner.name) {
+          setWinnerInfo({
+            name: selectedLottery.winner.name,
+            id: selectedLottery.winner.id
+          });
+        }
+      }, 1000);
+    }
+  }, [selectedLottery.status, selectedLottery.winning_number, selectedLottery.winner, isGenerating]);
   
   const handleDrawRaffle = async () => {
     if (isGenerating) return;
@@ -38,6 +58,7 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
     setShowDialog(true);
     setIsGenerating(true);
     setWinningNumber(null);
+    setWinnerInfo(null);
     
     // Animação de números aleatórios
     let duration = 3000; // 3 segundos
@@ -75,14 +96,7 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
       // Chama a função que realizará o sorteio no backend
       await onDrawRaffle(selectedLottery.id);
       
-      // Aguarda um momento para mostrar o resultado
-      setTimeout(() => {
-        setIsGenerating(false);
-        // O `selectedLottery` será atualizado pelo componente pai, 
-        // mas podemos forçar a exibição do número retornado se a lógica fosse ajustada para isso.
-        // Por enquanto, confiamos na re-renderização.
-        setWinningNumber(selectedLottery.winning_number);
-      }, 1000);
+      // O useEffect irá detectar a mudança na loteria e atualizar os estados
     } catch (error) {
       console.error("Erro ao finalizar o sorteio:", error);
       // Qualquer erro agora interrompe o processo
@@ -116,17 +130,21 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-5xl font-bold text-neon-lime"
+                className="flex flex-col items-center"
               >
-                {selectedLottery.winning_number}
+                <div className="text-5xl font-bold text-neon-lime mb-2">
+                  {selectedLottery.winning_number}
+                </div>
+                {selectedLottery.winner && typeof selectedLottery.winner === 'object' && selectedLottery.winner.name && (
+                  <div className="bg-neon-cyan/10 border border-neon-cyan/30 rounded-lg px-4 py-2">
+                    <div className="text-sm text-neon-cyan font-medium">
+                      🎉 {selectedLottery.winner.name}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : (
               <div className="text-5xl font-bold text-muted-foreground">?</div>
-            )}
-            {selectedLottery.winner && (
-              <div className="mt-2 text-sm text-muted-foreground">
-                Ganhador definido
-              </div>
             )}
           </div>
         </div>
@@ -178,12 +196,45 @@ const RandomNumberGenerator: React.FC<RandomNumberGeneratorProps> = ({
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex flex-col items-center"
                   >
-                    <div className="text-7xl font-bold text-neon-lime mb-6 min-h-[100px]">
-                      {winningNumber}
+                    {/* Resultado do sorteio com número e vencedor */}
+                    <div className="flex flex-col items-center space-y-4 mb-6">
+                      <div className="text-7xl font-bold text-neon-lime min-h-[100px] flex items-center">
+                        {winningNumber}
+                      </div>
+                      
+                      {winnerInfo ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="bg-galaxy-purple/20 border border-neon-cyan/30 rounded-lg px-6 py-3"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">Vencedor</p>
+                              <p className="text-lg font-semibold text-neon-cyan">{winnerInfo.name}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <div className="text-lg text-muted-foreground">Número sorteado!</div>
+                      )}
                     </div>
-                    <p className="text-lg">Número sorteado!</p>
+                    
+                    {winnerInfo && (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        className="text-center text-neon-lime mb-4"
+                      >
+                        🎉 <strong>Parabéns {winnerInfo.name}!</strong>
+                      </motion.p>
+                    )}
+                    
                     <Button 
-                      className="mt-6" 
+                      className="mt-4" 
                       onClick={handleCloseDialog}
                     >
                       Fechar

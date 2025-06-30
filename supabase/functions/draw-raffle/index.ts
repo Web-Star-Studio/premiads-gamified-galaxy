@@ -191,12 +191,30 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch winner profile data
+    const { data: winnerProfile, error: winnerProfileError } = await supabaseClient
+      .from("profiles")
+      .select("id, full_name, email, avatar_url")
+      .eq("id", winnerId)
+      .single();
+
+    if (winnerProfileError) {
+      console.error("Error fetching winner profile:", winnerProfileError);
+      // Continue without winner profile data - not critical
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         winning_number: winningNumber, 
-        winner_id: winnerId, 
-        message: "Sorteio realizado com sucesso! Ganhador encontrado." 
+        winner_id: winnerId,
+        winner: {
+          id: winnerId,
+          name: winnerProfile?.full_name || "Participante",
+          email: winnerProfile?.email || "",
+          avatar_url: winnerProfile?.avatar_url || null
+        },
+        message: `Sorteio realizado com sucesso! Parabéns a ${winnerProfile?.full_name || "Participante"} por ganhar com o número ${winningNumber}!` 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' } }
     );

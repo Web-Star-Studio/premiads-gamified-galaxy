@@ -180,18 +180,14 @@ const LotteryManagement = () => {
         return;
       }
 
-      // Invoke Supabase Edge Function to draw the raffle
-      const { data: result, error } = await supabase.functions.invoke('draw-raffle', {
-        body: { raffleId: lotteryId }, // Ensure correct parameter name as expected by the edge function
+      // Use the new PostgreSQL function to draw the raffle with winner info
+      const { data: result, error } = await supabase.rpc('draw_raffle_with_winner_info', {
+        p_lottery_id: lotteryId
       });
       
       if (error) {
-        // A função agora só deve falhar em caso de erros reais, não por falta de ganhador.
-        // O caso de "nenhum número válido" ainda pode retornar 400.
         let errorMessage = "Não foi possível realizar o sorteio.";
-        if (error.message && error.message.includes("Nenhum participante com números válidos")) {
-          errorMessage = "Sorteio não pode ser realizado: nenhum participante possui números.";
-        } else if (error instanceof Error) {
+        if (error instanceof Error) {
           errorMessage = error.message;
         }
 
@@ -200,21 +196,39 @@ const LotteryManagement = () => {
           description: errorMessage,
           variant: "destructive"
         });
-        throw error; // Propaga o erro para o `RandomNumberGenerator`
+        throw error;
+      }
+
+      // Check if the function execution was successful
+      if (!result?.success) {
+        const errorMessage = result?.error || "Erro desconhecido ao realizar sorteio.";
+        toast({
+          title: "Erro no Sorteio",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        throw new Error(errorMessage);
+      }
+      
+      // Update the selected lottery directly with the result data
+      if (selectedLottery) {
+        const updatedSelectedLottery = {
+          ...selectedLottery,
+          status: 'completed' as const,
+          winning_number: result.winning_number,
+          winner: result.winner || null
+        };
+        setSelectedLottery(updatedSelectedLottery);
       }
       
       // Refresh the lotteries list
       const updatedLotteries = await raffleService.getRaffles();
       setLotteries(updatedLotteries);
       
-      // Update the selected lottery
-      const updatedLottery = await raffleService.getRaffleById(lotteryId);
-      if (updatedLottery) setSelectedLottery(updatedLottery);
-      
-      // Show success toast
+      // Show success toast with winner information
       toast({
         title: "Sorteio realizado!",
-        description: (result as any)?.message || "O sorteio foi realizado com sucesso.",
+        description: result?.message || "O sorteio foi realizado com sucesso.",
       });
       playSound("reward");
     } catch (error) {

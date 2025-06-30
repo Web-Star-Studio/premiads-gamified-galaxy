@@ -31,7 +31,12 @@ export interface Lottery {
   updated_at: string;
   progress: number;
   numbersSold: number;
-  winner: any;
+  winner?: {
+    id: string;
+    name: string;
+    email?: string;
+    avatar_url?: string;
+  } | null;
   prizes: Array<{
     id: number;
     name: string;
