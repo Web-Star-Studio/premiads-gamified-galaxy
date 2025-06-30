@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
+import { useAuthStore } from "@/stores/authStore";
 
 // Função standalone para validar códigos de referência (não requer autenticação)
 export const validateReferralCodeStandalone = async (codigo: string) => {
@@ -100,7 +101,11 @@ export interface ReferralStats {
 }
 
 export const useReferrals = () => {
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { playSound } = useSounds();
+  const user = useAuthStore(state => state.user);
+  
+  const [loading, setLoading] = useState(false);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [referralCode, setReferralCode] = useState("");
   const [referralLink, setReferralLink] = useState("");
@@ -110,8 +115,6 @@ export const useReferrals = () => {
     registrados: 0,
     pontosGanhos: 0
   });
-  const { toast } = useToast();
-  const { playSound } = useSounds();
 
   // Gerar código único baseado no username + ano
   const generateReferralCode = async (userId: string) => {
@@ -202,15 +205,31 @@ export const useReferrals = () => {
         .eq('participante_id', userId)
         .single();
 
-      if (refError) throw refError;
+      if (refError) {
+        console.log('Usuário ainda não tem código de referência');
+        return {
+          totalConvites: 0,
+          pendentes: 0,
+          registrados: 0,
+          pontosGanhos: 0
+        };
+      }
 
-      // Buscar indicações
+      // Buscar indicações usando as tabelas corretas
       const { data: indicacoes, error: indError } = await supabase
         .from('indicacoes')
         .select('status')
-        .eq('referencia_id', userRef.id);
+        .eq('referenciador_id', userId);
 
-      if (indError) throw indError;
+      if (indError) {
+        console.error('Erro ao buscar indicações:', indError);
+        return {
+          totalConvites: 0,
+          pendentes: 0,
+          registrados: 0,
+          pontosGanhos: 0
+        };
+      }
 
       const totalConvites = indicacoes?.length || 0;
       const pendentes = indicacoes?.filter(i => i.status === 'pendente').length || 0;
@@ -236,86 +255,93 @@ export const useReferrals = () => {
 
   useEffect(() => {
     const fetchReferrals = async () => {
+      if (!user?.id) return;
+
       try {
-        const session = await supabase.auth.getSession();
-        const userId = session.data.session?.user.id;
-        
-        if (!userId) {
-          // Se não há usuário autenticado, apenas define loading como false
-          setLoading(false);
-          return;
-        }
-        
-        // Garantir que o usuário tenha um código de referência
-        const userReferralCode = await ensureReferralCode(userId);
-        setReferralCode(userReferralCode);
-        setReferralLink(`${window.location.origin}/registro?ref=${userReferralCode}`);
-        
-        // Buscar estatísticas
-        const referralStats = await fetchReferralStats(userId);
-        setStats(referralStats);
-        
-        // Buscar indicações detalhadas (mantendo compatibilidade)
-        const { data: userRef } = await supabase
+        setLoading(true);
+
+        // Buscar a referência do usuário
+        const { data: userRef, error: refError } = await supabase
           .from('referencias')
           .select('id')
-          .eq('participante_id', userId)
+          .eq('participante_id', user.id)
           .single();
 
-        if (userRef) {
-          const { data: indicacoes } = await supabase
-            .from('indicacoes')
-            .select(`
-              id,
-              status,
-              criado_em,
-              convidado_id
-            `)
-            .eq('referencia_id', userRef.id);
-
-          if (indicacoes) {
-            // Buscar perfis dos convidados
-            const convidadoIds = indicacoes.map(i => i.convidado_id).filter(Boolean);
-            let profiles: any[] = [];
-            
-            if (convidadoIds.length > 0) {
-              const { data: profilesData } = await supabase
-                .from('profiles')
-                .select('id, full_name, email')
-                .in('id', convidadoIds);
-              
-              profiles = profilesData || [];
-            }
-
-            const profileMap = new Map();
-            profiles.forEach(profile => {
-              profileMap.set(profile.id, profile);
-            });
-
-            const mappedReferrals: Referral[] = indicacoes.map(indicacao => {
-              const profile = indicacao.convidado_id ? profileMap.get(indicacao.convidado_id) : null;
-              
-              return {
-                id: indicacao.id,
-                name: profile?.full_name || "Amigo convidado",
-                email: profile?.email,
-                status: indicacao.status === 'completo' ? 'completed' : 'pending' as Referral['status'],
-                date: indicacao.criado_em,
-                completedMissions: indicacao.status === 'completo' ? 1 : 0,
-                rifasEarned: indicacao.status === 'completo' ? 200 : 0
-              };
-            });
-
-            setReferrals(mappedReferrals);
-          }
+        if (refError) {
+          console.log('Usuário ainda não tem código de referência');
+          setReferrals([]);
+          setStats({
+            totalConvites: 0,
+            pendentes: 0,
+            registrados: 0,
+            pontosGanhos: 0
+          });
+          return;
         }
-        
-        playSound("chime");
-      } catch (error: any) {
-        console.error("Error fetching referrals:", error);
+
+        // Buscar indicações com dados dos usuários convidados
+        const { data: indicacoes, error: indError } = await supabase
+          .from('indicacoes')
+          .select(`
+            id,
+            status,
+            created_at,
+            profiles!indicacoes_indicado_id_fkey(
+              id,
+              full_name,
+              email
+            )
+          `)
+          .eq('referenciador_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (indError) {
+          console.error('Erro ao buscar indicações:', indError);
+          setReferrals([]);
+          return;
+        }
+
+        // Transformar dados para o formato esperado
+        const referralsData: Referral[] = (indicacoes || []).map(ind => {
+          const profile = (ind as any).profiles;
+          return {
+            id: ind.id,
+            name: profile?.full_name || 'Nome não disponível',
+            email: profile?.email || 'Email não disponível',
+            status: ind.status === 'pendente' ? 'pending' : 
+                   ind.status === 'completo' ? 'completed' : 'registered',
+            date: ind.created_at,
+            completedMissions: ind.status === 'completo' ? 1 : 0,
+            rifasEarned: ind.status === 'completo' ? 200 : 0,
+            pointsEarned: ind.status === 'completo' ? 200 : 0
+          };
+        });
+
+        setReferrals(referralsData);
+
+        // Calcular estatísticas
+        const totalConvites = referralsData.length;
+        const pendentes = referralsData.filter(r => r.status === 'pending').length;
+        const registrados = referralsData.filter(r => r.status === 'completed').length;
+        const pontosGanhos = registrados * 200;
+
+        setStats({
+          totalConvites,
+          pendentes,
+          registrados,
+          pontosGanhos
+        });
+
+        // Buscar/gerar código de referência
+        const userReferralCode = await ensureReferralCode(user.id);
+        setReferralCode(userReferralCode);
+        setReferralLink(`${window.location.origin}/registro?ref=${userReferralCode}`);
+
+      } catch (error) {
+        console.error('Erro ao buscar referências:', error);
         toast({
-          title: "Erro ao carregar referências",
-          description: error.message,
+          title: "Erro",
+          description: "Não foi possível carregar suas referências.",
           variant: "destructive",
         });
       } finally {
@@ -346,13 +372,13 @@ export const useReferrals = () => {
   };
 
   // Registrar nova indicação
-  const registerReferral = async (referenciaId: string, convidadoId: string) => {
+  const registerReferral = async (referenciadorId: string, indicadoId: string) => {
     try {
       const { error } = await supabase
         .from('indicacoes')
         .insert({
-          referencia_id: referenciaId,
-          convidado_id: convidadoId,
+          referenciador_id: referenciadorId,
+          indicado_id: indicadoId,
           status: 'pendente'
         });
 
@@ -371,8 +397,8 @@ export const useReferrals = () => {
       // Buscar indicação pendente
       const { data: indicacao, error: searchError } = await supabase
         .from('indicacoes')
-        .select('id, referencia_id')
-        .eq('convidado_id', convidadoId)
+        .select('id, referenciador_id')
+        .eq('indicado_id', convidadoId)
         .eq('status', 'pendente')
         .maybeSingle();
 
@@ -387,7 +413,7 @@ export const useReferrals = () => {
       if (updateError) throw updateError;
 
       // Verificar e gerar recompensas
-      await checkAndGenerateRewards(indicacao.referencia_id);
+      await checkAndGenerateRewards(indicacao.referenciador_id);
 
       return { success: true };
     } catch (error) {
@@ -397,13 +423,13 @@ export const useReferrals = () => {
   };
 
   // Verificar e gerar recompensas baseadas em marcos
-  const checkAndGenerateRewards = async (referenciaId: string) => {
+  const checkAndGenerateRewards = async (referenciadorId: string) => {
     try {
       // Contar indicações completas
       const { data: indicacoes, error } = await supabase
         .from('indicacoes')
         .select('id')
-        .eq('referencia_id', referenciaId)
+        .eq('referenciador_id', referenciadorId)
         .eq('status', 'completo');
 
       if (error) throw error;
@@ -415,7 +441,7 @@ export const useReferrals = () => {
         const { data: existing3 } = await supabase
           .from('recompensas_indicacao')
           .select('id')
-          .eq('referencia_id', referenciaId)
+          .eq('referenciador_id', referenciadorId)
           .eq('tipo', 'bonus_3_amigos')
           .maybeSingle();
 
@@ -423,7 +449,7 @@ export const useReferrals = () => {
           await supabase
             .from('recompensas_indicacao')
             .insert({
-              referencia_id: referenciaId,
+              referenciador_id: referenciadorId,
               tipo: 'bonus_3_amigos',
               pontos: 500,
               status: 'disponivel'
@@ -436,7 +462,7 @@ export const useReferrals = () => {
         const { data: existing5 } = await supabase
           .from('recompensas_indicacao')
           .select('id')
-          .eq('referencia_id', referenciaId)
+          .eq('referenciador_id', referenciadorId)
           .eq('tipo', 'bonus_5_amigos')
           .maybeSingle();
 
@@ -444,7 +470,7 @@ export const useReferrals = () => {
           await supabase
             .from('recompensas_indicacao')
             .insert({
-              referencia_id: referenciaId,
+              referenciador_id: referenciadorId,
               tipo: 'bonus_5_amigos',
               pontos: 1000,
               status: 'disponivel'
@@ -456,7 +482,7 @@ export const useReferrals = () => {
       await supabase
         .from('recompensas_indicacao')
         .insert({
-          referencia_id: referenciaId,
+          referenciador_id: referenciadorId,
           tipo: 'bilhetes_extras',
           bilhetes: 3,
           status: 'disponivel'
@@ -522,7 +548,7 @@ export const useReferrals = () => {
   };
 };
 
-// Nova função encapsulada usando MCP direto
+// Nova função encapsulada usando consulta direta
 export async function validateReferralCodeMCP(codigo: string) {
   try {
     if (!codigo || codigo.trim().length < 3) {
@@ -530,35 +556,82 @@ export async function validateReferralCodeMCP(codigo: string) {
     }
 
     const trimmedCode = codigo.trim().toUpperCase()
+    console.log('Validando código:', trimmedCode)
 
-    // Consulta SQL direta que faz JOIN e evita problemas de RLS
-    const { data, error } = await supabase.rpc('validate_referral_code_direct', {
-      input_code: trimmedCode
-    })
+    // Primeira consulta: buscar referência
+    const { data: referenciaData, error: refError } = await supabase
+      .from('referencias')
+      .select('*')
+      .eq('codigo', trimmedCode)
+      .single()
 
-    if (error) {
-      console.error('Erro ao validar código:', error)
-      return { isValid: false, error: 'Erro interno do servidor' }
+    console.log('Resultado da consulta:', { referenciaData, refError })
+    console.log('Estrutura da referência:', Object.keys(referenciaData || {}))
+
+    if (refError || !referenciaData) {
+      console.error('Erro ao buscar referência:', refError)
+      return { isValid: false, error: 'Código inválido ou não encontrado' }
     }
 
-    if (!data || data.length === 0) {
-      return { isValid: false, error: 'Código inválido ou expirado' }
+    // Verificar se a referência está ativa (campo pode ser 'ativo' ou 'active')
+    const isActive = referenciaData.ativo ?? referenciaData.active ?? true
+    if (!isActive) {
+      return { isValid: false, error: 'Código de referência inativo' }
     }
 
-    const referralData = data[0]
-    
-    if (!referralData.active) {
+    // Obter ID do participante (campo pode ter nomes diferentes)
+    const participanteId = referenciaData.participante_id ?? referenciaData.user_id ?? referenciaData.owner_id
+    console.log('ID do participante encontrado:', participanteId)
+
+    if (!participanteId) {
+      return { isValid: false, error: 'Referência inválida - ID do participante não encontrado' }
+    }
+
+    // Segunda consulta: buscar dados do perfil
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', participanteId)
+      .maybeSingle()
+
+    console.log('Resultado do perfil:', { profileData, profileError })
+    if (profileData) {
+      console.log('Estrutura do perfil:', Object.keys(profileData))
+    }
+
+    if (profileError) {
+      console.error('Erro ao buscar perfil:', profileError)
+      return { isValid: false, error: 'Erro ao validar usuário do código' }
+    }
+
+    if (!profileData) {
+      // Fallback: se não encontrar o perfil, buscar pelo código na própria referência
+      // Isso pode acontecer se houver inconsistência entre tabelas
+      console.warn('Perfil não encontrado, usando dados da referência como fallback')
+      
+      return {
+        isValid: true,
+        ownerName: `Usuário ${referenciaData.codigo}`, // Nome temporário baseado no código
+        ownerId: participanteId,
+        referenciaId: referenciaData.id
+      }
+    }
+
+    // Verificar se está ativo (campo pode ser 'active' ou outro)
+    const isUserActive = profileData.active ?? profileData.ativo ?? true
+    if (!isUserActive) {
       return { isValid: false, error: 'Usuário do código não está ativo' }
     }
 
     return {
       isValid: true,
-      ownerName: referralData.full_name,
-      ownerId: referralData.participante_id
+      ownerName: profileData.full_name || `Usuário ${referenciaData.codigo}`,
+      ownerId: participanteId,
+      referenciaId: referenciaData.id
     }
 
   } catch (error) {
-    console.error('Erro na validação MCP:', error)
+    console.error('Erro na validação:', error)
     return { isValid: false, error: 'Erro interno do servidor' }
   }
 }
