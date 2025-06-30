@@ -30,7 +30,7 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission =
   ...mission,
   description: mission.description || '',
   brand: mission.brand || '',
-  requirements: mission.requirements || [],
+  requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
   cost_in_tokens: mission.cost_in_tokens || 0,
@@ -52,8 +52,8 @@ export interface Mission {
   tickets_reward: number;
   cashback_reward: number;
   brand: string;
-  has_badge?: boolean;
-  has_lootbox?: boolean;
+  has_badge: boolean;
+  has_lootbox: boolean;
   badge_image_url?: string;
   status: string;
   deadline?: string;

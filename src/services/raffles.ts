@@ -129,6 +129,10 @@ export class RaffleService {
     }
   }
 
+  static async getRaffles() {
+    return this.getAllRaffles();
+  }
+
   static async getActiveRaffles() {
     try {
       const { data, error } = await supabase
@@ -161,6 +165,22 @@ export class RaffleService {
     } catch (error) {
       console.error('Error fetching user won raffles:', error);
       return { data: [], error };
+    }
+  }
+
+  static async getUserProfile(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return { data: null, error };
     }
   }
 
