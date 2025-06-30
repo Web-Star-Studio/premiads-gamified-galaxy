@@ -1,42 +1,51 @@
-import React, { useState } from 'react';
-import { motion } from "framer-motion";
-import ClientHeader from "@/components/client/ClientHeader";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { useMediaQuery } from "@/hooks/use-mobile";
-import ClientSidebar from "@/components/client/dashboard/ClientSidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Gift, Target, AlertTriangle, Info, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Bell, Gift, Target, AlertTriangle, Info, CheckCircle2, X, Filter, Circle } from "lucide-react";
-import { useClientNotifications, type ClientNotificationFilters } from "@/hooks/useClientNotifications";
-import { cn } from "@/lib/utils";
+import { useClientNotifications } from "@/hooks/useClientNotifications";
+import { Link } from "react-router-dom";
 
-const ClientNotifications = () => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [activeFilter, setActiveFilter] = useState<ClientNotificationFilters>({});
+const NotificationCenter = () => {
+  const [isOpen, setIsOpen] = useState(false);
   
   const { 
     notifications, 
-    loading, 
-    stats,
-    error,
-    markAsRead, 
-    markAllAsRead, 
-    deleteNotification,
-    getRecentRewards,
-    getMissionNotifications,
-    getAchievementNotifications,
+    loading,
     hasUnread,
-    hasRecentActivity
-  } = useClientNotifications(activeFilter);
-
-  // Função para obter ícone baseado na categoria
+    markAsRead,
+    markAllAsRead 
+  } = useClientNotifications(); // Remove parameter
+  
+  const toggleNotifications = () => {
+    setIsOpen(!isOpen);
+  };
+  
+  const formatTimeAgo = (dateString: string | null) => {
+    if (!dateString) return 'Data indisponível';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 60) {
+      return `${diffMins}m atrás`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h atrás`;
+    } else {
+      return `${diffDays}d atrás`;
+    }
+  };
+  
   const getNotificationIcon = (category: string, type: string) => {
     const iconMap = {
       campaign: <Target className="w-5 h-5 text-neon-lime" />,
-      submission: type === 'success' ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />,
+      submission: type === 'success' ? <CheckCircle className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-amber-400" />,
       payment: <Gift className="w-5 h-5 text-neon-pink" />,
-      achievement: <Circle className="w-5 h-5 text-neon-cyan" />,
+      achievement: <Gift className="w-5 h-5 text-neon-cyan" />,
       user: <Gift className="w-5 h-5 text-purple-400" />,
       system: <Info className="w-5 h-5 text-blue-400" />,
       security: <AlertTriangle className="w-5 h-5 text-red-400" />,
@@ -44,243 +53,120 @@ const ClientNotifications = () => {
     return iconMap[category as keyof typeof iconMap] || <Bell className="w-5 h-5 text-gray-400" />;
   };
 
-  // Função para obter cor do badge baseado no tipo
-  const getBadgeVariant = (type: string) => {
-    const variants = {
-      success: "bg-green-500/20 text-green-400 border-green-500/30",
-      error: "bg-red-500/20 text-red-400 border-red-500/30", 
-      warning: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-      info: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    };
-    return variants[type as keyof typeof variants] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
-  };
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-  // Função para formatar data
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Data indisponível';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffHours < 1) {
-      return 'Agora há pouco';
-    } else if (diffHours < 24) {
-      return `${diffHours}h atrás`;
-    } else if (diffDays < 7) {
-      return `${diffDays}d atrás`;
-    } else {
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    }
-  };
-
-  // Filtros disponíveis
-  const filterOptions = [
-    { key: 'all', label: 'Todas', value: {} },
-    { key: 'unread', label: 'Não lidas', value: { unreadOnly: true } },
-    { key: 'campaign', label: 'Missões', value: { category: 'campaign' as const } },
-    { key: 'payment', label: 'Recompensas', value: { category: 'payment' as const } },
-    { key: 'achievement', label: 'Conquistas', value: { category: 'achievement' as const } },
-  ];
-
-  if (error) {
-    return (
-      <SidebarProvider defaultOpen={!isMobile}>
-        <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
-          <ClientSidebar />
-          <SidebarInset className="overflow-y-auto pb-20">
-            <ClientHeader />
-            <main className="container mx-auto px-4 py-8">
-              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-6 text-center">
-                <p className="text-red-400">Erro ao carregar notificações: {error}</p>
-              </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
-  
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
-      <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
-        <ClientSidebar />
-        <SidebarInset className="overflow-y-auto pb-20">
-          <ClientHeader />
-          <main className="container mx-auto px-4 py-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-6"
-            >
-              {/* Header com estatísticas */}
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">Notificações</h1>
-                  <div className="flex gap-4 text-sm text-gray-400">
-                    <span>Total: {stats.total}</span>
-                    <span>Não lidas: {stats.unread}</span>
-                    {hasRecentActivity && <span className="text-neon-lime">Atividade recente: {stats.recentActivity}</span>}
-                  </div>
-                </div>
-                
-                {hasUnread && (
-                  <Button onClick={markAllAsRead} variant="outline" size="sm">
-                    Marcar todas como lidas
-                  </Button>
-                )}
-              </div>
-
-              {/* Filtros */}
-              <Card className="bg-galaxy-dark/50 border-galaxy-purple/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
-                    Filtros
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {filterOptions.map((filter) => (
-                      <Button
-                        key={filter.key}
-                        variant={JSON.stringify(activeFilter) === JSON.stringify(filter.value) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setActiveFilter(filter.value)}
-                      >
-                        {filter.label}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Lista de notificações */}
-              {loading ? (
-                <Card className="bg-galaxy-dark/50 border-galaxy-purple/30">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan"></div>
-                      <span className="ml-2 text-gray-400">Carregando notificações...</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : notifications.length === 0 ? (
-                <Card className="bg-galaxy-dark/50 border-galaxy-purple/30">
-                  <CardContent className="p-6">
-                    <div className="text-center py-8">
-                      <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400 text-lg">
-                        {Object.keys(activeFilter).length > 0 
-                          ? 'Nenhuma notificação encontrada com os filtros aplicados.' 
-                          : 'Nenhuma notificação no momento.'}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {notifications.map((notification) => (
-                    <Card 
-                      key={notification.id} 
-                      className={cn(
-                        "bg-galaxy-dark/50 border-galaxy-purple/30 transition-all duration-200 hover:border-galaxy-purple/50",
-                        !notification.read && "border-neon-cyan/50 bg-neon-cyan/5"
-                      )}
+    <div className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative rounded-full"
+        onClick={toggleNotifications}
+      >
+        <Bell className="w-5 h-5" />
+        {hasUnread && (
+          <span className="absolute top-0 right-0 w-2 h-2 bg-neon-pink rounded-full animate-pulse"></span>
+        )}
+      </Button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 z-50 w-80 max-h-[70vh] glass-panel rounded-lg shadow-glow mt-2 overflow-hidden"
+          >
+            <div className="p-4 border-b border-galaxy-purple/20">
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-lg">Notificações</h3>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={markAllAsRead}
+                      className="text-xs text-neon-cyan hover:text-neon-cyan/80"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          <div className="mt-1">
-                            {getNotificationIcon(notification.category, notification.type)}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-semibold text-white">{notification.title}</h3>
-                                  <Badge className={getBadgeVariant(notification.type)}>
-                                    {notification.type}
-                                  </Badge>
-                                  {!notification.read && (
-                                    <div className="w-2 h-2 bg-neon-cyan rounded-full animate-pulse"></div>
-                                  )}
-                                </div>
-                                <p className="text-gray-300 text-sm mb-2">{notification.message}</p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span>{formatDate(notification.created_at)}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {notification.category}
-                                  </Badge>
-                                </div>
-                              </div>
-                              
-                              <div className="flex gap-2">
-                                {!notification.read && (
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={() => markAsRead(notification.id)}
-                                    className="text-neon-cyan hover:text-neon-cyan/80"
-                                  >
-                                    Marcar como lida
-                                  </Button>
-                                )}
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost"
-                                  onClick={() => deleteNotification(notification.id)}
-                                  className="text-gray-400 hover:text-red-400"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
+                      Marcar todas
+                    </Button>
+                  )}
+                <span className="text-xs text-gray-400 flex items-center">
+                  <Clock className="w-3 h-3 mr-1" />
+                    Tempo real
+                </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="overflow-y-auto max-h-[50vh]">
+              {loading ? (
+                <div className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-neon-cyan mx-auto mb-2"></div>
+                  <p className="text-gray-400 text-sm">Carregando...</p>
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Bell className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-400">Sem notificações no momento.</p>
+                </div>
+              ) : (
+                <div>
+                  {notifications.map(notification => (
+                    <div 
+                      key={notification.id}
+                      className={`p-4 border-b border-galaxy-purple/10 hover:bg-galaxy-deepPurple/30 transition-colors cursor-pointer ${!notification.read ? 'bg-galaxy-deepPurple/20' : ''}`}
+                      onClick={() => !notification.read && markAsRead(notification.id)}
+                    >
+                      <div className="flex gap-3">
+                        <div className="mt-0.5">
+                          {getNotificationIcon(notification.category, notification.type)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium">{notification.title}</h4>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">{formatTimeAgo(notification.created_at)}</span>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-neon-cyan rounded-full"></div>
+                              )}
                             </div>
                           </div>
+                          <p className="text-sm text-gray-300 mt-1 line-clamp-2">{notification.message}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs px-2 py-1 bg-galaxy-purple/30 rounded-full text-galaxy-purple-light">
+                              {notification.category}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              notification.type === 'success' ? 'bg-green-500/20 text-green-400' :
+                              notification.type === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+                              notification.type === 'error' ? 'bg-red-500/20 text-red-400' :
+                              'bg-blue-500/20 text-blue-400'
+                            }`}>
+                              {notification.type}
+                            </span>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
-
-              {/* Resumo de atividades recentes */}
-              {hasRecentActivity && (
-                <Card className="bg-galaxy-dark/50 border-galaxy-purple/30">
-                  <CardHeader>
-                    <CardTitle className="text-neon-lime">Atividade Recente</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-neon-pink">{getRecentRewards().length}</div>
-                        <div className="text-sm text-gray-400">Recompensas esta semana</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-neon-lime">{getMissionNotifications().length}</div>
-                        <div className="text-sm text-gray-400">Missões</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-neon-cyan">{getAchievementNotifications().length}</div>
-                        <div className="text-sm text-gray-400">Conquistas</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </motion.div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+            </div>
+            
+            <div className="p-3 border-t border-galaxy-purple/20">
+              <Link to="/cliente/notificacoes">
+                <Button variant="ghost" size="sm" className="w-full text-neon-cyan text-sm hover:text-neon-cyan/80">
+                Ver todas notificações
+              </Button>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
-export default ClientNotifications;
+export default NotificationCenter;

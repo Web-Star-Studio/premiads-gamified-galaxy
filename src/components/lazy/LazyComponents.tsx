@@ -33,12 +33,14 @@ export const LazyProfilePage = lazy(() => import('@/pages/advertiser/ProfilePage
 export const LazyPaymentSuccessPage = lazy(() => import('@/pages/advertiser/PaymentSuccessPage'));
 export const LazyCouponValidationPage = lazy(() => import('@/pages/advertiser/CouponValidationPage'));
 
-// Dashboard components - placeholders that return null for now
-export const LazyMissionsCarousel = lazy(() => Promise.resolve({ default: () => null }));
-export const LazyActiveMissions = lazy(() => Promise.resolve({ default: () => null }));
+// Dashboard components - now with proper implementations
+export const LazyMissionsCarousel = lazy(() => import('@/components/client/missions/MissionsCarousel'));
+export const LazyActiveMissions = lazy(() => import('@/components/client/missions/ActiveMissions'));
 
 // Cashback component - create a simple wrapper
-export const LazyCashbackForm = lazy(() => Promise.resolve({ default: () => null }));
+export const LazyCashbackForm = lazy(() => Promise.resolve({ 
+  default: () => <div>Cashback Form Placeholder</div> 
+}));
 
 // Public pages
 export const LazyBlog = lazy(() => import('@/pages/Blog'));
