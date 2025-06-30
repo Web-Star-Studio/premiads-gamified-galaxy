@@ -30,9 +30,9 @@ const AdvertiserDashboard = () => {
   } = useDashboardStats();
 
   const {
-    totalCampaigns: campaignsCount,
+    campaigns,
     loading: campaignsLoading,
-    error: campaignsError,
+    stats,
   } = useAdvertiserCampaigns();
 
   const {
@@ -60,12 +60,11 @@ const AdvertiserDashboard = () => {
       setLoading(false);
     }
 
-    if (statsError || campaignsError || submissionsError || missionsError) {
+    if (statsError || submissionsError || missionsError) {
       toast({
         title: "Erro ao carregar dados",
         description:
           statsError?.message ||
-          campaignsError?.message ||
           submissionsError?.message ||
           missionsError?.message ||
           "Ocorreu um erro ao carregar os dados do painel.",
@@ -78,7 +77,6 @@ const AdvertiserDashboard = () => {
     submissionsLoading,
     missionsLoading,
     statsError,
-    campaignsError,
     submissionsError,
     missionsError,
     toast,
@@ -91,26 +89,16 @@ const AdvertiserDashboard = () => {
     if (creditsCount !== undefined) {
       setTotalCredits(creditsCount);
     }
-    if (campaignsCount !== undefined) {
-      setTotalCampaigns(campaignsCount);
+    if (stats?.activeCampaigns !== undefined) {
+      setTotalCampaigns(stats.activeCampaigns);
     }
-  }, [missionsCount, creditsCount, campaignsCount]);
+  }, [missionsCount, creditsCount, stats]);
 
   useEffect(() => {
-    if (submissions) {
-      handleSubmissionsData(submissions);
+    if (typeof submissions === 'number') {
+      setPendingSubmissions(submissions);
     }
   }, [submissions]);
-
-  const handleSubmissionsData = (data: any) => {
-    if (Array.isArray(data)) {
-      setPendingSubmissions(data.length); // Convert array to count
-    } else if (typeof data === 'number') {
-      setPendingSubmissions(data);
-    } else {
-      setPendingSubmissions(0);
-    }
-  };
 
   if (loading) {
     return (

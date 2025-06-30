@@ -28,6 +28,7 @@ describe('Mission Finalization Service', () => {
 
       const result = await finalizeMissionSubmission({
         submissionId: 'test-submission-id',
+        moderatorId: 'test-moderator-id',
         decision: 'approve',
         stage: 'advertiser_first',
       });
@@ -51,6 +52,7 @@ describe('Mission Finalization Service', () => {
 
       const result = await finalizeMissionSubmission({
         submissionId: 'test-submission-id',
+        moderatorId: 'test-moderator-id',
         decision: 'reject',
         stage: 'advertiser_first',
       });
@@ -74,6 +76,7 @@ describe('Mission Finalization Service', () => {
 
       const result = await finalizeMissionSubmission({
         submissionId: 'test-submission-id',
+        moderatorId: 'test-moderator-id',
         decision: 'approve',
         stage: 'advertiser_first',
       });
@@ -85,6 +88,7 @@ describe('Mission Finalization Service', () => {
     it('should handle invalid stage/decision combinations', async () => {
       const result = await finalizeMissionSubmission({
         submissionId: 'test-submission-id',
+        moderatorId: 'test-moderator-id',
         decision: 'approve' as any,
         stage: 'invalid_stage' as any,
       });
@@ -103,6 +107,7 @@ describe('Mission Finalization Service', () => {
 
       const result = await finalizeMissionSubmission({
         submissionId: 'test-submission-id',
+        moderatorId: 'test-moderator-id',
         decision: 'approve',
         stage: 'advertiser_first',
       });

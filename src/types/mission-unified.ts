@@ -26,6 +26,7 @@ export interface SupabaseMission {
 
 export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission => ({
   ...mission,
+  description: mission.description || '',
   requirements: mission.requirements || [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
@@ -39,13 +40,13 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission =
 export interface Mission {
   id: string;
   title: string;
-  description?: string;
+  description: string; // Made required to match other Mission interfaces
   type: string;
   requirements: string | string[];
   rifas: number;
   points?: number;
-  tickets_reward?: number;
-  cashback_reward?: number; // Added this property
+  tickets_reward: number; // Made required
+  cashback_reward: number; // Made required
   has_badge?: boolean;
   has_lootbox?: boolean;
   badge_image_url?: string;
