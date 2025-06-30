@@ -425,159 +425,34 @@ export const raffleService = {
   
   participateInRaffle: withPerformanceMonitoring(async (userId: string, raffleId: string, numberOfTickets: number): Promise<LotteryParticipation> => {
     try {
-      // Get raffle details
-      const { data: raffle, error: raffleError } = await supabase
-        .from('lotteries')
-        .select('*')
-        .eq('id', raffleId)
-        .single();
-        
-      if (raffleError) throw raffleError;
-      
-      // Check if raffle is active
-      if (raffle.status !== 'active') {
-        throw new Error('Este sorteio não está ativo');
-      }
-      
-      // Check if user has enough rifas
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('rifas')
-        .eq('id', userId)
-        .single();
-        
-      if (profileError) throw profileError;
-      
-      if (!profile || profile.rifas < numberOfTickets) {
-        throw new Error('Você não tem rifas suficientes para participar');
-      }
-      
-      // Generate unique numbers for the user
-      const min = 1;
-      const max = raffle.numbers_total;
-      
-      // Check existing numbers already assigned to any participants in this raffle
-      const { data: existingParticipations, error: participationsError } = await supabase
-        .from('lottery_participants')
-        .select('numbers')
-        .eq('lottery_id', raffleId);
-        
-      if (participationsError) throw participationsError;
-      
-      // Flatten all existing numbers
-      const assignedNumbers = existingParticipations?.flatMap(p => p.numbers) || [];
-      
-      // Get all available numbers (those not yet assigned)
-      let availableNumbers: number[] = [];
-      for (let i = min; i <= max; i++) {
-        if (!assignedNumbers.includes(i)) {
-          availableNumbers.push(i);
-        }
-      }
-      
-      // Check if there are enough available numbers
-      if (availableNumbers.length < numberOfTickets) {
-        throw new Error(`Apenas ${availableNumbers.length} números disponíveis neste sorteio`);
-      }
-      
-      // Shuffle available numbers to get random ones
-      availableNumbers = availableNumbers.sort(() => Math.random() - 0.5);
-      
-      // Select required number of tickets
-      const userNumbers = availableNumbers.slice(0, numberOfTickets);
-      
-      // Buscar TODAS as participações existentes do usuário neste sorteio
-      const { data: allUserParticipations, error: listError } = await supabase
-        .from('lottery_participants')
-        .select('*')
-        .eq('lottery_id', raffleId)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true });
+      // Use the optimized SQL function to avoid recursion
+      const { data: result, error } = await supabase.rpc('participate_in_raffle', {
+        p_user_id: userId,
+        p_lottery_id: raffleId,
+        p_number_of_tickets: numberOfTickets
+      });
 
-      if (listError) throw listError;
-      
-      let participation;
-      
-      if (allUserParticipations && allUserParticipations.length > 0) {
-        // Consolidar todos os números existentes de todas as participações
-        const allExistingNumbers = allUserParticipations.reduce((acc, p) => {
-          return [...acc, ...p.numbers];
-        }, [] as number[]);
-        
-        // Adicionar os novos números aos existentes
-        const consolidatedNumbers = [...allExistingNumbers, ...userNumbers];
-        
-        // Deletar todas as participações existentes (que podem ter IDs nulos)
-        const { error: deleteError } = await supabase
-          .from('lottery_participants')
-          .delete()
-          .eq('lottery_id', raffleId)
-          .eq('user_id', userId);
-        
-        if (deleteError) throw deleteError;
-        
-        // Criar nova participação consolidada com todos os números
-        const { data, error } = await supabase
-          .from('lottery_participants')
-          .insert({
-            user_id: userId,
-            lottery_id: raffleId,
-            numbers: consolidatedNumbers,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        participation = data;
-      } else {
-        // Criar nova participação se não existir nenhuma
-        const { data, error } = await supabase
-          .from('lottery_participants')
-          .insert({
-            user_id: userId,
-            lottery_id: raffleId,
-            numbers: userNumbers,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-          
-        if (error) throw error;
-        
-        participation = data;
+      if (error) {
+        console.error('RPC Error:', error);
+        throw new Error(error.message);
       }
-      
-      // Update raffle progress
-      const totalParticipants = (await supabase
+
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to participate in raffle');
+      }
+
+      // Fetch the updated participation to return
+      const { data: participation, error: fetchError } = await supabase
         .from('lottery_participants')
-        .select('numbers')
-        .eq('lottery_id', raffleId)).data || [];
-      
-      const totalNumbersSold = totalParticipants.reduce((sum, p) => sum + p.numbers.length, 0);
-      const progress = Math.min(100, Math.round((totalNumbersSold / raffle.numbers_total) * 100));
-      
-      await supabase
-        .from('lotteries')
-        .update({
-          progress,
-          numbers_sold: totalNumbersSold,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', raffleId);
-        
-      // Deduct rifas from user
-      await supabase
-        .from('profiles')
-        .update({
-          rifas: profile.rifas - numberOfTickets
-        })
-        .eq('id', userId);
-      
-      // Retorna a participação recém-criada ou atualizada sem realizar uma nova consulta
+        .select('*')
+        .eq('id', result.participation_id)
+        .single();
+
+      if (fetchError) {
+        console.error('Fetch Error:', fetchError);
+        throw new Error('Error fetching participation: ' + fetchError.message);
+      }
+
       return participation as LotteryParticipation;
     } catch (error) {
       console.error('Error participating in raffle:', error);
