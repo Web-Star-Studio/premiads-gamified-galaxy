@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
@@ -10,6 +11,7 @@ const Careers = lazy(() => import("@/pages/Careers"));
 const TermsOfUse = lazy(() => import("@/pages/legal/TermsOfUse"));
 const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
 const CookiesPolicy = lazy(() => import("@/pages/legal/CookiesPolicy"));
+const LandingPage2 = lazy(() => import("@/pages/LandingPage2"));
 
 // Lazy load public pages
 const Index = lazy(() => import("@/pages/Index"));
@@ -46,6 +48,9 @@ const PublicRoutes = () => (
       <Route path="nosso-time" element={<Team />} />
       
       <Route path="carreiras" element={<Careers />} />
+      
+      {/* Nova landing page */}
+      <Route path="lp2" element={<LandingPage2 />} />
       
       {/* Política e termos legais */}
       <Route path="termos-de-uso" element={<TermsOfUse />} />
