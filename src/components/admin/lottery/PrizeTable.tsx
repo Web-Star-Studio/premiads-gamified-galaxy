@@ -42,7 +42,10 @@ const PrizeTable: React.FC<PrizeTableProps> = ({ prizes, isCompleted, lotteryPri
   };
 
   // Check if we have lottery prize data from database
-  const hasLotteryPrize = lotteryPrize && lotteryPrize.prize_type && lotteryPrize.prize_value;
+  const hasLotteryPrize = lotteryPrize && 
+    (lotteryPrize.prize_type || '').trim() !== '' && 
+    lotteryPrize.prize_value && 
+    parseFloat(lotteryPrize.prize_value.toString()) > 0;
   
   return (
     <div className="space-y-4">
@@ -89,7 +92,7 @@ const PrizeTable: React.FC<PrizeTableProps> = ({ prizes, isCompleted, lotteryPri
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-medium text-white text-lg">{lotteryPrize.prize_type}</h4>
+                  <h4 className="font-medium text-white text-lg">{lotteryPrize.prize_type || 'Prêmio'}</h4>
                   <p className="text-neon-lime font-bold text-xl">{formatPrizeValue(lotteryPrize.prize_value)}</p>
                   <div className="mt-2">
                     <Badge className="bg-gradient-to-r from-neon-pink to-neon-cyan text-white">

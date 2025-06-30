@@ -33,6 +33,46 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
     }
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Não definida';
+    
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = date.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const formattedDate = date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // Adicionar informação relativa se for próximo
+      if (diffDays === 0) {
+        return `${formattedDate} (hoje)`;
+      } else if (diffDays === 1) {
+        return `${formattedDate} (amanhã)`;
+      } else if (diffDays === -1) {
+        return `${formattedDate} (ontem)`;
+      } else if (diffDays > 0 && diffDays <= 7) {
+        return `${formattedDate} (em ${diffDays} dias)`;
+      } else if (diffDays < 0 && diffDays >= -7) {
+        return `${formattedDate} (${Math.abs(diffDays)} dias atrás)`;
+      }
+      
+      return formattedDate;
+    } catch (error) {
+      return 'Data inválida';
+    }
+  };
+
+  const getLotteryDisplayName = () => {
+    return selectedLottery.name || selectedLottery.title || 'Sorteio sem nome';
+  };
+
   const handleStatusChange = () => {
     try {
       playSound('pop');
@@ -121,22 +161,45 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
         whileHover={{ boxShadow: "0 0 8px rgba(155, 135, 245, 0.3)" }}
         transition={{ duration: 0.2 }}
       >
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <div className="text-xs text-muted-foreground">Nome</div>
-            <div className="font-medium">{selectedLottery.title}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Nome do Sorteio</div>
+              <div className="font-medium text-base">{getLotteryDisplayName()}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Status</div>
+              <div>{getStatusBadge(selectedLottery.status)}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Status</div>
-            <div>{getStatusBadge(selectedLottery.status)}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Data Início</div>
-            <div className="font-medium">{selectedLottery.start_date}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Data Fim</div>
-            <div className="font-medium">{selectedLottery.end_date}</div>
+          
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs text-muted-foreground mb-2 flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                Data de Início
+              </div>
+              <div className="bg-gradient-to-r from-neon-cyan/10 to-neon-lime/10 rounded-lg px-4 py-3 border border-neon-cyan/30 hover:border-neon-cyan/50 transition-colors">
+                <div className="font-medium text-sm text-neon-cyan">
+                  {formatDate(selectedLottery.start_date)}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-2 flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                Data de Término
+              </div>
+              <div className="bg-gradient-to-r from-neon-pink/10 to-neon-purple/10 rounded-lg px-4 py-3 border border-neon-pink/30 hover:border-neon-pink/50 transition-colors">
+                <div className="font-medium text-sm text-neon-pink">
+                  {formatDate(selectedLottery.end_date)}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -146,9 +209,9 @@ const LotteryDetails: React.FC<LotteryDetailsProps> = ({
           prizes={selectedLottery.prizes || []} 
           isCompleted={selectedLottery.status === 'completed'}
           lotteryPrize={{
-            prize_type: selectedLottery.prize_type,
-            prize_value: selectedLottery.prize_value,
-            image_url: selectedLottery.image_url
+            prize_type: selectedLottery.prize_type || selectedLottery.prizeType,
+            prize_value: selectedLottery.prize_value || selectedLottery.prizeValue,
+            image_url: selectedLottery.image_url || selectedLottery.imageUrl
           }}
         />
         <RandomNumberGenerator selectedLottery={selectedLottery} onDrawRaffle={onDrawRaffle} />
