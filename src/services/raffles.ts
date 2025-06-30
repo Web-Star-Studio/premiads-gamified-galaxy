@@ -122,10 +122,10 @@ export class RaffleService {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return { data, error: null };
+      return { data: data || [], error: null };
     } catch (error) {
       console.error('Error fetching all raffles:', error);
-      return { data: null, error };
+      return { data: [], error };
     }
   }
 
@@ -201,4 +201,4 @@ export class RaffleService {
 }
 
 export const raffleService = new RaffleService();
-export default raffleService;
+export default RaffleService;

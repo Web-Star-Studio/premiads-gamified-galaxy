@@ -47,7 +47,8 @@ const ClientMissions = () => {
     cashback_reward: mission.cashback_reward || 0,
     tickets_reward: mission.tickets_reward || 0,
     cost_in_tokens: mission.cost_in_tokens || 0,
-    requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
+    requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
+    start_date: mission.start_date || new Date().toISOString(),
   }));
 
   const selectedMission = rawSelectedMission ? {
@@ -57,7 +58,7 @@ const ClientMissions = () => {
     cashback_reward: rawSelectedMission.cashback_reward || 0,
     tickets_reward: rawSelectedMission.tickets_reward || 0,
     cost_in_tokens: rawSelectedMission.cost_in_tokens || 0,
-    requirements: Array.isArray(rawSelectedMission.requirements) ? rawSelectedMission.requirements : [],
+    requirements: Array.isArray(rawSelectedMission.requirements) ? rawSelectedMission.requirements : [rawSelectedMission.requirements || ''],
   } : null;
 
   useEffect(() => {
@@ -86,7 +87,8 @@ const ClientMissions = () => {
     // Convert back to UnifiedMission format for setSelectedMission
     const unifiedMission: UnifiedMission = {
       ...mission,
-      requirements: mission.requirements || [],
+      requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
+      start_date: mission.start_date || new Date().toISOString(),
     };
     setSelectedMission(unifiedMission);
     playSound("pop");
@@ -193,7 +195,8 @@ const ClientMissions = () => {
                     onMissionClick={(mission) => {
                       const unifiedMission: UnifiedMission = {
                         ...mission,
-                        requirements: mission.requirements || [],
+                        requirements: Array.isArray(mission.requirements) ? mission.requirements : [mission.requirements || ''],
+                        start_date: mission.start_date || new Date().toISOString(),
                       };
                       setSelectedMission(unifiedMission);
                       setIsSubmissionOpen(true);

@@ -20,6 +20,7 @@ export interface Mission {
   target_audience_age_min?: number;
   target_audience_age_max?: number;
   target_audience_region?: string;
+  start_date: string;
 }
 
 export interface MissionSubmission {

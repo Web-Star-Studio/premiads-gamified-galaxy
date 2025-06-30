@@ -1,4 +1,5 @@
-import raffleService from '@/services/raffles';
+
+import { RaffleService } from '@/services/raffles';
 
 // This is a placeholder file that will be replaced with real data from the raffle service
 // For now, we're setting an empty array but in a real implementation, 
@@ -6,15 +7,15 @@ import raffleService from '@/services/raffles';
 export const RAFFLES = [];
 
 // Export the service for direct use
-export { raffleService };
+export { RaffleService };
 
 // Helper function to fetch active raffles
 export async function fetchActiveRaffles() {
   try {
-    return await raffleService.getActiveRaffles();
+    const { data } = await RaffleService.getActiveRaffles();
+    return data || [];
   } catch (error) {
     console.error("Error fetching active raffles:", error);
     return [];
   }
 }
-

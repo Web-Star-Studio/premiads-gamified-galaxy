@@ -39,6 +39,7 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission =
   tickets_reward: mission.tickets_reward || 0,
   hasUserSubmission: false,
   type: mission.type as MissionType,
+  start_date: mission.start_date || new Date().toISOString(),
 });
 
 export interface Mission {
@@ -63,7 +64,7 @@ export interface Mission {
   business_type?: string;
   hasUserSubmission?: boolean;
 
-  start_date?: string;
+  start_date: string;
   end_date?: string;
   max_participants?: number;
   

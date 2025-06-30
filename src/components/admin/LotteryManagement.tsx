@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import LotteryDetails from "@/components/admin/lottery/LotteryDetails";
 import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
-import raffleService from "@/services/raffles";
+import { RaffleService } from "@/services/raffles";
 import { adminRaffleService } from "@/services/admin-raffles";
 import { supabase } from '@/integrations/supabase/client'
 
@@ -28,7 +29,7 @@ const LotteryManagement = () => {
     async function fetchLotteries() {
       setIsLoading(true);
       try {
-        const data = await raffleService.getRaffles();
+        const { data } = await RaffleService.getRaffles();
         
         // Filter out any lotteries with invalid IDs
         const validLotteries = data.filter(lottery => 
@@ -222,7 +223,7 @@ const LotteryManagement = () => {
       }
       
       // Refresh the lotteries list
-      const updatedLotteries = await raffleService.getRaffles();
+      const { data: updatedLotteries } = await RaffleService.getRaffles();
       setLotteries(updatedLotteries);
       
       // Show success toast with winner information

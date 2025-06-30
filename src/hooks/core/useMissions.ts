@@ -34,6 +34,8 @@ export function useMissions() {
           requirements: ['Fazer uma avaliação', 'Enviar screenshot'],
           has_badge: true,
           has_lootbox: false,
+          cost_in_tokens: 10,
+          start_date: new Date().toISOString(),
         },
         {
           id: '2',
@@ -48,6 +50,8 @@ export function useMissions() {
           requirements: ['Foto em alta qualidade', 'Produto visível'],
           has_badge: false,
           has_lootbox: true,
+          cost_in_tokens: 15,
+          start_date: new Date().toISOString(),
         }
       ];
 
