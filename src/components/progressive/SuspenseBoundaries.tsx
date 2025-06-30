@@ -1,7 +1,5 @@
 
 import React, { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingScreen from '@/components/LoadingScreen';
 
 interface SuspenseBoundaryProps {
@@ -16,12 +14,14 @@ export const SuspenseBoundary: React.FC<SuspenseBoundaryProps> = ({
   errorFallback = <div>Something went wrong</div>
 }) => {
   return (
-    <ErrorBoundary fallback={errorFallback}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={fallback}>
+      {children}
+    </Suspense>
   );
+};
+
+export const MissionsSuspense: React.FC<SuspenseBoundaryProps> = (props) => {
+  return <SuspenseBoundary {...props} />;
 };
 
 export default SuspenseBoundary;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -188,16 +189,16 @@ const SubmissionsApproval = () => {
     try {
       const submission = submissions[currentIndex];
       const { data: sessionData } = await supabase.auth.getSession();
-      const approverId = sessionData?.session?.user?.id;
+      const userId = sessionData?.session?.user?.id;
       
-      if (!approverId) {
+      if (!userId) {
         throw new Error("Usuário não autenticado");
       }
       
-      // Usar a função finalizeMissionSubmission para aprovar a submissão
+      // Use the correct property name 'moderatorId' instead of 'approverId'
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
+        moderatorId: userId,
         decision: 'approve',
         stage: 'advertiser_first'
       });
@@ -240,16 +241,16 @@ const SubmissionsApproval = () => {
     try {
       const submission = submissions[currentIndex];
       const { data: sessionData } = await supabase.auth.getSession();
-      const approverId = sessionData?.session?.user?.id;
+      const userId = sessionData?.session?.user?.id;
       
-      if (!approverId) {
+      if (!userId) {
         throw new Error("Usuário não autenticado");
       }
       
-      // Usar a função finalizeMissionSubmission para rejeitar a submissão
+      // Use the correct property name 'moderatorId' instead of 'approverId'
       const result = await finalizeMissionSubmission({
         submissionId: submission.id,
-        approverId,
+        moderatorId: userId,
         decision: 'reject',
         stage: 'advertiser_first'
       });

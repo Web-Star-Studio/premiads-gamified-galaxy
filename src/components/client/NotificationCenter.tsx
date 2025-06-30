@@ -15,7 +15,7 @@ const NotificationCenter = () => {
     hasUnread,
     markAsRead,
     markAllAsRead 
-  } = useClientNotifications({ limit: 5 }); // Apenas as 5 mais recentes para o dropdown
+  } = useClientNotifications(); // Remove parameter
   
   const toggleNotifications = () => {
     setIsOpen(!isOpen);

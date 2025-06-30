@@ -12,6 +12,11 @@ export interface Mission {
   requirements: string[];
   has_badge: boolean;
   has_lootbox: boolean;
+  business_type?: string;
+  target_audience_gender?: string;
+  target_audience_age_min?: number;
+  target_audience_age_max?: number;
+  target_audience_region?: string;
 }
 
 export interface MissionSubmission {

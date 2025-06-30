@@ -1,24 +1,29 @@
 
 import React, { Suspense } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import LoadingScreen from '@/components/LoadingScreen';
 
 interface ProgressiveLoaderProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  delay?: number;
+  useIntersection?: boolean;
 }
 
 const ProgressiveLoader: React.FC<ProgressiveLoaderProps> = ({ 
   children, 
-  fallback = <LoadingScreen />
+  fallback = <LoadingScreen />,
+  delay,
+  useIntersection
 }) => {
   return (
-    <ErrorBoundary fallback={<div>Something went wrong</div>}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={fallback}>
+      {children}
+    </Suspense>
   );
+};
+
+export const SectionLoader: React.FC<ProgressiveLoaderProps> = (props) => {
+  return <ProgressiveLoader {...props} />;
 };
 
 export default ProgressiveLoader;

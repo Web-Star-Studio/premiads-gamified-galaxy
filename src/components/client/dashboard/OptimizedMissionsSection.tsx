@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ProgressiveLoader, SectionLoader } from '@/components/progressive/ProgressiveLoader';
+import ProgressiveLoader from '@/components/progressive/ProgressiveLoader';
+import { SectionLoader } from '@/components/progressive/ProgressiveLoader';
 import { MissionsSuspense } from '@/components/progressive/SuspenseBoundaries';
 import { LazyMissionsCarousel, LazyActiveMissions } from '@/components/lazy/LazyComponents';
 import { useMissions } from '@/hooks/useMissions';
