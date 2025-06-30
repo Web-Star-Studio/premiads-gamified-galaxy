@@ -157,60 +157,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Se a submissão foi aprovada
-    if (status === 'approved') {
-      // Completar missão
-      if (missionRewardsResult.success) {
-        
-        // Verificar e atualizar indicações para completo (sistema de referências)
-        try {
-          const { data: indicacao, error: indicacaoError } = await supabase
-            .from('indicacoes')
-            .select('id, referencia_id')
-            .eq('convidado_id', submission.user_id)
-            .eq('status', 'pendente')
-            .maybeSingle();
-
-          if (!indicacaoError && indicacao) {
-            // Atualizar status da indicação para completo
-            await supabase
-              .from('indicacoes')
-              .update({ status: 'completo' })
-              .eq('id', indicacao.id);
-
-            // Dar recompensa ao referenciador (200 rifas por indicação completa)
-            const { data: referencia } = await supabase
-              .from('referencias')
-              .select('participante_id')
-              .eq('id', indicacao.referencia_id)
-              .single();
-
-            if (referencia) {
-              await supabase
-                .from('profiles')
-                .update({ 
-                  rifas: supabase.sql`rifas + 200` 
-                })
-                .eq('id', referencia.participante_id);
-
-              console.log('Recompensa de referência aplicada:', referencia.participante_id);
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao processar referência:', error);
-          // Não falha a moderação por erro de referência
-        }
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Submissão aprovada e recompensas processadas'
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
     return new Response(JSON.stringify({ success: true, message: `Action ${action} performed successfully.` }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
