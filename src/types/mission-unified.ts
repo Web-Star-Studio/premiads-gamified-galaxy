@@ -44,14 +44,14 @@ export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission =
 export interface Mission {
   id: string;
   title: string;
-  description: string; // Made required to match other Mission interfaces
-  type: MissionType; // Changed from string to MissionType
-  requirements: string | string[];
+  description: string;
+  type: MissionType;
+  requirements: string[];
   rifas: number;
   points?: number;
-  tickets_reward: number; // Made required
-  cashback_reward: number; // Made required
-  brand: string; // Made required
+  tickets_reward: number;
+  cashback_reward: number;
+  brand: string;
   has_badge?: boolean;
   has_lootbox?: boolean;
   badge_image_url?: string;
@@ -59,7 +59,7 @@ export interface Mission {
   deadline?: string;
   created_at?: string;
   advertiser_id?: string;
-  cost_in_tokens?: number;
+  cost_in_tokens: number;
   business_type?: string;
   hasUserSubmission?: boolean;
 

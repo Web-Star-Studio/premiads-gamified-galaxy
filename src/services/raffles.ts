@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CreateRaffleParams {
@@ -128,6 +129,41 @@ export class RaffleService {
     }
   }
 
+  static async getActiveRaffles() {
+    try {
+      const { data, error } = await supabase
+        .from('lotteries')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error fetching active raffles:', error);
+      return { data: [], error };
+    }
+  }
+
+  static async getUserWonRaffles(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('lottery_winners')
+        .select(`
+          *,
+          lotteries (*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error('Error fetching user won raffles:', error);
+      return { data: [], error };
+    }
+  }
+
   static async deleteRaffle(id: string) {
     try {
       const { data, error } = await supabase
@@ -145,3 +181,4 @@ export class RaffleService {
 }
 
 export const raffleService = new RaffleService();
+export default raffleService;

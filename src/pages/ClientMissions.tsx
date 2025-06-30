@@ -18,6 +18,7 @@ import FilteredMissionsList from "@/components/client/missions/FilteredMissionsL
 import MissionDialog from "@/components/client/missions/MissionDialog";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { Mission as UnifiedMission } from "@/types/mission-unified";
+import { Mission as UseMissionsTypeMission } from "@/hooks/useMissionsTypes";
 
 const ClientMissions = () => {
   const { userName, userType } = useUser();
@@ -38,13 +39,15 @@ const ClientMissions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
 
-  // Convert missions to the expected format
-  const missions = rawMissions.map((mission: UnifiedMission) => ({
+  // Convert missions to the expected format for UI components
+  const missions = rawMissions.map((mission: UnifiedMission): UseMissionsTypeMission => ({
     ...mission,
     brand: mission.brand || '',
     description: mission.description || '',
     cashback_reward: mission.cashback_reward || 0,
     tickets_reward: mission.tickets_reward || 0,
+    cost_in_tokens: mission.cost_in_tokens || 0,
+    requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
   }));
 
   const selectedMission = rawSelectedMission ? {
@@ -53,6 +56,8 @@ const ClientMissions = () => {
     description: rawSelectedMission.description || '',
     cashback_reward: rawSelectedMission.cashback_reward || 0,
     tickets_reward: rawSelectedMission.tickets_reward || 0,
+    cost_in_tokens: rawSelectedMission.cost_in_tokens || 0,
+    requirements: Array.isArray(rawSelectedMission.requirements) ? rawSelectedMission.requirements : [],
   } : null;
 
   useEffect(() => {
@@ -77,8 +82,13 @@ const ClientMissions = () => {
     mission.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleMissionClick = (mission: any) => {
-    setSelectedMission(mission);
+  const handleMissionClick = (mission: UseMissionsTypeMission) => {
+    // Convert back to UnifiedMission format for setSelectedMission
+    const unifiedMission: UnifiedMission = {
+      ...mission,
+      requirements: mission.requirements || [],
+    };
+    setSelectedMission(unifiedMission);
     playSound("pop");
   };
 
@@ -181,7 +191,11 @@ const ClientMissions = () => {
                   <FilteredMissionsList 
                     missions={filteredMissions}
                     onMissionClick={(mission) => {
-                      setSelectedMission(mission);
+                      const unifiedMission: UnifiedMission = {
+                        ...mission,
+                        requirements: mission.requirements || [],
+                      };
+                      setSelectedMission(unifiedMission);
                       setIsSubmissionOpen(true);
                     }}
                     emptyMessage="Você não tem missões em progresso no momento."

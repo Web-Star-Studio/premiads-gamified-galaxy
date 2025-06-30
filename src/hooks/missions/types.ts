@@ -14,6 +14,7 @@ export interface Mission {
   requirements: string[];
   has_badge: boolean;
   has_lootbox: boolean;
+  cost_in_tokens: number;
   business_type?: string;
   target_audience_gender?: string;
   target_audience_age_min?: number;
