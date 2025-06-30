@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
@@ -12,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
+import useAdvertiserProfile from "@/hooks/useAdvertiserProfile";
 import { 
   User, 
   Bell, 
@@ -24,16 +25,36 @@ import {
   ChevronRight, 
   Check,
   Save,
-  Smartphone
+  Smartphone,
+  AlertCircle
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const SettingsPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { playSound } = useSounds();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
-  const [isLoading, setIsLoading] = useState(false);
   const { userName = "Desenvolvedor" } = useUser();
+  
+  // Hook para gerenciar dados do perfil
+  const { 
+    profileData, 
+    isLoading, 
+    error, 
+    updateProfile, 
+    isUpdating 
+  } = useAdvertiserProfile();
+  
+  // Estados locais para edição
+  const [formData, setFormData] = useState({
+    full_name: "",
+    phone: "",
+    website: "",
+    description: "",
+    email_notifications: true,
+    push_notifications: true
+  });
   
   // Form states for various settings
   const [notificationsSettings, setNotificationsSettings] = useState({
@@ -49,24 +70,72 @@ const SettingsPage = () => {
     sessionTimeout: true,
     loginNotifications: true
   });
+
+  // Atualizar formData quando profileData mudar
+  useEffect(() => {
+    if (profileData) {
+      setFormData({
+        full_name: profileData.full_name || "",
+        phone: profileData.phone || "",
+        website: profileData.website || "",
+        description: profileData.description || "",
+        email_notifications: profileData.email_notifications,
+        push_notifications: profileData.push_notifications
+      });
+      
+      setNotificationsSettings(prev => ({
+        ...prev,
+        email: profileData.email_notifications,
+        push: profileData.push_notifications
+      }));
+    }
+  }, [profileData]);
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     playSound("pop");
   };
   
-  const handleSaveSettings = () => {
-    setIsLoading(true);
-    
-    // Simulate saving
-    setTimeout(() => {
-      setIsLoading(false);
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  const handleSaveProfile = async () => {
+    try {
+      const success = await updateProfile(formData);
+      
+      if (success) {
+        toast({
+          title: "Perfil atualizado",
+          description: "Suas informações foram salvas com sucesso",
+        });
+        playSound("chime");
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível atualizar o perfil. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
       toast({
-        title: "Configurações salvas",
-        description: "Suas alterações foram salvas com sucesso",
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
       });
-      playSound("chime");
-    }, 1000);
+    }
+  };
+  
+  const handleSaveSettings = () => {
+    // Simulação para outras configurações
+    toast({
+      title: "Configurações salvas",
+      description: "Suas alterações foram salvas com sucesso",
+    });
+    playSound("chime");
   };
   
   const toggleNotificationSetting = (setting: keyof typeof notificationsSettings) => {
@@ -74,6 +143,14 @@ const SettingsPage = () => {
       ...prev,
       [setting]: !prev[setting]
     }));
+    
+    // Se for email ou push, atualizar também no formData
+    if (setting === 'email') {
+      handleInputChange('email_notifications', !notificationsSettings.email);
+    } else if (setting === 'push') {
+      handleInputChange('push_notifications', !notificationsSettings.push);
+    }
+    
     playSound("pop");
   };
   
@@ -84,6 +161,30 @@ const SettingsPage = () => {
     }));
     playSound("pop");
   };
+
+  if (isLoading) {
+    return (
+      <SidebarProvider defaultOpen={!isMobile}>
+        <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
+          <AdvertiserSidebar />
+          <SidebarInset className="overflow-y-auto pb-20">
+            <AdvertiserHeader
+              title="Configurações"
+              userName={userName}
+              description="Carregando..."
+            />
+            <div className="container px-4 pt-20 py-8 mx-auto">
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-galaxy-purple/20 rounded w-1/4"></div>
+                <div className="h-4 bg-galaxy-purple/20 rounded w-1/2"></div>
+                <div className="h-64 bg-galaxy-purple/20 rounded"></div>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
   
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -101,6 +202,13 @@ const SettingsPage = () => {
               <h1 className="text-2xl font-bold mb-2">Configurações</h1>
               <p className="text-muted-foreground">Gerencie suas preferências e configurações da conta</p>
             </div>
+
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             
             <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-8">
               <TabsList className="grid grid-cols-4 sm:grid-cols-5 lg:w-auto">
@@ -136,28 +244,51 @@ const SettingsPage = () => {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="name">Nome</Label>
-                        <Input id="name" defaultValue="Desenvolvedor PremiAds" />
+                        <Input 
+                          id="name" 
+                          value={formData.full_name}
+                          onChange={(e) => handleInputChange('full_name', e.target.value)}
+                          placeholder="Seu nome completo"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">E-mail</Label>
-                        <Input id="email" defaultValue="desenvolvedor@premiads.com" />
+                        <Input 
+                          id="email" 
+                          value={profileData.email}
+                          disabled
+                          className="bg-muted"
+                        />
+                        <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="company">Empresa</Label>
-                        <Input id="company" defaultValue="PremiAds" />
+                        <Label htmlFor="phone">Telefone</Label>
+                        <Input 
+                          id="phone" 
+                          value={formData.phone}
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          placeholder="(11) 99999-9999"
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="role">Cargo</Label>
-                        <Input id="role" defaultValue="Marketing Manager" />
+                        <Label htmlFor="website">Website</Label>
+                        <Input 
+                          id="website" 
+                          value={formData.website}
+                          onChange={(e) => handleInputChange('website', e.target.value)}
+                          placeholder="https://seusite.com"
+                        />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="bio">Biografia</Label>
-                      <textarea
+                      <Textarea
                         id="bio"
-                        className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="Especialista em marketing digital com mais de 5 anos de experiência em campanhas digitais e estratégias de engajamento."
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        className="min-h-[100px]"
+                        placeholder="Conte um pouco sobre você ou sua empresa..."
                       />
                     </div>
                     
@@ -174,8 +305,8 @@ const SettingsPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end border-t border-galaxy-purple/20 pt-4">
-                    <Button onClick={handleSaveSettings} disabled={isLoading}>
-                      {isLoading ? (
+                    <Button onClick={handleSaveProfile} disabled={isUpdating}>
+                      {isUpdating ? (
                         <div className="flex items-center">
                           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
                           Salvando
@@ -210,8 +341,8 @@ const SettingsPage = () => {
                             </div>
                           </div>
                           <Switch 
-                            checked={notificationsSettings.email}
-                            onCheckedChange={() => toggleNotificationSetting('email')}
+                            checked={formData.email_notifications}
+                            onCheckedChange={(checked) => handleInputChange('email_notifications', checked)}
                           />
                         </div>
                         <div className="flex items-center justify-between">
@@ -223,8 +354,8 @@ const SettingsPage = () => {
                             </div>
                           </div>
                           <Switch 
-                            checked={notificationsSettings.push}
-                            onCheckedChange={() => toggleNotificationSetting('push')}
+                            checked={formData.push_notifications}
+                            onCheckedChange={(checked) => handleInputChange('push_notifications', checked)}
                           />
                         </div>
                         <div className="flex items-center justify-between">
@@ -270,8 +401,8 @@ const SettingsPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end border-t border-galaxy-purple/20 pt-4">
-                    <Button onClick={handleSaveSettings} disabled={isLoading}>
-                      {isLoading ? (
+                    <Button onClick={handleSaveProfile} disabled={isUpdating}>
+                      {isUpdating ? (
                         <div className="flex items-center">
                           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
                           Salvando
@@ -360,8 +491,8 @@ const SettingsPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end border-t border-galaxy-purple/20 pt-4">
-                    <Button onClick={handleSaveSettings} disabled={isLoading}>
-                      {isLoading ? (
+                    <Button onClick={handleSaveSettings} disabled={isUpdating}>
+                      {isUpdating ? (
                         <div className="flex items-center">
                           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
                           Salvando
@@ -442,8 +573,8 @@ const SettingsPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end border-t border-galaxy-purple/20 pt-4">
-                    <Button onClick={handleSaveSettings} disabled={isLoading}>
-                      {isLoading ? (
+                    <Button onClick={handleSaveSettings} disabled={isUpdating}>
+                      {isUpdating ? (
                         <div className="flex items-center">
                           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
                           Salvando
@@ -547,8 +678,8 @@ const SettingsPage = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-end border-t border-galaxy-purple/20 pt-4">
-                    <Button onClick={handleSaveSettings} disabled={isLoading}>
-                      {isLoading ? (
+                    <Button onClick={handleSaveSettings} disabled={isUpdating}>
+                      {isUpdating ? (
                         <div className="flex items-center">
                           <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
                           Salvando

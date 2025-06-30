@@ -20,6 +20,8 @@ interface UseAdvertiserProfileReturn {
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
+  updateProfile: (updates: Partial<AdvertiserProfileData>) => Promise<boolean>
+  isUpdating: boolean
 }
 
 /**
@@ -41,9 +43,10 @@ function useAdvertiserProfile(): UseAdvertiserProfileReturn {
     push_notifications: true
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = async (): Promise<void> => {
     if (!currentUser?.id) {
       setError('Usuário não autenticado')
       setIsLoading(false)
@@ -122,6 +125,54 @@ function useAdvertiserProfile(): UseAdvertiserProfileReturn {
     }
   }
 
+  const updateProfile = async (updates: Partial<AdvertiserProfileData>): Promise<boolean> => {
+    if (!currentUser?.id) return false
+
+    try {
+      setIsUpdating(true)
+      setError(null)
+
+      // Separar atualizações para auth.users e profiles
+      const profileUpdates: any = {}
+      
+      // Campos que vão para a tabela profiles
+      if (updates.full_name !== undefined) profileUpdates.full_name = updates.full_name
+      if (updates.phone !== undefined) profileUpdates.phone = updates.phone
+      if (updates.website !== undefined) profileUpdates.website = updates.website
+      if (updates.description !== undefined) profileUpdates.description = updates.description
+      if (updates.avatar_url !== undefined) profileUpdates.avatar_url = updates.avatar_url
+      if (updates.email_notifications !== undefined) profileUpdates.email_notifications = updates.email_notifications
+      if (updates.push_notifications !== undefined) profileUpdates.push_notifications = updates.push_notifications
+
+      // Atualizar tabela profiles se houver campos para atualizar
+      if (Object.keys(profileUpdates).length > 0) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update(profileUpdates)
+          .eq('id', currentUser.id)
+
+        if (profileError) {
+          throw new Error(`Erro ao atualizar perfil: ${profileError.message}`)
+        }
+      }
+
+      // Atualizar estado local
+      setProfileData(prev => ({
+        ...prev,
+        ...updates
+      }))
+
+      return true
+
+    } catch (err) {
+      console.error('Erro ao atualizar perfil:', err)
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar perfil')
+      return false
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   useEffect(() => {
     fetchProfileData()
   }, [currentUser?.id])
@@ -130,7 +181,9 @@ function useAdvertiserProfile(): UseAdvertiserProfileReturn {
     profileData,
     isLoading,
     error,
-    refetch: fetchProfileData
+    refetch: fetchProfileData,
+    updateProfile,
+    isUpdating
   }
 }
 
