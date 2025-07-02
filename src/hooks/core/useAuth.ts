@@ -5,7 +5,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { SignInCredentials, SignUpCredentials } from '@/types/auth';
 import { queryKeys } from '@/lib/query-client';
 import { useCallback } from 'react';
-import { validateReferralCodeMCP } from '@/hooks/useReferrals';
+import { validateReferralCodeStandalone } from '@/hooks/useReferrals';
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
@@ -92,6 +92,7 @@ export const useAuth = () => {
           try {
             const cleanCode = variables.referralCode.trim().toUpperCase();
             
+<<<<<<< HEAD
             // Usar a nova função MCP para validação
             const validationResult = await validateReferralCodeMCP(cleanCode);
             
@@ -120,6 +121,34 @@ export const useAuth = () => {
                     console.error('Erro ao registrar indicação:', indicacaoError);
                   } else {
                     console.log('Indicação registrada com sucesso para código:', cleanCode);
+=======
+            // Validar código de referência usando a função standalone
+            const validationResult = await validateReferralCodeStandalone(cleanCode);
+
+            if (validationResult.valid) {
+              // Verificar se não está tentando usar seu próprio código
+              if (validationResult.participanteId !== data.user.id) {
+                // Registrar indicação na tabela indicacoes com os campos corretos
+                const { error: indicacaoError } = await supabase
+                  .from('indicacoes')
+                  .insert({
+                    referencia_id: validationResult.referenciaId,
+                    convidado_id: data.user.id,
+                    status: 'pendente'
+                  });
+
+                if (indicacaoError) {
+                  console.error('Erro ao registrar indicação:', indicacaoError);
+                } else {
+                  console.log('Indicação registrada com sucesso para código:', cleanCode);
+                  
+                  // Dar pontos de bônus para o novo usuário (50 rifas)
+                  try {
+                    const { error: bonusError } = await supabase
+                      .from('profiles')
+                      .update({ rifas: 50 })
+                      .eq('id', data.user.id);
+>>>>>>> ff71f6e (BACKUP-REVERT-FROM-MAIN)
                     
                     // Dar pontos de bônus para o novo usuário
                     try {
@@ -134,6 +163,24 @@ export const useAuth = () => {
                     } catch (bonusError) {
                       console.error('Erro ao aplicar bônus:', bonusError);
                     }
+                  }
+
+                  // Registrar transação de rifas para o novo usuário
+                  try {
+                    const { error: transactionError } = await supabase
+                      .from('rifas_transactions')
+                      .insert({
+                        user_id: data.user.id,
+                        transaction_type: 'bonus',
+                        amount: 50,
+                        description: `Bônus de cadastro com código de referência: ${cleanCode}`
+                      });
+                    
+                    if (!transactionError) {
+                      console.log('Transação de bônus registrada');
+                    }
+                  } catch (transactionError) {
+                    console.error('Erro ao registrar transação de bônus:', transactionError);
                   }
                 }
               } else {

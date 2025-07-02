@@ -16,6 +16,7 @@ import MissionDetails from "@/components/client/missions/MissionDetails";
 import FilteredMissionsList from "@/components/client/missions/FilteredMissionsList";
 import MissionDialog from "@/components/client/missions/MissionDialog";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const ClientMissions = () => {
   const { userName, userType } = useUser();
@@ -59,8 +60,17 @@ const ClientMissions = () => {
   );
 
   const handleMissionClick = (mission: any) => {
-    setSelectedMission(mission);
-    playSound("pop");
+    try {
+      // Defensive check to ensure mission is valid before setting
+      if (mission && typeof mission === 'object' && mission.id) {
+        setSelectedMission(mission);
+        playSound("pop");
+      } else {
+        console.warn("Invalid mission object:", mission);
+      }
+    } catch (error) {
+      console.error("Error in handleMissionClick:", error);
+    }
   };
 
   const handleStartMission = () => {
@@ -130,72 +140,86 @@ const ClientMissions = () => {
                 onSearchChange={handleSearchChange}
               />
               
-              <Tabs defaultValue={currentFilter} onValueChange={(value) => setFilter(value as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
-                  <TabsTrigger value="available">Disponíveis</TabsTrigger>
-                  <TabsTrigger value="in_progress">Em Progresso</TabsTrigger>
-                  <TabsTrigger value="pending">Pendentes</TabsTrigger>
-                  <TabsTrigger value="completed">Concluídas</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="available" className="mt-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
-                      <MissionsList 
-                        missions={filteredMissions} 
-                        selectedMission={selectedMission} 
-                        onMissionClick={handleMissionClick}
-                        emptyMessage="Nenhuma missão disponível no momento."
-                      />
+              <ErrorBoundary>
+                <Tabs defaultValue={currentFilter} onValueChange={(value) => setFilter(value as any)} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 bg-galaxy-deepPurple/50 border border-galaxy-purple/20">
+                    <TabsTrigger value="available">Disponíveis</TabsTrigger>
+                    <TabsTrigger value="in_progress">Em Progresso</TabsTrigger>
+                    <TabsTrigger value="pending">Pendentes</TabsTrigger>
+                    <TabsTrigger value="completed">Concluídas</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="available" className="mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-1">
+                        <ErrorBoundary>
+                          <MissionsList 
+                            missions={filteredMissions} 
+                            selectedMission={selectedMission} 
+                            onMissionClick={handleMissionClick}
+                            emptyMessage="Nenhuma missão disponível no momento."
+                          />
+                        </ErrorBoundary>
+                      </div>
+                      
+                      <div className="lg:col-span-2">
+                        <ErrorBoundary>
+                          <MissionDetails 
+                            mission={selectedMission}
+                            onStartMission={handleStartMission}
+                          />
+                        </ErrorBoundary>
+                      </div>
                     </div>
-                    
-                    <div className="lg:col-span-2">
-                      <MissionDetails 
-                        mission={selectedMission}
-                        onStartMission={handleStartMission}
+                  </TabsContent>
+                  
+                  <TabsContent value="in_progress" className="mt-6">
+                    <ErrorBoundary>
+                      <FilteredMissionsList 
+                        missions={filteredMissions}
+                        onMissionClick={(mission) => {
+                          setSelectedMission(mission);
+                          setIsSubmissionOpen(true);
+                        }}
+                        emptyMessage="Você não tem missões em progresso no momento."
+                        type="in_progress"
                       />
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="in_progress" className="mt-6">
-                  <FilteredMissionsList 
-                    missions={filteredMissions}
-                    onMissionClick={(mission) => {
-                      setSelectedMission(mission);
-                      setIsSubmissionOpen(true);
-                    }}
-                    emptyMessage="Você não tem missões em progresso no momento."
-                    type="in_progress"
-                  />
-                </TabsContent>
-                
-                <TabsContent value="pending" className="mt-6">
-                  <FilteredMissionsList 
-                    missions={filteredMissions}
-                    emptyMessage="Você não tem missões pendentes de aprovação no momento."
-                    type="pending"
-                  />
-                </TabsContent>
-                
-                <TabsContent value="completed" className="mt-6">
-                  <FilteredMissionsList 
-                    missions={filteredMissions}
-                    emptyMessage="Você não tem missões concluídas ainda."
-                    type="completed"
-                  />
-                </TabsContent>
-              </Tabs>
+                    </ErrorBoundary>
+                  </TabsContent>
+                  
+                  <TabsContent value="pending" className="mt-6">
+                    <ErrorBoundary>
+                      <FilteredMissionsList 
+                        missions={filteredMissions}
+                        emptyMessage="Você não tem missões pendentes de aprovação no momento."
+                        type="pending"
+                      />
+                    </ErrorBoundary>
+                  </TabsContent>
+                  
+                  <TabsContent value="completed" className="mt-6">
+                    <ErrorBoundary>
+                      <FilteredMissionsList 
+                        missions={filteredMissions}
+                        emptyMessage="Você não tem missões concluídas ainda."
+                        type="completed"
+                      />
+                    </ErrorBoundary>
+                  </TabsContent>
+                </Tabs>
+              </ErrorBoundary>
             </div>
           </div>
           
-          <MissionDialog 
-            isOpen={isSubmissionOpen}
-            setIsOpen={setIsSubmissionOpen}
-            selectedMission={selectedMission}
-            loading={loading}
-            onSubmitMission={handleSubmitMission}
-          />
+          <ErrorBoundary>
+            <MissionDialog 
+              isOpen={isSubmissionOpen}
+              setIsOpen={setIsSubmissionOpen}
+              selectedMission={selectedMission}
+              loading={loading}
+              onSubmitMission={handleSubmitMission}
+            />
+          </ErrorBoundary>
         </SidebarInset>
       </div>
     </SidebarProvider>

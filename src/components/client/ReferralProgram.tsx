@@ -22,7 +22,7 @@ const ReferralProgram = () => {
 
   const handleShare = () => {
     const shareText = `Junte-se a mim no PremiAds e ganhe pontos para trocar por prêmios incríveis! Use meu código: ${referralCode}`;
-    const shareUrl = `${window.location.origin}/registro?ref=${referralCode}`;
+    const shareUrl = `${window.location.origin}/auth?ref=${referralCode}`;
     
     if (navigator.share) {
       navigator.share({

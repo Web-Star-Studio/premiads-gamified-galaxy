@@ -33,6 +33,89 @@ function canPerformAdvertiserActions(userType: string): boolean {
   return userType === 'anunciante' || userType === 'admin';
 }
 
+// Helper function to process referral completion
+async function processReferralCompletion(supabase: SupabaseClient, userId: string) {
+  try {
+    console.log('Processando indicação para usuário:', userId);
+    
+    // Buscar indicação pendente para este usuário
+    const { data: indicacao, error: indicacaoError } = await supabase
+      .from('indicacoes')
+      .select(`
+        id,
+        referencia_id,
+        referencias:referencia_id (
+          participante_id
+        )
+      `)
+      .eq('convidado_id', userId)
+      .eq('status', 'pendente')
+      .maybeSingle();
+
+    if (indicacaoError) {
+      console.error('Erro ao buscar indicação:', indicacaoError);
+      return;
+    }
+
+    if (!indicacao) {
+      console.log('Nenhuma indicação pendente encontrada para:', userId);
+      return;
+    }
+
+    // Atualizar status da indicação para completo
+    const { error: updateError } = await supabase
+      .from('indicacoes')
+      .update({ status: 'completo' })
+      .eq('id', indicacao.id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar status da indicação:', updateError);
+      return;
+    }
+
+    // Dar recompensa ao referenciador (200 rifas)
+    const referenciadorId = (indicacao.referencias as any)?.participante_id;
+    if (referenciadorId) {
+      // Buscar rifas atuais do referenciador
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('rifas')
+        .eq('id', referenciadorId)
+        .single();
+
+      if (!profileError && profile) {
+        const novasRifas = (profile.rifas || 0) + 200;
+        
+        // Atualizar rifas
+        const { error: updateRifasError } = await supabase
+          .from('profiles')
+          .update({ rifas: novasRifas })
+          .eq('id', referenciadorId);
+
+        if (!updateRifasError) {
+          // Registrar transação
+          await supabase
+            .from('rifas_transactions')
+            .insert({
+              user_id: referenciadorId,
+              transaction_type: 'bonus',
+              amount: 200,
+              description: 'Bônus por indicação completa'
+            });
+
+          console.log('Recompensa de referência aplicada:', referenciadorId, '- Nova quantidade de rifas:', novasRifas);
+        } else {
+          console.error('Erro ao atualizar rifas do referenciador:', updateRifasError);
+        }
+      } else {
+        console.error('Erro ao buscar perfil do referenciador:', profileError);
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao processar indicação:', error);
+  }
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -157,6 +240,23 @@ serve(async (req: Request) => {
       });
     }
 
+<<<<<<< HEAD
+=======
+    // Processar indicação se a ação for de aprovação
+    if (action === "ADVERTISER_APPROVE_FIRST_INSTANCE" || action === "ADVERTISER_APPROVE_SECOND_INSTANCE") {
+      // Buscar dados da submissão para obter o user_id
+      const { data: submission, error: submissionError } = await supabaseAdminClient
+        .from('mission_submissions')
+        .select('user_id')
+        .eq('id', submission_id)
+        .single();
+
+      if (!submissionError && submission) {
+        await processReferralCompletion(supabaseAdminClient, submission.user_id);
+      }
+    }
+
+>>>>>>> ff71f6e (BACKUP-REVERT-FROM-MAIN)
     return new Response(JSON.stringify({ success: true, message: `Action ${action} performed successfully.` }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

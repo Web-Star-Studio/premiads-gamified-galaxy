@@ -23,16 +23,24 @@ const Authentication = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup" | "reset">("login");
   const [searchParams] = useSearchParams();
   const [passwordResetMode, setPasswordResetMode] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>("");
   
   const { signIn, signUp, loading, resetPassword, updatePassword } = useAuth();
   const navigate = useNavigate();
   
-  // Check for password reset mode
+  // Check for password reset mode and referral code
   useEffect(() => {
     const isReset = searchParams.get('reset') === 'true';
+    const refCode = searchParams.get('ref');
+    
     if (isReset) {
       setPasswordResetMode(true);
       setActiveTab('reset');
+    }
+    
+    if (refCode) {
+      setReferralCode(refCode);
+      setActiveTab('signup'); // Switch to signup tab when referral code is present
     }
   }, [searchParams]);
   
@@ -44,7 +52,7 @@ const Authentication = () => {
     }
   };
   
-  const handleSignup = async (credentials: SignUpCredentials) => {
+  const handleSignup = async (credentials: SignUpCredentials & { referralCode?: string }) => {
     try {
       await signUp(credentials);
       setActiveTab("login");
@@ -85,7 +93,9 @@ const Authentication = () => {
         >
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold neon-text-cyan mb-1">PremiAds</h1>
-            <p className="text-muted-foreground">Entrar ou criar sua conta</p>
+            <p className="text-muted-foreground">
+              {referralCode ? `Cadastre-se com o código: ${referralCode}` : "Entrar ou criar sua conta"}
+            </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "signup" | "reset")}>
@@ -108,6 +118,7 @@ const Authentication = () => {
                 <SignUpForm 
                   loading={loading} 
                   onSubmit={handleSignup}
+                  initialReferralCode={referralCode}
                 />
               </TabsContent>
               
