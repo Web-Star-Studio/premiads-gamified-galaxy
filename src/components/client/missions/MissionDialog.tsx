@@ -14,7 +14,6 @@ import { Mission } from "@/hooks/missions/types";
 import { useSubmissionFileUpload } from "@/hooks/useSubmissionFileUpload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureString, safeRenderArray } from "@/utils/react-safe-render";
 
 interface MissionDialogProps {
   isOpen: boolean;
@@ -31,36 +30,42 @@ const MissionDialog = ({
   loading,
   onSubmitMission
 }: MissionDialogProps) => {
-  const { toast } = useToast();
-  const { uploadFiles } = useSubmissionFileUpload();
-  
   const [formData, setFormData] = useState({
     content: "",
-    files: [] as File[]
+    files: [] as File[],
+    saveAsDraft: false
   });
   const [submitting, setSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
+  const { uploadFiles, isUploading } = useSubmissionFileUpload();
+  const { toast } = useToast();
+  
+  // Handle dialog close
   const handleClose = () => {
+    if (submitting || isUploading) return;
     setIsOpen(false);
-    setFormData({ content: "", files: [] });
+    setFormData({ content: "", files: [], saveAsDraft: false });
   };
-
+  
+  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({
       ...prev,
       content: e.target.value
     }));
   };
-
+  
+  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
-      ...prev,
-      files: [...prev.files, ...files]
-    }));
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setFormData(prev => ({
+        ...prev,
+        files: [...prev.files, ...selectedFiles]
+      }));
+    }
   };
-
+  
+  // Remove a file from the selection
   const handleRemoveFile = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -132,11 +137,6 @@ const MissionDialog = ({
   
   if (!selectedMission) return null;
   
-  // Safe rendering using utility functions
-  const titleValue = ensureString(selectedMission.title, "Missão sem título");
-  const descriptionValue = ensureString(selectedMission.description, "Descrição não disponível");
-  const requirements = safeRenderArray(selectedMission.requirements);
-  
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent 
@@ -145,21 +145,21 @@ const MissionDialog = ({
       >
         <DialogHeader>
           <DialogTitle className="text-xl font-heading">
-            {titleValue}
+            {selectedMission.title}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 my-4">
           <div className="space-y-2">
             <p id="mission-submission-description" className="text-sm text-muted-foreground">
-              {descriptionValue}
+              {selectedMission.description}
             </p>
             
-            {requirements.length > 0 && (
+            {selectedMission.requirements && selectedMission.requirements.length > 0 && (
               <div className="mt-4">
                 <h3 className="text-sm font-medium mb-2">Requisitos:</h3>
                 <ul className="list-disc list-inside text-sm space-y-1 pl-2">
-                  {requirements.map((req, index) => (
+                  {selectedMission.requirements.map((req, index) => (
                     <li key={index} className="text-gray-300">{req}</li>
                   ))}
                 </ul>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,27 +9,20 @@ import { validateReferralCodeMCP } from "@/hooks/useReferrals";
 interface SignUpFormProps {
   loading: boolean;
   onSubmit: (credentials: SignUpCredentials & { referralCode?: string }) => Promise<void>;
-  initialReferralCode?: string;
 }
 
-const SignUpForm = ({ loading, onSubmit, initialReferralCode = "" }: SignUpFormProps) => {
+const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<UserType>("participante");
-  const [referralCode, setReferralCode] = useState(initialReferralCode);
+  const [referralCode, setReferralCode] = useState("");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [validatingCode, setValidatingCode] = useState(false);
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [codeOwnerName, setCodeOwnerName] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Pre-validate referral code if provided initially
-  useEffect(() => {
-    if (initialReferralCode && initialReferralCode.trim().length > 0) {
-      handleReferralCodeChange(initialReferralCode);
-    }
-  }, [initialReferralCode]);
 
   const handleReferralCodeChange = async (code: string) => {
     setReferralCode(code);
@@ -46,8 +39,8 @@ const SignUpForm = ({ loading, onSubmit, initialReferralCode = "" }: SignUpFormP
     setValidatingCode(true);
     try {
       const result = await validateReferralCodeMCP(code.trim().toUpperCase());
-      setCodeValid(result.isValid);
-      if (result.isValid && result.ownerName) {
+              setCodeValid(result.isValid);
+        if (result.isValid && result.ownerName) {
         setCodeOwnerName(result.ownerName);
       }
     } catch (error) {

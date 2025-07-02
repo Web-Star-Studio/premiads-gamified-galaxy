@@ -5,7 +5,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { SignInCredentials, SignUpCredentials } from '@/types/auth';
 import { queryKeys } from '@/lib/query-client';
 import { useCallback } from 'react';
-import { validateReferralCodeStandalone } from '@/hooks/useReferrals';
+import { validateReferralCodeMCP } from '@/hooks/useReferrals';
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
@@ -91,50 +91,28 @@ export const useAuth = () => {
         if (variables.referralCode && variables.userType === 'participante') {
           try {
             const cleanCode = variables.referralCode.trim().toUpperCase();
+            console.log('Processando código de referência:', cleanCode);
             
-<<<<<<< HEAD
-            // Usar a nova função MCP para validação
+            // Validar código de referência usando a função do hook
             const validationResult = await validateReferralCodeMCP(cleanCode);
-            
-            if (validationResult.isValid && validationResult.ownerId) {
+
+            if (validationResult.isValid) {
+              const referrerData = {
+                participante_id: validationResult.ownerId,
+                full_name: validationResult.ownerName,
+                active: true
+              };
+              
               // Verificar se não está tentando usar seu próprio código
-              if (validationResult.ownerId !== data.user.id) {
-                // Buscar a referência para registrar indicação
-                const { data: referencia, error: refError } = await supabase
-                  .from('referencias')
-                  .select('id')
-                  .eq('participante_id', validationResult.ownerId)
-                  .eq('codigo', cleanCode)
-                  .single();
-
-                if (!refError && referencia) {
-                  // Registrar indicação
-                  const { error: indicacaoError } = await supabase
-                    .from('indicacoes')
-                    .insert({
-                      referencia_id: referencia.id,
-                      convidado_id: data.user.id,
-                      status: 'pendente'
-                    });
-
-                  if (indicacaoError) {
-                    console.error('Erro ao registrar indicação:', indicacaoError);
-                  } else {
-                    console.log('Indicação registrada com sucesso para código:', cleanCode);
-=======
-            // Validar código de referência usando a função standalone
-            const validationResult = await validateReferralCodeStandalone(cleanCode);
-
-            if (validationResult.valid) {
-              // Verificar se não está tentando usar seu próprio código
-              if (validationResult.participanteId !== data.user.id) {
-                // Registrar indicação na tabela indicacoes com os campos corretos
+              if (referrerData.participante_id !== data.user.id) {
+                // Registrar indicação na tabela indicacoes
                 const { error: indicacaoError } = await supabase
                   .from('indicacoes')
                   .insert({
-                    referencia_id: validationResult.referenciaId,
-                    convidado_id: data.user.id,
-                    status: 'pendente'
+                    referenciador_id: referrerData.participante_id,
+                    indicado_id: data.user.id,
+                    status: 'pendente',
+                    created_at: new Date().toISOString()
                   });
 
                 if (indicacaoError) {
@@ -142,52 +120,25 @@ export const useAuth = () => {
                 } else {
                   console.log('Indicação registrada com sucesso para código:', cleanCode);
                   
-                  // Dar pontos de bônus para o novo usuário (50 rifas)
+                  // Dar pontos de bônus para o novo usuário
                   try {
                     const { error: bonusError } = await supabase
                       .from('profiles')
-                      .update({ rifas: 50 })
+                      .update({ rifas: 50 }) // 50 rifas de bônus por usar código
                       .eq('id', data.user.id);
->>>>>>> ff71f6e (BACKUP-REVERT-FROM-MAIN)
                     
-                    // Dar pontos de bônus para o novo usuário
-                    try {
-                      const { error: bonusError } = await supabase
-                        .from('profiles')
-                        .update({ rifas: 50 }) // 50 rifas de bônus por usar código
-                        .eq('id', data.user.id);
-                      
-                      if (!bonusError) {
-                        console.log('Bônus de boas-vindas aplicado');
-                      }
-                    } catch (bonusError) {
-                      console.error('Erro ao aplicar bônus:', bonusError);
+                    if (!bonusError) {
+                      console.log('Bônus de boas-vindas aplicado (50 rifas)');
                     }
-                  }
-
-                  // Registrar transação de rifas para o novo usuário
-                  try {
-                    const { error: transactionError } = await supabase
-                      .from('rifas_transactions')
-                      .insert({
-                        user_id: data.user.id,
-                        transaction_type: 'bonus',
-                        amount: 50,
-                        description: `Bônus de cadastro com código de referência: ${cleanCode}`
-                      });
-                    
-                    if (!transactionError) {
-                      console.log('Transação de bônus registrada');
-                    }
-                  } catch (transactionError) {
-                    console.error('Erro ao registrar transação de bônus:', transactionError);
+                  } catch (bonusError) {
+                    console.error('Erro ao aplicar bônus:', bonusError);
                   }
                 }
               } else {
                 console.warn('Usuário tentou usar seu próprio código de referência');
               }
             } else {
-              console.warn('Código de referência inválido:', cleanCode, validationResult.error);
+              console.warn('Código de referência não encontrado ou inválido:', cleanCode, validationResult.error);
             }
           } catch (error) {
             console.error('Erro ao processar código de referência:', error);
