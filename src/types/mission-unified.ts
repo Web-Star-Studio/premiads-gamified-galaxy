@@ -23,7 +23,7 @@ export interface SupabaseMission {
 
 export const mapSupabaseMissionToMission = (mission: SupabaseMission): Mission => ({
   ...mission,
-  requirements: mission.requirements || [],
+  requirements: Array.isArray(mission.requirements) ? mission.requirements : [],
   has_badge: mission.has_badge || false,
   has_lootbox: mission.has_lootbox || false,
   cost_in_tokens: mission.cost_in_tokens || 0,
@@ -36,7 +36,7 @@ export interface Mission {
   title: string;
   description?: string;
   type: string;
-  requirements: string | string[];
+  requirements: string[];
   rifas: number;
   points?: number;
   tickets_reward?: number;

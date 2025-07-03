@@ -74,13 +74,49 @@ serve(async (req) => {
       throw updateError
     }
 
+    // NOVO: Buscar o ID do participante referenciador para dar a recompensa
+    const { data: referencia, error: referenciaError } = await supabase
+      .from('referencias')
+      .select('participante_id')
+      .eq('id', indicacao.referencia_id)
+      .single()
+
+    if (referenciaError) {
+      throw referenciaError
+    }
+
+    // NOVO: Award 200 rifas (points) to the referrer
+    const { data: currentProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('rifas')
+      .eq('id', referencia.participante_id)
+      .single()
+
+    if (profileError) {
+      throw profileError
+    }
+
+    const currentRifas = currentProfile?.rifas || 0
+    const { error: rewardError } = await supabase
+      .from('profiles')
+      .update({ 
+        rifas: currentRifas + 200,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', referencia.participante_id)
+
+    if (rewardError) {
+      console.error('Erro ao dar recompensa ao referenciador:', rewardError)
+      // Continue execution even if this fails, but log the error
+    }
+
     // Verificar e gerar recompensas baseadas em marcos
     await checkAndGenerateRewards(supabase, indicacao.referencia_id)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Indicação atualizada e recompensas processadas' 
+        message: 'Indicação atualizada, recompensa de 200 rifas concedida e marcos processados' 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

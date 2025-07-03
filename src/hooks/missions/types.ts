@@ -1,4 +1,4 @@
-export type MissionStatus = "available" | "in_progress" | "pending_approval" | "completed";
+    export type MissionStatus = "available" | "in_progress" | "pending_approval" | "completed";
 
 export interface Mission {
   id: string;

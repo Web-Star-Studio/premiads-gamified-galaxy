@@ -56,12 +56,12 @@ const MissionDetails = ({ mission, onClose, onSubmit, onStartMission }: MissionD
       <div>
         <h3 className="text-lg font-medium">Requisitos</h3>
         <ul>
-          {Array.isArray(mission.requirements) ? (
+          {mission.requirements.length > 0 ? (
             mission.requirements.map((req, index) => (
               <li key={index} className="text-sm text-gray-400">{req}</li>
             ))
           ) : (
-            <li className="text-sm text-gray-400">{mission.requirements}</li>
+            <li className="text-sm text-gray-400">Nenhum requisito específico</li>
           )}
         </ul>
       </div>

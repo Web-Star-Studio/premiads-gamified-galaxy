@@ -8,7 +8,7 @@ export interface Mission {
   rifas: number;
   cashback_reward: number;
   cost_in_tokens: number;
-  requirements: string[] | string;
+  requirements: string[];
   status: string;
   start_date: string;
   end_date: string;
