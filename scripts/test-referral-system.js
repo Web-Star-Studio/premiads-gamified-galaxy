@@ -37,12 +37,17 @@ async function testReferralValidation() {
         })
       });
       
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log(`✅ Válido - Proprietário: ${result.data.ownerName} (${result.data.ownerId})`);
-      } else {
-        console.log(`❌ Inválido - Erro: ${result.error}`);
+      const resultText = await response.text();
+      try {
+        const result = JSON.parse(resultText);
+        if (result.success) {
+          console.log(`✅ Válido - Proprietário: ${result.data.ownerName} (${result.data.ownerId})`);
+        } else {
+          console.log(`❌ Inválido - Resposta do Servidor: ${resultText}`);
+        }
+      } catch (e) {
+        console.log(`💥 Erro ao processar JSON: ${e.message}`);
+        console.log(`📝 Corpo da resposta (não-JSON): ${resultText}`);
       }
       
     } catch (error) {
@@ -75,16 +80,21 @@ async function testStatsRetrieval() {
       })
     });
     
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('✅ Estatísticas do Lucas:');
-      console.log(`   📈 Total de convites: ${result.data.totalConvites}`);
-      console.log(`   ⏳ Pendentes: ${result.data.pendentes}`);
-      console.log(`   ✅ Registrados: ${result.data.registrados}`);
-      console.log(`   🎯 Pontos ganhos: ${result.data.pontosGanhos}`);
-    } else {
-      console.log(`❌ Erro ao buscar estatísticas: ${result.error}`);
+    const resultText = await response.text();
+    try {
+      const result = JSON.parse(resultText);
+      if (result.success) {
+        console.log('✅ Estatísticas do Lucas:');
+        console.log(`   📈 Total de convites: ${result.data.totalConvites}`);
+        console.log(`   ⏳ Pendentes: ${result.data.pendentes}`);
+        console.log(`   ✅ Registrados: ${result.data.registrados}`);
+        console.log(`   🎯 Pontos ganhos: ${result.data.pontosGanhos}`);
+      } else {
+        console.log(`❌ Erro ao buscar estatísticas - Resposta: ${resultText}`);
+      }
+    } catch (e) {
+        console.log(`💥 Erro ao processar JSON de estatísticas: ${e.message}`);
+        console.log(`📝 Corpo da resposta (não-JSON): ${resultText}`);
     }
     
   } catch (error) {
@@ -102,9 +112,6 @@ async function runTests() {
   console.log('✨ Testes concluídos!');
 }
 
-// Executar apenas se for chamado diretamente
-if (require.main === module) {
-  runTests().catch(console.error);
-}
+runTests().catch(console.error);
 
-module.exports = { testReferralValidation, testStatsRetrieval }; 
+export { testReferralValidation, testStatsRetrieval }; 

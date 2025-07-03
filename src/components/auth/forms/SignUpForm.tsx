@@ -1,55 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SignUpCredentials, UserType } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
-import { validateReferralCodeMCP } from "@/hooks/useReferrals";
+import { useReferrals } from "@/hooks/useReferrals";
 
 interface SignUpFormProps {
   loading: boolean;
   onSubmit: (credentials: SignUpCredentials & { referralCode?: string }) => Promise<void>;
 }
 
-const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
+function SignUpForm({ loading, onSubmit }: SignUpFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<UserType>("participante");
   const [referralCode, setReferralCode] = useState("");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-  const [validatingCode, setValidatingCode] = useState(false);
-  const [codeValid, setCodeValid] = useState<boolean | null>(null);
-  const [codeOwnerName, setCodeOwnerName] = useState<string | null>(null);
+  const [debouncedCode, setDebouncedCode] = useState(referralCode);
+
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean | null;
+    ownerName?: string;
+    error?: string;
+  }>({ isValid: null });
+
   const { toast } = useToast();
+  const { validateReferralCode, isValidating } = useReferrals();
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCode(referralCode);
+    }, 500);
 
-  const handleReferralCodeChange = async (code: string) => {
-    setReferralCode(code);
-    setCodeValid(null);
-    setCodeOwnerName(null);
-    
-    if (code.trim().length === 0) return;
-    
-    if (code.trim().length < 3) {
-      setCodeValid(false);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [referralCode]);
+
+  const handleValidation = useCallback(async (code: string) => {
+    if (!code.trim()) {
+      setValidationResult({ isValid: null });
       return;
     }
+
+    const result = await validateReferralCode(code);
     
-    setValidatingCode(true);
-    try {
-      const result = await validateReferralCodeMCP(code.trim().toUpperCase());
-              setCodeValid(result.isValid);
-        if (result.isValid && result.ownerName) {
-        setCodeOwnerName(result.ownerName);
-      }
-    } catch (error) {
-      console.error('Erro ao validar código:', error);
-      setCodeValid(false);
-    } finally {
-      setValidatingCode(false);
+    setValidationResult({
+      isValid: result.valid,
+      ownerName: result.ownerName,
+      error: result.error
+    });
+  }, [validateReferralCode]);
+
+  useEffect(() => {
+    if (debouncedCode) {
+      handleValidation(debouncedCode);
+    } else {
+      setValidationResult({ isValid: null });
     }
-  };
+  }, [debouncedCode, handleValidation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +83,10 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
       return;
     }
     
-    if (referralCode && codeValid === false) {
+    if (referralCode && validationResult.isValid === false) {
       toast({
         title: "Código inválido",
-        description: "O código de indicação inserido não é válido.",
+        description: validationResult.error || "O código de indicação inserido não é válido.",
         variant: "destructive",
       });
       return;
@@ -89,6 +100,15 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
       referralCode: referralCode.trim() || undefined 
     });
   };
+
+  const getValidationMessage = () => {
+    if (isValidating) return 'Verificando código...';
+    if (validationResult.isValid === true) return `✓ Código válido! Dono: ${validationResult.ownerName}`;
+    if (validationResult.isValid === false) return `✗ ${validationResult.error || 'Código inválido ou expirado.'}`;
+    return null;
+  };
+
+  const validationMessage = getValidationMessage();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,37 +162,33 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
               type="text"
               placeholder="Ex: PREMIUMUSER2025"
               value={referralCode}
-              onChange={(e) => handleReferralCodeChange(e.target.value)}
+              onChange={(e) => setReferralCode(e.target.value)}
               className={`bg-galaxy-dark ${
                 referralCode 
-                  ? codeValid === true 
+                  ? validationResult.isValid === true 
                     ? 'border-green-500' 
-                    : codeValid === false 
+                    : validationResult.isValid === false 
                       ? 'border-red-500' 
                       : 'border-yellow-500'
                   : ''
               }`}
-              disabled={validatingCode}
+              disabled={isValidating}
             />
-            {validatingCode && (
+            {isValidating && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
               </div>
             )}
           </div>
-          {referralCode && (
+          {referralCode && validationMessage && (
             <p className={`text-xs ${
-              codeValid === true 
+              validationResult.isValid === true 
                 ? 'text-green-400' 
-                : codeValid === false 
+                : validationResult.isValid === false 
                   ? 'text-red-400' 
                   : 'text-yellow-400'
             }`}>
-              {codeValid === true 
-                ? `✓ Código válido! Você ganhará pontos extras ao se cadastrar. Dono: ${codeOwnerName}` 
-                : codeValid === false 
-                  ? '✗ Código inválido ou expirado.' 
-                  : 'Verificando código...'}
+              {validationMessage}
             </p>
           )}
         </div>
@@ -232,11 +248,11 @@ const SignUpForm = ({ loading, onSubmit }: SignUpFormProps) => {
         </div>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full" disabled={loading || isValidating}>
         {loading ? "Cadastrando..." : "Cadastrar"}
       </Button>
     </form>
   );
-};
+}
 
 export default SignUpForm;

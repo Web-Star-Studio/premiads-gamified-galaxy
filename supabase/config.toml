@@ -1,1 +1,4 @@
 project_id = "zfryjwaeojccskfiibtq"
+
+[functions.referral-system]
+  verify_jwt = false

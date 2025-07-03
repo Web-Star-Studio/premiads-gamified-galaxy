@@ -14,17 +14,17 @@ interface ReferralRequest {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
   try {
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders })
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action, userId, referralCode, submissionId }: ReferralRequest = await req.json()
+    const { action, userId, referralCode }: ReferralRequest = await req.json()
 
     if (!action) {
       return createErrorResponse('Ação é obrigatória', 400)
@@ -53,8 +53,8 @@ serve(async (req) => {
         return createErrorResponse('Ação inválida', 400)
     }
   } catch (error: any) {
-    console.error('Erro inesperado:', error)
-    return createErrorResponse(error?.message ?? 'Erro desconhecido', 500)
+    console.error('Erro inesperado no servidor:', error)
+    return createErrorResponse(error?.message ?? 'Erro desconhecido no servidor', 500)
   }
 })
 
@@ -265,7 +265,7 @@ async function processMissionCompletion(supabase: any, userId: string): Promise<
 // Validar código de referência
 async function validateReferralCode(supabase: any, code: string): Promise<Response> {
   try {
-    if (!code) {
+    if (!code || !String(code).trim()) {
       return createErrorResponse('Código é obrigatório', 400)
     }
 
@@ -275,7 +275,12 @@ async function validateReferralCode(supabase: any, code: string): Promise<Respon
       input_code: cleanCode,
     })
 
-    if (validationError || !validationData || validationData.length === 0) {
+    if (validationError) {
+      console.error('Erro na RPC validate_referral_code_direct:', validationError)
+      return createErrorResponse('Erro de banco de dados ao validar o código.', 500)
+    }
+    
+    if (!validationData || validationData.length === 0) {
       return createErrorResponse('Código de referência inválido ou inativo', 400)
     }
 
@@ -288,8 +293,8 @@ async function validateReferralCode(supabase: any, code: string): Promise<Respon
       ownerName
     })
   } catch (error: any) {
-    console.error('Erro ao validar código:', error)
-    return createErrorResponse(error?.message ?? 'Erro interno', 500)
+    console.error('Erro inesperado ao validar código:', error)
+    return createErrorResponse(error?.message ?? 'Erro interno desconhecido', 500)
   }
 }
 
