@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
@@ -6,28 +6,35 @@ import { useSounds } from "@/hooks/use-sounds";
 // Função standalone para validar códigos de referência (não requer autenticação)
 export const validateReferralCodeStandalone = async (codigo: string) => {
   try {
-    // Verificar se o código não está vazio
     if (!codigo || codigo.trim().length === 0) {
       return { valid: false, error: 'Código de referência não pode estar vazio' };
     }
 
-    // Limpar e normalizar o código
     const cleanCode = codigo.trim().toUpperCase();
     
-    // Verificar comprimento mínimo
     if (cleanCode.length < 3) {
       return { valid: false, error: 'Código de referência muito curto' };
     }
 
-    // Primeiro, tentar usar a Edge Function se disponível
+    // Usar a nova edge function
     try {
-      const { data: functionResult, error: functionError } = await supabase.functions.invoke('validate-referral-code', {
-        body: { codigo: cleanCode }
+      const { data: functionResult, error: functionError } = await supabase.functions.invoke('referral-system', {
+        body: { 
+          action: 'validate_code',
+          referralCode: cleanCode 
+        }
       });
 
-      if (!functionError && functionResult) {
-        return functionResult;
+      if (!functionError && functionResult?.success) {
+        return {
+          valid: true,
+          referenciaId: functionResult.data?.referenciaId,
+          participanteId: functionResult.data?.ownerId,
+          ownerName: functionResult.data?.ownerName
+        };
       }
+
+      return { valid: false, error: functionResult?.error || 'Código inválido' };
     } catch (functionError) {
       console.warn('Edge Function não disponível, usando fallback direto:', functionError);
     }
@@ -48,7 +55,6 @@ export const validateReferralCodeStandalone = async (codigo: string) => {
       return { valid: false, error: 'Código de referência inválido ou não encontrado' };
     }
 
-    // Verificar se o usuário está ativo
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('full_name, active')
@@ -99,7 +105,25 @@ export interface ReferralStats {
   pontosGanhos: number;
 }
 
-export const useReferrals = () => {
+interface ValidationResult {
+  valid: boolean;
+  ownerId?: string;
+  ownerName?: string;
+  error?: string;
+}
+
+interface UserReferralCode {
+  code: string | null;
+  active: boolean;
+}
+
+// Cache para evitar múltiplas chamadas simultâneas
+const referralCodeCache = new Map<string, Promise<string>>();
+
+export function useReferrals() {
+  const [isValidating, setIsValidating] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isLoadingUserCode, setIsLoadingUserCode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [referralCode, setReferralCode] = useState("");
@@ -113,10 +137,140 @@ export const useReferrals = () => {
   const { toast } = useToast();
   const { playSound } = useSounds();
 
+  // Validar código de referência dinamicamente
+  const validateReferralCode = useCallback(async (code: string): Promise<ValidationResult> => {
+    if (!code?.trim()) {
+      return { valid: false, error: 'Código é obrigatório' };
+    }
+
+    setIsValidating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('referral-system', {
+        body: {
+          action: 'validate_code',
+          referralCode: code.trim()
+        }
+      });
+
+      if (error) {
+        console.error('Erro na validação:', error);
+        return { valid: false, error: 'Erro ao validar código' };
+      }
+
+      if (!data?.success) {
+        return { valid: false, error: data?.error || 'Código inválido' };
+      }
+
+      return {
+        valid: true,
+        ownerId: data.data?.ownerId,
+        ownerName: data.data?.ownerName
+      };
+    } catch (error) {
+      console.error('Erro inesperado na validação:', error);
+      return { valid: false, error: 'Erro inesperado' };
+    } finally {
+      setIsValidating(false);
+    }
+  }, []);
+
+  // Buscar estatísticas de referência dinamicamente
+  const getReferralStats = useCallback(async (userId: string): Promise<ReferralStats | null> => {
+    if (!userId) return null;
+
+    setIsLoadingStats(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('referral-system', {
+        body: {
+          action: 'get_stats',
+          userId
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao buscar estatísticas:', error);
+        return null;
+      }
+
+      if (!data?.success) {
+        console.error('Erro nas estatísticas:', data?.error);
+        return null;
+      }
+
+      return data.data as ReferralStats;
+    } catch (error) {
+      console.error('Erro inesperado ao buscar estatísticas:', error);
+      return null;
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, []);
+
+  // Buscar código do usuário dinamicamente
+  const getUserReferralCode = useCallback(async (userId: string): Promise<UserReferralCode | null> => {
+    if (!userId) return null;
+
+    setIsLoadingUserCode(true);
+    
+    try {
+      const { data: referralData, error } = await supabase
+        .from('referencias')
+        .select('codigo')
+        .eq('participante_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao buscar código do usuário:', error);
+        return null;
+      }
+
+      return {
+        code: referralData?.codigo || null,
+        active: !!referralData?.codigo
+      };
+    } catch (error) {
+      console.error('Erro inesperado ao buscar código:', error);
+      return null;
+    } finally {
+      setIsLoadingUserCode(false);
+    }
+  }, []);
+
+  // Buscar todos os códigos ativos dinamicamente
+  const getAllReferralCodes = useCallback(async (): Promise<Array<{id: string, code: string, user_name: string}> | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('referencias')
+        .select(`
+          id,
+          codigo,
+          profiles!inner(full_name, active, user_type)
+        `)
+        .eq('profiles.active', true)
+        .eq('profiles.user_type', 'participante')
+        .order('criado_em', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar códigos:', error);
+        return null;
+      }
+
+      return data?.map((item: any) => ({
+        id: item.id,
+        code: item.codigo,
+        user_name: item.profiles?.full_name || 'Usuário'
+      })) || [];
+    } catch (error) {
+      console.error('Erro inesperado ao buscar códigos:', error);
+      return null;
+    }
+  }, []);
+
   // Gerar código único baseado no username + ano
   const generateReferralCode = async (userId: string) => {
     try {
-      // Buscar o perfil do usuário para pegar o nome
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name')
@@ -129,7 +283,6 @@ export const useReferrals = () => {
       const username = profile?.full_name?.replace(/\s+/g, '').toUpperCase() || 'USER';
       let baseCode = `${username}${year}`;
       
-      // Garantir que o código seja único
       let finalCode = baseCode;
       let counter = 1;
       
@@ -151,60 +304,95 @@ export const useReferrals = () => {
       return finalCode;
     } catch (error) {
       console.error('Erro ao gerar código:', error);
-      // Fallback para código simples
       return `USER${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}`;
     }
   };
 
   // Criar ou recuperar código de referência
   const ensureReferralCode = async (userId: string) => {
-    try {
-      // Verificar se já existe um código para este usuário
-      const { data: existingRef, error: refError } = await supabase
-        .from('referencias')
-        .select('codigo')
-        .eq('participante_id', userId)
-        .maybeSingle();
-
-      if (refError && refError.code !== 'PGRST116') throw refError;
-
-      if (existingRef) {
-        return existingRef.codigo;
-      }
-
-      // Gerar novo código
-      const newCode = await generateReferralCode(userId);
-      
-      // Criar nova referência
-      const { error: insertError } = await supabase
-        .from('referencias')
-        .insert({
-          codigo: newCode,
-          participante_id: userId
-        });
-
-      if (insertError) throw insertError;
-
-      return newCode;
-    } catch (error) {
-      console.error('Erro ao garantir código de referência:', error);
-      throw error;
+    if (referralCodeCache.has(userId)) {
+      return await referralCodeCache.get(userId)!;
     }
+
+    const promise = (async () => {
+      try {
+        const { data: existingRef, error: refError } = await supabase
+          .from('referencias')
+          .select('codigo')
+          .eq('participante_id', userId)
+          .maybeSingle();
+
+        if (refError && refError.code !== 'PGRST116') throw refError;
+
+        if (existingRef) {
+          return existingRef.codigo;
+        }
+
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (attempts < maxAttempts) {
+          try {
+            const baseCode = await generateReferralCode(userId);
+            const finalCode = attempts === 0 ? baseCode : `${baseCode}${Math.floor(Math.random() * 1000)}`;
+            
+            const { error: insertError } = await supabase
+              .from('referencias')
+              .insert({
+                codigo: finalCode,
+                participante_id: userId
+              });
+
+            if (!insertError) {
+              return finalCode;
+            }
+
+            if (insertError.code !== '23505') {
+              throw insertError;
+            }
+
+            attempts++;
+          } catch (error: any) {
+            if (error.code !== '23505') {
+              throw error;
+            }
+            attempts++;
+          }
+        }
+
+        throw new Error('Não foi possível gerar código de referência único após múltiplas tentativas');
+      } catch (error) {
+        console.error('Erro ao garantir código de referência:', error);
+        throw error;
+      } finally {
+        referralCodeCache.delete(userId);
+      }
+    })();
+
+    referralCodeCache.set(userId, promise);
+    
+    return await promise;
   };
 
   // Buscar estatísticas de referência
   const fetchReferralStats = async (userId: string) => {
     try {
-      // Buscar a referência do usuário
       const { data: userRef, error: refError } = await supabase
         .from('referencias')
         .select('id')
         .eq('participante_id', userId)
-        .single();
+        .maybeSingle();
 
       if (refError) throw refError;
+      if (!userRef) {
+        return {
+          totalConvites: 0,
+          pendentes: 0,
+          registrados: 0,
+          pontosGanhos: 0
+        };
+      }
 
-      // Buscar indicações
       const { data: indicacoes, error: indError } = await supabase
         .from('indicacoes')
         .select('status')
@@ -215,7 +403,7 @@ export const useReferrals = () => {
       const totalConvites = indicacoes?.length || 0;
       const pendentes = indicacoes?.filter(i => i.status === 'pendente').length || 0;
       const registrados = indicacoes?.filter(i => i.status === 'completo').length || 0;
-      const pontosGanhos = registrados * 200; // 200 pontos por indicação completa
+      const pontosGanhos = registrados * 200;
 
       return {
         totalConvites,
@@ -241,26 +429,22 @@ export const useReferrals = () => {
         const userId = session.data.session?.user.id;
         
         if (!userId) {
-          // Se não há usuário autenticado, apenas define loading como false
           setLoading(false);
           return;
         }
         
-        // Garantir que o usuário tenha um código de referência
         const userReferralCode = await ensureReferralCode(userId);
         setReferralCode(userReferralCode);
         setReferralLink(`${window.location.origin}/registro?ref=${userReferralCode}`);
         
-        // Buscar estatísticas
         const referralStats = await fetchReferralStats(userId);
         setStats(referralStats);
         
-        // Buscar indicações detalhadas (mantendo compatibilidade)
         const { data: userRef } = await supabase
           .from('referencias')
           .select('id')
           .eq('participante_id', userId)
-          .single();
+          .maybeSingle();
 
         if (userRef) {
           const { data: indicacoes } = await supabase
@@ -274,7 +458,6 @@ export const useReferrals = () => {
             .eq('referencia_id', userRef.id);
 
           if (indicacoes) {
-            // Buscar perfis dos convidados
             const convidadoIds = indicacoes.map(i => i.convidado_id).filter(Boolean);
             let profiles: any[] = [];
             
@@ -326,25 +509,6 @@ export const useReferrals = () => {
     fetchReferrals();
   }, [toast, playSound]);
 
-  // Validar código de referência durante cadastro (não requer autenticação)
-  const validateReferralCode = async (codigo: string) => {
-    try {
-      const { data: referencia, error } = await supabase
-        .from('referencias')
-        .select('id, participante_id')
-        .eq('codigo', codigo.toUpperCase())
-        .single();
-
-      if (error) {
-        return { valid: false, error: 'Código de referência inválido' };
-      }
-
-      return { valid: true, referenciaId: referencia.id, participanteId: referencia.participante_id };
-    } catch (error) {
-      return { valid: false, error: 'Erro ao validar código' };
-    }
-  };
-
   // Registrar nova indicação
   const registerReferral = async (referenciaId: string, convidadoId: string) => {
     try {
@@ -357,208 +521,101 @@ export const useReferrals = () => {
         });
 
       if (error) throw error;
-
-      return { success: true };
-    } catch (error) {
-      console.error('Erro ao registrar indicação:', error);
-      return { success: false, error: 'Erro ao registrar indicação' };
-    }
-  };
-
-  // Atualizar status para completo quando primeira missão for concluída
-  const completeReferral = async (convidadoId: string) => {
-    try {
-      // Buscar indicação pendente
-      const { data: indicacao, error: searchError } = await supabase
-        .from('indicacoes')
-        .select('id, referencia_id')
-        .eq('convidado_id', convidadoId)
-        .eq('status', 'pendente')
-        .maybeSingle();
-
-      if (searchError || !indicacao) return { success: false };
-
-      // Atualizar status
-      const { error: updateError } = await supabase
-        .from('indicacoes')
-        .update({ status: 'completo' })
-        .eq('id', indicacao.id);
-
-      if (updateError) throw updateError;
-
-      // Verificar e gerar recompensas
-      await checkAndGenerateRewards(indicacao.referencia_id);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Erro ao completar indicação:', error);
-      return { success: false };
-    }
-  };
-
-  // Verificar e gerar recompensas baseadas em marcos
-  const checkAndGenerateRewards = async (referenciaId: string) => {
-    try {
-      // Contar indicações completas
-      const { data: indicacoes, error } = await supabase
-        .from('indicacoes')
-        .select('id')
-        .eq('referencia_id', referenciaId)
-        .eq('status', 'completo');
-
-      if (error) throw error;
-
-      const totalCompletas = indicacoes?.length || 0;
-
-      // Verificar se já foi gerada recompensa para 3 amigos
-      if (totalCompletas >= 3) {
-        const { data: existing3 } = await supabase
-          .from('recompensas_indicacao')
-          .select('id')
-          .eq('referencia_id', referenciaId)
-          .eq('tipo', 'bonus_3_amigos')
-          .maybeSingle();
-
-        if (!existing3) {
-          await supabase
-            .from('recompensas_indicacao')
-            .insert({
-              referencia_id: referenciaId,
-              tipo: 'bonus_3_amigos',
-              pontos: 500,
-              status: 'disponivel'
-            });
-        }
-      }
-
-      // Verificar se já foi gerada recompensa para 5 amigos
-      if (totalCompletas >= 5) {
-        const { data: existing5 } = await supabase
-          .from('recompensas_indicacao')
-          .select('id')
-          .eq('referencia_id', referenciaId)
-          .eq('tipo', 'bonus_5_amigos')
-          .maybeSingle();
-
-        if (!existing5) {
-          await supabase
-            .from('recompensas_indicacao')
-            .insert({
-              referencia_id: referenciaId,
-              tipo: 'bonus_5_amigos',
-              pontos: 1000,
-              status: 'disponivel'
-            });
-        }
-      }
-
-      // Gerar bilhetes extras (3 bilhetes a cada indicação completa)
-      await supabase
-        .from('recompensas_indicacao')
-        .insert({
-          referencia_id: referenciaId,
-          tipo: 'bilhetes_extras',
-          bilhetes: 3,
-          status: 'disponivel'
-        });
-
-    } catch (error) {
-      console.error('Erro ao verificar recompensas:', error);
-    }
-  };
-
-  // Send referral invites
-  const sendInvites = async (emails: string[], message: string) => {
-    try {
-      setLoading(true);
-      // Filter valid emails
-      const validEmails = emails.filter(email => email.trim() !== "");
       
-      if (validEmails.length === 0) {
-        playSound("error");
-        toast({
-          title: "Nenhum email válido",
-          description: "Por favor, insira pelo menos um email para enviar convites.",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      // In a real app, this would make an API call to send emails
-      
-      // Simulate a network request
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      playSound("chime");
       toast({
-        title: "Convites enviados",
-        description: `${validEmails.length} convites foram enviados com sucesso.`,
+        title: "Indicação registrada!",
+        description: "Sua indicação foi registrada com sucesso.",
       });
       
-      return true;
+      playSound("success");
     } catch (error: any) {
-      console.error("Error sending invites:", error);
+      console.error('Erro ao registrar indicação:', error);
       toast({
-        title: "Erro ao enviar convites",
+        title: "Erro ao registrar indicação",
         description: error.message,
         variant: "destructive",
       });
-      return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  return { 
-    loading, 
-    referrals, 
-    referralCode, 
-    referralLink, 
+  // Completar indicação
+  const completeReferral = async (convidadoId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('referral-system', {
+        body: {
+          action: 'process_mission_completion',
+          userId: convidadoId
+        }
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Indicação completada!",
+        description: "Recompensa de 200 rifas foi concedida.",
+      });
+      
+      playSound("success");
+    } catch (error: any) {
+      console.error('Erro ao completar indicação:', error);
+      toast({
+        title: "Erro ao completar indicação",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  return {
+    loading,
+    referrals,
+    referralCode,
+    referralLink,
     stats,
-    sendInvites,
     validateReferralCode,
     registerReferral,
-    completeReferral
+    completeReferral,
+    isValidating,
+    isLoadingStats,
+    isLoadingUserCode,
+    getReferralStats,
+    getUserReferralCode,
+    getAllReferralCodes
   };
-};
+}
 
 // Nova função encapsulada usando MCP direto
 export async function validateReferralCodeMCP(codigo: string) {
   try {
-    if (!codigo || codigo.trim().length < 3) {
-      return { isValid: false, error: 'Código deve ter pelo menos 3 caracteres' }
+    if (!codigo?.trim()) {
+      return { valid: false, error: 'Código é obrigatório' };
     }
 
-    const trimmedCode = codigo.trim().toUpperCase()
+    const cleanCode = codigo.trim().toUpperCase();
 
-    // Consulta SQL direta que faz JOIN e evita problemas de RLS
-    const { data, error } = await supabase.rpc('validate_referral_code_direct', {
-      input_code: trimmedCode
-    })
+    const { data, error } = await supabase.functions.invoke('referral-system', {
+      body: {
+        action: 'validate_code',
+        referralCode: cleanCode
+      }
+    });
 
     if (error) {
-      console.error('Erro ao validar código:', error)
-      return { isValid: false, error: 'Erro interno do servidor' }
+      console.error('Erro na validação MCP:', error);
+      return { valid: false, error: 'Erro ao validar código' };
     }
 
-    if (!data || data.length === 0) {
-      return { isValid: false, error: 'Código inválido ou expirado' }
-    }
-
-    const referralData = data[0]
-    
-    if (!referralData.active) {
-      return { isValid: false, error: 'Usuário do código não está ativo' }
+    if (!data?.success) {
+      return { valid: false, error: data?.error || 'Código inválido' };
     }
 
     return {
-      isValid: true,
-      ownerName: referralData.full_name,
-      ownerId: referralData.participante_id
-    }
-
+      valid: true,
+      ownerId: data.data?.ownerId,
+      ownerName: data.data?.ownerName
+    };
   } catch (error) {
-    console.error('Erro na validação MCP:', error)
-    return { isValid: false, error: 'Erro interno do servidor' }
+    console.error('Erro inesperado na validação MCP:', error);
+    return { valid: false, error: 'Erro inesperado' };
   }
 }

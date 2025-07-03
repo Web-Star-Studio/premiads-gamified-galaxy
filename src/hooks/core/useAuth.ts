@@ -87,63 +87,35 @@ export const useAuth = () => {
           console.error('Falha ao sincronizar perfil durante o cadastro:', profileError);
         }
 
-        // Processar código de referência se fornecido
+        // Processar código de referência se fornecido usando nova Edge Function encapsulada
         if (variables.referralCode && variables.userType === 'participante') {
           try {
             const cleanCode = variables.referralCode.trim().toUpperCase();
             
-            // Usar a nova função MCP para validação
-            const validationResult = await validateReferralCodeMCP(cleanCode);
-            
-            if (validationResult.isValid && validationResult.ownerId) {
-              // Verificar se não está tentando usar seu próprio código
-              if (validationResult.ownerId !== data.user.id) {
-                // Buscar a referência para registrar indicação
-                const { data: referencia, error: refError } = await supabase
-                  .from('referencias')
-                  .select('id')
-                  .eq('participante_id', validationResult.ownerId)
-                  .eq('codigo', cleanCode)
-                  .single();
-
-                if (!refError && referencia) {
-                  // Registrar indicação
-                  const { error: indicacaoError } = await supabase
-                    .from('indicacoes')
-                    .insert({
-                      referencia_id: referencia.id,
-                      convidado_id: data.user.id,
-                      status: 'pendente'
-                    });
-
-                  if (indicacaoError) {
-                    console.error('Erro ao registrar indicação:', indicacaoError);
-                  } else {
-                    console.log('Indicação registrada com sucesso para código:', cleanCode);
-                    
-                    // Dar pontos de bônus para o novo usuário
-                    try {
-                      const { error: bonusError } = await supabase
-                        .from('profiles')
-                        .update({ rifas: 50 }) // 50 rifas de bônus por usar código
-                        .eq('id', data.user.id);
-                      
-                      if (!bonusError) {
-                        console.log('Bônus de boas-vindas aplicado');
-                      }
-                    } catch (bonusError) {
-                      console.error('Erro ao aplicar bônus:', bonusError);
-                    }
-                  }
+            // Chamar nova Edge Function encapsulada
+            const { data: result, error: referralError } = await supabase.functions.invoke(
+              'referral-system',
+              {
+                body: {
+                  action: 'process_signup',
+                  userId: data.user.id,
+                  referralCode: cleanCode
                 }
-              } else {
-                console.warn('Usuário tentou usar seu próprio código de referência');
+              }
+            );
+
+            if (referralError) {
+              console.error('Erro ao processar código de referência:', referralError);
+            } else if (result?.success) {
+              console.log('Código de referência processado com sucesso:', result.message);
+              if (result.data?.bonus_rifas) {
+                console.log(`Bônus de ${result.data.bonus_rifas} rifas aplicado`);
               }
             } else {
-              console.warn('Código de referência inválido:', cleanCode, validationResult.error);
+              console.warn('Processamento de código falhou:', result?.error || result?.message);
             }
           } catch (error) {
-            console.error('Erro ao processar código de referência:', error);
+            console.error('Erro inesperado ao processar código de referência:', error);
           }
         }
 
