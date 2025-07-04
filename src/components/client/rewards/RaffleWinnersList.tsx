@@ -12,7 +12,7 @@ interface RaffleWinner {
   user_id: string;
   winning_number: number;
   prize_name: string;
-  prize_value: number;
+  prize_value: string | number;
   created_at: string;
   raffle: {
     id: string;
@@ -21,7 +21,7 @@ interface RaffleWinner {
     description: string;
     image_url?: string;
     prize_type: string;
-    prize_value: number;
+    prize_value: string | number;
     status: string;
   };
 }
@@ -87,7 +87,7 @@ function RaffleWinnersList({ winners, loading = false }: RaffleWinnersListProps)
                       </div>
                       <div className="text-neon-cyan font-medium">
                         <Tag className="inline-block w-4 h-4 mr-1" />
-                        {formatCurrency(winner.prize_value)}
+                        {formatCurrency(typeof winner.prize_value === 'string' ? parseFloat(winner.prize_value) : winner.prize_value)}
                       </div>
                     </div>
                   </div>

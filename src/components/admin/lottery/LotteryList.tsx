@@ -79,7 +79,7 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-lg text-white">{lottery.title}</CardTitle>
+                <CardTitle className="text-lg text-white">{lottery.title || lottery.name}</CardTitle>
                 <p className="text-sm text-gray-400 mt-1">{lottery.description}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -123,21 +123,27 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
                 <Trophy className="h-4 w-4 text-yellow-400" />
                 <span className="text-gray-400">Prêmio:</span>
                 <span className="text-white font-medium">
-                  {lottery.prize_type === 'money' ? `R$ ${lottery.prize_value}` : lottery.prize_value}
+                  {(lottery.prize_type || lottery.prizeType) === 'money' ? 
+                    `R$ ${lottery.prize_value || lottery.prizeValue}` : 
+                    (lottery.prize_value || lottery.prizeValue)
+                  }
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4 text-blue-400" />
                 <span className="text-gray-400">Números:</span>
                 <span className="text-white font-medium">
-                  {lottery.numbers?.length || 0}/{lottery.numbers_total}
+                  {lottery.numbers?.length || 0}/{lottery.numbers_total || lottery.numbersTotal}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-green-400" />
                 <span className="text-gray-400">Sorteio:</span>
                 <span className="text-white font-medium">
-                  {format(new Date(lottery.draw_date), "dd/MM/yyyy", { locale: ptBR })}
+                  {lottery.draw_date || lottery.drawDate ? 
+                    format(new Date(lottery.draw_date || lottery.drawDate), "dd/MM/yyyy", { locale: ptBR }) : 
+                    'Não definido'
+                  }
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">

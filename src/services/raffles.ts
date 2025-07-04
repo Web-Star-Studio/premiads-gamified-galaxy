@@ -18,6 +18,17 @@ const generateUUID = () => {
 
 // Helper function to transform database data to UI format
 const transformLotteryFromDatabase = (dbData: any): Lottery => {
+  // Helper to safely handle dates
+  const safeDate = (dateValue: any) => {
+    if (!dateValue) return '';
+    try {
+      const date = new Date(dateValue);
+      return isNaN(date.getTime()) ? '' : dateValue;
+    } catch {
+      return '';
+    }
+  };
+
   return {
     ...dbData,
     // Map snake_case to camelCase for UI compatibility
@@ -25,9 +36,9 @@ const transformLotteryFromDatabase = (dbData: any): Lottery => {
     prizeType: dbData.prize_type || dbData.prizeType || '',
     prizeValue: Number(dbData.prize_value || dbData.prizeValue || 0),
     imageUrl: dbData.image_url || dbData.imageUrl || '',
-    startDate: dbData.start_date || dbData.startDate || '',
-    endDate: dbData.end_date || dbData.endDate || '',
-    drawDate: dbData.draw_date || dbData.drawDate || '',
+    startDate: safeDate(dbData.start_date || dbData.startDate),
+    endDate: safeDate(dbData.end_date || dbData.endDate),
+    drawDate: safeDate(dbData.draw_date || dbData.drawDate),
     numbersTotal: dbData.numbers_total || dbData.numbersTotal || 0,
     numbersSold: dbData.numbers_sold || dbData.numbersSold || 0,
     // Keep both versions for compatibility
@@ -35,9 +46,9 @@ const transformLotteryFromDatabase = (dbData: any): Lottery => {
     prize_type: dbData.prize_type || '',
     prize_value: Number(dbData.prize_value || 0),
     image_url: dbData.image_url || '',
-    start_date: dbData.start_date || '',
-    end_date: dbData.end_date || '',
-    draw_date: dbData.draw_date || '',
+    start_date: safeDate(dbData.start_date || dbData.startDate),
+    end_date: safeDate(dbData.end_date || dbData.endDate),
+    draw_date: safeDate(dbData.draw_date || dbData.drawDate),
     numbers_total: dbData.numbers_total || 0,
     numbers_sold: dbData.numbers_sold || 0,
     // Set defaults for required fields
@@ -557,17 +568,14 @@ export const raffleService = {
   
   getUserWonRaffles: withPerformanceMonitoring(async (userId: string) => {
     try {
-      // Buscar os sorteios ganhos pelo usuário com detalhes do sorteio
-      const { data, error } = await supabase
-        .from('lottery_winners')
-        .select(`
-          *,
-          raffle:lotteries(*)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
+      const { data, error } = await supabase.rpc('get_user_won_raffles', {
+        p_user_id: userId
+      });
+
+      if (error) {
+        console.error('Error calling get_user_won_raffles RPC:', error);
+        throw error;
+      }
       
       return data || [];
     } catch (error) {
