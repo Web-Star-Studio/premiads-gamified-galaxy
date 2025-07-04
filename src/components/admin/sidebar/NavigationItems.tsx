@@ -1,4 +1,3 @@
-
 import { 
   LayoutDashboard, 
   Users, 
@@ -10,7 +9,8 @@ import {
   Ticket,
   FileText,
   BookOpen,
-  Gavel
+  Gavel,
+  Gift
 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import NavigationItem, { NavigationItemProps } from "./NavigationItem";
@@ -29,6 +29,12 @@ export const NavigationItems = () => {
       url: "/admin/usuarios",
       icon: Users,
       description: "Gerenciamento de usuários"
+    },
+    {
+      title: "Rifas",
+      url: "/admin/rifas",
+      icon: Gift,
+      description: "Distribuição de rifas"
     },
     {
       title: "Regras",

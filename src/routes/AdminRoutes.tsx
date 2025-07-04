@@ -8,7 +8,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
 const UserManagementPage = lazy(() => import("@/pages/admin/UserManagementPage"));
 const LotteryManagementPage = lazy(() => import("@/pages/admin/LotteryManagementPage"));
-
+const RifasManagementPage = lazy(() => import("@/pages/admin/RifasManagementPage"));
 
 const NotificationsPage = lazy(() => import("@/pages/admin/NotificationsPage"));
 const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
@@ -48,6 +48,11 @@ const AdminRoutes = () => {
           <Route 
             path="usuarios" 
             element={<UserManagementPage />} 
+          />
+          
+          <Route 
+            path="rifas" 
+            element={<RifasManagementPage />} 
           />
           
           <Route 
