@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
+import CampaignDetailsModal from "./CampaignDetailsModal";
 import { useAdvertiserCampaigns } from '@/hooks/useAdvertiserCampaigns';
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,6 +21,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
+  const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const { playSound } = useSounds();
   const { toast } = useToast();
   const { campaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
@@ -179,6 +182,18 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     setFilterStatus(status);
   };
   
+  const handleViewDetails = (campaignId: string) => {
+    setViewingCampaignId(campaignId);
+    setIsDetailsModalOpen(true);
+    playSound("pop");
+  };
+  
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setViewingCampaignId(null);
+    playSound("pop");
+  };
+  
   return (
     <div className="space-y-6">
       {loading ? (
@@ -206,8 +221,18 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
             campaigns={filteredCampaigns} 
             onDelete={handleDelete}
             onEdit={handleEdit}
+            onViewDetails={handleViewDetails}
           />
         </>
+      )}
+      
+      {/* Campaign Details Modal */}
+      {viewingCampaignId && (
+        <CampaignDetailsModal
+          campaignId={viewingCampaignId}
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+        />
       )}
     </div>
   );
