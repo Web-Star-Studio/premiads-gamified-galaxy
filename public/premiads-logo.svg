@@ -1,0 +1,20 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- PremiAds Logo - Exact reproduction -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
+      .logo-text {
+        font-family: 'Inter', 'Arial', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+    </style>
+  </defs>
+  
+  <!-- "premi" in purple -->
+  <text x="0" y="40" class="logo-text" fill="#4400b9">premi</text>
+  
+  <!-- "ads" in orange -->
+  <text x="85" y="40" class="logo-text" fill="#fe690d">ads</text>
+</svg> 

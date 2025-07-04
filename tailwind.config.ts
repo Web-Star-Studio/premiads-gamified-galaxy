@@ -78,6 +78,11 @@ export default {
 					lightPurple: '#D6BCFA',
 					magenta: '#FF4ECD',
 					blue: '#2F80ED'
+				},
+				// PremiAds brand colors
+				premiads: {
+					purple: '#4400b9',
+					orange: '#fe690d'
 				}
 			},
 			fontFamily: {
