@@ -16,6 +16,44 @@ const generateUUID = () => {
   });
 };
 
+// Helper function to transform database data to UI format
+const transformLotteryFromDatabase = (dbData: any): Lottery => {
+  return {
+    ...dbData,
+    // Map snake_case to camelCase for UI compatibility
+    detailedDescription: dbData.detailed_description || dbData.detailedDescription || '',
+    prizeType: dbData.prize_type || dbData.prizeType || '',
+    prizeValue: Number(dbData.prize_value || dbData.prizeValue || 0),
+    imageUrl: dbData.image_url || dbData.imageUrl || '',
+    startDate: dbData.start_date || dbData.startDate || '',
+    endDate: dbData.end_date || dbData.endDate || '',
+    drawDate: dbData.draw_date || dbData.drawDate || '',
+    numbersTotal: dbData.numbers_total || dbData.numbersTotal || 0,
+    numbersSold: dbData.numbers_sold || dbData.numbersSold || 0,
+    // Keep both versions for compatibility
+    detailed_description: dbData.detailed_description || '',
+    prize_type: dbData.prize_type || '',
+    prize_value: Number(dbData.prize_value || 0),
+    image_url: dbData.image_url || '',
+    start_date: dbData.start_date || '',
+    end_date: dbData.end_date || '',
+    draw_date: dbData.draw_date || '',
+    numbers_total: dbData.numbers_total || 0,
+    numbers_sold: dbData.numbers_sold || 0,
+    // Set defaults for required fields
+    title: dbData.title || dbData.name || '',
+    tickets_reward: dbData.tickets_reward || 0,
+    type: dbData.type || 'lottery',
+    pointsPerNumber: dbData.points_per_number || dbData.pointsPerNumber || 1,
+    minPoints: dbData.min_points || dbData.minPoints || 0,
+    numbers: dbData.numbers || [],
+    progress: dbData.progress || 0,
+    prizes: dbData.prizes || [],
+    created_at: dbData.created_at || '',
+    updated_at: dbData.updated_at || ''
+  };
+};
+
 // Helper function to transform form data to Supabase structure
 const transformLotteryData = (formData: LotteryFormValues) => {
   // Calculate end date as 72 hours after start date if auto-scheduled
@@ -113,7 +151,8 @@ export const raffleService = {
              // Log the received data to debug
        console.log('Raffle created successfully:', { id: data.id, name: data.name });
        
-       return data as unknown as Lottery;
+       // Transform database data to UI format
+       return transformLotteryFromDatabase(data);
     } catch (error) {
       console.error('Error creating raffle:', error);
       throw error;
@@ -147,7 +186,7 @@ export const raffleService = {
           .from('raffle-images')
           .getPublicUrl(filePath);
           
-        updates.image_url = publicUrlData.publicUrl;
+        updates.imageUrl = publicUrlData.publicUrl;
       }
       
       // Prepare update data
@@ -168,28 +207,28 @@ export const raffleService = {
       
       if (updates.prizeValue !== undefined) updateData.prize_value = updates.prizeValue;
       
-      if (updates.image_url) updateData.image_url = updates.image_url;
+      if (updates.imageUrl) updateData.image_url = updates.imageUrl;
       
-      if (updates.start_date) updateData.start_date = updates.start_date;
+      if (updates.startDate) updateData.start_date = updates.startDate;
       
-      if (updates.end_date) updateData.end_date = updates.end_date;
+      if (updates.endDate) updateData.end_date = updates.endDate;
       
       if (updates.status) updateData.status = updates.status;
       
-      if (updates.numbers_total !== undefined) updateData.numbers_total = updates.numbers_total;
+      if (updates.numbersTotal !== undefined) updateData.numbers_total = updates.numbersTotal;
       
-      if (updates.points_per_number !== undefined) updateData.points_per_number = updates.points_per_number;
+      if (updates.pointsPerNumber !== undefined) updateData.points_per_number = updates.pointsPerNumber;
       
-      if (updates.min_points !== undefined) updateData.min_points = updates.min_points;
+      if (updates.minPoints !== undefined) updateData.min_points = updates.minPoints;
       
-      if (updates.number_range) {
+      if (updates.numberRange) {
         updateData.number_range = {
-          min: updates.number_range.min,
-          max: updates.number_range.max
+          min: updates.numberRange.min,
+          max: updates.numberRange.max
         };
       }
       
-      if (updates.is_auto_scheduled !== undefined) updateData.is_auto_scheduled = updates.is_auto_scheduled;
+      if (updates.isAutoScheduled !== undefined) updateData.is_auto_scheduled = updates.isAutoScheduled;
       
       // Update raffle in database
       const { data, error } = await supabase
@@ -201,7 +240,8 @@ export const raffleService = {
         
       if (error) throw error;
       
-      return data;
+      // Transform database data to UI format
+      return transformLotteryFromDatabase(data);
     } catch (error) {
       console.error('Error updating raffle:', error);
       throw error;
@@ -235,7 +275,8 @@ export const raffleService = {
       );
       
       console.log(`Fetched ${validData.length} valid lotteries from database`);
-      return validData;
+      // Transform database data to UI format
+      return validData.map(item => transformLotteryFromDatabase(item));
     } catch (error) {
       console.error('Error fetching raffles:', error);
       return [];
@@ -252,7 +293,8 @@ export const raffleService = {
         
       if (error) throw error;
       
-      return data;
+      // Transform database data to UI format
+      return data ? transformLotteryFromDatabase(data) : null;
     } catch (error) {
       console.error('Error fetching raffle:', error);
       return null;
@@ -320,9 +362,10 @@ export const raffleService = {
         .select()
         .single();
         
-      if (error) throw error;
+              if (error) throw error;
       
-      return data;
+      // Transform database data to UI format
+      return data ? transformLotteryFromDatabase(data) : null;
     } catch (error) {
       console.error('Error updating raffle status:', error);
       return null;
@@ -416,7 +459,8 @@ export const raffleService = {
         
       if (error) throw error;
       
-      return data || [];
+      // Transform database data to UI format
+      return (data || []).map(item => transformLotteryFromDatabase(item));
     } catch (error) {
       console.error('Error fetching active raffles:', error);
       return [];
