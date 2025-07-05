@@ -128,13 +128,17 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      // Delete campaign from database
-      const { error } = await supabase
-        .from('missions')
-        .delete()
-        .eq('id', id);
+      // Use database function to delete campaign with cascade
+      // This contorna RLS policies and ensures complete deletion
+      const { data, error } = await supabase
+        .rpc('delete_mission_cascade', { mission_id_param: id });
       
       if (error) throw error;
+      
+      // Check if the function returned an error
+      if (data && !data.success) {
+        throw new Error(data.error || 'Erro desconhecido ao remover campanha');
+      }
       
       // Refresh list after delete
       refreshCampaigns();
@@ -143,7 +147,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       playSound("error");
       toast({
         title: "Campanha removida",
-        description: `A campanha foi removida com sucesso`,
+        description: data?.message || `A campanha e todos os dados relacionados foram removidos com sucesso`,
       });
     } catch (error: any) {
       console.error("Erro ao remover campanha:", error);
