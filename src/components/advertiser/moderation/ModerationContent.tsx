@@ -8,7 +8,6 @@ import { Submission, toSubmission } from '@/types/missions';
 import { Button } from "@/components/ui/button";
 import { finalizeMissionSubmission } from '@/lib/submissions/missionModeration';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import AttachmentTestButton from './AttachmentTestButton';
 
 // Mapeamento de abas para status do DB
 const tabStatusMap: Record<string, string> = {
@@ -379,11 +378,6 @@ const ModerationContent = ({ refreshKey }: ModerationContentProps) => {
 
   return (
     <div>
-      {/* Botão de teste temporário - REMOVER DEPOIS DE TESTAR */}
-      <div className="mb-6">
-        <AttachmentTestButton />
-      </div>
-      
       {/* Mission filter dropdown */}
       <div className="mb-4">
         <Select aria-label="Selecione Missão" value={selectedMissionId} onValueChange={setSelectedMissionId}>

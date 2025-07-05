@@ -11,7 +11,6 @@ import { BarChart3, LineChart, PieChart, TrendingUp, Users } from "lucide-react"
 import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
 import { useAdvertiserCampaigns } from "@/hooks/useAdvertiserCampaigns";
-import { CreditsDebug } from "@/components/credits/credits-debug";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -102,11 +101,6 @@ const AdvertiserCampaigns = () => {
             <div className="mb-8">
               <h1 className="text-2xl font-bold mb-2">Gerenciamento de Campanhas</h1>
               <p className="text-muted-foreground">Crie e gerencie suas campanhas publicitárias</p>
-            </div>
-            
-            {/* Debug component - temporary */}
-            <div className="mb-4">
-              <CreditsDebug />
             </div>
             
             {/* Stats overview */}

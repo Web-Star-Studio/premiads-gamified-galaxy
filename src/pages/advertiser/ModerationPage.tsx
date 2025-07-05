@@ -6,7 +6,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
 import AdvertiserHeader from "@/components/advertiser/AdvertiserHeader";
 import ModerationContent from "@/components/advertiser/moderation/ModerationContent";
-import ModerationTest from "@/components/advertiser/moderation/ModerationTest";
 
 const ModerationPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -25,11 +24,6 @@ const ModerationPage = () => {
           />
           
           <div className="container px-4 py-8 mx-auto">
-            <div className="mb-8">
-              {/* Test submission creation and diagnostics */}
-              <ModerationTest onRefresh={() => setRefreshKey(k => k + 1)} />
-            </div>
-            
             {/* Real moderation panel that consumes the same refreshKey */}
             <ModerationContent refreshKey={refreshKey} />
           </div>
