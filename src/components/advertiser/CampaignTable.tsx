@@ -7,9 +7,10 @@ interface CampaignTableProps {
   onDelete: (id: string) => void; // Changed from number to string to match campaign.id type
   onEdit: (campaign: Campaign) => void;
   onViewDetails: (campaignId: string) => void;
+  onViewAnalytics: (campaignId: string) => void;
 }
 
-const CampaignTable = ({ campaigns, onDelete, onEdit, onViewDetails }: CampaignTableProps) => (
+const CampaignTable = ({ campaigns, onDelete, onEdit, onViewDetails, onViewAnalytics }: CampaignTableProps) => (
     <div className="rounded-lg border border-gray-800 overflow-hidden">
       {campaigns.length === 0 ? (
         <div className="py-8 text-center text-gray-400">
@@ -37,6 +38,7 @@ const CampaignTable = ({ campaigns, onDelete, onEdit, onViewDetails }: CampaignT
                   onDelete={onDelete} 
                   onEdit={onEdit}
                   onViewDetails={onViewDetails}
+                  onViewAnalytics={onViewAnalytics}
                 />
               ))}
             </TableBody>

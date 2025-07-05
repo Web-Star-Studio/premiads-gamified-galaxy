@@ -6,6 +6,7 @@ import CampaignForm from "./CampaignForm";
 import CampaignHeader from "./CampaignHeader";
 import CampaignTable from "./CampaignTable";
 import CampaignDetailsModal from "./CampaignDetailsModal";
+import CampaignAnalyticsModal from "./CampaignAnalyticsModal";
 import { useAdvertiserCampaigns } from '@/hooks/useAdvertiserCampaigns';
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,6 +24,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const [filterStatus, setFilterStatus] = useState<string | null>(initialFilter);
   const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [analyticsCampaignId, setAnalyticsCampaignId] = useState<string | null>(null);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const { playSound } = useSounds();
   const { toast } = useToast();
   const { campaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
@@ -194,6 +197,18 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     playSound("pop");
   };
   
+  const handleViewAnalytics = (campaignId: string) => {
+    setAnalyticsCampaignId(campaignId);
+    setIsAnalyticsModalOpen(true);
+    playSound("pop");
+  };
+  
+  const handleCloseAnalyticsModal = () => {
+    setIsAnalyticsModalOpen(false);
+    setAnalyticsCampaignId(null);
+    playSound("pop");
+  };
+  
   return (
     <div className="space-y-6">
       {loading ? (
@@ -222,6 +237,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
             onDelete={handleDelete}
             onEdit={handleEdit}
             onViewDetails={handleViewDetails}
+            onViewAnalytics={handleViewAnalytics}
           />
         </>
       )}
@@ -232,6 +248,15 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
           campaignId={viewingCampaignId}
           isOpen={isDetailsModalOpen}
           onClose={handleCloseDetailsModal}
+        />
+      )}
+      
+      {/* Campaign Analytics Modal */}
+      {analyticsCampaignId && (
+        <CampaignAnalyticsModal
+          campaignId={analyticsCampaignId}
+          isOpen={isAnalyticsModalOpen}
+          onClose={handleCloseAnalyticsModal}
         />
       )}
     </div>

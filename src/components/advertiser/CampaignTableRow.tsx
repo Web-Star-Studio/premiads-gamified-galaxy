@@ -10,9 +10,10 @@ interface CampaignTableRowProps {
   onDelete: (id: string) => void; 
   onEdit: (campaign: Campaign) => void;
   onViewDetails: (campaignId: string) => void;
+  onViewAnalytics: (campaignId: string) => void;
 }
 
-const CampaignTableRow = ({ campaign, onDelete, onEdit, onViewDetails }: CampaignTableRowProps) => {
+const CampaignTableRow = ({ campaign, onDelete, onEdit, onViewDetails, onViewAnalytics }: CampaignTableRowProps) => {
   // Use properties from the campaign object with proper fallbacks
   const audience = campaign.audience || campaign.target_audience || 'Todos';
   const completions = typeof campaign.completions === 'number' ? campaign.completions : 0;
@@ -65,6 +66,7 @@ const CampaignTableRow = ({ campaign, onDelete, onEdit, onViewDetails }: Campaig
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 text-gray-400 hover:text-neon-pink"
+                onClick={() => onViewAnalytics(campaign.id)}
               >
                 <BarChart className="w-4 h-4" />
               </Button>
