@@ -32,6 +32,7 @@ import {
 import { useUser } from "@/context/UserContext";
 import useAdvertiserKPIs from "@/hooks/useAdvertiserKPIs";
 import useAdvertiserProfile from "@/hooks/useAdvertiserProfile";
+import { DownloadButton } from "@/components/ui/download-button";
 
 const ProfilePage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -136,6 +137,11 @@ const ProfilePage = () => {
               
               {/* Botões para atualizar dados */}
               <div className="flex gap-2">
+                <DownloadButton 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mr-2"
+                />
                 <Button 
                   variant="outline" 
                   size="sm" 

@@ -29,15 +29,39 @@ export function useDocumentationDownload(): UseDocumentationDownloadReturn {
         return
       }
 
-      // Verificar se é admin
+      // Verificar se é usuário válido (admin, anunciante ou participante)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, user_type')
         .eq('id', user.id)
         .single()
 
-      if (!profile || profile.role !== 'admin') {
+      if (!profile) {
+        toastError('Perfil de usuário não encontrado.')
+        return
+      }
+
+      // Permitir acesso para admins, anunciantes e participantes
+      const allowedRoles = ['admin', 'anunciante', 'cliente', 'user']
+      const allowedUserTypes = ['admin', 'anunciante', 'cliente', 'participante']
+      
+      const hasRoleAccess = profile.role && allowedRoles.includes(profile.role)
+      const hasUserTypeAccess = profile.user_type && allowedUserTypes.includes(profile.user_type)
+      
+      if (!hasRoleAccess && !hasUserTypeAccess) {
         toastError('Você não tem permissão para acessar este arquivo.')
+        return
+      }
+
+      // Primeiro, verificar se o arquivo existe
+      const { data: fileExists } = await supabase.storage
+        .from('documentation')
+        .list('', {
+          search: 'premiads-documentation.pdf'
+        })
+
+      if (!fileExists || fileExists.length === 0) {
+        toastError('Arquivo de documentação não encontrado no servidor.')
         return
       }
 
@@ -51,11 +75,44 @@ export function useDocumentationDownload(): UseDocumentationDownloadReturn {
         return
       }
 
-      // Criar download via fetch
+      // Tentar download direto do storage usando download()
+      try {
+        const { data: downloadData, error: downloadError } = await supabase.storage
+          .from('documentation')
+          .download('premiads-documentation.pdf')
+
+        if (downloadError) {
+          toastError(`Erro no download: ${downloadError.message}`)
+          return
+        }
+
+        if (downloadData) {
+          // Usar dados do download direto
+          const url = window.URL.createObjectURL(downloadData)
+          
+          const link = document.createElement('a')
+          link.href = url
+          link.download = 'PremiAds-Documentacao-Completa.pdf'
+          link.style.display = 'none'
+          
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          
+          window.URL.revokeObjectURL(url)
+          
+          toastSuccess('Documentação baixada com sucesso!')
+          return
+        }
+      } catch (downloadDirectError) {
+        // Fallback para fetch se download direto falhar
+      }
+
+      // Fallback: Criar download via fetch
       const response = await fetch(data.publicUrl)
       
       if (!response.ok) {
-        toastError('Arquivo de documentação não encontrado. Contate o suporte.')
+        toastError(`Erro ao baixar arquivo: ${response.status} - ${response.statusText}`)
         return
       }
 

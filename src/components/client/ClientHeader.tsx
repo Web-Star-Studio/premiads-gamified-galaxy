@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { DrawerMenu } from "@/components/ui/drawer-menu";
+import { DownloadButton } from "@/components/ui/download-button";
 import { motion } from "framer-motion";
 import { Menu, User, Home, Bell } from "lucide-react";
 
@@ -73,6 +74,12 @@ const ClientHeader = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <DownloadButton 
+            variant="ghost" 
+            size="sm" 
+            className="hidden md:flex"
+          />
+          
           <Link to="/cliente/notificacoes">
             <Button variant="ghost" size="icon" className="relative">
               <Bell size={20} />
