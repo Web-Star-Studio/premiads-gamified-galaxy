@@ -1,22 +1,17 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { AdminSidebar } from '@/components/admin';
 import { DashboardHeader } from '@/components/admin';
 import { 
   DocNavigation, 
   DocContentTabs, 
-  DocHeader 
 } from '@/components/admin/documentation';
+import DocHeader from '@/components/admin/documentation/DocHeader';
 import { SidebarProvider } from '@/components/ui/sidebar/sidebar-provider';
 
 const DocumentationPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
-  
-  useEffect(() => {
-    console.log("DocumentationPage rendered with activeSection:", activeSection);
-  }, [activeSection]);
   
   return (
     <SidebarProvider>
