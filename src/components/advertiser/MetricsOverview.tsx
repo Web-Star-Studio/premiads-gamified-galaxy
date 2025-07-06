@@ -2,71 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { PieChart, BarChart2, Users, TrendingUp, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdvertiserMetrics } from "@/hooks/advertiser/useAdvertiserMetrics";
 
 const MetricsOverview = () => {
-  const { data: metrics, isLoading } = useQuery({
-    queryKey: ["advertiser-metrics"],
-    queryFn: async () => {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      
-      if (!userId) throw new Error("User not authenticated");
-      
-      // ----- 1️⃣ Fetch missions authored by the current advertiser -----
-      const { data: missions } = await supabase
-        .from("missions")
-        .select("id, status")
-        .eq("advertiser_id", userId)
-
-      const totalMissions = missions?.length ?? 0
-      const validatedMissions = missions?.filter(m => m.status === "validada").length ?? 0
-
-      // ----- 2️⃣ Fetch participations linked to those missions (unique mission_id) -----
-      let initiatedMissions = 0
-      if (totalMissions > 0) {
-        const missionIds = missions!.map(m => m.id)
-        const { data: submissions } = await supabase
-          .from("mission_submissions")
-          .select("mission_id")
-          .in("mission_id", missionIds)
-
-        initiatedMissions = submissions ? new Set(submissions.map(s => s.mission_id)).size : 0
-      }
-
-      // ----- 3️⃣ Fetch completed missions & active users for legacy metrics -----
-      const [
-        { count: completedMissions },
-        { count: activeUsers },
-      ] = await Promise.all([
-        supabase
-          .from("mission_submissions")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "approved"),
-        supabase
-          .from("mission_submissions")
-          .select("user_id", { count: "exact", head: true })
-          .eq("status", "approved"),
-      ])
-
-      const completionRate = totalMissions === 0
-        ? "0%"
-        : `${Math.round((validatedMissions / totalMissions) * 100)}%`
-
-      const initiationRate = totalMissions === 0
-        ? "0%"
-        : `${Math.round((initiatedMissions / totalMissions) * 100)}%`
-
-      return {
-        missionsCompleted: completedMissions || 0,
-        uniqueUsers: activeUsers || 0,
-        completionRate,
-        initiationRate,
-      };
-    },
-    refetchInterval: 30000,
-  });
+  const { data: metrics, isLoading, error } = useAdvertiserMetrics();
   
   const metricsData = [
     {
@@ -78,7 +18,7 @@ const MetricsOverview = () => {
       borderClass: "border-neon-cyan/30"
     },
     {
-      title: "Usuários Ativos",
+      title: "Usuários Engajados",
       value: metrics?.uniqueUsers || 0,
       icon: Users,
       colorClass: "text-neon-pink",
@@ -94,14 +34,27 @@ const MetricsOverview = () => {
       borderClass: "border-emerald-400/30",
     },
     {
-      title: "Taxa de Missões Iniciadas",
-      value: metrics?.initiationRate ?? "0%",
+      title: "Taxa de Engajamento",
+      value: metrics?.engagementRate ?? "0%",
       icon: Clock,
       colorClass: "text-amber-400",
       bgClass: "bg-amber-400/10",
       borderClass: "border-amber-400/30",
     },
   ];
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-bold font-heading">Visão Geral</h2>
+          <div className="flex items-center gap-2 text-sm text-red-400 bg-red-900/20 px-3 py-1.5 rounded-full border border-red-500/30">
+            <span>Erro ao carregar métricas</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -136,7 +89,7 @@ const MetricsOverview = () => {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-bold font-heading">Visão Geral</h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-galaxy-deepPurple/50 px-3 py-1.5 rounded-full border border-galaxy-purple/30">
-          <span>Últimos 30 dias</span>
+          <span>Dados atualizados</span>
           <PieChart className="w-4 h-4 text-neon-cyan" />
         </div>
       </div>

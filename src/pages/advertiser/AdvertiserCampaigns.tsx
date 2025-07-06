@@ -11,15 +11,18 @@ import { BarChart3, LineChart, PieChart, TrendingUp, Users } from "lucide-react"
 import { motion } from "framer-motion";
 import { useUser } from "@/context/UserContext";
 import { useAdvertiserCampaigns } from "@/hooks/useAdvertiserCampaigns";
+import { useAdvertiserMetrics } from "@/hooks/advertiser/useAdvertiserMetrics";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AdvertiserCampaigns = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { playSound } = useSounds();
   const [activeTab, setActiveTab] = useState("active");
   const { userName = "Desenvolvedor" } = useUser();
-  const { stats } = useAdvertiserCampaigns();
+  const { stats: campaignStats } = useAdvertiserCampaigns();
+  const { data: metrics, isLoading: metricsLoading } = useAdvertiserMetrics();
   const location = useLocation();
   const { toast } = useToast();
 
@@ -50,29 +53,29 @@ const AdvertiserCampaigns = () => {
 
   // Campaign stats mapped from the hook data
   const statCards = [
-    { 
-      title: "Campanhas Ativas", 
-      value: stats.activeCampaigns.toString(), 
-      description: "campanhas em andamento", 
-      icon: <TrendingUp className="h-4 w-4 text-green-400" /> 
+    {
+      title: "Campanhas Ativas",
+      value: campaignStats.activeCampaigns.toString(),
+      description: "campanhas em andamento",
+      icon: <TrendingUp className="h-4 w-4 text-green-400" />,
     },
-    { 
-      title: "Total de Missões", 
-      value: stats.totalCompletions.toString(), 
-      description: "completadas neste mês", 
-      icon: <BarChart3 className="h-4 w-4 text-blue-400" /> 
+    {
+      title: "Total de Missões",
+      value: metrics?.missionsCompleted ?? "0",
+      description: "completadas neste mês",
+      icon: <BarChart3 className="h-4 w-4 text-blue-400" />,
     },
-    { 
-      title: "Taxa de Conclusão", 
-      value: `${stats.completionRate}%`, 
-      description: "média das campanhas", 
-      icon: <PieChart className="h-4 w-4 text-purple-400" /> 
+    {
+      title: "Taxa de Conclusão",
+      value: metrics?.completionRate ?? "0%",
+      description: "média das campanhas",
+      icon: <PieChart className="h-4 w-4 text-purple-400" />,
     },
-    { 
-      title: "Usuários Engajados", 
-      value: stats.uniqueUsers.toString(), 
-      description: "pessoas participantes", 
-      icon: <Users className="h-4 w-4 text-pink-400" /> 
+    {
+      title: "Usuários Engajados",
+      value: metrics?.uniqueUsers ?? "0",
+      description: "pessoas participantes",
+      icon: <Users className="h-4 w-4 text-pink-400" />,
     },
   ];
 
@@ -105,29 +108,52 @@ const AdvertiserCampaigns = () => {
             
             {/* Stats overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {statCards.map((stat, index) => (
-                <motion.div
-                  key={stat.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
-                    <CardContent className="p-4 pt-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{stat.title}</p>
-                          <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+              {metricsLoading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <Card
+                      key={index}
+                      className="bg-galaxy-darkPurple border-galaxy-purple/30"
+                    >
+                      <CardContent className="p-4 pt-4">
+                        <div className="flex justify-between items-start">
+                          <div className="w-full">
+                            <p className="text-sm text-muted-foreground">
+                              <Skeleton className="h-4 w-24" />
+                            </p>
+                            <h3 className="text-2xl font-bold mt-2">
+                              <Skeleton className="h-8 w-16" />
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <Skeleton className="h-3 w-32" />
+                            </p>
+                          </div>
                         </div>
-                        <div className="p-2 rounded-full bg-galaxy-purple/20">
-                          {stat.icon}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                : statCards.map((stat, index) => (
+                    <motion.div
+                      key={stat.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="bg-galaxy-darkPurple border-galaxy-purple/30">
+                        <CardContent className="p-4 pt-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm text-muted-foreground">{stat.title}</p>
+                              <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+                              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                            </div>
+                            <div className="p-2 rounded-full bg-galaxy-purple/20">
+                              {stat.icon}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
             </div>
             
             {/* Tabs for campaign categories */}
