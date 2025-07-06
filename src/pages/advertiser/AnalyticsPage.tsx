@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import AdvertiserSidebar from "@/components/advertiser/AdvertiserSidebar";
@@ -15,6 +14,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Download, Filter, RefreshCw } from "lucide-react";
 import { useUser } from "@/context/UserContext";
+import { useAdvertiserCampaignsData } from "@/hooks/advertiser/useAdvertiserCampaignsData";
+import { useCampaignExport } from "@/hooks/advertiser/useCampaignExport";
 
 const AnalyticsPage = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -23,12 +24,16 @@ const AnalyticsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState("month");
   const { userName = "Desenvolvedor" } = useUser();
+
+  const { data: campaignData, isLoading: isLoadingCampaigns, refetch: refetchCampaigns } = useAdvertiserCampaignsData();
+  const { exportToCsv } = useCampaignExport();
   
   const refreshData = () => {
     setIsLoading(true);
     playSound("pop");
+    refetchCampaigns();
     
-    // Simulate loading
+    // Simulate loading for other charts if necessary
     setTimeout(() => {
       setIsLoading(false);
       playSound("chime");
@@ -36,8 +41,12 @@ const AnalyticsPage = () => {
   };
   
   useEffect(() => {
-    refreshData();
-  }, [dateRange]);
+    // Initial fetch is handled by the hook
+  }, []);
+
+  const handleExport = () => {
+    exportToCsv(campaignData);
+  }
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -71,16 +80,21 @@ const AnalyticsPage = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={refreshData}
-                  disabled={isLoading}
+                  disabled={isLoading || isLoadingCampaigns}
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${(isLoading || isLoadingCampaigns) ? 'animate-spin' : ''}`} />
                   Atualizar
                 </Button>
                 <Button variant="outline" size="sm">
                   <Filter className="h-4 w-4 mr-2" />
                   Filtros
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={isLoadingCampaigns || !campaignData || campaignData.length === 0}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Exportar
                 </Button>
