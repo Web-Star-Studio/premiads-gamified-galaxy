@@ -1,17 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getUserBadges, BadgeRecord } from '@/lib/services/badges'
 
-export interface Badge {
-  id: string;
-  user_id: string;
-  mission_id: string;
-  badge_name: string;
-  badge_description?: string;
-  badge_image_url?: string;
-  earned_at: string;
-}
+export type Badge = BadgeRecord
 
 export const useBadges = (userId?: string | null) => {
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -27,15 +19,8 @@ export const useBadges = (userId?: string | null) => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("user_badges")
-        .select("*")
-        .eq("user_id", userId)
-        .order("earned_at", { ascending: false });
-
-      if (error) throw error;
-
-      setBadges(data || []);
+      const badgeList = await getUserBadges({ userId })
+      setBadges(badgeList)
     } catch (err: any) {
       console.error("Error fetching badges:", err);
       toast({

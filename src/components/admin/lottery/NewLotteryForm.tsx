@@ -13,7 +13,7 @@ import NumberRangeSection from './form-sections/NumberRangeSection';
 import FormActions from './form-sections/FormActions';
 import { Card } from '@/components/ui/card';
 import NumberGenerator from './NumberGenerator';
-import { adminRaffleService } from '@/services/admin-raffles';
+import { adminRaffleService } from '@/lib/services/admin-raffles';
 
 interface NewLotteryFormProps {
   onSuccess: (lottery: Lottery) => void;

@@ -13,7 +13,7 @@ import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
 import raffleService from "@/services/raffles";
-import { adminRaffleService } from "@/services/admin-raffles";
+import { adminRaffleService } from "@/lib/services/admin-raffles";
 import { supabase } from '@/integrations/supabase/client'
 
 const LotteryManagement = () => {

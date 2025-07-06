@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { supabase } from "@/integrations/supabase/client";
+import { getCreditPackages, purchaseCredits } from '@/lib/services/credits'
 import { loadStripe } from "@stripe/stripe-js";
 import { getSupabaseConfig } from '@/services/config';
 
@@ -58,42 +58,16 @@ export default function useCreditPurchase() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Fetch credit packages
     const fetchPackages = async () => {
       try {
-        const db = supabase as any;
-        const { data, error } = await db
-          .from('rifa_packages')
-          .select('*')
-          .eq('active', true)
-          .order('price', { ascending: true });
-        
-        if (error) throw error;
-        
-        // Transform data to match the CreditPackage interface
-        const formattedPackages = (data as any[]).map((pkg: any) => ({
-          id: pkg.id,
-          name: `${pkg.rifas_amount} Rifas`,
-          description: pkg.rifas_bonus > 0 ? `${pkg.rifas_bonus} Rifas bônus` : 'Pacote básico',
-          price: pkg.price,
-          credit: pkg.rifas_amount + pkg.rifas_bonus,
-          stripe_price_id: '',
-          base: pkg.rifas_amount,
-          bonus: pkg.rifas_bonus
-        }));
-        
-        setPackages(formattedPackages);
-        
-        // Set default package
-        if (formattedPackages.length > 0 && !selectedPackage) {
-          setSelectedPackage(formattedPackages[0]);
-        }
+        const packages = await getCreditPackages()
+        setPackages(packages)
+        if (packages.length > 0 && !selectedPackage) setSelectedPackage(packages[0])
       } catch (error) {
-        console.error('Error fetching credit packages:', error);
+        console.error('Error fetching credit packages:', error)
       }
-    };
-    
-    fetchPackages();
+    }
+    fetchPackages()
   }, [selectedPackage]);
 
   // Mutation to handle credit purchase via Edge Function
@@ -105,26 +79,7 @@ export default function useCreditPurchase() {
 
         console.log('Tentando compra com:', { provider, method, packageId: selectedPackage.id, userId: user.id });
 
-        console.log('Iniciando compra com Supabase...');
-        const { data, error } = await supabase.functions.invoke(
-          'purchase-credits',
-          {
-            body: {
-              userId: user.id,
-              packageId: selectedPackage.id,
-              paymentProvider: provider,
-              paymentMethod: method,
-            },
-          }
-        )
-
-        if (error) {
-          console.error('Erro ao iniciar compra:', error)
-          throw new Error(error.message || 'Falha ao iniciar compra.')
-        }
-
-        console.log('Resposta da compra:', data);
-        return data;
+        return await purchaseCredits({ userId: user.id, packageId: selectedPackage.id, paymentProvider: provider, paymentMethod: method })
       },
       onSuccess: async (data: any) => {
         // Invalidate queries to refresh user data

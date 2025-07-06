@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSounds } from '@/hooks/use-sounds'
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotificationService, createCustomNotificationService } from '@/lib/services/notifications'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import type { Tables } from '@/integrations/supabase/types'
+import type { NotificationRecord } from '@/lib/services/notifications'
 
-export type Notification = Tables<'notifications'>
+export type Notification = NotificationRecord
 
 export interface NotificationStats {
   total: number
@@ -55,17 +56,7 @@ export function useNotifications() {
     try {
       setLoading(true)
       setError(null)
-
-      const { data, error: fetchError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      if (fetchError) throw fetchError
-
-      const notificationList = data || []
+      const notificationList = await getNotifications({ userId: user.id })
       setNotifications(notificationList)
       setStats(calculateStats(notificationList))
     } catch (err) {
@@ -81,90 +72,33 @@ export function useNotifications() {
     if (!user?.id) return
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true, updated_at: new Date().toISOString() })
-        .eq('id', notificationId)
-        .eq('user_id', user.id)
-
-      if (error) throw error
-
-      // Atualizar estado local
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
-            : notification
-        )
-      )
-
-      // Recalcular estatísticas
-      setNotifications(prev => {
-        setStats(calculateStats(prev))
-        return prev
-      })
-
-      playSound?.('pop')
+      await markNotificationAsRead({ userId: user.id, notificationId })
     } catch (err) {
       console.error('Error marking notification as read:', err)
     }
-  }, [user?.id, calculateStats, playSound])
+  }, [user?.id])
 
   // Marcar todas como lidas
   const markAllAsRead = useCallback(async () => {
     if (!user?.id) return
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('read', false)
-
-      if (error) throw error
-
-      // Atualizar estado local
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
-      )
-
-      // Recalcular estatísticas
-      setNotifications(prev => {
-        setStats(calculateStats(prev))
-        return prev
-      })
-
-      playSound?.('chime')
+      await markAllNotificationsAsRead({ userId: user.id })
     } catch (err) {
       console.error('Error marking all notifications as read:', err)
     }
-  }, [user?.id, calculateStats, playSound])
+  }, [user?.id])
 
   // Deletar notificação
   const deleteNotification = useCallback(async (notificationId: string) => {
     if (!user?.id) return
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', notificationId)
-        .eq('user_id', user.id)
-
-      if (error) throw error
-
-      // Remover do estado local
-      setNotifications(prev => {
-        const filtered = prev.filter(notification => notification.id !== notificationId)
-        setStats(calculateStats(filtered))
-        return filtered
-      })
-
-      playSound?.('error')
+      await deleteNotificationService({ userId: user.id, notificationId })
     } catch (err) {
       console.error('Error deleting notification:', err)
     }
-  }, [user?.id, calculateStats, playSound])
+  }, [user?.id])
 
   // Criar notificação personalizada (para admins)
   const createCustomNotification = useCallback(async (
@@ -176,21 +110,7 @@ export function useNotifications() {
     data: any = {}
   ) => {
     try {
-      const { error } = await supabase.functions.invoke('smart-notifications', {
-        body: {
-          action: 'create_custom_notification',
-          data: {
-            user_id: targetUserId,
-            title,
-            message,
-            type,
-            category,
-            data
-          }
-        }
-      })
-
-      if (error) throw error
+      await createCustomNotificationService({ targetUserId, title, message, type, category, data })
       playSound?.('success')
     } catch (err) {
       console.error('Error creating custom notification:', err)
