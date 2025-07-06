@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { validateReferralCodeStandalone, getReferralStats as getReferralStatsService } from '@/lib/services/referrals'
@@ -93,6 +93,7 @@ export function useReferrals() {
 
   // Buscar código do usuário dinamicamente
   const getUserReferralCode = useCallback(async (userId: string): Promise<UserReferralCode | null> => {
+    const supabase = await getSupabaseClient()
     if (!userId) return null;
 
     setIsLoadingUserCode(true);
@@ -123,6 +124,7 @@ export function useReferrals() {
 
   // Buscar todos os códigos ativos dinamicamente
   const getAllReferralCodes = useCallback(async (): Promise<Array<{id: string, code: string, user_name: string}> | null> => {
+    const supabase = await getSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('referencias')
@@ -153,6 +155,7 @@ export function useReferrals() {
 
   // Gerar código único baseado no username + ano
   const generateReferralCode = async (userId: string) => {
+    const supabase = await getSupabaseClient()
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -193,11 +196,13 @@ export function useReferrals() {
 
   // Criar ou recuperar código de referência
   const ensureReferralCode = async (userId: string) => {
+    const supabase = await getSupabaseClient()
     if (referralCodeCache.has(userId)) {
       return await referralCodeCache.get(userId)!;
     }
 
     const promise = (async () => {
+      const supabase = await getSupabaseClient()
       try {
         const { data: existingRef, error: refError } = await supabase
           .from('referencias')
@@ -259,6 +264,7 @@ export function useReferrals() {
 
   useEffect(() => {
     const fetchReferrals = async () => {
+      const supabase = await getSupabaseClient()
       try {
         const session = await supabase.auth.getSession();
         const userId = session.data.session?.user.id;
@@ -346,6 +352,7 @@ export function useReferrals() {
 
   // Registrar nova indicação
   const registerReferral = async (referenciaId: string, convidadoId: string) => {
+    const supabase = await getSupabaseClient()
     try {
       const { error } = await supabase
         .from('indicacoes')
@@ -375,6 +382,7 @@ export function useReferrals() {
 
   // Completar indicação
   const completeReferral = async (convidadoId: string) => {
+    const supabase = await getSupabaseClient()
     try {
       const { error } = await supabase.functions.invoke('referral-system', {
         body: {
@@ -421,6 +429,7 @@ export function useReferrals() {
 
 // Nova função encapsulada usando MCP direto
 export async function validateReferralCodeMCP(codigo: string) {
+  const supabase = await getSupabaseClient()
   try {
     if (!codigo?.trim()) {
       return { valid: false, error: 'Código é obrigatório' };
