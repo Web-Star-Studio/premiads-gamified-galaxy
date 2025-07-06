@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CashbackCampaign, CashbackRedemption } from '@/types/cashback';
@@ -7,7 +8,7 @@ import {
   fetchUserCashbackBalance, 
   redeemCashback as apiRedeemCashback 
 } from './cashbackApi';
-import { getSupabaseClient } from '@/lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCashbackMarketplace = () => {
   const [campaigns, setCampaigns] = useState<CashbackCampaign[]>([]);
@@ -20,8 +21,7 @@ export const useCashbackMarketplace = () => {
     const fetchCashbackData = async () => {
       try {
         // First check if the user is authenticated
-        const supabase = await getSupabaseClient()
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
           console.log("No authenticated session found - using empty data");
@@ -61,8 +61,7 @@ export const useCashbackMarketplace = () => {
   const redeemCashback = async (campaignId: string, amount: number) => {
     try {
       // Check if user is authenticated before attempting redemption
-      const supabase = await getSupabaseClient()
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
         toast({

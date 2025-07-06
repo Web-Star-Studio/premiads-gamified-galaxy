@@ -13,7 +13,7 @@ import NewLotteryDialog from "@/components/admin/lottery/NewLotteryDialog";
 import EmptyState from "@/components/admin/lottery/EmptyState";
 import { Lottery } from "@/types/lottery";
 import raffleService from "@/services/raffles";
-import { adminRaffleService } from "@/lib/services/admin-raffles";
+import { adminRaffleService } from "@/services/admin-raffles";
 import { supabase } from '@/integrations/supabase/client'
 
 const LotteryManagement = () => {
@@ -262,8 +262,8 @@ const LotteryManagement = () => {
         <p className="text-gray-400">Gerencie todos os sorteios da plataforma</p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
           <LotteryList
             lotteries={lotteries}
             onViewDetails={setSelectedLottery}
@@ -272,7 +272,7 @@ const LotteryManagement = () => {
           />
         </div>
         
-        <div className="xl:col-span-3">
+        <div className="lg:col-span-2">
           {selectedLottery ? (
             <LotteryDetails
               selectedLottery={selectedLottery}

@@ -1,20 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getOpenRaffles, buyRaffleTickets } from '@/lib/services/raffles'
+import { supabase } from '../integrations/supabase/client'
+import type { Database } from '../integrations/supabase/types'
 
-// Raffle types inferred from service
 const RAFFLES_KEY = ['raffles']
+
+type Raffle = Database['public']['Tables']['raffles']['Row']
 
 export function useRaffles() {
   const queryClient = useQueryClient()
 
   const rafflesQuery = useQuery({
     queryKey: RAFFLES_KEY,
-    queryFn: getOpenRaffles
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('raffles')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as Raffle[]
+    }
   })
 
   const buyTickets = useMutation({
-    mutationFn: buyRaffleTickets,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: RAFFLES_KEY })
+    mutationFn: async ({ raffleId, qty }: { raffleId: string; qty: number }) => {
+      // @ts-ignore - tabela gerada em próxima atualização de tipos
+      const { error } = await supabase.from('raffle_tickets' as any).insert({
+        raffle_id: raffleId,
+        qty
+      } as any)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: RAFFLES_KEY })
+    }
   })
 
   return {

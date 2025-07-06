@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Gift, Clock3, Trophy, CreditCard } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -14,10 +15,8 @@ import LootBoxList from "@/components/client/rewards/LootBoxList";
 import RaffleWinnersList from "@/components/client/rewards/RaffleWinnersList";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { getSupabaseClient } from "@/lib/supabaseClient";
-import { getUserRewards } from "@/lib/services/rewards";
-import raffleService from "@/services/raffles";
-import { fetchUserCashbackTokens } from "@/lib/services/cashbackCampaigns";
+import { raffleService } from "@/services/raffles";
+import { fetchUserCashbackTokens } from "@/hooks/cashback/cashbackApi";
 
 const RewardsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -36,8 +35,25 @@ const RewardsPage = () => {
     try {
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Fetch mission rewards for the user via centralized service
-      const missionRewardsData = await getUserRewards({ userId: user.id });
+      // Fetch mission rewards for the user
+      const { data: missionRewardsData, error: lootBoxesError } = await supabase
+        .from('mission_rewards')
+        .select(`
+          id,
+          rifas_earned,
+          cashback_earned,
+          rewarded_at,
+          mission_id,
+          missions (title),
+          mission_submissions!inner (user_id)
+        `)
+        .eq('mission_submissions.user_id', user.id)
+        .order('rewarded_at', { ascending: false });
+
+      if (lootBoxesError) {
+        console.error("Error fetching mission rewards:", lootBoxesError);
+        throw lootBoxesError;
+      }
 
       const transformedLootBoxes = (missionRewardsData || []).flatMap(reward => {
         const rewards = [];
@@ -94,33 +110,46 @@ const RewardsPage = () => {
   };
 
   useEffect(() => {
-    let lbSub, lwSub;
-    const refreshInterval = setInterval(fetchRewards, 30000);
     fetchRewards();
-    (async () => {
-      const supabase = await getSupabaseClient();
-      const { data: session } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) return;
-      lbSub = supabase
-        .channel('loot_box_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_rewards', filter: `user_id=eq.${userId}` }, () => {
+    // Realtime subscription for loot boxes only
+    const lootBoxesSubscription = supabase
+      .channel('loot_box_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'mission_rewards',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
+        }, 
+        (payload) => {
           fetchRewards();
           playSound('reward');
-        })
-        .subscribe();
-      lwSub = supabase
-        .channel('lottery_winners_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_winners', filter: `user_id=eq.${userId}` }, () => {
+        }
+      )
+      .subscribe();
+    
+    // Realtime subscription for lottery winners
+    const lotteryWinnersSubscription = supabase
+      .channel('lottery_winners_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'lottery_winners',
+          filter: `user_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`
+        }, 
+        (payload) => {
           fetchRewards();
           playSound('reward');
-        })
-        .subscribe();
-    })();
+        }
+      )
+      .subscribe();
+      
+    const refreshInterval = setInterval(fetchRewards, 30000);
     return () => {
       clearInterval(refreshInterval);
-      lbSub?.unsubscribe();
-      lwSub?.unsubscribe();
+      lootBoxesSubscription.unsubscribe();
+      lotteryWinnersSubscription.unsubscribe();
     };
   }, [location.key, toast, playSound, user?.id]);
 

@@ -270,21 +270,6 @@
   @apply outline-none ring-2 ring-neon-cyan/50 ring-offset-1 ring-offset-galaxy-dark;
 }
 
-/* Line clamp utilities */
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
 /* Improved support for reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

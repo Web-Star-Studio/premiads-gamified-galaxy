@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSounds } from "@/hooks/use-sounds";
 import { useToast } from "@/hooks/use-toast";
-import { getUserProfile, updateUserProfile } from '@/lib/services/profile'
 
 export const useProfileData = () => {
   const { userName, setUserName } = useUser();
@@ -42,12 +42,32 @@ export const useProfileData = () => {
           return;
         }
         
-        const profileRecord = await getUserProfile({ userId })
-        setProfileData(profileRecord)
-        setRifas(profileRecord.rifas)
-        setCashback(profileRecord.cashback_balance)
-        setIsProfileCompleted(profileRecord.profile_completed)
-        if (profileRecord.full_name && !userName) setUserName(profileRecord.full_name)
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+        
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          setRifas(0);
+          setCashback(0);
+          setStreak(0);
+          setIsProfileCompleted(false);
+          setLoading(false);
+          return;
+        }
+        
+        if (profileData) {
+          setProfileData(profileData);
+          setRifas(profileData.rifas || 0);
+          setCashback(profileData.cashback_balance || 0);
+          setIsProfileCompleted(profileData.profile_completed || false);
+          
+          if (profileData.full_name && !userName) {
+            setUserName(profileData.full_name);
+          }
+        }
         
         setStreak(0);
         localStorage.setItem("lastActivity", Date.now().toString());
@@ -74,35 +94,15 @@ export const useProfileData = () => {
     fetchUserData();
   }, [userName, setUserName, playSound, toast]);
 
-  // Atualizar perfil do usuário
-  const updateProfile = useCallback(async (updates: Partial<{ full_name: string; rifas: number; cashback_balance: number; profile_completed: boolean }>) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const userId = session?.user.id
-      if (!userId) throw new Error('Usuário não autenticado')
-      const updated = await updateUserProfile({ userId, updates })
-      setProfileData(updated)
-      if (updated.full_name) setUserName(updated.full_name)
-      toast({ title: 'Perfil atualizado com sucesso' })
-      playSound('success')
-      return updated
-    } catch (error: any) {
-      console.error('Erro ao atualizar perfil:', error)
-      toast({ title: 'Erro ao atualizar perfil', description: error.message, variant: 'destructive' })
-      throw error
-    }
-  }, [playSound, toast, setUserName]);
-
   return {
     loading,
-    points: rifas,
-    credits: cashback,
+    points: rifas, // Alias for compatibility
+    credits: cashback, // Alias for compatibility  
     rifas,
     cashback,
     streak,
     isProfileCompleted,
     profileData,
-    authError,
-    updateProfile
+    authError
   };
 };

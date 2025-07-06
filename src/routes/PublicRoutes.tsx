@@ -24,38 +24,40 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Support = lazy(() => import("@/pages/Support"));
 
 const PublicRoutes = () => (
-  <Routes>
-    <Route index element={<Suspense fallback={<RouteLoadingSpinner />}><Index /></Suspense>} />
-    <Route path="sobre" element={<Suspense fallback={<RouteLoadingSpinner />}><About /></Suspense>} />
-    <Route path="como-funciona" element={<Suspense fallback={<RouteLoadingSpinner />}><HowItWorks /></Suspense>} />
-    <Route path="faq" element={<Suspense fallback={<RouteLoadingSpinner />}><Faq /></Suspense>} />
-    <Route path="feedback" element={<Suspense fallback={<RouteLoadingSpinner />}><Feedback /></Suspense>} />
-    <Route path="tutoriais" element={<Suspense fallback={<RouteLoadingSpinner />}><Tutorials /></Suspense>} />
-    <Route path="auth" element={<Suspense fallback={<RouteLoadingSpinner />}><Authentication /></Suspense>} />
-    <Route path="blog" element={<Suspense fallback={<RouteLoadingSpinner />}><Blog /></Suspense>} />
-    <Route path="blog/:id" element={<Suspense fallback={<RouteLoadingSpinner />}><BlogPost /></Suspense>} />
-    <Route path="suporte" element={<Suspense fallback={<RouteLoadingSpinner />}><Support /></Suspense>} />
-    
-    {/* Redirect /documentacao to /admin/documentacao */}
-    <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
+  <Suspense fallback={<RouteLoadingSpinner />}>
+    <Routes>
+      <Route index element={<Index />} />
+      <Route path="sobre" element={<About />} />
+      <Route path="como-funciona" element={<HowItWorks />} />
+      <Route path="faq" element={<Faq />} />
+      <Route path="feedback" element={<Feedback />} />
+      <Route path="tutoriais" element={<Tutorials />} />
+      <Route path="auth" element={<Authentication />} />
+      <Route path="blog" element={<Blog />} />
+      <Route path="blog/:id" element={<BlogPost />} />
+      <Route path="suporte" element={<Support />} />
+      
+      {/* Redirect /documentacao to /admin/documentacao */}
+      <Route path="documentacao" element={<Navigate to="/admin/documentacao" replace />} />
 
-    
-    <Route path="tour" element={<Suspense fallback={<RouteLoadingSpinner />}><Tour /></Suspense>} />
-    
-    <Route path="nosso-time" element={<Suspense fallback={<RouteLoadingSpinner />}><Team /></Suspense>} />
-    
-    <Route path="carreiras" element={<Suspense fallback={<RouteLoadingSpinner />}><Careers /></Suspense>} />
-    
-    {/* Política e termos legais */}
-    <Route path="termos-de-uso" element={<Suspense fallback={<RouteLoadingSpinner />}><TermsOfUse /></Suspense>} />
-    
-    <Route path="politica-de-privacidade" element={<Suspense fallback={<RouteLoadingSpinner />}><PrivacyPolicy /></Suspense>} />
-    
-    <Route path="cookies" element={<Suspense fallback={<RouteLoadingSpinner />}><CookiesPolicy /></Suspense>} />
-    
-    {/* Catch-all for missing routes */}
-    <Route path="*" element={<Suspense fallback={<RouteLoadingSpinner />}><NotFound /></Suspense>} />
-  </Routes>
+      
+      <Route path="tour" element={<Tour />} />
+      
+      <Route path="nosso-time" element={<Team />} />
+      
+      <Route path="carreiras" element={<Careers />} />
+      
+      {/* Política e termos legais */}
+      <Route path="termos-de-uso" element={<TermsOfUse />} />
+      
+      <Route path="politica-de-privacidade" element={<PrivacyPolicy />} />
+      
+      <Route path="cookies" element={<CookiesPolicy />} />
+      
+      {/* Catch-all for missing routes */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
 );
 
 export default PublicRoutes;

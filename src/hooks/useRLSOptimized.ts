@@ -1,8 +1,7 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { RLSOptimizedService } from '@/services/rls-optimized';
-import { getUserTransactions, createTransaction as createTransactionService, Transaction } from '@/lib/services/transactions'
-import { getOrCreateStripeCustomer } from '@/lib/services/stripe-customers'
 import { toast } from 'sonner';
 
 /**
@@ -22,9 +21,9 @@ export function useRLSOptimized() {
     data: raffles,
     isLoading: isRafflesLoading,
     refetch: refetchRaffles
-  } = useQuery<any[]>({
+  } = useQuery({
     queryKey: ['auth-optimized-raffles'],
-    queryFn: async () => await RLSOptimizedService.getRaffles(),
+    queryFn: () => RLSOptimizedService.getRaffles(),
     staleTime: 1000 * 60 * 5, // 5 minutos
     enabled: true, // Público, sempre habilitado
   });
@@ -33,9 +32,9 @@ export function useRLSOptimized() {
     data: userReferrals,
     isLoading: isReferralsLoading,
     refetch: refetchReferrals
-  } = useQuery<any[]>({
+  } = useQuery({
     queryKey: ['auth-optimized-referrals', user?.id],
-    queryFn: async () => await RLSOptimizedService.getUserReferrals(user!.id),
+    queryFn: () => RLSOptimizedService.getUserReferrals(user!.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 3, // 3 minutos
   });
@@ -54,9 +53,9 @@ export function useRLSOptimized() {
     data: userPurchases,
     isLoading: isPurchasesLoading,
     refetch: refetchPurchases
-  } = useQuery<any[]>({
+  } = useQuery({
     queryKey: ['auth-optimized-purchases', user?.id],
-    queryFn: async () => await RLSOptimizedService.getUserPurchases(user!.id),
+    queryFn: () => RLSOptimizedService.getUserPurchases(user!.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 2, // 2 minutos
   });
@@ -65,9 +64,9 @@ export function useRLSOptimized() {
     data: userTransactions,
     isLoading: isTransactionsLoading,
     refetch: refetchTransactions
-  } = useQuery<Transaction[]>({
+  } = useQuery({
     queryKey: ['auth-optimized-transactions', user?.id],
-    queryFn: async () => await getUserTransactions({ userId: user!.id }),
+    queryFn: () => RLSOptimizedService.getUserTransactions(user!.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 1, // 1 minuto
   });
@@ -78,7 +77,7 @@ export function useRLSOptimized() {
     refetch: refetchAnalytics
   } = useQuery({
     queryKey: ['auth-optimized-dashboard-analytics', user?.id],
-    queryFn: async () => await RLSOptimizedService.getDashboardAnalytics(user!.id),
+    queryFn: () => RLSOptimizedService.getDashboardAnalytics(user!.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
@@ -101,13 +100,7 @@ export function useRLSOptimized() {
   });
 
   const createTransactionMutation = useMutation({
-    mutationFn: (transactionData: any) =>
-      createTransactionService({
-        userId: transactionData.user_id,
-        type: transactionData.type,
-        amount: transactionData.amount,
-        metadata: transactionData.metadata
-      }),
+    mutationFn: (transactionData: any) => RLSOptimizedService.createTransaction(transactionData),
     onSuccess: () => {
       toast.success('Transação registrada!');
       queryClient.invalidateQueries({ queryKey: ['auth-optimized-transactions', user?.id] });
@@ -143,7 +136,12 @@ export function useRLSOptimized() {
   };
 
   const createTransaction = async (type: string, amount: number, metadata?: any) => {
-    await createTransactionMutation.mutateAsync({ user_id: user?.id, type, amount, metadata });
+    await createTransactionMutation.mutateAsync({
+      user_id: user?.id,
+      type,
+      amount,
+      metadata
+    });
   };
 
   return {
@@ -181,9 +179,9 @@ export function useRLSOptimized() {
     refetchAnalytics,
     
     // Dados derivados com máxima performance
-    totalActiveRaffles: (raffles || []).filter(r => (r as any).status === 'active').length || 0,
-    totalReferrals: (userReferrals || []).length || 0,
-    totalPurchaseValue: (userPurchases || []).reduce((sum, p: any) => sum + p.price, 0) || 0,
-    recentTransactionsCount: (userTransactions || []).length || 0,
+    totalActiveRaffles: raffles?.filter(r => r.status === 'active').length || 0,
+    totalReferrals: userReferrals?.length || 0,
+    totalPurchaseValue: userPurchases?.reduce((sum, p) => sum + p.price, 0) || 0,
+    recentTransactionsCount: userTransactions?.length || 0,
   };
 }
