@@ -16,16 +16,22 @@ interface Profile {
 }
 
 async function getUserProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, user_type")
-    .eq("id", userId)
-    .single();
-  if (error) {
-    console.error("Error fetching user profile:", error);
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, user_type")
+      .eq("id", userId)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+    return data as Profile;
+  } catch (error) {
+    console.error("Exception fetching user profile:", error);
     return null;
   }
-  return data as Profile;
 }
 
 // Helper function to check if user can perform advertiser actions
@@ -52,13 +58,21 @@ serve(async (req: Request) => {
     });
     console.log("moderate-mission-submission: Supabase admin client initialized.");
 
-    const userAuthHeader = req.headers.get("Authorization")!;
+    const userAuthHeader = req.headers.get("Authorization");
+    if (!userAuthHeader) {
+      console.error("No authorization header provided");
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const jwt = userAuthHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseAdminClient.auth.getUser(jwt);
 
     if (userError || !user) {
       console.error("Auth error:", userError);
-      return new Response(JSON.stringify({ error: "Authentication failed" }), {
+      return new Response(JSON.stringify({ error: "Authentication failed", details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -66,10 +80,22 @@ serve(async (req: Request) => {
     const userId = user.id;
     console.log(`moderate-mission-submission: Authenticated user ID: ${userId}`);
 
-    const requestBody = await req.json();
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error("Error parsing request body:", error);
+      return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     console.log("moderate-mission-submission: Request body:", JSON.stringify(requestBody));
     const { submission_id, action } = requestBody;
+    
     if (!submission_id || !action) {
+      console.error("Missing required fields:", { submission_id, action });
       return new Response(JSON.stringify({ error: "Missing submission_id or action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -93,7 +119,10 @@ serve(async (req: Request) => {
       case "ADVERTISER_APPROVE_FIRST_INSTANCE":
         if (!canPerformAdvertiserActions(userProfile.user_type?.trim())) {
           console.error(`Permission check failed for action '${action}': Expected 'anunciante' or 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or 'admin' for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'anunciante' or 'admin' for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "approve_submission_first_instance";
         rpcParams.p_advertiser_id = userId;
@@ -101,7 +130,10 @@ serve(async (req: Request) => {
       case "ADVERTISER_REJECT_TO_SECOND_INSTANCE":
         if (!canPerformAdvertiserActions(userProfile.user_type?.trim())) {
           console.error(`Permission check failed for action '${action}': Expected 'anunciante' or 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or 'admin' for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'anunciante' or 'admin' for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "reject_submission_to_second_instance";
         rpcParams.p_advertiser_id = userId;
@@ -109,7 +141,10 @@ serve(async (req: Request) => {
       case "ADMIN_REJECT":
         if (!userProfile.user_type || userProfile.user_type.trim() !== "admin") {
           console.error(`Permission check failed for action '${action}': Expected 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'admin' or user_type is invalid for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'admin' or user_type is invalid for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "admin_reject_submission";
         rpcParams.p_admin_id = userId;
@@ -117,7 +152,10 @@ serve(async (req: Request) => {
       case "ADMIN_RETURN_TO_ADVERTISER":
         if (!userProfile.user_type || userProfile.user_type.trim() !== "admin") {
           console.error(`Permission check failed for action '${action}': Expected 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'admin' or user_type is invalid for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'admin' or user_type is invalid for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "admin_return_submission_to_advertiser";
         rpcParams.p_admin_id = userId;
@@ -125,7 +163,10 @@ serve(async (req: Request) => {
       case "ADVERTISER_APPROVE_SECOND_INSTANCE":
         if (!canPerformAdvertiserActions(userProfile.user_type?.trim())) {
           console.error(`Permission check failed for action '${action}': Expected 'anunciante' or 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or 'admin' for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'anunciante' or 'admin' for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "approve_submission_second_instance";
         rpcParams.p_advertiser_id = userId;
@@ -133,12 +174,16 @@ serve(async (req: Request) => {
       case "ADVERTISER_REJECT_SECOND_INSTANCE":
         if (!canPerformAdvertiserActions(userProfile.user_type?.trim())) {
           console.error(`Permission check failed for action '${action}': Expected 'anunciante' or 'admin', got '[${userProfile.user_type?.trim()}]' for user ID ${userId}`);
-          throw new Error("Permission denied: User is not an 'anunciante' or 'admin' for this action.");
+          return new Response(JSON.stringify({ error: "Permission denied: User is not an 'anunciante' or 'admin' for this action." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         rpcName = "reject_submission_second_instance";
         rpcParams.p_advertiser_id = userId;
         break;
       default:
+        console.error(`Invalid action provided: ${action}`);
         return new Response(JSON.stringify({ error: "Invalid action" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -146,25 +191,52 @@ serve(async (req: Request) => {
     }
 
     console.log(`moderate-mission-submission: Attempting RPC call '${rpcName}' with params:`, JSON.stringify(rpcParams));
-    const { data: rpcData, error: rpcError } = await supabaseAdminClient.rpc(rpcName, rpcParams);
-    console.log(`moderate-mission-submission: RPC call '${rpcName}' completed. Data:`, JSON.stringify(rpcData), "Error:", JSON.stringify(rpcError));
+    
+    try {
+      const { data: rpcData, error: rpcError } = await supabaseAdminClient.rpc(rpcName, rpcParams);
+      console.log(`moderate-mission-submission: RPC call '${rpcName}' completed. Data:`, JSON.stringify(rpcData), "Error:", JSON.stringify(rpcError));
 
-    if (rpcError) {
-      console.error(`RPC error (${rpcName}):`, rpcError);
-      return new Response(JSON.stringify({ error: rpcError.message || "Failed to moderate submission" }), {
+      if (rpcError) {
+        console.error(`RPC error (${rpcName}):`, rpcError);
+        return new Response(JSON.stringify({ 
+          error: rpcError.message || "Failed to moderate submission",
+          details: rpcError,
+          rpc_name: rpcName,
+          rpc_params: rpcParams
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Action ${action} performed successfully.`,
+        rpc_name: rpcName,
+        data: rpcData
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (rpcException) {
+      console.error(`RPC exception (${rpcName}):`, rpcException);
+      return new Response(JSON.stringify({ 
+        error: "RPC call failed",
+        details: rpcException.message,
+        rpc_name: rpcName,
+        rpc_params: rpcParams
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, message: `Action ${action} performed successfully.` }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-
   } catch (error) {
-    console.error("moderate-mission-submission: Unhandled error:", error, "Error stringified:", JSON.stringify(error));
-    return new Response(JSON.stringify({ error: error.message || "Internal server error" }), {
+    console.error("moderate-mission-submission: Unhandled error:", error);
+    return new Response(JSON.stringify({ 
+      error: error.message || "Internal server error",
+      stack: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
