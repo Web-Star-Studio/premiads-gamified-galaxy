@@ -1,14 +1,16 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef, useMemo } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Lazy load route components
-const PublicRoutes = lazy(() => import("./PublicRoutes"));
-const ClientRoutes = lazy(() => import("./ClientRoutes"));
-const AdminRoutes = lazy(() => import("./AdminRoutes"));
-const AdvertiserRoutes = lazy(() => import("./AdvertiserRoutes"));
+// Import route components directly (no lazy loading at group level)
+import PublicRoutes from "./PublicRoutes";
+import ClientRoutes from "./ClientRoutes";
+import AdminRoutes from "./AdminRoutes";
+import AdvertiserRoutes from "./AdvertiserRoutes";
+
+// Keep lazy loading only for NotFound page
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppRoutes = () => {
@@ -24,19 +26,18 @@ const AppRoutes = () => {
     }
   }, [location.pathname, isAuthenticated, isLoading]);
   
-  // Helper function to handle redirections for root and auth paths
-  const shouldRedirect = () => isAuthenticated && 
+  // Memoize helper functions to avoid recalculations
+  const shouldRedirect = useMemo(() => isAuthenticated && 
            currentUser && 
-           (location.pathname === "/" || location.pathname === "/auth");
+           (location.pathname === "/" || location.pathname === "/auth"), 
+           [isAuthenticated, currentUser, location.pathname]);
 
-  // Check if user should be redirected to auth when not authenticated
-  const shouldRedirectToAuth = () => {
+  const shouldRedirectToAuth = useMemo(() => {
     const protectedPaths = ["/cliente", "/anunciante", "/admin"];
     return !isAuthenticated && protectedPaths.some(path => location.pathname.startsWith(path));
-  };
+  }, [isAuthenticated, location.pathname]);
   
-  // Get appropriate dashboard path based on user type
-  const getDashboardPath = () => {
+  const dashboardPath = useMemo(() => {
     const userType = currentUser?.user_metadata?.user_type;
     
     if (userType === "participante") return "/cliente";
@@ -44,7 +45,7 @@ const AppRoutes = () => {
     if (userType === "admin" || userType === "moderator") return "/admin";
     
     return "/auth"; // Default fallback
-  };
+  }, [currentUser?.user_metadata?.user_type]);
 
   // Don't render any routes until we've checked auth status
   if (isLoading) {
@@ -55,7 +56,7 @@ const AppRoutes = () => {
     <ErrorBoundary>
       <Routes>
         {/* Redirect to auth if not authenticated and on protected route */}
-        {shouldRedirectToAuth() && (
+        {shouldRedirectToAuth && (
           <Route 
             path="*" 
             element={<Navigate to="/auth" replace />} 
@@ -63,46 +64,38 @@ const AppRoutes = () => {
         )}
         
         {/* Redirect root path for authenticated users */}
-        {shouldRedirect() && (
+        {shouldRedirect && (
           <Route 
             index 
-            element={<Navigate to={getDashboardPath()} replace />} 
+            element={<Navigate to={dashboardPath} replace />} 
           />
         )}
         
-        {/* Public routes with suspense loading */}
+        {/* Public routes - no suspense at group level */}
         <Route path="/*" element={
           <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <PublicRoutes />
-            </Suspense>
+            <PublicRoutes />
           </ErrorBoundary>
         } />
         
-        {/* Client routes with suspense loading */}
+        {/* Client routes - no suspense at group level */}
         <Route path="/cliente/*" element={
           <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <ClientRoutes />
-            </Suspense>
+            <ClientRoutes />
           </ErrorBoundary>
         } />
         
-        {/* Advertiser routes with suspense loading */}
+        {/* Advertiser routes - no suspense at group level */}
         <Route path="/anunciante/*" element={
           <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AdvertiserRoutes />
-            </Suspense>
+            <AdvertiserRoutes />
           </ErrorBoundary>
         } />
         
-        {/* Admin routes with suspense loading */}
+        {/* Admin routes - no suspense at group level */}
         <Route path="/admin/*" element={
           <ErrorBoundary>
-            <Suspense fallback={<RouteLoadingSpinner />}>
-              <AdminRoutes />
-            </Suspense>
+            <AdminRoutes />
           </ErrorBoundary>
         } />
         

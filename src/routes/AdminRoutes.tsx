@@ -39,62 +39,60 @@ const AdminRoutes = () => {
   console.log("AdminRoutes - Rendering admin routes");
   return (
     <ErrorBoundary fallback={<div className="p-8">Ocorreu um erro. Tente novamente mais tarde.</div>}>
-      <Suspense fallback={<RouteLoadingSpinner />}>
-        <Routes>
-          <Route 
-            index 
-            element={<AdminPanel />} 
-          />
-          
-          <Route 
-            path="usuarios" 
-            element={<UserManagementPage />} 
-          />
-          
-          <Route 
-            path="rifas" 
-            element={<RifasManagementPage />} 
-          />
-          
-          <Route 
-            path="sorteios" 
-            element={<LotteryManagementPage />} 
-          />
-          
-          <Route 
-            path="notificacoes" 
-            element={<NotificationsPage />} 
-          />
-          
-          <Route 
-            path="regras" 
-            element={<RulesPage />} 
-          />
-          
-          <Route 
-            path="configuracoes" 
-            element={<SettingsPage />} 
-          />
-          
-          <Route 
-            path="documentacao" 
-            element={<DocumentationPage />} 
-          />
-          
-          <Route 
-            path="moderacao" 
-            element={<ModerationPage />} 
-          />
-          
-          <Route 
-            path="perfil" 
-            element={<AdminProfilePage />} 
-          />
-          
-          {/* Catch-all route for 404 handling within admin routes */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route 
+          index 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><AdminPanel /></Suspense>} 
+        />
+        
+        <Route 
+          path="usuarios" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><UserManagementPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="rifas" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><RifasManagementPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="sorteios" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><LotteryManagementPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="notificacoes" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><NotificationsPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="regras" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><RulesPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="configuracoes" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><SettingsPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="documentacao" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><DocumentationPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="moderacao" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><ModerationPage /></Suspense>} 
+        />
+        
+        <Route 
+          path="perfil" 
+          element={<Suspense fallback={<RouteLoadingSpinner />}><AdminProfilePage /></Suspense>} 
+        />
+        
+        {/* Catch-all route for 404 handling within admin routes */}
+        <Route path="*" element={<Suspense fallback={<RouteLoadingSpinner />}><NotFound /></Suspense>} />
+      </Routes>
     </ErrorBoundary>
   );
 };

@@ -32,17 +32,45 @@ const createOptimizedQueryClient = () => new QueryClient({
 
 const queryClient = createOptimizedQueryClient();
 
-// Route imports for preloading
+// Comprehensive route imports for preloading
 const routeImports = {
+  // Auth routes
   '/auth': () => import('@/pages/Authentication'),
+  
+  // Client routes
   '/cliente': () => import('@/pages/ClientDashboard'),
   '/cliente/missoes': () => import('@/pages/ClientMissions'),
   '/cliente/cashback': () => import('@/pages/CashbackMarketplace'),
   '/cliente/rifas': () => import('@/pages/ClientRaffles'),
+  '/cliente/perfil': () => import('@/pages/ClientProfile'),
+  '/cliente/recompensas': () => import('@/pages/client/RewardsPage'),
+  '/cliente/notificacoes': () => import('@/pages/client/ClientNotifications'),
+  '/cliente/indicacoes': () => import('@/pages/ClientReferrals'),
+  
+  // Advertiser routes
   '/anunciante': () => import('@/pages/AdvertiserDashboard'),
   '/anunciante/campanhas': () => import('@/pages/advertiser/AdvertiserCampaigns'),
+  '/anunciante/nova-campanha': () => import('@/pages/advertiser/NewCampaign'),
   '/anunciante/moderacao': () => import('@/pages/advertiser/ModerationPage'),
+  '/anunciante/analises': () => import('@/pages/advertiser/AnalyticsPage'),
+  '/anunciante/creditos': () => import('@/pages/advertiser/CreditsPage'),
+  '/anunciante/cashbacks': () => import('@/pages/anunciante/cashbacks'),
+  '/anunciante/perfil': () => import('@/pages/advertiser/ProfilePage'),
+  
+  // Admin routes
   '/admin': () => import('@/pages/AdminPanel'),
+  '/admin/usuarios': () => import('@/pages/admin/UserManagementPage'),
+  '/admin/sorteios': () => import('@/pages/admin/LotteryManagementPage'),
+  '/admin/moderacao': () => import('@/pages/admin/ModerationPage'),
+  '/admin/documentacao': () => import('@/pages/admin/DocumentationPage'),
+  '/admin/regras': () => import('@/pages/admin/RulesPage'),
+  
+  // Public routes (most accessed)
+  '/': () => import('@/pages/Index'),
+  '/sobre': () => import('@/pages/About'),
+  '/como-funciona': () => import('@/pages/HowItWorks'),
+  '/faq': () => import('@/pages/Faq'),
+  '/blog': () => import('@/pages/Blog'),
 };
 
 interface OptimizedProvidersProps {

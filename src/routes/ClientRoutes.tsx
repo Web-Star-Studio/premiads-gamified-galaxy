@@ -20,23 +20,21 @@ const RewardsPage = lazy(() => import("@/pages/client/RewardsPage"));
 
 const ClientRoutes = () => (
   <RouteGuard>
-    <Suspense fallback={<LoadingSpinner />}>
-      <Routes>
-        <Route index element={<ClientDashboard />} />
-        <Route path="missoes" element={<ClientMissions />} />
-        <Route path="perfil" element={<ClientProfile />} />
-        <Route path="sorteios" element={<ClientRaffles />} />
-        <Route path="indicacoes" element={<ClientReferrals />} />
-        <Route path="cashback" element={<CashbackMarketplace />} />
-        <Route path="suporte" element={<Support />} />
-        <Route path="tour" element={<Tour />} />
-        <Route path="como-funciona" element={<HowItWorks />} />
-        <Route path="faq" element={<Faq />} />
-        <Route path="notificacoes" element={<ClientNotifications />} />
-        <Route path="recompensas" element={<RewardsPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+    <Routes>
+      <Route index element={<Suspense fallback={<LoadingSpinner />}><ClientDashboard /></Suspense>} />
+      <Route path="missoes" element={<Suspense fallback={<LoadingSpinner />}><ClientMissions /></Suspense>} />
+      <Route path="perfil" element={<Suspense fallback={<LoadingSpinner />}><ClientProfile /></Suspense>} />
+      <Route path="sorteios" element={<Suspense fallback={<LoadingSpinner />}><ClientRaffles /></Suspense>} />
+      <Route path="indicacoes" element={<Suspense fallback={<LoadingSpinner />}><ClientReferrals /></Suspense>} />
+      <Route path="cashback" element={<Suspense fallback={<LoadingSpinner />}><CashbackMarketplace /></Suspense>} />
+      <Route path="suporte" element={<Suspense fallback={<LoadingSpinner />}><Support /></Suspense>} />
+      <Route path="tour" element={<Suspense fallback={<LoadingSpinner />}><Tour /></Suspense>} />
+      <Route path="como-funciona" element={<Suspense fallback={<LoadingSpinner />}><HowItWorks /></Suspense>} />
+      <Route path="faq" element={<Suspense fallback={<LoadingSpinner />}><Faq /></Suspense>} />
+      <Route path="notificacoes" element={<Suspense fallback={<LoadingSpinner />}><ClientNotifications /></Suspense>} />
+      <Route path="recompensas" element={<Suspense fallback={<LoadingSpinner />}><RewardsPage /></Suspense>} />
+      <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
+    </Routes>
   </RouteGuard>
 );
 
