@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useSounds } from "@/hooks/use-sounds";
-import { supabase } from "@/integrations/supabase/client";
-import { Mission } from "@/hooks/useMissionsTypes";
-import { UseMissionsOptions } from "@/hooks/missions/types";
-import { useMissionSubmit } from "@/hooks/missions/useMissionSubmit";
+import { useToast } from "./use-toast";
+import { useSounds } from "./use-sounds";
+import { getSupabaseClient } from "../lib/supabaseClient";
+import { getActiveMissions } from "../lib/services/missions";
+import { getSubmissions } from "../lib/services/submissions";
+import { Mission } from "./useMissionsTypes";
+import { UseMissionsOptions } from "./missions/types";
+import { useMissionSubmit } from "./missions/useMissionSubmit";
 
 export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions = {}) => {
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
   const [currentFilter, setFilter] = useState<"available" | "in_progress" | "pending" | "completed">(initialFilter);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const { submitMission: submitMissionToServer, submissionLoading } = useMissionSubmit(setMissions);
+  const { submitMission: submitMissionToServer, isSubmitting: submissionLoading } = useMissionSubmit(setMissions);
 
   // Define filter to status mapping
   const filterToStatus = {
@@ -47,7 +49,8 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
       setLoading(true);
       
       // Get current user
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const supabase = await getSupabaseClient()
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !sessionData?.session?.user?.id) {
         console.error("No authenticated user found");
@@ -57,24 +60,10 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
       const userId = sessionData.session.user.id;
       
       // First get all active missions
-      const { data: missionData, error: missionError } = await supabase
-        .from("missions")
-        .select("*")
-        .eq("is_active", true);
-      
-      if (missionError) {
-        throw missionError;
-      }
+      const missionData = await getActiveMissions()
       
       // Then get user's mission submissions
-      const { data: submissionData, error: submissionError } = await supabase
-        .from("mission_submissions")
-        .select("*")
-        .eq("user_id", userId);
-      
-      if (submissionError) {
-        throw submissionError;
-      }
+      const submissionData = await getSubmissions({ userId })
       
       // Process missions to determine their status for this user
       const processedMissions = missionData.map((mission) => {
@@ -155,7 +144,8 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
       console.log('Submitting mission:', { missionId, submissionData, status });
       
       // Get current user
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const supabase = await getSupabaseClient()
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !sessionData?.session?.user?.id) {
         console.error("No authenticated user found");
