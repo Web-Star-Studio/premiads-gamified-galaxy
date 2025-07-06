@@ -16,6 +16,7 @@ const RulesPage = lazy(() => import("@/pages/admin/RulesPage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const DocumentationPage = lazy(() => import("@/pages/admin/DocumentationPage"));
 const ModerationPage = lazy(() => import("@/pages/admin/ModerationPage"));
+const AdminProfilePage = lazy(() => import("@/pages/admin/AdminProfilePage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AdminRoutes = () => {
@@ -83,6 +84,11 @@ const AdminRoutes = () => {
           <Route 
             path="moderacao" 
             element={<ModerationPage />} 
+          />
+          
+          <Route 
+            path="perfil" 
+            element={<AdminProfilePage />} 
           />
           
           {/* Catch-all route for 404 handling within admin routes */}

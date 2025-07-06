@@ -65,17 +65,21 @@ export const useUserOperations = () => {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
+      console.log('Attempting to delete user with ID:', userId);
+      
       const { data, error } = await supabase.rpc('delete_user_account', {
-        target_user_id: userId
+        user_id_param: userId
       });
         
       if (error) {
+        console.error('Supabase RPC error:', error);
         if (error.code === '23503') {
           throw new Error('Cannot delete user because they have related data in the system. Consider deactivating the user instead.');
         }
         throw error;
       }
       
+      console.log('User deletion successful:', data);
       toast({
         title: 'User deleted',
         description: 'User has been deleted successfully'
@@ -85,6 +89,13 @@ export const useUserOperations = () => {
     } catch (err: unknown) {
       const error = err as PostgrestError;
       console.error('Error deleting user:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
+      
       toast({
         title: 'Error deleting user',
         description: error.message || 'An unexpected error occurred',

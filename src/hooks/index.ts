@@ -7,6 +7,8 @@ import { useMissions } from "./useMissions";
 import { useMediaQuery } from "./use-mobile";
 import { useClientDashboard } from "./useClientDashboard";
 import { useTheme } from "./use-theme";
+import { useAdminProfile } from "./admin/useAdminProfile";
+import { useAdminAvatarUpload } from "./admin/useAdminAvatarUpload";
 
 // Re-export all hooks
 export {
@@ -17,7 +19,9 @@ export {
   useMissions,
   useMediaQuery,
   useClientDashboard,
-  useTheme
+  useTheme,
+  useAdminProfile,
+  useAdminAvatarUpload
 };
 
 // Re-export types using 'export type'
