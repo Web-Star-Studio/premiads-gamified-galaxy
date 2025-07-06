@@ -73,16 +73,16 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {validLotteries.map((lottery, index) => (
         <Card key={lottery.id || `lottery-${index}-${Date.now()}`} className="border-gray-800 bg-gray-900/50">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg text-white">{lottery.title || lottery.name}</CardTitle>
-                <p className="text-sm text-gray-400 mt-1">{lottery.description}</p>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg text-white truncate">{lottery.title || lottery.name}</CardTitle>
+                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{lottery.description}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                 <Badge className={getStatusColor(lottery.status)}>
                   {getStatusText(lottery.status)}
                 </Badge>
@@ -117,12 +117,12 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <CardContent className="pt-0 px-6 pb-6">
+            <div className="grid grid-cols-1 gap-3">
               <div className="flex items-center gap-2 text-sm">
-                <Trophy className="h-4 w-4 text-yellow-400" />
-                <span className="text-gray-400">Prêmio:</span>
-                <span className="text-white font-medium">
+                <Trophy className="h-4 w-4 text-yellow-400 flex-shrink-0" />
+                <span className="text-gray-400 whitespace-nowrap">Prêmio:</span>
+                <span className="text-white font-medium truncate">
                   {(lottery.prize_type || lottery.prizeType) === 'money' ? 
                     `R$ ${lottery.prize_value || lottery.prizeValue}` : 
                     (lottery.prize_value || lottery.prizeValue)
@@ -130,16 +130,16 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-400">Números:</span>
+                <Users className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <span className="text-gray-400 whitespace-nowrap">Números:</span>
                 <span className="text-white font-medium">
                   {lottery.numbers?.length || 0}/{lottery.numbers_total || lottery.numbersTotal}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-green-400" />
-                <span className="text-gray-400">Sorteio:</span>
-                <span className="text-white font-medium">
+                <Calendar className="h-4 w-4 text-green-400 flex-shrink-0" />
+                <span className="text-gray-400 whitespace-nowrap">Sorteio:</span>
+                <span className="text-white font-medium truncate">
                   {lottery.draw_date || lottery.drawDate ? 
                     format(new Date(lottery.draw_date || lottery.drawDate), "dd/MM/yyyy", { locale: ptBR }) : 
                     'Não definido'
@@ -147,8 +147,8 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-400">Tipo:</span>
-                <span className="text-white font-medium capitalize">{lottery.type}</span>
+                <span className="text-gray-400 whitespace-nowrap">Tipo:</span>
+                <span className="text-white font-medium capitalize truncate">{lottery.type}</span>
               </div>
             </div>
             <div className="mt-4 flex gap-2">
@@ -156,7 +156,7 @@ const LotteryList = ({ lotteries, onViewDetails, onEdit, onDelete }: LotteryList
                 variant="outline" 
                 size="sm" 
                 onClick={() => onViewDetails(lottery)}
-                className="border-gray-700 hover:bg-gray-800"
+                className="border-gray-700 hover:bg-gray-800 w-full"
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Ver Detalhes

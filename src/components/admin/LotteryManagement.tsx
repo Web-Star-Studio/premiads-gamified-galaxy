@@ -262,8 +262,8 @@ const LotteryManagement = () => {
         <p className="text-gray-400">Gerencie todos os sorteios da plataforma</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <div className="xl:col-span-2">
           <LotteryList
             lotteries={lotteries}
             onViewDetails={setSelectedLottery}
@@ -272,7 +272,7 @@ const LotteryManagement = () => {
           />
         </div>
         
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-3">
           {selectedLottery ? (
             <LotteryDetails
               selectedLottery={selectedLottery}
