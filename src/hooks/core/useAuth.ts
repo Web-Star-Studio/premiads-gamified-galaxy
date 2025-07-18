@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { SignInCredentials, SignUpCredentials } from '@/types/auth';
-import { queryKeys } from '@/lib/query-client';
 import { useCallback } from 'react';
 import { validateReferralCodeMCP } from '@/hooks/useReferrals';
 
@@ -14,7 +13,7 @@ export const useAuth = () => {
 
   // Session query
   const { data: session } = useQuery({
-    queryKey: queryKeys.auth(),
+    queryKey: ['auth', 'session'],
     queryFn: async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
@@ -34,7 +33,7 @@ export const useAuth = () => {
     },
     onSuccess: (data) => {
       setUser(data.user);
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth() });
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error: any) => {
       setError(error.message);

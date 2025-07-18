@@ -1,11 +1,22 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useSounds } from '@/hooks/use-sounds'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import type { Tables } from '@/integrations/supabase/types'
 
-export type Notification = Tables<'notifications'>
+export interface Notification {
+  id: string
+  user_id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error' | 'activity'
+  category: 'system' | 'mission' | 'reward' | 'social' | 'general'
+  read: boolean
+  data?: any
+  created_at: string
+  updated_at: string
+}
 
 export interface NotificationStats {
   total: number
@@ -15,46 +26,20 @@ export interface NotificationStats {
 }
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [stats, setStats] = useState<NotificationStats>({
-    total: 0,
-    unread: 0,
-    byType: {},
-    byCategory: {}
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
   const { user } = useAuth()
   const { playSound } = useSounds()
+  const queryClient = useQueryClient()
 
-  // Calcular estatísticas
-  const calculateStats = useCallback((notificationList: Notification[]): NotificationStats => {
-    const stats: NotificationStats = {
-      total: notificationList.length,
-      unread: notificationList.filter(n => !n.read).length,
-      byType: {},
-      byCategory: {}
-    }
-
-    notificationList.forEach(notification => {
-      // Contar por tipo
-      stats.byType[notification.type] = (stats.byType[notification.type] || 0) + 1
-      
-      // Contar por categoria
-      stats.byCategory[notification.category] = (stats.byCategory[notification.category] || 0) + 1
-    })
-
-    return stats
-  }, [])
-
-  // Buscar notificações
-  const fetchNotifications = useCallback(async () => {
-    if (!user?.id) return
-
-    try {
-      setLoading(true)
-      setError(null)
+  // Query para buscar notificações
+  const {
+    data: notifications = [],
+    isLoading: loading,
+    error,
+    refetch: fetchNotifications
+  } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async (): Promise<Notification[]> => {
+      if (!user?.id) return []
 
       const { data, error: fetchError } = await supabase
         .from('notifications')
@@ -65,22 +50,39 @@ export function useNotifications() {
 
       if (fetchError) throw fetchError
 
-      const notificationList = data || []
-      setNotifications(notificationList)
-      setStats(calculateStats(notificationList))
-    } catch (err) {
-      console.error('Error fetching notifications:', err)
-      setError(err instanceof Error ? err.message : 'Erro ao carregar notificações')
-    } finally {
-      setLoading(false)
+      return data || []
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 1, // 1 minuto
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  })
+
+  // Calcular estatísticas
+  const stats = useMemo((): NotificationStats => {
+    const stats: NotificationStats = {
+      total: notifications.length,
+      unread: notifications.filter(n => !n.read).length,
+      byType: {},
+      byCategory: {}
     }
-  }, [user?.id, calculateStats])
 
-  // Marcar como lida
-  const markAsRead = useCallback(async (notificationId: string) => {
-    if (!user?.id) return
+    notifications.forEach(notification => {
+      // Contar por tipo
+      stats.byType[notification.type] = (stats.byType[notification.type] || 0) + 1
+      
+      // Contar por categoria
+      stats.byCategory[notification.category] = (stats.byCategory[notification.category] || 0) + 1
+    })
 
-    try {
+    return stats
+  }, [notifications])
+
+  // Mutation para marcar como lida
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      if (!user?.id) throw new Error('User not authenticated')
+
       const { error } = await supabase
         .from('notifications')
         .update({ read: true, updated_at: new Date().toISOString() })
@@ -88,33 +90,30 @@ export function useNotifications() {
         .eq('user_id', user.id)
 
       if (error) throw error
-
-      // Atualizar estado local
-      setNotifications(prev => 
-        prev.map(notification => 
+    },
+    onSuccess: (_, notificationId) => {
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData(['notifications', user?.id], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.map(notification => 
           notification.id === notificationId 
             ? { ...notification, read: true }
             : notification
         )
-      )
-
-      // Recalcular estatísticas
-      setNotifications(prev => {
-        setStats(calculateStats(prev))
-        return prev
       })
 
       playSound?.('pop')
-    } catch (err) {
-      console.error('Error marking notification as read:', err)
+    },
+    onError: (error) => {
+      console.error('Error marking notification as read:', error)
     }
-  }, [user?.id, calculateStats, playSound])
+  })
 
-  // Marcar todas como lidas
-  const markAllAsRead = useCallback(async () => {
-    if (!user?.id) return
+  // Mutation para marcar todas como lidas
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated')
 
-    try {
       const { error } = await supabase
         .from('notifications')
         .update({ read: true, updated_at: new Date().toISOString() })
@@ -122,29 +121,26 @@ export function useNotifications() {
         .eq('read', false)
 
       if (error) throw error
-
-      // Atualizar estado local
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
-      )
-
-      // Recalcular estatísticas
-      setNotifications(prev => {
-        setStats(calculateStats(prev))
-        return prev
+    },
+    onSuccess: () => {
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData(['notifications', user?.id], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.map(notification => ({ ...notification, read: true }))
       })
 
       playSound?.('chime')
-    } catch (err) {
-      console.error('Error marking all notifications as read:', err)
+    },
+    onError: (error) => {
+      console.error('Error marking all notifications as read:', error)
     }
-  }, [user?.id, calculateStats, playSound])
+  })
 
-  // Deletar notificação
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    if (!user?.id) return
+  // Mutation para deletar notificação
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      if (!user?.id) throw new Error('User not authenticated')
 
-    try {
       const { error } = await supabase
         .from('notifications')
         .delete()
@@ -152,30 +148,38 @@ export function useNotifications() {
         .eq('user_id', user.id)
 
       if (error) throw error
-
-      // Remover do estado local
-      setNotifications(prev => {
-        const filtered = prev.filter(notification => notification.id !== notificationId)
-        setStats(calculateStats(filtered))
-        return filtered
+    },
+    onSuccess: (_, notificationId) => {
+      // Remover do cache otimisticamente
+      queryClient.setQueryData(['notifications', user?.id], (old: Notification[] | undefined) => {
+        if (!old) return old
+        return old.filter(notification => notification.id !== notificationId)
       })
 
       playSound?.('error')
-    } catch (err) {
-      console.error('Error deleting notification:', err)
+    },
+    onError: (error) => {
+      console.error('Error deleting notification:', error)
     }
-  }, [user?.id, calculateStats, playSound])
+  })
 
-  // Criar notificação personalizada (para admins)
-  const createCustomNotification = useCallback(async (
-    targetUserId: string,
-    title: string,
-    message: string,
-    type: Notification['type'] = 'info',
-    category: Notification['category'] = 'system',
-    data: any = {}
-  ) => {
-    try {
+  // Mutation para criar notificação personalizada
+  const createCustomNotificationMutation = useMutation({
+    mutationFn: async ({
+      targetUserId,
+      title,
+      message,
+      type = 'info',
+      category = 'system',
+      data = {}
+    }: {
+      targetUserId: string
+      title: string
+      message: string
+      type?: Notification['type']
+      category?: Notification['category']
+      data?: any
+    }) => {
       const { error } = await supabase.functions.invoke('smart-notifications', {
         body: {
           action: 'create_custom_notification',
@@ -191,13 +195,16 @@ export function useNotifications() {
       })
 
       if (error) throw error
+    },
+    onSuccess: () => {
       playSound?.('success')
-    } catch (err) {
-      console.error('Error creating custom notification:', err)
+    },
+    onError: (error) => {
+      console.error('Error creating custom notification:', error)
     }
-  }, [playSound])
+  })
 
-  // Filtrar notificações
+  // Funções utilitárias para filtrar notificações
   const getNotificationsByType = useCallback((type: string) => {
     return notifications.filter(n => n.type === type)
   }, [notifications])
@@ -232,9 +239,10 @@ export function useNotifications() {
 
             if (payload.eventType === 'INSERT') {
               const newNotification = payload.new as Notification
-              setNotifications(prev => {
-                const updated = [newNotification, ...prev]
-                setStats(calculateStats(updated))
+              
+              // Atualizar cache com nova notificação
+              queryClient.setQueryData(['notifications', user.id], (old: Notification[] | undefined) => {
+                const updated = [newNotification, ...(old || [])]
                 return updated
               })
 
@@ -251,21 +259,23 @@ export function useNotifications() {
 
             if (payload.eventType === 'UPDATE') {
               const updatedNotification = payload.new as Notification
-              setNotifications(prev => {
-                const updated = prev.map(n => 
+              
+              // Atualizar cache com notificação atualizada
+              queryClient.setQueryData(['notifications', user.id], (old: Notification[] | undefined) => {
+                if (!old) return old
+                return old.map(n => 
                   n.id === updatedNotification.id ? updatedNotification : n
                 )
-                setStats(calculateStats(updated))
-                return updated
               })
             }
 
             if (payload.eventType === 'DELETE') {
               const deletedId = payload.old.id as string
-              setNotifications(prev => {
-                const updated = prev.filter(n => n.id !== deletedId)
-                setStats(calculateStats(updated))
-                return updated
+              
+              // Remover do cache
+              queryClient.setQueryData(['notifications', user.id], (old: Notification[] | undefined) => {
+                if (!old) return old
+                return old.filter(n => n.id !== deletedId)
               })
             }
           }
@@ -274,20 +284,50 @@ export function useNotifications() {
     }
 
     setupRealtime()
-    fetchNotifications()
 
     return () => {
       if (channel) {
         supabase.removeChannel(channel)
       }
     }
-  }, [user?.id, fetchNotifications, calculateStats, playSound])
+  }, [user?.id, queryClient, playSound])
+
+  // Wrapper functions para as mutations
+  const markAsRead = async (notificationId: string) => {
+    await markAsReadMutation.mutateAsync(notificationId)
+  }
+
+  const markAllAsRead = async () => {
+    await markAllAsReadMutation.mutateAsync()
+  }
+
+  const deleteNotification = async (notificationId: string) => {
+    await deleteNotificationMutation.mutateAsync(notificationId)
+  }
+
+  const createCustomNotification = async (
+    targetUserId: string,
+    title: string,
+    message: string,
+    type: Notification['type'] = 'info',
+    category: Notification['category'] = 'system',
+    data: any = {}
+  ) => {
+    await createCustomNotificationMutation.mutateAsync({
+      targetUserId,
+      title,
+      message,
+      type,
+      category,
+      data
+    })
+  }
 
   return {
     notifications,
     stats,
     loading,
-    error,
+    error: error?.message || null,
     fetchNotifications,
     markAsRead,
     markAllAsRead,

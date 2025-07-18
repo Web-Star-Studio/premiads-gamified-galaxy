@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 interface UserProfile {
   id: string;
@@ -11,46 +12,43 @@ interface UserProfile {
 }
 
 export const useUserProfile = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
+  // Query para buscar perfil do usuário
+  const {
+    data: profile,
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async (): Promise<UserProfile | null> => {
+      if (!user?.id) return null;
 
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Erro ao buscar perfil:', profileError);
-          setError(profileError.message);
-          return;
-        }
-
-        setProfile(data);
-      } catch (err) {
-        console.error('Erro inesperado ao buscar perfil:', err);
-        setError('Erro inesperado ao carregar perfil');
-      } finally {
-        setLoading(false);
+      if (profileError) {
+        console.error('Erro ao buscar perfil:', profileError);
+        throw profileError;
       }
-    };
 
-    fetchProfile();
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  });
 
-    // Configurar listener para mudanças em tempo real
+  // Configurar listener para mudanças em tempo real
+  useEffect(() => {
+    if (!user?.id) return;
+
     const channel = supabase
       .channel('profile_changes')
       .on(
@@ -64,7 +62,8 @@ export const useUserProfile = () => {
         (payload) => {
           console.log('Perfil atualizado:', payload);
           if (payload.eventType === 'UPDATE' && payload.new) {
-            setProfile(payload.new as UserProfile);
+            // Atualizar cache diretamente para mudanças em tempo real
+            queryClient.setQueryData(['user-profile', user.id], payload.new as UserProfile);
           }
         }
       )
@@ -73,13 +72,14 @@ export const useUserProfile = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, queryClient]);
 
   return {
     profile,
     loading,
-    error,
+    error: error?.message || null,
     userName: profile?.full_name || profile?.email?.split('@')[0] || 'Usuário',
     userType: profile?.user_type || 'participante',
+    refetch
   };
 }; 

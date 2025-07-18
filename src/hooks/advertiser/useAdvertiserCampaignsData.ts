@@ -77,7 +77,6 @@ export function useAdvertiserCampaignsData() {
     queryFn: () => fetchAdvertiserCampaignsData(advertiserId!),
     enabled: !!advertiserId,
     staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: true,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })

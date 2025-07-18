@@ -21,17 +21,6 @@ export const supabase = createClient(
       flowType: 'pkce'
     },
     global: {
-      fetch: (url: RequestInfo | URL, options?: RequestInit) => {
-        // Log sem alterar cabeçalhos originais para não remover 'apikey' e 'Authorization'
-        console.log('Supabase fetch to:', url)
-        console.log('Request method:', options?.method)
-        
-        return fetch(url, options).catch(err => {
-          console.error('Supabase fetch error:', err)
-          console.error('URL was:', url)
-          throw err
-        })
-      },
       headers: {
         'X-Client-Info': 'premiads-gamified-galaxy'
       }

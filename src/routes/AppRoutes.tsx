@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RouteLoadingSpinner from "@/components/routing/RouteLoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useGlobalRefetchManager } from "@/hooks/core/useGlobalRefetchManager";
 
 // Lazy load route components
 const PublicRoutes = lazy(() => import("./PublicRoutes"));
@@ -15,6 +16,9 @@ const AppRoutes = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const location = useLocation();
   const renderCountRef = useRef(0);
+  
+  // Gerenciador global de refetch (temporariamente desabilitado)
+  // useGlobalRefetchManager();
   
   // Controle para evitar logs excessivos
   useEffect(() => {

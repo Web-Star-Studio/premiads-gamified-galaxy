@@ -1,17 +1,19 @@
-import { useState, useEffect, useCallback } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { useSounds } from "@/hooks/use-sounds"
 import { Campaign } from "@/components/advertiser/campaignData"
+import { useAuth } from "@/hooks/useAuth"
+import { useEffect } from "react"
 
 /**
  * Hook to fetch and subscribe to advertiser campaigns in real-time
  */
 export function useAdvertiserCampaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
   const { toast } = useToast()
   const { playSound } = useSounds()
+  const { currentUser, isLoading: authLoading, isAuthenticated } = useAuth()
+  const queryClient = useQueryClient()
 
   // Helper function to determine campaign status based on dates
   const determineCampaignStatus = (campaign: any): string => {
@@ -31,19 +33,26 @@ export function useAdvertiserCampaigns() {
     }
   }
 
-  // Fetch advertiser campaigns
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true)
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      const userId = sessionData?.session?.user?.id
-      if (sessionError || !userId) throw new Error("Usuário não autenticado")
-
-      // Get all missions created by this advertiser (without is_active filter)
+  // React Query for fetching campaigns
+  const {
+    data: campaigns = [],
+    isLoading: loading,
+    error,
+    refetch: refreshCampaigns
+  } = useQuery({
+    queryKey: ['advertiser-campaigns', currentUser?.id],
+    queryFn: async (): Promise<Campaign[]> => {
+      if (!currentUser?.id) {
+        console.error('[useAdvertiserCampaigns] User not authenticated')
+        return []
+      }
+      
+      console.log('[useAdvertiserCampaigns] Fetching campaigns for user:', currentUser.id)
+      
       const { data, error } = await supabase
         .from("missions")
         .select("*, mission_submissions(count)")
-        .eq("advertiser_id", userId)
+        .eq("advertiser_id", currentUser.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -87,39 +96,55 @@ export function useAdvertiserCampaigns() {
         }
       })
 
-      setCampaigns(processedCampaigns as Campaign[])
+      console.log('[useAdvertiserCampaigns] Processed', processedCampaigns.length, 'campaigns')
       playSound("chime")
-    } catch (err: any) {
-      console.error("Erro ao carregar campanhas:", err)
-      toast({ title: "Erro ao carregar campanhas", description: err.message, variant: "destructive" })
-    } finally {
-      setLoading(false)
-    }
-  }, [playSound, toast])
-
-  // Initial fetch
-  useEffect(() => {
-    fetchCampaigns()
-  }, [fetchCampaigns])
+      return processedCampaigns as Campaign[]
+    },
+    enabled: !!currentUser?.id && !authLoading,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
+  })
 
   // Real-time subscription
   useEffect(() => {
-    let userId: string | null = null
-    supabase.auth.getSession().then(({ data }) => { userId = data?.session?.user?.id || null })
+    if (!currentUser?.id) return
 
     const channel = supabase
       .channel("advertiser-campaigns")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "missions", filter: userId ? `advertiser_id=eq.${userId}` : undefined },
-        () => fetchCampaigns()
+        { event: "*", schema: "public", table: "missions", filter: `advertiser_id=eq.${currentUser.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns', currentUser.id] })
+        }
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchCampaigns])
+  }, [currentUser?.id, queryClient])
+
+  // Handle errors
+  useEffect(() => {
+    if (error) {
+      const errorMessage = (error as Error).message || 'Erro desconhecido'
+      
+      // Não mostrar toast para erros de abort esperados
+      if (errorMessage.includes('Query aborted') || errorMessage.includes('timeout')) {
+        console.log('[useAdvertiserCampaigns] Query cancelada ou timeout:', errorMessage)
+        return
+      }
+      
+      console.error("Erro ao carregar campanhas:", error)
+      toast({ 
+        title: "Erro ao carregar campanhas", 
+        description: errorMessage, 
+        variant: "destructive" 
+      })
+    }
+  }, [error, toast])
 
   // Get campaign statistics for dashboard
   const getCampaignStats = () => {
@@ -146,8 +171,8 @@ export function useAdvertiserCampaigns() {
 
   return { 
     campaigns, 
-    loading, 
-    refreshCampaigns: fetchCampaigns,
+    loading: loading || authLoading, 
+    refreshCampaigns,
     stats: getCampaignStats()
   }
-}
+} 

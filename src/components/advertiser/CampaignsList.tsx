@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { useCampaignFormReset } from "@/hooks/advertiser/usePendingSubmissions";
+import { useOptimizedCampaignQueries } from "@/hooks/advertiser/useOptimizedCampaignQueries";
 
 interface CampaignsListProps {
   initialFilter?: string | null;
@@ -31,6 +32,7 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
   const { campaigns, loading, refreshCampaigns } = useAdvertiserCampaigns();
   const queryClient = useQueryClient();
   const location = useLocation();
+  const { refreshCampaignData, isRefreshing } = useOptimizedCampaignQueries({ debugMode: false });
   
   // Hook personalizado para detectar redirecionamentos de criação de campanha
   const { shouldResetForm, clearResetFlag, isRedirectFromCampaignCreation } = useCampaignFormReset();
@@ -53,9 +55,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       
       playSound('success');
       
-      // Refresh da lista de campanhas
-      refreshCampaigns();
-      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      // Refresh otimizado da lista de campanhas
+      refreshCampaignData(true);
       
       // Limpar a flag de reset
       clearResetFlag();
@@ -74,9 +75,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
       setShowCreateForm(false);
       setEditingCampaign(null);
       
-      // Refresh da lista de campanhas
-      refreshCampaigns();
-      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      // Refresh otimizado da lista de campanhas
+      refreshCampaignData(true);
       
       console.log('✅ CampaignsList resetado com sucesso (fallback)');
       
@@ -97,9 +97,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         setShowCreateForm(false);
         setEditingCampaign(null);
         
-        // Refresh da lista de campanhas
-        refreshCampaigns();
-        queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+        // Refresh otimizado da lista de campanhas
+        refreshCampaignData(true);
         
         console.log('✅ Formulário resetado devido ao evento campaignCreated');
       }
@@ -140,9 +139,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
         throw new Error(data.error || 'Erro desconhecido ao remover campanha');
       }
       
-      // Refresh list after delete
-      refreshCampaigns();
-      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      // Refresh otimizado após deletar
+      refreshCampaignData(true);
       
       playSound("error");
       toast({
@@ -170,9 +168,8 @@ const CampaignsList = ({ initialFilter = null }: CampaignsListProps) => {
     setEditingCampaign(null);
     playSound("pop");
     
-    // Refresh list to reflect changes
-    refreshCampaigns();
-    queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+    // Refresh otimizado para refletir mudanças
+    refreshCampaignData();
   };
   
   const handleEdit = (campaign: any) => {

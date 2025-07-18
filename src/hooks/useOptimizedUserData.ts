@@ -23,7 +23,6 @@ export function useOptimizedUserData() {
     queryFn: () => OptimizedSupabaseService.getDashboardMetrics(user!.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 2, // 2 minutos
-    refetchOnWindowFocus: true,
   });
 
   // Query para recompensas do usuário

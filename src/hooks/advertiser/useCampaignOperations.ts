@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { FormData } from '@/components/advertiser/campaign-form/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
+import { useWindowFocusManager } from '@/hooks/core/useWindowFocusManager';
 
 // Helper function to format dates as ISO strings
 const formatDate = (date: Date | string): string => {
@@ -18,8 +19,9 @@ const useCampaignOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   const queryClient = useQueryClient();
+  const { safeInvalidateQueries } = useWindowFocusManager();
 
   const createCampaign = async (formData: FormData): Promise<{ success: boolean; shouldRedirect?: boolean }> => {
     if (!user) {
@@ -82,10 +84,12 @@ const useCampaignOperations = () => {
         description: `Sua campanha foi criada e está ativa. ${totalCost} rifas foram debitadas da sua conta.`,
       });
       
-      // Refresh user rifas and dashboard metrics
-      queryClient.invalidateQueries({ queryKey: ['user-rifas'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      // Refresh user rifas and dashboard metrics de forma segura
+      await Promise.all([
+        safeInvalidateQueries(['user-rifas']),
+        safeInvalidateQueries(['dashboard-metrics']),
+        safeInvalidateQueries(['advertiser-campaigns'])
+      ]);
       
       console.log('✅ Campanha criada com sucesso, retornando shouldRedirect=true');
       return { success: true, shouldRedirect: true };
@@ -171,8 +175,8 @@ const useCampaignOperations = () => {
         description: 'Sua campanha foi atualizada com sucesso',
       });
       
-      // Refresh campaigns list
-      queryClient.invalidateQueries({ queryKey: ['advertiser-campaigns'] });
+      // Refresh campaigns list de forma segura
+      await safeInvalidateQueries(['advertiser-campaigns']);
       
       return { success: true, shouldRedirect: true };
     } catch (error: any) {

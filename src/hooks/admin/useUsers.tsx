@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Json } from '@/integrations/supabase/types';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface User {
@@ -25,22 +25,24 @@ interface UserRPCResponse {
 }
 
 export const useUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      
+  // Query para buscar usuários
+  const {
+    data: users = [],
+    isLoading: loading,
+    error,
+    refetch: fetchUsers
+  } = useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: async (): Promise<User[]> => {
       const { data: functionData, error: functionError } = await supabase.rpc('get_all_users');
       
       if (functionError) throw functionError;
       
       if (!functionData) {
-        setUsers([]);
-        return;
+        return [];
       }
       
       // Parse the JSON data and properly type it
@@ -59,29 +61,26 @@ export const useUsers = () => {
         };
       });
       
-      setUsers(mappedUsers);
-      setError(null);
-    } catch (err: any) {
-      console.error('Error fetching users:', err);
-      setError(err.message);
-      toast({
-        title: 'Error fetching users',
-        description: err.message,
-        variant: 'destructive'
-      });
-      
-      // Set empty array to avoid UI issues
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      return mappedUsers;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  });
 
+  // Handle query errors
+  if (error) {
+    console.error('Error fetching users:', error);
+    toast({
+      title: 'Error fetching users',
+      description: error.message,
+      variant: 'destructive'
+    });
+  }
+
+  // Configurar realtime subscription
   useEffect(() => {
     let profilesSubscription: RealtimeChannel;
-
-    // Initial fetch
-    fetchUsers();
 
     // Set up real-time subscription to profiles table
     profilesSubscription = supabase
@@ -93,8 +92,8 @@ export const useUsers = () => {
           table: 'profiles' 
         }, 
         () => {
-          // Refresh user list when profiles change
-          fetchUsers();
+          // Invalidate and refetch users when profiles change
+          queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
         }
       )
       .subscribe();
@@ -103,12 +102,12 @@ export const useUsers = () => {
     return () => {
       profilesSubscription.unsubscribe();
     };
-  }, [fetchUsers]);
+  }, [queryClient]);
 
   return {
     users,
     loading,
-    error,
+    error: error?.message || null,
     fetchUsers
   };
 };

@@ -29,6 +29,7 @@ const AdminHeader = () => {
   ];
   
   useEffect(() => {
+    console.log("AdminHeader");
     const handleScroll = () => {
       const isScrolled = window.scrollY > 10;
       if (isScrolled !== scrolled) {

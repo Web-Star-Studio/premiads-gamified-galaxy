@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,16 +25,18 @@ interface UseSubmissionsProps {
 }
 
 export const useSubmissions = ({ missionId, userId, status }: UseSubmissionsProps = {}) => {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchSubmissions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  // Query para buscar submissões
+  const {
+    data: submissions = [],
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['submissions', missionId, userId, status],
+    queryFn: async (): Promise<Submission[]> => {
       let query = supabase
         .from('mission_submissions')
         .select(`
@@ -71,22 +73,22 @@ export const useSubmissions = ({ missionId, userId, status }: UseSubmissionsProp
         throw fetchError;
       }
 
-      setSubmissions(data || []);
-    } catch (err: any) {
-      console.error('Error fetching submissions:', err);
-      setError(err.message);
-      toast({
-        title: 'Erro ao carregar submissões',
-        description: err.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  });
 
-  const submitMission = async (missionId: string, submissionData: any) => {
-    try {
+  // Mutation para submeter missão
+  const submitMissionMutation = useMutation({
+    mutationFn: async ({
+      missionId,
+      submissionData
+    }: {
+      missionId: string;
+      submissionData: any;
+    }) => {
       const { data, error } = await supabase
         .from('mission_submissions')
         .insert({
@@ -98,35 +100,56 @@ export const useSubmissions = ({ missionId, userId, status }: UseSubmissionsProp
         .single();
 
       if (error) throw error;
-
+      return data;
+    },
+    onSuccess: (data) => {
       toast({
         title: 'Sucesso',
         description: 'Submissão enviada com sucesso!'
       });
 
-      await fetchSubmissions();
-      return { success: true, submission: data };
-    } catch (error: any) {
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    },
+    onError: (error: any) => {
       console.error('Error submitting mission:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao enviar submissão',
         variant: 'destructive'
       });
+    }
+  });
+
+  // Handle query errors
+  if (error) {
+    console.error('Error fetching submissions:', error);
+    toast({
+      title: 'Erro ao carregar submissões',
+      description: error.message,
+      variant: 'destructive',
+    });
+  }
+
+  const submitMission = async (missionId: string, submissionData: any) => {
+    try {
+      const result = await submitMissionMutation.mutateAsync({
+        missionId,
+        submissionData
+      });
+      return { success: true, submission: result };
+    } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  useEffect(() => {
-    fetchSubmissions();
-  }, [missionId, userId, status]);
-
   return {
     submissions,
     loading,
-    error,
-    refetch: fetchSubmissions,
+    error: error?.message || null,
+    refetch,
     submitMission,
-    isSubmitting: false
+    isSubmitting: submitMissionMutation.isPending
   };
 };

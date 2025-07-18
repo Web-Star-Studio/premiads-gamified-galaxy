@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -15,52 +16,56 @@ export interface ReferralTrackingStep {
 }
 
 export const useReferralTracking = () => {
-  const [loading, setLoading] = useState(true)
-  const [trackingSteps, setTrackingSteps] = useState<ReferralTrackingStep[]>([])
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const fetchTrackingData = async () => {
-      try {
-        const session = await supabase.auth.getSession()
-        const userId = session.data.session?.user.id
-        
-        if (!userId) {
-          setLoading(false)
-          return
-        }
-
-        // Buscar dados de rastreamento do usuário
-        const { data: tracking, error } = await supabase
-          .from('referral_tracking')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-
-        if (error) {
-          console.error('Erro ao buscar rastreamento:', error)
-          toast({
-            title: "Erro ao carregar rastreamento",
-            description: error.message,
-            variant: "destructive",
-          })
-        } else {
-          setTrackingSteps(tracking || [])
-        }
-      } catch (error: any) {
-        console.error("Error fetching tracking data:", error)
-        toast({
-          title: "Erro ao carregar dados",
-          description: error.message,
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
+  // Query para buscar dados de rastreamento
+  const {
+    data: trackingSteps = [],
+    isLoading: loading,
+    error,
+    refetch: fetchTrackingData
+  } = useQuery({
+    queryKey: ['referral-tracking'],
+    queryFn: async (): Promise<ReferralTrackingStep[]> => {
+      const session = await supabase.auth.getSession()
+      const userId = session.data.session?.user.id
+      
+      if (!userId) {
+        return []
       }
-    }
 
-    fetchTrackingData()
+      // Buscar dados de rastreamento do usuário
+      const { data: tracking, error } = await supabase
+        .from('referral_tracking')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
 
+      if (error) {
+        console.error('Erro ao buscar rastreamento:', error)
+        throw error
+      }
+
+      return tracking || []
+    },
+    staleTime: 1000 * 60 * 3, // 3 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  })
+
+  // Handle query errors
+  if (error) {
+    console.error("Error fetching tracking data:", error)
+    toast({
+      title: "Erro ao carregar dados",
+      description: error.message,
+      variant: "destructive",
+    })
+  }
+
+  // Configurar realtime subscription
+  useEffect(() => {
     // Configurar realtime subscription para atualizações
     const subscription = supabase
       .channel('referral_tracking_changes')
@@ -73,7 +78,8 @@ export const useReferralTracking = () => {
         },
         (payload) => {
           console.log('Tracking change received:', payload)
-          fetchTrackingData() // Recarregar dados quando houver mudanças
+          // Invalidar e refazer query quando houver mudanças
+          queryClient.invalidateQueries({ queryKey: ['referral-tracking'] })
         }
       )
       .subscribe()
@@ -81,7 +87,7 @@ export const useReferralTracking = () => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [toast])
+  }, [queryClient])
 
   // Função para obter o último status de cada etapa
   const getStepStatus = (stepName: ReferralTrackingStep['step']) => {

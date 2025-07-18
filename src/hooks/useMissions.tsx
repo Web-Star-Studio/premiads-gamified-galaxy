@@ -1,27 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSounds } from "@/hooks/use-sounds";
 import { supabase } from "@/integrations/supabase/client";
 import { Mission } from "@/hooks/useMissionsTypes";
 import { UseMissionsOptions } from "@/hooks/missions/types";
-import { useMissionSubmit } from "@/hooks/missions/useMissionSubmit";
 
 export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions = {}) => {
-  const [loading, setLoading] = useState(true);
-  const [missions, setMissions] = useState<Mission[]>([]);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [currentFilter, setFilter] = useState<"available" | "in_progress" | "pending" | "completed">(initialFilter);
   const { toast } = useToast();
   const { playSound } = useSounds();
-  const { submitMission: submitMissionToServer, submissionLoading } = useMissionSubmit(setMissions);
-
-  // Define filter to status mapping
-  const filterToStatus = {
-    available: "available",
-    in_progress: "in_progress",
-    pending: "pending",
-    completed: "completed"
-  };
+  const queryClient = useQueryClient();
 
   // Mapear status do banco para o frontend
   const mapDbStatusToFrontend = (dbStatus: string): string => {
@@ -41,22 +31,25 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     }
   };
 
-  // Fetch missions based on current filter
-  const fetchMissions = useCallback(async () => {
-    try {
-      setLoading(true);
-      
+  // Query para buscar missões
+  const {
+    data: missionsData,
+    isLoading: loading,
+    error,
+    refetch: refreshMissions
+  } = useQuery({
+    queryKey: ['missions', 'all'],
+    queryFn: async () => {
       // Get current user
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session?.user?.id) {
-        console.error("No authenticated user found");
-        return;
+        throw new Error("No authenticated user found");
       }
       
       const userId = sessionData.session.user.id;
       
-      // First get all active missions
+      // Get all active missions
       const { data: missionData, error: missionError } = await supabase
         .from("missions")
         .select("*")
@@ -66,7 +59,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         throw missionError;
       }
       
-      // Then get user's mission submissions
+      // Get user's mission submissions
       const { data: submissionData, error: submissionError } = await supabase
         .from("mission_submissions")
         .select("*")
@@ -120,51 +113,41 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         } as Mission & { hasUserSubmission: boolean };
       });
       
-      setMissions(processedMissions);
-      
-      // If a mission was previously selected, update its data
-      if (selectedMission) {
-        const updatedMission = processedMissions.find(
-          (m) => m.id === selectedMission.id
-        );
-        
-        if (updatedMission) {
-          setSelectedMission(updatedMission);
-        }
-      }
-      
-    } catch (error) {
-      console.error("Error fetching missions:", error);
-      toast({
-        title: "Erro ao carregar missões",
-        description: "Não foi possível carregar as missões. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedMission, toast]);
+      return processedMissions;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  });
 
-  // Submit a mission
-  const submitMission = async (
-    missionId: string,
-    submissionData: any,
-    status: "in_progress" | "pending_approval" = "pending_approval"
-  ): Promise<boolean> => {
-    try {
+  // Handle query errors
+  if (error) {
+    console.error("Error fetching missions:", error);
+    toast({
+      title: "Erro ao carregar missões",
+      description: "Não foi possível carregar as missões. Tente novamente mais tarde.",
+      variant: "destructive",
+    });
+  }
+
+  // Mutation para submeter missão
+  const submitMissionMutation = useMutation({
+    mutationFn: async ({
+      missionId,
+      submissionData,
+      status = "pending_approval"
+    }: {
+      missionId: string;
+      submissionData: any;
+      status?: "in_progress" | "pending_approval";
+    }) => {
       console.log('Submitting mission:', { missionId, submissionData, status });
       
       // Get current user
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session?.user?.id) {
-        console.error("No authenticated user found");
-        toast({
-          title: "Erro ao enviar submissão",
-          description: "Usuário não autenticado. Faça login novamente.",
-          variant: "destructive",
-        });
-        return false;
+        throw new Error("No authenticated user found");
       }
       
       const userId = sessionData.session.user.id;
@@ -178,12 +161,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         .single();
 
       if (existingSubmission) {
-        toast({
-          title: "Submissão já enviada",
-          description: "Você já enviou uma submissão para esta missão.",
-          variant: "destructive",
-        });
-        return false;
+        throw new Error("Você já enviou uma submissão para esta missão.");
       }
       
       // Get mission details for rewards info
@@ -194,13 +172,7 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         .single();
 
       if (missionError) {
-        console.error("Error fetching mission details:", missionError);
-        toast({
-          title: "Erro ao enviar submissão",
-          description: "Não foi possível obter detalhes da missão.",
-          variant: "destructive",
-        });
-        return false;
+        throw new Error("Não foi possível obter detalhes da missão.");
       }
       
       // Submit the mission
@@ -218,15 +190,12 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         .single();
 
       if (submitError) {
-        console.error("Error submitting mission:", submitError);
-        toast({
-          title: "Erro ao enviar submissão",
-          description: submitError.message || "Ocorreu um erro ao enviar sua submissão",
-          variant: "destructive",
-        });
-        return false;
+        throw new Error(submitError.message || "Ocorreu um erro ao enviar sua submissão");
       }
       
+      return { submission, mission };
+    },
+    onSuccess: ({ submission, mission }) => {
       // Play success sound
       playSound("success");
       
@@ -242,29 +211,24 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
         className: "bg-gradient-to-br from-green-600/90 to-teal-500/60 text-white border-neon-cyan"
       });
       
-      // Refresh missions to update status
-      fetchMissions();
-      
-      return true;
-    } catch (error: any) {
+      // Invalidate missions query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    },
+    onError: (error: any) => {
       console.error("Error submitting mission:", error);
       toast({
         title: "Erro ao enviar submissão",
         description: error.message || "Ocorreu um erro ao enviar sua submissão",
         variant: "destructive",
       });
-      return false;
     }
-  };
-
-  // Fetch missions when component mounts or filter changes
-  useEffect(() => {
-    fetchMissions();
-  }, [fetchMissions, currentFilter]);
+  });
 
   // Get missions filtered by current filter
   const getFilteredMissions = useCallback(() => {
-    return missions.filter((mission) => {
+    if (!missionsData) return [];
+    
+    return missionsData.filter((mission) => {
       switch (currentFilter) {
         case 'available':
           // Missões ativas que o usuário ainda não submeteu
@@ -288,7 +252,10 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
           return false;
       }
     });
-  }, [missions, currentFilter]);
+  }, [missionsData, currentFilter]);
+
+  // Memoize filtered missions
+  const filteredMissions = useMemo(() => getFilteredMissions(), [getFilteredMissions]);
 
   // Submit a mission with specific status
   const handleSubmitMission = async (
@@ -296,28 +263,29 @@ export const useMissions = ({ initialFilter = "available" }: UseMissionsOptions 
     submissionData: any, 
     status: "in_progress" | "pending_approval" = "pending_approval"
   ) => {
-    const success = await submitMission(missionId, submissionData, status);
-    
-    if (success) {
-      playSound("success");
-      
-      // Refresh missions after submission
-      fetchMissions();
+    try {
+      await submitMissionMutation.mutateAsync({
+        missionId,
+        submissionData,
+        status
+      });
+      return true;
+    } catch (error) {
+      return false;
     }
-    
-    return success;
   };
 
   return {
     loading,
-    missions: getFilteredMissions(),
-    allMissions: missions,
+    missions: filteredMissions,
+    allMissions: missionsData || [],
     selectedMission,
     setSelectedMission,
     currentFilter,
     setFilter,
     submitMission: handleSubmitMission,
-    submissionLoading,
-    refreshMissions: fetchMissions
+    submissionLoading: submitMissionMutation.isPending,
+    refreshMissions,
+    error: error?.message || null
   };
 };

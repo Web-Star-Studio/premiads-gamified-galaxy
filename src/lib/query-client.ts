@@ -1,43 +1,55 @@
 
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query'
 
-// Query keys factory for consistency
-export const queryKeys = {
-  all: ['queries'] as const,
-  auth: () => [...queryKeys.all, 'auth'] as const,
-  user: (id: string) => [...queryKeys.auth(), 'user', id] as const,
-  
-  missions: () => [...queryKeys.all, 'missions'] as const,
-  mission: (id: string) => [...queryKeys.missions(), id] as const,
-  userMissions: (userId: string) => [...queryKeys.missions(), 'user', userId] as const,
-  
-  campaigns: () => [...queryKeys.all, 'campaigns'] as const,
-  campaign: (id: string) => [...queryKeys.campaigns(), id] as const,
-  
-  stats: () => [...queryKeys.all, 'stats'] as const,
-  clientStats: (userId: string) => [...queryKeys.stats(), 'client', userId] as const,
-  
-  raffles: () => [...queryKeys.all, 'raffles'] as const,
-  raffle: (id: string) => [...queryKeys.raffles(), id] as const,
-};
-
-// Optimized query client configuration
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Aggressive caching for better performance
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
-        if (error?.status >= 400 && error?.status < 500) return false;
-        return failureCount < 3;
+// Criar uma função para criar o QueryClient com configurações padrão
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Configurar staleTime para evitar refetch imediato
+        staleTime: 5 * 60 * 1000, // 5 minutos
+        // Configurar gcTime (anteriormente cacheTime) para limpeza do cache
+        gcTime: 10 * 60 * 1000, // 10 minutos
+        // Configurar retry padrão
+        retry: (failureCount, error: any) => {
+          // Não fazer retry em erros de abort
+          if (error?.message?.includes('aborted')) {
+            return false
+          }
+          return failureCount < 3
+        },
+        // Desabilitar refetch automático para prevenir problemas
+        refetchOnWindowFocus: false,
+        // Só refetch ao montar se não houver dados
+        refetchOnMount: 'always',
+        // Configurar refetchOnReconnect
+        refetchOnReconnect: 'always',
       },
-      refetchOnWindowFocus: false,
-      refetchOnMount: true,
+      mutations: {
+        // Configurar retry para mutations
+        retry: 1,
+      },
     },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+  })
+}
+
+// Variável para manter o client no browser
+let browserQueryClient: QueryClient | undefined = undefined
+
+// Função para obter o QueryClient (compatível com SSR)
+export function getQueryClient() {
+  // No servidor, sempre criar um novo client
+  if (typeof window === 'undefined') {
+    return makeQueryClient()
+  }
+  
+  // No browser, reutilizar o client ou criar um novo se não existir
+  if (!browserQueryClient) {
+    browserQueryClient = makeQueryClient()
+  }
+  
+  return browserQueryClient
+}
+
+// Exportar instância default para uso simples
+export const queryClient = getQueryClient()

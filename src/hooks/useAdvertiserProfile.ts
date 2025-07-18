@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/services/supabase'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -30,32 +30,20 @@ interface UseAdvertiserProfileReturn {
  */
 function useAdvertiserProfile(): UseAdvertiserProfileReturn {
   const { currentUser } = useAuth()
-  const [profileData, setProfileData] = useState<AdvertiserProfileData>({
-    full_name: '',
-    email: '',
-    phone: '',
-    website: '',
-    description: '',
-    avatar_url: '',
-    user_type: 'anunciante',
-    created_at: '',
-    email_notifications: true,
-    push_notifications: true
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  const fetchProfileData = async (): Promise<void> => {
-    if (!currentUser?.id) {
-      setError('Usuário não autenticado')
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      setError(null)
+  // Query para buscar dados do perfil
+  const {
+    data: profileData,
+    isLoading,
+    error,
+    refetch: refetchQuery
+  } = useQuery({
+    queryKey: ['advertiser-profile', currentUser?.id],
+    queryFn: async (): Promise<AdvertiserProfileData> => {
+      if (!currentUser?.id) {
+        throw new Error('Usuário não autenticado')
+      }
 
       // Buscar dados do perfil do usuário
       const { data: profile, error: profileError } = await supabase
@@ -101,36 +89,18 @@ function useAdvertiserProfile(): UseAdvertiserProfileReturn {
         push_notifications: profile?.push_notifications !== false
       }
 
-      setProfileData(mappedProfile)
+      return mappedProfile
+    },
+    enabled: !!currentUser?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  })
 
-    } catch (err) {
-      console.error('Erro ao buscar dados do perfil:', err)
-      setError(err instanceof Error ? err.message : 'Erro desconhecido')
-      
-      // Fallback com dados básicos do currentUser
-      setProfileData({
-        full_name: currentUser?.email?.split('@')[0] || 'Usuário',
-        email: currentUser?.email || '',
-        phone: '',
-        website: '',
-        description: '',
-        avatar_url: '',
-        user_type: 'anunciante',
-        created_at: '',
-        email_notifications: true,
-        push_notifications: true
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const updateProfile = async (updates: Partial<AdvertiserProfileData>): Promise<boolean> => {
-    if (!currentUser?.id) return false
-
-    try {
-      setIsUpdating(true)
-      setError(null)
+  // Mutation para atualizar perfil
+  const updateProfileMutation = useMutation({
+    mutationFn: async (updates: Partial<AdvertiserProfileData>) => {
+      if (!currentUser?.id) throw new Error('Usuário não autenticado')
 
       // Separar atualizações para auth.users e profiles
       const profileUpdates: any = {}
@@ -156,34 +126,64 @@ function useAdvertiserProfile(): UseAdvertiserProfileReturn {
         }
       }
 
-      // Atualizar estado local
-      setProfileData(prev => ({
-        ...prev,
-        ...updates
-      }))
+      return updates
+    },
+    onSuccess: (updates) => {
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData(['advertiser-profile', currentUser?.id], (old: AdvertiserProfileData | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          ...updates
+        }
+      })
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar perfil:', error)
+    }
+  })
 
+  // Handle query errors
+  let errorMessage: string | null = null
+  if (error) {
+    console.error('Erro ao buscar dados do perfil:', error)
+    errorMessage = error.message
+  }
+
+  // Fallback data quando há erro
+  const fallbackData: AdvertiserProfileData = {
+    full_name: currentUser?.email?.split('@')[0] || 'Usuário',
+    email: currentUser?.email || '',
+    phone: '',
+    website: '',
+    description: '',
+    avatar_url: '',
+    user_type: 'anunciante',
+    created_at: '',
+    email_notifications: true,
+    push_notifications: true
+  }
+
+  const refetch = async (): Promise<void> => {
+    await refetchQuery()
+  }
+
+  const updateProfile = async (updates: Partial<AdvertiserProfileData>): Promise<boolean> => {
+    try {
+      await updateProfileMutation.mutateAsync(updates)
       return true
-
-    } catch (err) {
-      console.error('Erro ao atualizar perfil:', err)
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar perfil')
+    } catch (error) {
       return false
-    } finally {
-      setIsUpdating(false)
     }
   }
 
-  useEffect(() => {
-    fetchProfileData()
-  }, [currentUser?.id])
-
   return {
-    profileData,
+    profileData: profileData || fallbackData,
     isLoading,
-    error,
-    refetch: fetchProfileData,
+    error: errorMessage,
+    refetch,
     updateProfile,
-    isUpdating
+    isUpdating: updateProfileMutation.isPending
   }
 }
 

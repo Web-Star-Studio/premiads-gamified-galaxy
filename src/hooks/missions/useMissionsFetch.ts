@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Mission, mapSupabaseMissionToMission } from '@/types/mission-unified';
 
@@ -9,15 +9,14 @@ interface UseMissionsFetchProps {
 }
 
 export const useMissionsFetch = ({ status, advertiserId }: UseMissionsFetchProps = {}) => {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchMissions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  const {
+    data: missions = [],
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['missions', 'fetch', status, advertiserId],
+    queryFn: async (): Promise<Mission[]> => {
       let query = supabase
         .from('missions')
         .select('*')
@@ -39,24 +38,17 @@ export const useMissionsFetch = ({ status, advertiserId }: UseMissionsFetchProps
 
       // Mapear dados do Supabase para o formato Mission
       const mappedMissions = (data || []).map(mapSupabaseMissionToMission);
-      setMissions(mappedMissions);
-    } catch (err: any) {
-      console.error('Error fetching missions:', err);
-      setError(err.message);
-      setMissions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMissions();
-  }, [status, advertiserId]);
+      return mappedMissions;
+    },
+    staleTime: 1000 * 60 * 3, // 3 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3
+  });
 
   return {
     missions,
     loading,
-    error,
-    refetch: fetchMissions
+    error: error?.message || null,
+    refetch
   };
 };

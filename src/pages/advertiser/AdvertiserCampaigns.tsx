@@ -89,6 +89,10 @@ const AdvertiserCampaigns = () => {
     }
   };
 
+  useEffect(() => {
+    console.log("AdvertiserCampaigns");
+  }, []);
+
   return (
     <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-galaxy-dark overflow-hidden">
@@ -117,15 +121,15 @@ const AdvertiserCampaigns = () => {
                       <CardContent className="p-4 pt-4">
                         <div className="flex justify-between items-start">
                           <div className="w-full">
-                            <p className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground">
                               <Skeleton className="h-4 w-24" />
-                            </p>
-                            <h3 className="text-2xl font-bold mt-2">
+                            </div>
+                            <div className="text-2xl font-bold mt-2">
                               <Skeleton className="h-8 w-16" />
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
                               <Skeleton className="h-3 w-32" />
-                            </p>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

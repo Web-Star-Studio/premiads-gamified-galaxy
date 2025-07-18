@@ -49,6 +49,5 @@ export function useAdvertiserMetrics() {
     queryFn: () => fetchAdvertiserMetrics(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: true,
   })
 } 
